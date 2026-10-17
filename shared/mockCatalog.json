@@ -1,0 +1,736 @@
+{
+  "businesses": {
+    "Food & beverage": {
+      "slug": "food",
+      "templates": [
+        {
+          "format": "Tasting bar",
+          "tagline": "A small menu. A world of discovery.",
+          "offering": "A tasting bar with a rotating menu and bookable discovery sessions.",
+          "theme": "Taste discovery",
+          "moments": [
+            "A guided tasting flight",
+            "A rotating guest producer",
+            "A take-home discovery kit"
+          ],
+          "image": "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative tasting bar inspiration",
+          "personality": "Curated & exploratory",
+          "costFactor": 1
+        },
+        {
+          "format": "Neighborhood kitchen",
+          "tagline": "Make a good meal part of the everyday.",
+          "offering": "A neighborhood kitchen serving a compact seasonal menu through prebooked meals and flexible pickup.",
+          "theme": "Everyday food rituals",
+          "moments": [
+            "A signature seasonal meal",
+            "Flexible ordering and pickup",
+            "A recurring menu club"
+          ],
+          "image": "https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative neighborhood kitchen inspiration",
+          "personality": "Considered & practical",
+          "costFactor": 0.85
+        },
+        {
+          "format": "Shared-table dining",
+          "tagline": "Good food brings a neighborhood together.",
+          "offering": "A shared-table dining series with visiting cooks and small neighborhood gatherings.",
+          "theme": "Shared-table culture",
+          "moments": [
+            "A hosted communal table",
+            "A visiting local cook",
+            "A neighborhood supper series"
+          ],
+          "image": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative shared-table dining inspiration",
+          "personality": "Social & participatory",
+          "costFactor": 0.7
+        }
+      ]
+    },
+    "Retail": {
+      "slug": "retail",
+      "templates": [
+        {
+          "format": "Curated concept store",
+          "tagline": "Discover things with a story worth keeping.",
+          "offering": "A curated concept store pairing a small product collection with maker demonstrations and guided discovery.",
+          "theme": "Intentional shopping",
+          "moments": [
+            "A tightly edited product collection",
+            "Meet the maker sessions",
+            "A rotating discovery shelf"
+          ],
+          "image": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative curated concept store inspiration",
+          "personality": "Curated & exploratory",
+          "costFactor": 1
+        },
+        {
+          "format": "Repair and resale shop",
+          "tagline": "Buy thoughtfully. Keep things longer.",
+          "offering": "A repair and resale shop combining restored goods, repair appointments, and practical care workshops.",
+          "theme": "Circular retail",
+          "moments": [
+            "A repair appointment bar",
+            "A quality resale collection",
+            "A hands-on care workshop"
+          ],
+          "image": "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative repair and resale shop inspiration",
+          "personality": "Considered & practical",
+          "costFactor": 0.85
+        },
+        {
+          "format": "Local makers market",
+          "tagline": "Give local talent a place to be found.",
+          "offering": "A rotating makers market with small vendor residencies, product drops, and neighborhood events.",
+          "theme": "Independent makers",
+          "moments": [
+            "A local maker residency",
+            "Small-batch collection launches",
+            "A community market day"
+          ],
+          "image": "https://images.unsplash.com/photo-1473181488821-2d23949a045a?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative local makers market inspiration",
+          "personality": "Social & participatory",
+          "costFactor": 0.7
+        }
+      ]
+    },
+    "Hospitality": {
+      "slug": "hospitality",
+      "templates": [
+        {
+          "format": "Neighborhood guesthouse",
+          "tagline": "Stay somewhere that opens a door to the city.",
+          "offering": "A small guesthouse pairing thoughtfully designed rooms with locally hosted neighborhood itineraries.",
+          "theme": "Local travel",
+          "moments": [
+            "A neighborhood welcome kit",
+            "Bookable local host walks",
+            "Rooms designed around the stay"
+          ],
+          "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative neighborhood guesthouse inspiration",
+          "personality": "Curated & exploratory",
+          "costFactor": 1
+        },
+        {
+          "format": "Restorative short-stay retreat",
+          "tagline": "A different pace, even for a short stay.",
+          "offering": "A short-stay retreat offering quiet rooms, flexible arrival windows, and optional restorative activities.",
+          "theme": "Restorative travel",
+          "moments": [
+            "A flexible arrival ritual",
+            "A quiet evening program",
+            "A bookable restorative activity"
+          ],
+          "image": "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative restorative short-stay retreat inspiration",
+          "personality": "Considered & practical",
+          "costFactor": 0.85
+        },
+        {
+          "format": "Social residence",
+          "tagline": "Come for a stay. Leave with a connection.",
+          "offering": "A small social residence combining private rooms, shared spaces, and an opt-in host program.",
+          "theme": "Shared experiences",
+          "moments": [
+            "An opt-in hosted gathering",
+            "A useful shared living space",
+            "A resident-led local outing"
+          ],
+          "image": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative social residence inspiration",
+          "personality": "Social & participatory",
+          "costFactor": 0.7
+        }
+      ]
+    },
+    "Wellness": {
+      "slug": "wellness",
+      "templates": [
+        {
+          "format": "Movement studio",
+          "tagline": "Find a practice that fits your day.",
+          "offering": "A small movement studio offering short, bookable classes with clear beginner pathways.",
+          "theme": "Accessible movement",
+          "moments": [
+            "A short guided movement class",
+            "A beginner onboarding session",
+            "A flexible practice pass"
+          ],
+          "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative movement studio inspiration",
+          "personality": "Curated & exploratory",
+          "costFactor": 1
+        },
+        {
+          "format": "Recovery lounge",
+          "tagline": "Make room to pause and recover.",
+          "offering": "A recovery lounge offering bookable quiet sessions, guided relaxation, and practical recovery routines.",
+          "theme": "Intentional recovery",
+          "moments": [
+            "A guided recovery session",
+            "A low-stimulation rest space",
+            "A practical at-home routine"
+          ],
+          "image": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative recovery lounge inspiration",
+          "personality": "Considered & practical",
+          "costFactor": 0.85
+        },
+        {
+          "format": "Outdoor wellbeing club",
+          "tagline": "Feel better, together and outdoors.",
+          "offering": "An outdoor wellbeing club combining gentle group movement, guided walks, and recurring local meetups.",
+          "theme": "Outdoor connection",
+          "moments": [
+            "A welcoming neighborhood walk",
+            "An adaptable outdoor class",
+            "A recurring practice circle"
+          ],
+          "image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative outdoor wellbeing club inspiration",
+          "personality": "Social & participatory",
+          "costFactor": 0.7
+        }
+      ]
+    },
+    "Entertainment": {
+      "slug": "entertainment",
+      "templates": [
+        {
+          "format": "Immersive story venue",
+          "tagline": "Step into a story you can shape.",
+          "offering": "A small immersive story venue combining interactive sets, timed experiences, and artist-led sessions.",
+          "theme": "Participatory storytelling",
+          "moments": [
+            "An interactive story session",
+            "A rotating creative world",
+            "A behind-the-scenes artist event"
+          ],
+          "image": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative immersive story venue inspiration",
+          "personality": "Curated & exploratory",
+          "costFactor": 1
+        },
+        {
+          "format": "Games and play lounge",
+          "tagline": "A little friendly competition. A lot to connect over.",
+          "offering": "A games lounge with bookable tables, guided introductions, and rotating cooperative game nights.",
+          "theme": "Social play",
+          "moments": [
+            "A hosted game introduction",
+            "A bookable group table",
+            "A cooperative tournament night"
+          ],
+          "image": "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative games and play lounge inspiration",
+          "personality": "Considered & practical",
+          "costFactor": 0.85
+        },
+        {
+          "format": "Independent performance club",
+          "tagline": "Make the next great night a local one.",
+          "offering": "An intimate performance club presenting local artists, short-form showcases, and small collaborative events.",
+          "theme": "Independent performance",
+          "moments": [
+            "A local artist showcase",
+            "A recurring themed performance",
+            "An audience participation session"
+          ],
+          "image": "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1000&q=85",
+          "imageAlt": "Illustrative independent performance club inspiration",
+          "personality": "Social & participatory",
+          "costFactor": 0.7
+        }
+      ]
+    }
+  },
+  "profiles": [
+    {
+      "id": "family",
+      "label": "Family-friendly experiences",
+      "keywords": [
+        "family",
+        "families",
+        "parents",
+        "parent",
+        "children",
+        "kids",
+        "caregiver"
+      ],
+      "names": {
+        "Food & beverage": [
+          "Little Table",
+          "Weeknight Kitchen",
+          "The Family Supper"
+        ],
+        "Retail": [
+          "Little & Local",
+          "Hand-Me-Down House",
+          "Family Market Day"
+        ],
+        "Hospitality": [
+          "The Family Landing",
+          "Small Days Retreat",
+          "Together House"
+        ],
+        "Wellness": [
+          "Move Together",
+          "The Family Reset",
+          "Little Steps Club"
+        ],
+        "Entertainment": [
+          "Wonder Workshop",
+          "The Play Commons",
+          "Small Stage Saturdays"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Offer early sittings, adaptable portions, and space for shared family visits.",
+        "Retail": "Offer durable products, parent-and-child workshops, and convenient browsing times.",
+        "Hospitality": "Offer connecting-room options, practical family amenities, and short local activities.",
+        "Wellness": "Offer caregiver-friendly timetables and adaptable sessions without promising health outcomes.",
+        "Entertainment": "Offer daytime sessions, clear age guidance, and options for adults and children to participate together."
+      },
+      "signals": [
+        [
+          "Shared routines",
+          "shared activities that adults and children can choose together"
+        ],
+        [
+          "Flexible timing",
+          "short sessions and predictable booking windows"
+        ],
+        [
+          "Practical access",
+          "clear pricing and easier group planning"
+        ]
+      ],
+      "fits": [
+        91,
+        94,
+        89
+      ]
+    },
+    {
+      "id": "mindful",
+      "label": "Calm and intentional routines",
+      "keywords": [
+        "mindful",
+        "wellbeing",
+        "wellness",
+        "calm",
+        "slow",
+        "relaxation",
+        "yoga",
+        "rest",
+        "burnout",
+        "meditation"
+      ],
+      "names": {
+        "Food & beverage": [
+          "Still Table",
+          "Soft Hours Kitchen",
+          "The Slow Supper"
+        ],
+        "Retail": [
+          "Considered Goods",
+          "Keep Well Workshop",
+          "Quiet Makers"
+        ],
+        "Hospitality": [
+          "The Quiet Landing",
+          "Still House Retreat",
+          "Gentle Stay"
+        ],
+        "Wellness": [
+          "The Practice Room",
+          "Pause Recovery",
+          "Grounded Outdoors"
+        ],
+        "Entertainment": [
+          "Slow Story Studio",
+          "Quiet Play",
+          "The Listening Stage"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Keep the menu focused and offer quieter reservation windows and an unhurried service rhythm.",
+        "Retail": "Emphasize product care, tactile discovery, and a calmer appointment-based shopping option.",
+        "Hospitality": "Prioritize quiet spaces, optional activities, and room to set an individual pace.",
+        "Wellness": "Provide low-stimulation sessions and clear choices about intensity, timing, and participation.",
+        "Entertainment": "Offer smaller groups, lower-volume sessions, and clear sensory information before booking."
+      },
+      "signals": [
+        [
+          "Intentional rituals",
+          "a repeatable experience with fewer competing demands"
+        ],
+        [
+          "Low-stimulation spaces",
+          "clear sensory choices and quieter participation options"
+        ],
+        [
+          "Personal pace",
+          "opt-in activities and flexible intensity"
+        ]
+      ],
+      "fits": [
+        88,
+        95,
+        84
+      ]
+    },
+    {
+      "id": "creative",
+      "label": "Design and creative discovery",
+      "keywords": [
+        "creative",
+        "creatives",
+        "design",
+        "designer",
+        "designers",
+        "artist",
+        "artists",
+        "indie",
+        "vinyl",
+        "music",
+        "art",
+        "gen z"
+      ],
+      "names": {
+        "Food & beverage": [
+          "The Listening Room",
+          "Edition Kitchen",
+          "Common Grounds"
+        ],
+        "Retail": [
+          "Edition House",
+          "Second Form Studio",
+          "Makers Assembly"
+        ],
+        "Hospitality": [
+          "Field Notes House",
+          "The Studio Stay",
+          "Open House Residence"
+        ],
+        "Wellness": [
+          "Form & Flow",
+          "The Studio Reset",
+          "Creative Movement Club"
+        ],
+        "Entertainment": [
+          "Parallel Worlds",
+          "Playtest Social",
+          "The Independent Stage"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Pair the menu with local creative collaborations, listening sessions, and a rotating visual identity.",
+        "Retail": "Spotlight independent designers, limited product editions, and hands-on making sessions.",
+        "Hospitality": "Include a small creative workspace and opt-in visits hosted by local artists or designers.",
+        "Wellness": "Build a visually considered environment with expressive movement and peer-led creative sessions.",
+        "Entertainment": "Invite local artists to shape original experiences and give guests a role in the creative process."
+      },
+      "signals": [
+        [
+          "Independent discovery",
+          "introductions to small local creators and their work"
+        ],
+        [
+          "Hands-on participation",
+          "making or shaping part of the experience"
+        ],
+        [
+          "Design-led spaces",
+          "a coherent visual and sensory identity"
+        ]
+      ],
+      "fits": [
+        95,
+        86,
+        92
+      ]
+    },
+    {
+      "id": "value",
+      "label": "Practical value and access",
+      "keywords": [
+        "budget",
+        "affordable",
+        "value",
+        "student",
+        "students",
+        "low cost",
+        "accessible",
+        "economical"
+      ],
+      "names": {
+        "Food & beverage": [
+          "Good Plate",
+          "Everyday Kitchen",
+          "The Shared Pot"
+        ],
+        "Retail": [
+          "Good Finds",
+          "Fix & Keep",
+          "The Value Collective"
+        ],
+        "Hospitality": [
+          "Basecamp Rooms",
+          "Simple Stay",
+          "The Travel Commons"
+        ],
+        "Wellness": [
+          "Everyday Movement",
+          "The Reset Pass",
+          "Open Air Practice"
+        ],
+        "Entertainment": [
+          "Story for Everyone",
+          "The Game Pass",
+          "Neighborhood Nights"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Use transparent set menus, a smaller operating footprint, and clearly priced group options.",
+        "Retail": "Offer transparent price bands, repair-first options, and useful pre-owned products.",
+        "Hospitality": "Focus on compact rooms, practical amenities, and clear optional extras.",
+        "Wellness": "Offer shorter sessions, straightforward pricing, and a low-commitment introductory pass.",
+        "Entertainment": "Offer clear ticket bundles, shorter formats, and affordable group booking options."
+      },
+      "signals": [
+        [
+          "Transparent value",
+          "clear inclusions and predictable total costs"
+        ],
+        [
+          "Low-commitment access",
+          "small first purchases or introductory bookings"
+        ],
+        [
+          "Practical utility",
+          "a useful experience without unnecessary extras"
+        ]
+      ],
+      "fits": [
+        87,
+        96,
+        91
+      ]
+    },
+    {
+      "id": "professional",
+      "label": "Flexible working-day routines",
+      "keywords": [
+        "professional",
+        "professionals",
+        "remote",
+        "worker",
+        "workers",
+        "work",
+        "entrepreneur",
+        "entrepreneurs",
+        "founder",
+        "founders",
+        "business",
+        "office"
+      ],
+      "names": {
+        "Food & beverage": [
+          "Between Meetings",
+          "The Weekday Kitchen",
+          "After Hours Table"
+        ],
+        "Retail": [
+          "The Weekday Edit",
+          "Ready Again",
+          "Office Hours Market"
+        ],
+        "Hospitality": [
+          "The Workday Stay",
+          "Off Duty House",
+          "Remote Commons"
+        ],
+        "Wellness": [
+          "The 30-Minute Practice",
+          "Off Duty Recovery",
+          "After Work Outdoors"
+        ],
+        "Entertainment": [
+          "After Hours Stories",
+          "The Social Break",
+          "Off Duty Live"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Build around predictable service windows, advance ordering, and bookable after-work gatherings.",
+        "Retail": "Offer focused selections, appointment-based advice, and convenient collection windows.",
+        "Hospitality": "Include reliable workspaces, flexible arrival times, and a clear separation between work and rest.",
+        "Wellness": "Offer time-boxed sessions, flexible booking, and practical routines that fit between commitments.",
+        "Entertainment": "Offer concise evening formats, clear start times, and simple group reservations."
+      },
+      "signals": [
+        [
+          "Time-conscious routines",
+          "bookable experiences with a clear duration"
+        ],
+        [
+          "Flexible participation",
+          "advance booking and practical cancellation options"
+        ],
+        [
+          "After-work connection",
+          "low-pressure gatherings around shared activities"
+        ]
+      ],
+      "fits": [
+        91,
+        94,
+        85
+      ]
+    },
+    {
+      "id": "discovery",
+      "label": "Exploration and novel experiences",
+      "keywords": [
+        "adventure",
+        "adventurous",
+        "explorer",
+        "explorers",
+        "travel",
+        "traveler",
+        "travelers",
+        "tourist",
+        "tourists",
+        "discovery",
+        "novel",
+        "curious",
+        "foodie",
+        "foodies"
+      ],
+      "names": {
+        "Food & beverage": [
+          "Offbeat Tasting",
+          "Passport Kitchen",
+          "The Discovery Supper"
+        ],
+        "Retail": [
+          "Hidden Objects",
+          "Found Again",
+          "The Discovery Market"
+        ],
+        "Hospitality": [
+          "Elsewhere House",
+          "Beyond the Usual",
+          "The Wayfarer Commons"
+        ],
+        "Wellness": [
+          "New Moves",
+          "The Recovery Journey",
+          "Trail & Try"
+        ],
+        "Entertainment": [
+          "Elsewhere Stories",
+          "The Game Expedition",
+          "The Surprise Stage"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Rotate unusual tasting themes and guest producers, with clear explanations of every new offering.",
+        "Retail": "Offer rotating collections, maker stories, and small discovery events that invite exploration.",
+        "Hospitality": "Build locally hosted itineraries and optional neighborhood experiences beyond the usual checklist.",
+        "Wellness": "Offer introductory sessions in unfamiliar practices with clear guidance and adaptable participation.",
+        "Entertainment": "Rotate interactive themes, surprise showcases, and optional routes through each experience."
+      },
+      "signals": [
+        [
+          "Novel experiences",
+          "rotating themes and opportunities to try something unfamiliar"
+        ],
+        [
+          "Local exploration",
+          "introductions hosted by neighborhood businesses or creators"
+        ],
+        [
+          "Guided discovery",
+          "clear context that makes unfamiliar choices approachable"
+        ]
+      ],
+      "fits": [
+        96,
+        85,
+        91
+      ]
+    },
+    {
+      "id": "general",
+      "label": "Open audience brief",
+      "keywords": [],
+      "names": {
+        "Food & beverage": [
+          "The Tasting Room",
+          "Neighborhood Kitchen",
+          "The Common Table"
+        ],
+        "Retail": [
+          "The Neighborhood Edit",
+          "Renew & Repair",
+          "Local Assembly"
+        ],
+        "Hospitality": [
+          "The Local Landing",
+          "A Slower Stay",
+          "Common House"
+        ],
+        "Wellness": [
+          "Daily Practice",
+          "The Reset Room",
+          "Neighborhood Movement"
+        ],
+        "Entertainment": [
+          "Story House",
+          "The Play Room",
+          "The Local Stage"
+        ]
+      },
+      "delivery": {
+        "Food & beverage": "Use the supplied audience brief to frame a small tasting pilot and gather direct feedback.",
+        "Retail": "Use the audience brief to choose a small initial product range and test it with prospective shoppers.",
+        "Hospitality": "Use the audience brief to prototype a stay package and interview prospective guests.",
+        "Wellness": "Use the audience brief to prototype session formats and ask participants about timing and access needs.",
+        "Entertainment": "Use the audience brief to test a small event format and gather participant feedback."
+      },
+      "signals": [
+        [
+          "Audience interviews",
+          "direct conversations about the supplied audience brief"
+        ],
+        [
+          "Small pilots",
+          "a limited trial before committing to a permanent format"
+        ],
+        [
+          "Feedback-led iteration",
+          "changes based on what participants actually report"
+        ]
+      ],
+      "fits": [
+        87,
+        85,
+        88
+      ]
+    }
+  ],
+  "accents": [
+    "#e69b73",
+    "#bac49c",
+    "#b6b2da"
+  ]
+}
