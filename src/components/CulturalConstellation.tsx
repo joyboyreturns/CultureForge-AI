@@ -16,7 +16,13 @@ import type { Concept, Evidence } from '../contracts'
  * Positions are layout, not meaning. Nothing here is a learned similarity.
  */
 
-const VIEW = { width: 720, height: 520, cx: 360, cy: 250 }
+// The viewBox is roomy on purpose: every node carries a label, and a graph
+// that clips its own words is not worth reading.
+const VIEW = { width: 880, height: 660, cx: 440, cy: 320 }
+const RING = { seed: 104, venue: 180, decision: 266 }
+// Each ring's label sits on its own band: the inner rings label towards the
+// centre, the outer ring labels away from it, so the three bands never meet.
+const LABEL_RING = { seed: 78, venue: 154, decision: 292 }
 
 type NodeKind = 'seed' | 'venue' | 'decision'
 
@@ -28,6 +34,10 @@ interface Node {
   x: number
   y: number
   radius: number
+  /** Where the label goes, on its own band. */
+  labelX: number
+  labelY: number
+  anchor: 'start' | 'middle' | 'end'
 }
 
 interface Edge {
@@ -39,6 +49,24 @@ interface Edge {
 function polar(radius: number, index: number, total: number, offset = 0) {
   const angle = (offset + (index / Math.max(1, total)) * Math.PI * 2) - Math.PI / 2
   return { x: VIEW.cx + Math.cos(angle) * radius, y: VIEW.cy + Math.sin(angle) * radius }
+}
+
+/**
+ * Place a label on its ring's band and point it away from the centre, so the
+ * text runs along the graph rather than into it.
+ */
+function labelSpot(x: number, y: number, band: number): { labelX: number; labelY: number; anchor: 'start' | 'middle' | 'end' } {
+  const dx = x - VIEW.cx
+  const dy = y - VIEW.cy
+  const length = Math.max(1, Math.hypot(dx, dy))
+  const labelX = VIEW.cx + (dx / length) * band
+  const labelY = VIEW.cy + (dy / length) * band
+  const anchor = dx < -24 ? 'end' : dx > 24 ? 'start' : 'middle'
+  return { labelX, labelY, anchor }
+}
+
+function shorten(text: string, max: number) {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
 const NODE_RADIUS: Record<NodeKind, number> = { seed: 6, venue: 7, decision: 8 }
@@ -65,23 +93,26 @@ export function CulturalConstellation({
     // The audience sits at the centre.
     built.push({
       id: '__audience__', kind: 'seed', label: 'Your audience',
-      detail: 'The brief Qloo was asked to resolve', x: VIEW.cx, y: VIEW.cy, radius: 26,
+      detail: 'The brief Qloo was asked to resolve', x: VIEW.cx, y: VIEW.cy, radius: 30,
+      labelX: VIEW.cx, labelY: VIEW.cy, anchor: 'middle',
     })
     seeds.forEach((seed, index) => {
-      const point = polar(112, index, seeds.length)
+      const point = polar(RING.seed, index, seeds.length)
       built.push({
         id: seed.id, kind: 'seed', label: seed.label,
         detail: seed.tagId ?? 'Audience seed', radius: NODE_RADIUS.seed, ...point,
+        ...labelSpot(point.x, point.y, LABEL_RING.seed),
       })
       links.push({ from: '__audience__', to: seed.id, kind: 'qloo' })
     })
 
     // The venues Qloo returned sit on the middle ring.
     venues.forEach((venue, index) => {
-      const point = polar(196, index, venues.length)
+      const point = polar(RING.venue, index, venues.length)
       built.push({
         id: venue.id, kind: 'venue', label: venue.label,
         detail: venue.entityType ?? 'Qloo place', radius: NODE_RADIUS.venue, ...point,
+        ...labelSpot(point.x, point.y, LABEL_RING.venue),
       })
       // A venue hangs off the seed it was returned for. Every venue is linked to
       // the first seed, because Qloo returned it for the whole signal set.
@@ -93,10 +124,16 @@ export function CulturalConstellation({
       concept.decisions.map((decision) => ({ concept, decision })))
     decisions.forEach((entry, index) => {
       const id = `${entry.concept.id}::${entry.decision.id}`
-      const point = polar(272, index, decisions.length)
+      // The decisions of one concept sit next to each other on the ring, so
+      // the shape of the graph shows the grouping.
+      const conceptIndex = concepts.findIndex((candidate) => candidate.id === entry.concept.id)
+      const offset = -Math.PI / 2 + (conceptIndex / Math.max(1, concepts.length)) * Math.PI * 2
+      const point = polar(RING.decision, index, decisions.length, offset * 0)
       built.push({
-        id, kind: 'decision', label: entry.concept.name,
-        detail: entry.decision.field, radius: NODE_RADIUS.decision, ...point,
+        id, kind: 'decision',
+        label: `${entry.concept.name} · ${entry.decision.field}`,
+        detail: entry.decision.proposal, radius: NODE_RADIUS.decision, ...point,
+        ...labelSpot(point.x, point.y, LABEL_RING.decision),
       })
       entry.decision.evidenceIds.forEach((evidenceId) => {
         links.push({ from: evidenceId, to: id, kind: 'ours' })
@@ -182,9 +219,23 @@ export function CulturalConstellation({
                 <circle cx={node.x} cy={node.y} r={26} className="constellation-hub" />
               )}
               <circle cx={node.x} cy={node.y} r={radius} className="constellation-dot" />
-              <text x={node.x} y={node.y + radius + 13} className="constellation-label">
-                {node.label.length > 26 ? `${node.label.slice(0, 25)}…` : node.label}
-              </text>
+              <title>{node.label}{node.detail ? ` — ${node.detail}` : ''}</title>
+              {node.id === '__audience__' ? (
+                <text x={node.labelX} y={node.labelY} textAnchor="middle" className="constellation-hub-label">
+                  <tspan x={node.labelX} dy="-7">Your</tspan>
+                  <tspan x={node.labelX} dy="13">audience</tspan>
+                </text>
+              ) : (
+                <text
+                  x={node.labelX}
+                  y={node.labelY}
+                  textAnchor={node.anchor}
+                  dominantBaseline="middle"
+                  className="constellation-label"
+                >
+                  {shorten(node.label, node.kind === 'decision' ? 24 : 20)}
+                </text>
+              )}
             </g>
           )
         })}

@@ -148,9 +148,13 @@ def resolve_taste(request: CompareRequest) -> dict:
         tag_id = provider.tag_id(row)
         if not tag_id:
             continue
+        # Qloo's own name for the signal, so the founder confirms the same
+        # wording they will later see attached to the evidence.
+        name = row.get('name')
         candidates.append({
             'tagId': tag_id,
-            'label': tag_id.rsplit(':', 1)[-1].replace('_', ' ').strip().capitalize(),
+            'label': name if isinstance(name, str) and name.strip()
+                     else tag_id.rsplit(':', 1)[-1].replace('_', ' ').strip().capitalize(),
             'popularity': row.get('popularity'),
             'type': row.get('type'),
         })

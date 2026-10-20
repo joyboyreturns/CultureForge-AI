@@ -6,9 +6,9 @@
     "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
   },
   "backend/main.py": {
-    "mtime": 1792509330.6146557,
-    "seen": 1792509956.542201,
-    "ast_hash": "045ee1eacc3c514763a9feb8d6196c37",
+    "mtime": 1792510144.2371287,
+    "seen": 1792510776.618384,
+    "ast_hash": "65fc90f43da17ec625d9ed7e0ccd393f",
     "semantic_hash": ""
   },
   "backend/mock_generator.py": {
@@ -60,9 +60,9 @@
     "semantic_hash": "2330b334237c3853462849eb15b325ee"
   },
   "src/App.tsx": {
-    "mtime": 1792509858.3044493,
-    "seen": 1792509956.5422342,
-    "ast_hash": "aa6940b844c1fc1492782e5c1885c4ec",
+    "mtime": 1792510506.6370807,
+    "seen": 1792510776.618412,
+    "ast_hash": "e93334b106e871e2a4cc772924410493",
     "semantic_hash": ""
   },
   "src/api.ts": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "src/components/CulturalConstellation.tsx": {
-    "mtime": 1792509400.4625628,
-    "seen": 1792509956.54224,
-    "ast_hash": "778362e7df404ee139a7ce6b6ddcf205",
+    "mtime": 1792510662.1916118,
+    "seen": 1792510776.618418,
+    "ast_hash": "b301560bdd5c22587e7e0a2731d1b3f5",
     "semantic_hash": ""
   },
   "src/components/CulturalHeat.tsx": {
