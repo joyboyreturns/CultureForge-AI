@@ -130,6 +130,18 @@ The concept studio has six tabs, and the last four are the ones a judge should b
 
 The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
+### The editorial layer
+
+`src/wildroot.css` is imported last, so it wins over `styles.css` and `readability.css`. It moves the studio out of the dashboard register and into an editorial, seed-packet one:
+
+- **Deep colour blocks.** The results masthead is a beet block with cream type and a sun-coloured accent; the scenario card is the same block on the other side of the page. Type is set oversized and uppercase, with the serif italic kept for the one phrase that should not shout.
+- **Stickers, not panels.** Cards have square corners, a hard offset shadow, and a slight rotation, so a row of three directions reads as printed cards laid on a table rather than as a grid of widgets.
+- **Banded labels.** Monospace labels sit on solid colour bands — the direction number, the evidence badge, the cultural themes, the top-line facts — so the eye can find the structure without reading it.
+- **The photography is given room.** Each concept card is a wide 16:10 banner of the Qloo photograph that came with the venue, credited to the place it belongs to, and the places Qloo returned are shown again as a full strip with their own affinity, popularity and rating printed beside them.
+- **The constellation reads.** The graph's rings are further apart, every label is broken over at most two lines, each label sits on its own band just outside its ring, and a halo of the panel colour keeps a word readable where it crosses an edge.
+
+Both themes were re-drawn for it: the dark theme is warm soil, beet and clay; the light theme is cream paper with near-black rules and flat offset shadows. `prefers-reduced-motion: reduce` still stands the new transforms down.
+
 ### Background video and Safari
 
 The background video uses the attributes Safari requires for inline autoplay — `autoplay muted loop playsinline` — plus `preload="auto"` and a `poster`. Two details matter:
@@ -184,6 +196,39 @@ All contract checks passed.
 ```
 
 It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
+
+## Walking the product as a business owner
+
+The contract check proves the shapes agree. It does not prove the product works. `npm run test:walkthrough` walks the whole journey a founder takes, in order, and asserts what each step must hand the next one:
+
+```
+$ npm run test:walkthrough
+--- the founder walks in ---
+[ok]   the backend reports which provider is active -> dataMode live
+[ok]   the studio is served -> HTTP 200
+[ok]   the brief returns a result -> 3 directions
+[ok]   the audience resolves into candidate signals -> Gen Z Foodies, Modern Restaurant Design, Food Design
+[ok]   the research run starts -> run-dc14db07d37e
+[ok]   the run finishes -> status complete
+[ok]   there are three directions -> The Design Floor | The Neighbourhood Table | The Slow Hour
+[ok]   every decision cites evidence that exists -> 8 pieces of evidence
+[ok]   no invented fit score is shown -> affinity does not measure business fit
+[ok]   the request that was sent is recorded -> filter.type+take+signal.interests.tags+…
+[ok]   no unexpected parameter reaches the provenance panel -> all allowlisted
+[ok]   removing a venue returns a recomposition -> Qloo was not called again.
+[ok]   the recomposition keeps only directions that still have support -> 3 of 3 survived
+[ok]   Qloo compares the two groups -> 3 shared tags
+[ok]   Qloo ranks the venues -> 1. The Bell House | 2. Brooklyn Bridge Park Corporation | …
+[ok]   the signal Qloo actually sent is reported -> 24_and_younger
+[ok]   the exploration can be shared -> snap-a575cbe437dc
+[ok]   a repeated brief spends no upstream request -> 0 upstream requests, delivery cache
+[ok]   changing the audience re-researches -> The Neighbourhood Table | The Slow Hour | The Third Place
+----------------------------------------------------------
+The whole journey works. 35 checks passed.
+----------------------------------------------------------
+```
+
+Eleven steps, from landing to a cached repeat. Every step runs against cached evidence, so the whole journey is free and the script refuses to spend quota it did not intend to. It needs the backend on port 8000 and the dev server on port 5173.
 
 ## Cinematic layer
 

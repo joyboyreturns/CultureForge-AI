@@ -18,11 +18,12 @@ import type { Concept, Evidence } from '../contracts'
 
 // The viewBox is roomy on purpose: every node carries a label, and a graph
 // that clips its own words is not worth reading.
-const VIEW = { width: 880, height: 660, cx: 440, cy: 320 }
-const RING = { seed: 104, venue: 180, decision: 266 }
-// Each ring's label sits on its own band: the inner rings label towards the
-// centre, the outer ring labels away from it, so the three bands never meet.
-const LABEL_RING = { seed: 78, venue: 154, decision: 292 }
+const VIEW = { width: 1160, height: 880, cx: 580, cy: 424 }
+const RING = { seed: 104, venue: 172, decision: 330 }
+// Each ring's label sits on its own band, just outside the ring it belongs
+// to, so the three bands never meet and no label ever runs across the dot it
+// belongs to.
+const LABEL_RING = { seed: 118, venue: 206, decision: 366 }
 
 type NodeKind = 'seed' | 'venue' | 'decision'
 
@@ -38,6 +39,8 @@ interface Node {
   labelX: number
   labelY: number
   anchor: 'start' | 'middle' | 'end'
+  /** The label, broken over at most two lines. */
+  lines: string[]
 }
 
 interface Edge {
@@ -52,24 +55,53 @@ function polar(radius: number, index: number, total: number, offset = 0) {
 }
 
 /**
- * Place a label on its ring's band and point it away from the centre, so the
- * text runs along the graph rather than into it.
+ * Place a label on its ring's band.
+ *
+ * `outward` says which way the words run. A label on a band outside its own
+ * ring reads away from the centre; one on a band inside reads towards it.
+ * Get it wrong and the text runs straight across the dot it belongs to.
  */
-function labelSpot(x: number, y: number, band: number): { labelX: number; labelY: number; anchor: 'start' | 'middle' | 'end' } {
+function labelSpot(x: number, y: number, band: number, outward: boolean): { labelX: number; labelY: number; anchor: 'start' | 'middle' | 'end' } {
   const dx = x - VIEW.cx
   const dy = y - VIEW.cy
   const length = Math.max(1, Math.hypot(dx, dy))
   const labelX = VIEW.cx + (dx / length) * band
   const labelY = VIEW.cy + (dy / length) * band
-  const anchor = dx < -24 ? 'end' : dx > 24 ? 'start' : 'middle'
+  let anchor: 'start' | 'middle' | 'end'
+  if (dx < -24) anchor = outward ? 'end' : 'start'
+  else if (dx > 24) anchor = outward ? 'start' : 'end'
+  else anchor = 'middle'
   return { labelX, labelY, anchor }
 }
 
-function shorten(text: string, max: number) {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
+/**
+ * Break a name over at most two lines.
+ *
+ * A single long line is what makes a radial graph unreadable: it reaches
+ * across its neighbours. Two shorter lines keep the label to its own wedge.
+ */
+function wrapLabel(text: string, max: number): string[] {
+  if (text.length <= max) return [text]
+  const words = text.split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word
+    if (next.length <= max) { current = next; continue }
+    if (!current) { current = word.slice(0, max) }
+    else { lines.push(current); current = word }
+    if (lines.length === 2) break
+  }
+  if (lines.length < 2) lines.push(current)
+  const last = lines[lines.length - 1]
+  if (last.length > max) lines[lines.length - 1] = `${last.slice(0, max - 1)}…`
+  return lines
 }
 
 const NODE_RADIUS: Record<NodeKind, number> = { seed: 6, venue: 7, decision: 8 }
+// How wide a label may run before it is broken onto a second line.
+const LABEL_WIDTH: Record<NodeKind, number> = { seed: 15, venue: 17, decision: 19 }
+
 
 export function CulturalConstellation({
   evidence, concepts, selectedId, onSelect, onInspect,
@@ -94,14 +126,15 @@ export function CulturalConstellation({
     built.push({
       id: '__audience__', kind: 'seed', label: 'Your audience',
       detail: 'The brief Qloo was asked to resolve', x: VIEW.cx, y: VIEW.cy, radius: 30,
-      labelX: VIEW.cx, labelY: VIEW.cy, anchor: 'middle',
+      labelX: VIEW.cx, labelY: VIEW.cy, anchor: 'middle', lines: ['Your', 'audience'],
     })
     seeds.forEach((seed, index) => {
       const point = polar(RING.seed, index, seeds.length)
       built.push({
         id: seed.id, kind: 'seed', label: seed.label,
         detail: seed.tagId ?? 'Audience seed', radius: NODE_RADIUS.seed, ...point,
-        ...labelSpot(point.x, point.y, LABEL_RING.seed),
+        ...labelSpot(point.x, point.y, LABEL_RING.seed, true),
+        lines: wrapLabel(seed.label, LABEL_WIDTH.seed),
       })
       links.push({ from: '__audience__', to: seed.id, kind: 'qloo' })
     })
@@ -112,7 +145,8 @@ export function CulturalConstellation({
       built.push({
         id: venue.id, kind: 'venue', label: venue.label,
         detail: venue.entityType ?? 'Qloo place', radius: NODE_RADIUS.venue, ...point,
-        ...labelSpot(point.x, point.y, LABEL_RING.venue),
+        ...labelSpot(point.x, point.y, LABEL_RING.venue, true),
+        lines: wrapLabel(venue.label, LABEL_WIDTH.venue),
       })
       // A venue hangs off the seed it was returned for. Every venue is linked to
       // the first seed, because Qloo returned it for the whole signal set.
@@ -133,7 +167,8 @@ export function CulturalConstellation({
         id, kind: 'decision',
         label: `${entry.concept.name} · ${entry.decision.field}`,
         detail: entry.decision.proposal, radius: NODE_RADIUS.decision, ...point,
-        ...labelSpot(point.x, point.y, LABEL_RING.decision),
+        ...labelSpot(point.x, point.y, LABEL_RING.decision, true),
+        lines: wrapLabel(`${entry.concept.name} · ${entry.decision.field}`, LABEL_WIDTH.decision),
       })
       entry.decision.evidenceIds.forEach((evidenceId) => {
         links.push({ from: evidenceId, to: id, kind: 'ours' })
@@ -228,12 +263,14 @@ export function CulturalConstellation({
               ) : (
                 <text
                   x={node.labelX}
-                  y={node.labelY}
+                  y={node.labelY - (node.lines.length - 1) * 8}
                   textAnchor={node.anchor}
                   dominantBaseline="middle"
                   className="constellation-label"
                 >
-                  {shorten(node.label, node.kind === 'decision' ? 24 : 20)}
+                  {node.lines.map((line, index) => (
+                    <tspan key={index} x={node.labelX} y={node.labelY - (node.lines.length - 1) * 8 + index * 16}>{line}</tspan>
+                  ))}
                 </text>
               )}
             </g>

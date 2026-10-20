@@ -261,6 +261,9 @@ class QlooHarnessProvider(CultureProvider):
                     acquiredAt=cached[1].delivery.acquiredAt if cached[1].delivery else None,
                     servedAt=datetime.now(timezone.utc).isoformat(),
                     expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+                    # Replaying a held answer spends no upstream request, so the
+                    # number says zero rather than leaving the cost unknown.
+                    transportRequests=0,
                 )
                 return cached[1].model_copy(update={
                     'projectId': f'cf-{uuid4().hex[:10]}',

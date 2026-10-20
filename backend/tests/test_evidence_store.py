@@ -107,3 +107,53 @@ def test_the_provider_reports_zero_for_a_cached_workflow(monkeypatch, store):
     assert was_cached is True
     assert requests == 0
     assert envelope['status'] == 'ok'
+
+
+def test_a_repeated_brief_reports_that_it_spent_nothing(monkeypatch, recommend_places):
+    """The delivery is the product's receipt. A replay must read zero, not unknown.
+
+    The brief is answered twice from the same evidence. The second answer is
+    served from the provider's own cache, so it costs no upstream request, and
+    the delivery has to say so rather than leave the cost blank.
+    """
+    from backend.models import ProjectRequest
+    from backend.providers import QlooHarnessProvider
+
+    find_tags = {
+        'status': 'ok',
+        'results': [
+            {'id': 'urn:tag:customer_segment:qloo:gen_z_foodies', 'name': 'Gen Z Foodies', 'popularity': 0.97},
+            {'id': 'urn:tag:interests:qloo:modern_restaurant_design', 'name': 'Modern Restaurant Design', 'popularity': 0.98},
+            {'id': 'urn:tag:interests:qloo:food_design', 'name': 'Food Design', 'popularity': 0.93},
+        ],
+        'execution': {'duration_ms': 1},
+        'provenance': {'endpoint': 'stub', 'requests': []},
+    }
+
+    provider = QlooHarnessProvider()
+    calls: list[str] = []
+
+    def fake(operation, payload):
+        calls.append(operation)
+        if operation == 'find_tags':
+            return find_tags, False, 1
+        return recommend_places, False, 1
+
+    monkeypatch.setattr(provider, 'run_workflow_cached', fake)
+
+    project = ProjectRequest(
+        businessType='Food & beverage', audience='Design-conscious Gen Z',
+        location='Brooklyn, New York', budget='$25k – $50k',
+        objectives=['Build a loyal community'],
+    )
+
+    first = provider.generate(project)
+    assert first.delivery is not None
+    assert first.delivery.kind == 'fresh'
+    assert first.delivery.transportRequests == 2
+
+    second = provider.generate(project)
+    assert second.delivery is not None
+    assert second.delivery.kind == 'cache'
+    assert second.delivery.transportRequests == 0
+    assert calls == ['find_tags', 'recommend'], 'the replay must not call Qloo again'
