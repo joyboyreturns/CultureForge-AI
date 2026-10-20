@@ -288,6 +288,12 @@ export async function listExplorations(): Promise<{ explorations: SavedExplorati
   return await response.json() as { explorations: SavedExploration[] }
 }
 
+export async function fetchExploration(id: string): Promise<SavedExploration & { result: GenerateResponse }> {
+  const response = await fetch(`/api/explorations/${id}`)
+  if (!response.ok) throw new Error('That exploration is no longer saved.')
+  return await response.json() as SavedExploration & { result: GenerateResponse }
+}
+
 export async function fetchUsage(): Promise<{ requests: number; upstreamCalls: number; byRoute: Record<string, number> }> {
   const response = await fetch('/api/usage')
   if (!response.ok) throw new Error('The usage could not be read.')

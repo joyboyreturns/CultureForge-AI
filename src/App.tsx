@@ -8,8 +8,8 @@ import {
   Sparkles, Sun, Target, Users, WandSparkles, Waves, X,
 } from 'lucide-react'
 import type { Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, ProjectRequest, TraceEvent } from './contracts'
-import { compareAudience, compareAudiences, fetchSnapshot, generateConcepts, rankAnchors, recompose, resolveTaste, shareExploration, startResearch } from './api'
-import type { TasteSeed } from './api'
+import { compareAudience, compareAudiences, fetchExploration, fetchSnapshot, generateConcepts, listExplorations, rankAnchors, recompose, resolveTaste, shareExploration, startResearch } from './api'
+import type { SavedExploration, TasteSeed } from './api'
 import { CulturalConstellation } from './components/CulturalConstellation'
 import { ProvenanceDrawer } from './components/ProvenanceDrawer'
 import { AgentTrace } from './components/AgentTrace'
@@ -232,7 +232,7 @@ export default function App() {
     </aside>
     <main className="main-area"><header className="topbar"><div className="topbar-left"><button className="studio-return" onClick={goToLanding}><ArrowLeft size={14}/> Landing</button><button className="mobile-menu icon-button" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20}/></button><span className="topbar-workspace">Workspace</span><ChevronRight size={12}/><span>{titles[screen]}</span></div><div className="topbar-right"><span className="prototype-badge"><span/> {result.dataMode === 'live' ? 'Qloo signals connected' : 'Prototype · mock data'}</span><span className="topbar-separator"/><a className="topbar-link" href="/">Front page <ArrowUpRight size={13}/></a><button className="theme-toggle" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={17}/> : <Moon size={17}/>}<span>{theme === 'dark' ? 'Light' : 'Dark'} mode</span></button><button className="top-new icon-button" aria-label="Create a new exploration" onClick={() => navigate('create')}><Plus size={18}/></button></div></header>
       <div className="page-content" key={screen}>
-        {screen === 'home' && <Home start={() => navigate('create')} demo={() => create(initial, true)} explore={() => navigate('results')}/>}
+        {screen === 'home' && <Home start={() => navigate('create')} demo={() => create(initial, true)} explore={() => navigate('results')} openExploration={async (id) => { try { const record = await fetchExploration(id); setResult(record.result); setSelected(record.result.concepts[0]?.id ?? ''); navigate('results'); setToast('Reopened from your saved explorations.') } catch (error) { setToast(error instanceof Error ? error.message : 'That exploration could not be opened.') } }}/>}
         {screen === 'create' && (seedCandidates
           ? <TasteSeeds candidates={seedCandidates} audience={form.audience} busy={seedBusy}
               selected={seedSelection ?? seedCandidates.map((candidate) => candidate.tagId)}
@@ -260,14 +260,45 @@ function BusinessIcon({type,size=14}:{type:ProjectRequest['businessType'];size?:
 function Eyebrow({ children }: { children: ReactNode }) { return <div className="eyebrow"><span/>{children}</div> }
 function Button({ children, onClick, variant = 'primary', type = 'button', disabled = false }: { children: ReactNode; onClick?: () => void; variant?: 'primary' | 'secondary' | 'text'; type?: 'button' | 'submit'; disabled?: boolean }) { return <button type={type} className={`button button-${variant}`} onClick={onClick} disabled={disabled}>{children}</button> }
 
-function Home({ start, demo, explore }: { start: () => void; demo: () => void; explore: () => void }) {
+function Home({ start, demo, explore, openExploration }: { start: () => void; demo: () => void; explore: () => void; openExploration: (id: string) => void }) {
   return <div className="home-page"><div className="welcome-row"><span>YOUR NEXT CHAPTER STARTS HERE</span><span className="edition-tag">CULTURE / COMMERCE / POSSIBILITY</span></div>
     <section className="hero"><div className="hero-copy"><Eyebrow>BUILT ON CULTURE. MADE FOR YOU.</Eyebrow><h1>Great ideas have<br/>a <em>cultural edge.</em></h1><p>Discover what moves your audience.<br/>Build a business that moves them.</p><div className="hero-actions"><Button onClick={start}>Find your next big idea <ArrowUpRight size={18}/></Button><button className="play-button" onClick={demo}><span><Play size={12} fill="currentColor"/></span> Explore the demo</button></div><div className="hero-assurance"><ShieldCheck size={14}/> Evidence-led thinking <span/> Your imagination, amplified</div></div>
       <div className="hero-composition"><div className="hero-image main-photo"><div className="photo-grain"/><span className="image-caption">BROOKLYN, NEW YORK <ArrowUpRight size={14}/></span><div className="image-story"><span>THE NEXT WAVE OF THIRD PLACES</span><h2>Where coffee<br/>meets <em>culture.</em></h2></div></div><div className="orbit-sticker"><Waves size={27}/><span>FOLLOW THE<br/>CULTURAL CURRENT</span></div><div className="signal-card"><div className="signal-card-label"><span className="orange-dot"/> A CONNECTION WORTH EXPLORING <ArrowUpRight size={13}/></div><div className="signal-link"><span><AudioLines size={16}/> Vinyl culture</span><span className="connection-line"/><span><Coffee size={16}/> Café rituals</span></div><div className="signal-card-footer"><span>Different interests. Shared audience.</span><span className="sample-mini">SAMPLE SIGNAL</span></div></div><span className="composition-index">01 / A WORLD OF CONNECTIONS</span></div></section>
     <section className="possibility-strip"><div><span className="strip-number">01</span><span><strong>Understand the audience.</strong><small>Discover cultural affinities that connect.</small></span></div><ArrowRight size={16}/><div><span className="strip-number">02</span><span><strong>Explore the unexpected.</strong><small>Three distinct concepts. One clear vision.</small></span></div><ArrowRight size={16}/><div><span className="strip-number">03</span><span><strong>Make your next move.</strong><small>Compare, refine, and find your direction.</small></span></div></section>
     <section className="discovery-section"><div className="section-heading"><div><Eyebrow>LESS GUESSWORK. MORE POSSIBILITY.</Eyebrow><h2>A new way to see <em>what’s next.</em></h2></div><button className="text-link" onClick={explore}>Inside an exploration <ArrowUpRight size={15}/></button></div><div className="discovery-grid"><button className="discovery-card graph-card" onClick={explore}><div className="discovery-top"><span className="feature-icon"><Fingerprint size={19}/></span><ArrowUpRight size={17}/></div><h3>Connect the cultural dots.</h3><p>Music, places, brands, and behavior.<br/>See the world through your audience’s tastes.</p><CultureGraph compact/><span className="feature-bottom">CROSS-DOMAIN CULTURAL INTELLIGENCE <Plus size={12}/></span></button><button className="discovery-card concept-teaser" onClick={demo}><div className="discovery-top"><span className="feature-icon"><Lightbulb size={19}/></span><ArrowUpRight size={17}/></div><h3>From insight to “what if.”</h3><p>Turn cultural connections into business<br/>experiences with a point of view.</p><div className="teaser-stack"><span className="stack-back"/><span className="stack-middle"/><div className="stack-front"><span className="tiny-cap">CONCEPT 01 · SAMPLE</span><h4>The Listening Room</h4><span>A café built around the perfect side A.</span><div><AudioLines size={16}/><span>COFFEE × VINYL × CONNECTION</span></div></div></div><span className="feature-bottom">THREE DIFFERENTIATED CONCEPTS <Plus size={12}/></span></button><button className="discovery-card scenario-teaser" onClick={explore}><div className="discovery-top"><span className="feature-icon"><SlidersHorizontal size={19}/></span><ArrowUpRight size={17}/></div><h3>A small change. A new angle.</h3><p>Shift the audience. Explore the tradeoffs.<br/>Find the idea that feels right.</p><div className="teaser-bars"><span>Independent creatives <b>94</b><i><em style={{width:'94%'}}/></i></span><span>Mindful professionals <b>86</b><i><em style={{width:'86%'}}/></i></span><span>Young families <b>78</b><i><em style={{width:'78%'}}/></i></span><small>ILLUSTRATIVE AUDIENCE-FIT SCORES</small></div><span className="feature-bottom">INTERACTIVE SCENARIO EXPLORATION <Plus size={12}/></span></button></div></section>
+    <SavedExplorations onOpen={openExploration}/>
     <div className="home-bottom-note"><span><Sparkles size={16}/> Curiosity is your competitive advantage.</span><span>Explore freely. Build thoughtfully.</span></div>
   </div>
+}
+
+function SavedExplorations({ onOpen }: { onOpen: (id: string) => void }) {
+  const [items, setItems] = useState<SavedExploration[]>([])
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    listExplorations()
+      .then((data) => setItems(data.explorations))
+      .catch(() => setItems([]))
+      .finally(() => setLoaded(true))
+  }, [])
+  if (!loaded) return null
+  if (!items.length) return null
+  return <section className="saved-explorations">
+    <div className="section-heading">
+      <div><Eyebrow>YOUR SAVED EXPLORATIONS</Eyebrow><h2>Still here,<br/><em>even after a restart.</em></h2></div>
+      <span className="sample-label">SAVED TO THIS WORKSPACE</span>
+    </div>
+    <ul className="saved-exploration-list">
+      {items.slice(0, 6).map((item) => <li key={item.id}>
+        <button onClick={() => onOpen(item.id)}>
+          <span className="saved-exploration-title">{item.title}</span>
+          <span className="saved-exploration-meta">
+            {String((item.brief as { location?: string })?.location ?? 'exploration')} · {item.versions.length} version{item.versions.length === 1 ? '' : 's'}
+          </span>
+          <ArrowUpRight size={16}/>
+        </button>
+      </li>)}
+    </ul>
+  </section>
 }
 
 function CultureGraph({ compact = false }: { compact?: boolean }) {

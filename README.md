@@ -319,15 +319,17 @@ $ npm run test:walkthrough
 [ok]   the signal Qloo actually sent is reported -> 24_and_younger
 [ok]   the exploration can be shared -> snap-a575cbe437dc
 [ok]   a repeated brief spends no upstream request -> 0 upstream requests, delivery cache
+[ok]   the investigation returns real geographic cells -> 20 cells
+[ok]   the map says what it is not -> interest cells, not venue pins
 [ok]   changing the audience re-researches -> The Neighbourhood Table | The Slow Hour | The Third Place
 [ok]   a location Qloo cannot resolve is reported, not guessed at -> Qloo returned no places for 'Greenpoint, Brooklyn'…
 [ok]   the message offers a location Qloo already returned places for -> 'Brooklyn, New York' returned places for these same signals earlier.
 ----------------------------------------------------------
-The whole journey works. 41 checks passed.
+The whole journey works. 46 checks passed.
 ----------------------------------------------------------
 ```
 
-Eleven steps, from landing to a cached repeat. Every step runs against cached evidence, so the whole journey is free and the script refuses to spend quota it did not intend to. It needs the backend on port 8000 and the dev server on port 5173.
+Twelve steps, from landing to a cached repeat, including the investigation loop. Every step runs against cached evidence, so the whole journey is free and the script refuses to spend quota it did not intend to. It needs the backend on port 8000 and the dev server on port 5173.
 
 ## Cinematic layer
 

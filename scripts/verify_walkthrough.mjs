@@ -106,7 +106,7 @@ async function main() {
     method: 'POST',
     body: { project: BRIEF, audience: BRIEF.audience, seedTagIds: candidates.map((c) => c.tagId) },
   });
-  check('the research run starts', started.status === 200 && Boolean(started.body?.runId), started.body?.runId);
+  check('the research run starts', started.status === 202 && Boolean(started.body?.runId), started.body?.runId);
 
   let run = null;
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -202,9 +202,42 @@ async function main() {
       `${survivors.length} of ${live.concepts.length} survived`);
   }
 
+  // 7b. investigate the leading direction
+  const entities = evidence.filter((item) => item.kind === 'entity' && item.entityId).map((item) => item.entityId);
+  if (entities.length) {
+    const investigation = await api('/api/projects/investigate', {
+      method: 'POST',
+      body: {
+        project: BRIEF,
+        directionId: live.concepts?.[0]?.id,
+        entityIds: entities,
+        reference: entities[0],
+        within: BRIEF.location,
+        facets: ['geography'],
+      },
+    });
+    check('the investigation answers with the tools it called',
+      investigation.status === 200 && (investigation.body?.tools ?? []).length > 0,
+      (investigation.body?.tools ?? []).map((t) => `qloo ${t.workflow}`).join(', '));
+    check('the investigation names the workflow behind the answer',
+      (investigation.body?.tools ?? []).every((tool) => typeof tool.workflow === 'string' && tool.workflow.length > 0),
+      (investigation.body?.tools ?? []).map((t) => t.workflow).join(', '));
+    const points = investigation.body?.geography?.points ?? [];
+    check('the investigation returns real geographic cells',
+      points.length > 0 && points.every((point) =>
+        typeof point.lat === 'number' && typeof point.lon === 'number'),
+      `${points.length} cells`);
+    check('the map says what it is not',
+      /distinct from precise venue coordinates/i.test(investigation.body?.geography?.note ?? ''),
+      'interest cells, not venue pins');
+    check('the investigation states what it did not establish',
+      Array.isArray(investigation.body?.limitations),
+      `${investigation.body?.limitations?.length ?? 0} limitations`);
+  }
+
   // 8. compare audiences
-  const groupA = evidence.filter((item) => item.kind === 'entity' && item.entityId).slice(0, 2).map((item) => item.entityId);
-  const groupB = evidence.filter((item) => item.kind === 'entity' && item.entityId).slice(2, 4).map((item) => item.entityId);
+  const groupA = entities.slice(0, 2);
+  const groupB = entities.slice(2, 4);
   if (groupA.length === 2 && groupB.length === 2) {
     const compared = await api('/api/projects/compare/audiences', {
       method: 'POST', body: { groupA, groupB, targetType: 'place' },
@@ -222,7 +255,7 @@ async function main() {
   }
 
   // 9. the anchor tournament
-  const options = evidence.filter((item) => item.kind === 'entity' && item.entityId).map((item) => item.entityId);
+  const options = entities;
   if (options.length >= 2) {
     const ranked = await api('/api/projects/rank', {
       method: 'POST',
@@ -241,7 +274,7 @@ async function main() {
 
   // 10. sharing
   const shared = await api('/api/explorations/share', { method: 'POST', body: live });
-  check('the exploration can be shared', shared.status === 200 && Boolean(shared.body?.snapshotId),
+  check('the exploration can be shared', shared.status === 201 && Boolean(shared.body?.snapshotId),
     shared.body?.snapshotId);
   const snapshot = await api(`/api/snapshots/${shared.body?.snapshotId}`);
   check('the shared exploration reopens exactly',

@@ -548,6 +548,28 @@
 .concept-grid > .concept-card {
   animation: cardRise 0.78s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
+/* --- The saved explorations, on the overview -------------------------------- */
+.saved-explorations { margin: 46px 0 8px; }
+.saved-exploration-list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;
+}
+.saved-exploration-list button {
+  display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; width: 100%; text-align: left;
+  padding: 17px 18px; border: 1.5px solid var(--card-edge); background: var(--surface);
+  box-shadow: 5px 5px 0 var(--card-shadow);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.saved-exploration-list button:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--card-shadow); }
+.saved-exploration-title {
+  grid-column: 1; font: 800 14px/1.3 var(--font-sans); letter-spacing: -.01em;
+  text-transform: uppercase; color: var(--text);
+}
+.saved-exploration-meta {
+  grid-column: 1; font: 400 10px/1.6 'DM Mono', monospace; color: var(--subtle); letter-spacing: .04em;
+}
+.saved-exploration-list svg { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--accent); }
+
 /* --- The geographic interest plot ------------------------------------------ */
 .geo-map {
   margin: 0;

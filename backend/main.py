@@ -17,7 +17,8 @@ from .models import (CompareAudiencesRequest, CompareRequest, ErrorBody, ErrorRe
 from .platform import get_platform
 from . import metering
 from .investigation import FACET_QUESTIONS, FACETS, _bounds, _demographics, _geography_points, _workflow_for, investigate
-from .providers import (COMPOSER_VERSION, QLOO_WORKFLOWS, QlooHarnessError,
+from .providers import (COMPOSER_VERSION, QLOO_ENTITY_TYPES, QLOO_WORKFLOWS, QlooHarnessError,
+                        capabilities,
                         audience_demographics_payload, describe_payload, entity_tags_payload,
                         trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
@@ -159,7 +160,7 @@ def generate(project: ProjectRequest, request: Request) -> GenerateResponse:
             workspace, _prefix = resolve_workspace(request)
             get_platform().save_exploration(
                 workspace['id'], response.model_dump(),
-                title=f"{project.businessType} in {project.location}",
+                title=f"{project.businessType} for {project.audience}",
                 brief=project.model_dump(),
                 project_id=response.projectId,
                 delivery=response.delivery.model_dump() if response.delivery else None)
@@ -410,6 +411,24 @@ def list_facets() -> dict:
 # ---------------------------------------------------------------------------
 # Qloo's workflows, one route each, so a partner can reach the full surface
 # ---------------------------------------------------------------------------
+
+@app.get('/api/qloo/workflows', tags=['evidence'],
+         summary='The Qloo workflows this app can reach, and how to call them')
+def qloo_workflows() -> dict:
+    """A machine-readable capability matrix.
+
+    Every Qloo workflow has its own contract, and each rejects fields it does
+    not know — the field carrying the entity type is not the same field in
+    every workflow, and `rank` takes no limit at all. This is the contract,
+    so a partner can read it rather than discover it by getting it wrong.
+    """
+    return {
+        'workflows': capabilities(),
+        'entityTypes': list(QLOO_ENTITY_TYPES),
+        'note': ('Every workflow is read-only, cached, and metered. The delivery on any '
+                 'result says whether the evidence was freshly fetched or already held.'),
+    }
+
 
 @app.post('/api/qloo/describe', tags=['evidence'], summary='Resolve one entity and describe it')
 def qloo_describe(request: dict) -> dict:

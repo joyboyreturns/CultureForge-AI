@@ -93,6 +93,85 @@ class MockCultureProvider(CultureProvider):
 # error, so each workflow gets its own builder here.
 # ---------------------------------------------------------------------------
 
+#: The entity types Qloo accepts, for the workflows that take one.
+QLOO_ENTITY_TYPES = (
+    'artist', 'book', 'brand', 'movie', 'person', 'place', 'podcast', 'tv_show',
+    'videogame', 'locality', 'actor', 'album', 'author', 'director',
+)
+
+#: The capability matrix, and the single source of truth for how each workflow
+#: is called. Each entry says which field carries the entity type, because
+#: they are not the same field: `describe` takes `type`, the others take
+#: `entity_type`. It says whether the workflow accepts a limit, because `rank`
+#: does not. A partner can read this instead of discovering it by getting it
+#: wrong, and the payload builders below are written from it.
+QLOO_CAPABILITIES = {
+    'find_tags': {
+        "summary": "Search Qloo's tag ontology by natural-language concept.",
+        'entityTypeField': None, 'acceptsLimit': True, 'latency': 'fast',
+        'required': ['query'], 'optional': ['limit'],
+    },
+    'recommend': {
+        'summary': 'Return places for a set of taste signals and a location.',
+        'entityTypeField': 'target_type', 'acceptsLimit': True, 'latency': 'slow',
+        'required': ['target_type'], 'optional': ['signal_tags', 'signal_location', 'limit'],
+    },
+    'rank': {
+        'summary': 'Rank a caller-supplied shortlist against one signal profile.',
+        'entityTypeField': 'option_type', 'acceptsLimit': False, 'latency': 'slow',
+        'required': ['options', 'option_type'],
+        'optional': ['signals', 'signal_location', 'demographic', 'include_tags', 'exclude_tags'],
+    },
+    'compare_audiences': {
+        'summary': 'Compare two complete groups of entity signals.',
+        'entityTypeField': 'target_type', 'acceptsLimit': True, 'latency': 'slow',
+        'required': ['group_a', 'group_b'], 'optional': ['target_type', 'limit'],
+    },
+    'describe': {
+        'summary': 'Resolve one named entity and return the metadata Qloo holds.',
+        'entityTypeField': 'type', 'acceptsLimit': False, 'latency': 'fast',
+        'required': ['entity'], 'optional': ['type'],
+    },
+    'where_popular': {
+        'summary': 'Geographic cells where one entity has strong query-relative affinity.',
+        'entityTypeField': 'entity_type', 'acceptsLimit': True, 'latency': 'medium',
+        'required': ['entity', 'within'], 'optional': ['entity_type', 'limit'],
+    },
+    'entity_tags': {
+        'summary': 'The concepts that jointly characterise one or more entities.',
+        'entityTypeField': 'entity_type', 'acceptsLimit': True, 'latency': 'fast',
+        'required': ['entities'], 'optional': ['entity_type', 'limit'],
+    },
+    'audience_demographics': {
+        'summary': 'Aggregate demographic indexing associated with one entity.',
+        'entityTypeField': 'entity_type', 'acceptsLimit': True, 'latency': 'fast',
+        'required': ['entity'], 'optional': ['entity_type', 'limit'],
+    },
+    'trends': {
+        'summary': 'Time-series popularity for one to five resolved entities.',
+        'entityTypeField': 'entity_type', 'acceptsLimit': True, 'latency': 'medium',
+        'required': ['entities', 'entity_type', 'start_date', 'end_date'], 'optional': ['limit'],
+    },
+}
+
+
+def capabilities() -> list[dict]:
+    """The capability matrix, as the API publishes it."""
+    published = []
+    for operation, spec in QLOO_CAPABILITIES.items():
+        published.append({
+            'id': operation,
+            'summary': spec['summary'],
+            'entityTypeField': spec['entityTypeField'],
+            'entityTypes': list(QLOO_ENTITY_TYPES) if spec['entityTypeField'] else [],
+            'acceptsLimit': spec['acceptsLimit'],
+            'latency': spec['latency'],
+            'required': list(spec['required']),
+            'optional': list(spec['optional']),
+        })
+    return published
+
+
 def describe_payload(entity: str, entity_type: Optional[str] = None) -> dict:
     payload: dict = {'entity': entity}
     if entity_type:
