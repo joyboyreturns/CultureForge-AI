@@ -53,5 +53,6 @@ export function mockGenerate(project: ProjectRequest): GenerateResponse {
     provenance: { source: 'Mock', endpoint: null, documentation: null, resolved_tags: [] },
     evidence: [], trace: [],
     delivery: null,
+    composerVersion: null,
   }
 }

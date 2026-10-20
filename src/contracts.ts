@@ -36,6 +36,10 @@ export interface TraceEvent {
   detail?: string | null
   evidenceIds: string[]
   acquiredAt?: string | null
+  /** The allowlisted request that was sent. Never raw subprocess output. */
+  request?: { method?: string | null; path?: string | null; query?: unknown; endpoint?: string | null; documentation?: string | null } | null
+  /** A short excerpt of what came back. */
+  resultExcerpt?: string[] | null
 }
 
 /** How fresh the evidence is. The UI labels this honestly. */
@@ -80,4 +84,6 @@ export interface GenerateResponse {
   evidence: Evidence[]
   trace: TraceEvent[]
   delivery?: Delivery | null
+  /** Which composer produced these directions. */
+  composerVersion?: string | null
 }

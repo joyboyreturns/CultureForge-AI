@@ -5,8 +5,10 @@ from fastapi.responses import JSONResponse
 
 from uuid import uuid4
 
+from .comparison import compare_audiences as compare_audiences_native
+from .comparison import rank_entities, recompose
 from .evidence_store import get_store
-from .models import CompareRequest, GenerateResponse, ProjectRequest
+from .models import CompareRequest, GenerateResponse, ProjectRequest, RecomposeRequest
 from .providers import QlooHarnessError, QlooHarnessProvider, get_provider
 from .research import registry as research_registry, start_research
 
@@ -175,3 +177,53 @@ def read_snapshot(snapshot_id: str) -> dict:
     if not payload:
         raise HTTPException(status_code=404, detail='That snapshot is no longer available.')
     return payload
+
+
+# ---------------------------------------------------------------------------
+# Native Qloo comparisons, ranking, and recomposition
+# ---------------------------------------------------------------------------
+@app.post('/api/projects/compare/audiences')
+def compare_audiences(request: dict) -> dict:
+    """Qloo's own A/B between two groups of entities."""
+    group_a = [str(x) for x in (request.get('groupA') or [])]
+    group_b = [str(x) for x in (request.get('groupB') or [])]
+    try:
+        return compare_audiences_native(
+            group_a, group_b,
+            target_type=str(request.get('targetType') or 'place'),
+            limit=int(request.get('limit') or 12),
+        )
+    except QlooHarnessError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post('/api/projects/rank')
+def rank_anchors(request: dict) -> dict:
+    """Rank real Qloo entities by affinity for a signal set."""
+    options = [str(x) for x in (request.get('options') or [])]
+    signals = [str(x) for x in (request.get('signals') or [])]
+    include_tags = [str(x) for x in (request.get('includeTags') or [])]
+    try:
+        return rank_entities(
+            options,
+            signals=signals or None,
+            include_tags=include_tags or None,
+            option_type=str(request.get('optionType') or 'place'),
+            signal_location=request.get('signalLocation') or None,
+            limit=int(request.get('limit') or 6),
+        )
+    except QlooHarnessError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post('/api/projects/recompose')
+def recompose_route(request: RecomposeRequest) -> dict:
+    """Rebuild the directions without the given evidence, using no new call."""
+    try:
+        return recompose(
+            request.project,
+            exclude_entity_ids=request.excludeEntityIds,
+            exclude_tag_ids=request.excludeTagIds,
+        )
+    except QlooHarnessError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc

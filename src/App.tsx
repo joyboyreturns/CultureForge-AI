@@ -68,7 +68,9 @@ export default function App() {
     const id = ++runId.current
     setProviderError(''); setForm(project); setScreen('progress'); setSavedOnly(false)
     try {
-      const [data] = await Promise.all([demo ? Promise.resolve(mockGenerate(project)) : generateConcepts(project), new Promise(resolve => window.setTimeout(resolve, 3300))])
+      // A cached result is already warm, so it appears immediately. A cold
+      // result shows its real progress in the workspace instead of a timer.
+      const data = demo ? mockGenerate(project) : await generateConcepts(project)
       if (id !== runId.current) return
       setResult(data); setSelected(data.concepts[0]?.id ?? '01'); setScreen('results')
     } catch (error) {

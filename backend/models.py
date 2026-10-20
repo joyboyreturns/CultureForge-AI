@@ -68,6 +68,10 @@ class TraceEvent(BaseModel):
     detail: Optional[str] = None
     evidenceIds: list[str] = Field(default_factory=list)
     acquiredAt: Optional[str] = None
+    # The allowlisted request that was sent, and a short excerpt of what came
+    # back. Never the raw subprocess output, which can carry credentials.
+    request: Optional[dict] = None
+    resultExcerpt: Optional[list[str]] = None
 
 class Delivery(BaseModel):
     """How fresh the evidence is. The UI must label this honestly."""
@@ -118,8 +122,17 @@ class GenerateResponse(BaseModel):
     evidence: list[Evidence] = Field(default_factory=list)
     trace: list[TraceEvent] = Field(default_factory=list)
     delivery: Optional[Delivery] = None
+    # Which composer produced these directions, so an old snapshot is never
+    # mistaken for a current one.
+    composerVersion: Optional[str] = None
 
 class CompareRequest(BaseModel):
     """Re-research a brief for a different audience."""
     project: ProjectRequest
     audience: str = Field(min_length=2, max_length=240)
+
+class RecomposeRequest(BaseModel):
+    """Rebuild the directions without a piece of the evidence."""
+    project: ProjectRequest
+    excludeEntityIds: list[str] = Field(default_factory=list)
+    excludeTagIds: list[str] = Field(default_factory=list)

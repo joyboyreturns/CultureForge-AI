@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import threading
 import time
+from typing import Optional
 from uuid import uuid4
 
 try:
@@ -21,6 +22,10 @@ except ImportError:
 
 from .concept_composer import compose
 from .evidence_store import cached_call, canonical_key, get_store
+
+# Bumped whenever the composer changes what a concept means, so a stored
+# snapshot is never mistaken for a current result.
+COMPOSER_VERSION = '1'
 from .models import (Concept, CulturalSignal, Decision, Delivery, Evidence, ExperienceMoment,
                       GenerateResponse, ProjectRequest, ProvenanceMetadata, TraceEvent)
 
@@ -97,7 +102,7 @@ class QlooHarnessProvider(CultureProvider):
             if calls_in_hour >= hour_limit or len(calls) >= day_limit:
                 raise QlooHarnessError(
                     'Qloo call budget reached for this period. Live signals are paused to protect the '
-                    'hackathon API quota. Raise QLOO_MAX_CALLS_PER_HOUR or QLOO_MAX_CALLS_PER_DAY to allow more.'
+                    'hackathon API quota. Wait for the budget to reset, or open a saved exploration.'
                 )
             calls.append(now)
             self._write_call_log(calls)
@@ -199,7 +204,14 @@ class QlooHarnessProvider(CultureProvider):
         except (TypeError, ValueError):
             return None
 
-    def generate(self, project: ProjectRequest) -> GenerateResponse:
+    def generate(self, project: ProjectRequest, tag_result: Optional[dict] = None,
+                 recommendations: Optional[dict] = None) -> GenerateResponse:
+        """Compose the answer for a brief.
+
+        `tag_result` and `recommendations` may be supplied to reuse envelopes
+        that are already held, which is how recomposition rebuilds the answer
+        without spending another upstream call.
+        """
         cache_payload = {'businessType': project.businessType, 'audience': project.audience, 'location': project.location, 'target_type': 'place'}
         cache_key = sha256(json.dumps(cache_payload, sort_keys=True).encode()).hexdigest()
         now = time.monotonic()
@@ -223,17 +235,22 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(cache_key, None)
 
         query = f'{project.businessType} {project.audience}'.strip()
-        tag_result, _cached, _requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
+        reused = tag_result is not None and recommendations is not None
+        if tag_result is None:
+            tag_result, was_cached, _requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
+            reused = was_cached
         if tag_result.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.')
         matched_tags = [tag for row in self.rows(tag_result) if (tag := self.tag_id(row))][:3]
         if not matched_tags:
             raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.')
 
-        recommendations, _cached, _requests = self.run_workflow_cached('recommend', {
-            'target_type': 'place', 'signal_tags': matched_tags,
-            'signal_location': project.location, 'limit': 5,
-        })
+        if recommendations is None:
+            recommendations, was_cached, _requests = self.run_workflow_cached('recommend', {
+                'target_type': 'place', 'signal_tags': matched_tags,
+                'signal_location': project.location, 'limit': 5,
+            })
+            reused = reused or was_cached
         if recommendations.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.')
         rows = self.rows(recommendations)
@@ -262,6 +279,8 @@ class QlooHarnessProvider(CultureProvider):
         entity_evidence_ids: dict[str, str] = {}
 
         tag_trace = self._trace_event('resolve-audience-tags', 'find_tags', tag_result, len(matched_tags))
+        if reused:
+            tag_trace.detail = f'{tag_trace.detail} (reused from cache)'
         trace.append(tag_trace)
 
         for tag in matched_tags:
@@ -273,6 +292,8 @@ class QlooHarnessProvider(CultureProvider):
             ))
 
         entity_trace = self._trace_event('retrieve-local-evidence', 'recommend', recommendations, len(rows))
+        if reused:
+            entity_trace.detail = f'{entity_trace.detail} (reused from cache)'
         trace.append(entity_trace)
 
         entity_rows: list[dict] = []
@@ -357,7 +378,8 @@ class QlooHarnessProvider(CultureProvider):
             notice=notice,
             provenance=ProvenanceMetadata(source='Qloo API', endpoint='qloo exec find_tags → recommend', documentation='https://github.com/qloo/qloo-hackathon-kit', resolved_tags=matched_tags),
             evidence=evidence, trace=trace,
-            delivery=Delivery(kind='fresh', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(),
+            composerVersion=COMPOSER_VERSION,
+            delivery=Delivery(kind='cache' if reused else 'fresh', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(),
                               expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()),
         )
         with self._lock:
@@ -373,11 +395,49 @@ class QlooHarnessProvider(CultureProvider):
 
     @staticmethod
     def _trace_event(step: str, workflow: str, envelope: dict, result_count: int) -> TraceEvent:
-        """Build a trace event from the harness execution block."""
+        """Build a trace event from the harness execution block.
+
+        The request preview is allowlisted field by field: the Qloo endpoint and
+        the query parameters the harness itself recorded, never raw subprocess
+        output, which can carry credentials or context.
+        """
         execution = envelope.get('execution') if isinstance(envelope.get('execution'), dict) else {}
         provenance = envelope.get('provenance') if isinstance(envelope.get('provenance'), dict) else {}
         endpoint = provenance.get('endpoint')
         detail = f'Qloo {workflow} → {endpoint}' if endpoint else f'Qloo {workflow}'
+
+        request: Optional[dict] = None
+        requests = provenance.get('requests')
+        if isinstance(requests, list) and requests and isinstance(requests[0], dict):
+            first = requests[0]
+            request = {
+                'method': first.get('method'),
+                'path': first.get('path'),
+                'query': first.get('query'),
+                'endpoint': endpoint,
+                'documentation': provenance.get('documentation'),
+            }
+
+        excerpt: list[str] = []
+        results = envelope.get('results')
+        if isinstance(results, dict):
+            # compare_audiences returns a dict of lists rather than one list.
+            for value in results.values():
+                if isinstance(value, list):
+                    results = value
+                    break
+        for row in (results if isinstance(results, list) else [])[:5]:
+            if not isinstance(row, dict):
+                continue
+            label = row.get('name') or row.get('tag_id') or row.get('id')
+            if isinstance(label, str) and label.strip():
+                bits = [label]
+                if isinstance(row.get('affinity'), (int, float)):
+                    bits.append(f'affinity {row["affinity"]:.3f}')
+                if isinstance(row.get('popularity'), (int, float)):
+                    bits.append(f'popularity {row["popularity"]:.4f}')
+                excerpt.append(' · '.join(bits))
+
         return TraceEvent(
             id=f'trace-{workflow}-{step}',
             step=step, workflow=workflow,
@@ -385,6 +445,7 @@ class QlooHarnessProvider(CultureProvider):
             durationMs=execution.get('duration_ms') if isinstance(execution.get('duration_ms'), int) else None,
             correlationId=execution.get('correlation_id') if isinstance(execution.get('correlation_id'), str) else None,
             resultCount=result_count, detail=detail,
+            request=request, resultExcerpt=excerpt or None,
             acquiredAt=datetime.now(timezone.utc).isoformat(),
         )
 

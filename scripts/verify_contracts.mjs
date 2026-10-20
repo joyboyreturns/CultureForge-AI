@@ -103,6 +103,8 @@ const CONTRACT = {
     detail: { type: 'string', nullable: true },
     evidenceIds: { type: 'array', required: true },
     acquiredAt: { type: 'string', nullable: true },
+    request: { type: 'object', nullable: true },
+    resultExcerpt: { type: 'array', nullable: true },
   },
   Delivery: {
     kind: { type: 'string', oneOf: ['fresh', 'cache', 'snapshot', 'mock'], required: true },
@@ -128,6 +130,7 @@ const CONTRACT = {
     evidence: { type: 'array', required: true },
     trace: { type: 'array', required: true },
     delivery: { type: 'object', nullable: true },
+    composerVersion: { type: 'string', nullable: true },
   },
 };
 
