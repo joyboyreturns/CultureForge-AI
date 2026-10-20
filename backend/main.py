@@ -3,8 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .models import GenerateResponse, ProjectRequest
-from .providers import QlooHarnessError, get_provider
+from .models import CompareRequest, GenerateResponse, ProjectRequest
+from .providers import QlooHarnessError, QlooHarnessProvider, get_provider
 
 app = FastAPI(title='CultureForge API', version='0.1.0')
 
@@ -57,3 +57,34 @@ def generate(project: ProjectRequest) -> GenerateResponse:
         return get_provider().generate(project)
     except QlooHarnessError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post('/api/projects/compare')
+def compare(request: CompareRequest) -> dict:
+    """Re-research the same brief for a different audience.
+
+    The scenario lab needs real evidence for the alternative audience, not a
+    locally computed score shift. This runs the same two Qloo workflows against
+    the new audience and returns the composed directions and their evidence.
+    """
+    try:
+        provider = get_provider()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if not isinstance(provider, QlooHarnessProvider):
+        raise HTTPException(status_code=409, detail='Live comparison needs the Qloo provider. Run the backend in qloo mode.')
+    try:
+        project = request.project.model_copy(update={'audience': request.audience})
+        response = provider.generate(project)
+    except QlooHarnessError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        'audience': request.audience,
+        'concepts': [concept.model_dump() for concept in response.concepts],
+        'evidence': [item.model_dump() for item in response.evidence],
+        'signals': [signal.model_dump() for signal in response.signals],
+        'trace': [event.model_dump() for event in response.trace],
+        'delivery': response.delivery.model_dump() if response.delivery else None,
+        'resolvedTags': response.provenance.resolved_tags if response.provenance else [],
+        'notice': response.notice,
+    }

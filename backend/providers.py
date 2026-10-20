@@ -1,6 +1,7 @@
 """Culture data providers: transparent sample data or the official Qloo harness."""
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import json
 import os
@@ -18,7 +19,9 @@ try:
 except ImportError:
     pass
 
-from .models import Concept, CulturalSignal, GenerateResponse, ProjectRequest, ProvenanceMetadata
+from .concept_composer import compose
+from .models import (Concept, CulturalSignal, Decision, Delivery, Evidence, ExperienceMoment,
+                      GenerateResponse, ProjectRequest, ProvenanceMetadata, TraceEvent)
 
 class CultureProvider(ABC):
     @abstractmethod
@@ -187,8 +190,19 @@ class QlooHarnessProvider(CultureProvider):
         with self._lock:
             cached = self._cache.get(cache_key)
             if cached and now - cached[0] < self.CACHE_TTL_SECONDS:
-                # Return a fresh project ID and the current request alongside cached Qloo data.
-                return cached[1].model_copy(update={'projectId': f'cf-{uuid4().hex[:10]}', 'project': project, 'concepts': MockCultureProvider().generate(project).concepts})
+                # Reuse the evidence-backed result, but relabel the delivery so
+                # the UI can say plainly that this is cached, not fresh.
+                delivery = Delivery(
+                    kind='cache',
+                    acquiredAt=cached[1].delivery.acquiredAt if cached[1].delivery else None,
+                    servedAt=datetime.now(timezone.utc).isoformat(),
+                    expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+                )
+                return cached[1].model_copy(update={
+                    'projectId': f'cf-{uuid4().hex[:10]}',
+                    'project': project,
+                    'delivery': delivery,
+                })
             if cached:
                 self._cache.pop(cache_key, None)
 
@@ -221,14 +235,114 @@ class QlooHarnessProvider(CultureProvider):
         if not signals:
             raise QlooHarnessError('Qloo returned no usable recommendation results for this project.')
 
-        # Concept cards and fit scores remain sample templates; Qloo affinities are shown
-        # separately and are never converted into fabricated audience-fit percentages.
-        sample = MockCultureProvider().generate(project)
+        # ---- Evidence, trace and composition -----------------------------
+        # Qloo supplies the audience lens (the tags) and the local evidence
+        # (the entities). CultureForge supplies the business reading, and
+        # names the evidence each proposal came from.
+        acquired_at = datetime.now(timezone.utc).isoformat()
+        trace: list[TraceEvent] = []
+        evidence: list[Evidence] = []
+        tag_evidence_ids: dict[str, str] = {}
+        entity_evidence_ids: dict[str, str] = {}
+
+        tag_trace = self._trace_event('resolve-audience-tags', 'find_tags', tag_result, len(matched_tags))
+        trace.append(tag_trace)
+
+        for tag in matched_tags:
+            evidence_id = f'ev-tag-{len(evidence)}'
+            tag_evidence_ids[tag] = evidence_id
+            evidence.append(Evidence(
+                id=evidence_id, kind='tag', label=self._tag_label(tag), tagId=tag,
+                traceId=tag_trace.id, description='Audience seed resolved by Qloo from the founder’s audience description.',
+            ))
+
+        entity_trace = self._trace_event('retrieve-local-evidence', 'recommend', recommendations, len(rows))
+        trace.append(entity_trace)
+
+        entity_rows: list[dict] = []
+        for row in rows[:5]:
+            name = row.get('name')
+            if not isinstance(name, str) or not name.strip():
+                continue
+            entity_id = row.get('entity_id') or row.get('id')
+            properties = row.get('properties') if isinstance(row.get('properties'), dict) else {}
+            image = properties.get('image')
+            image_url = image.get('url') if isinstance(image, dict) else image
+            geocode = properties.get('geocode') if isinstance(properties.get('geocode'), dict) else {}
+            evidence_id = f'ev-entity-{len(evidence)}'
+            if isinstance(entity_id, str):
+                entity_evidence_ids[entity_id] = evidence_id
+            evidence.append(Evidence(
+                id=evidence_id, kind='entity', label=name,
+                entityId=entity_id if isinstance(entity_id, str) else None,
+                entityType=row.get('subtype') or row.get('type'),
+                affinity=self._affinity(row),
+                popularity=row.get('popularity') if isinstance(row.get('popularity'), (int, float)) else None,
+                rating=properties.get('business_rating') if isinstance(properties.get('business_rating'), (int, float)) else None,
+                priceLevel=properties.get('price_level') if isinstance(properties.get('price_level'), int) else None,
+                description=properties.get('short_description') or properties.get('description'),
+                image=image_url if isinstance(image_url, str) else None,
+                location=', '.join(part for part in (geocode.get('city'), geocode.get('admin1_region')) if part) or project.location,
+                traceId=entity_trace.id,
+            ))
+            entity_rows.append({
+                'entity_id': entity_id if isinstance(entity_id, str) else '',
+                'name': name,
+                'description': properties.get('description') or properties.get('short_description') or '',
+                'short_description': properties.get('short_description') or '',
+                'image': image_url if isinstance(image_url, str) else '',
+                'popularity': row.get('popularity') if isinstance(row.get('popularity'), (int, float)) else 0.0,
+                'affinity': self._affinity(row) or 0.0,
+                'business_rating': properties.get('business_rating'),
+                'price_level': properties.get('price_level'),
+            })
+
+        composed = compose(
+            business_type=project.businessType,
+            audience=project.audience,
+            location=project.location,
+            budget=project.budget,
+            tags=[{'id': tag} for tag in matched_tags],
+            entities=entity_rows,
+            evidence_index={},
+            tag_evidence_ids=tag_evidence_ids,
+            entity_evidence_ids=entity_evidence_ids,
+            trace_id=entity_trace.id,
+        )
+        trace.append(TraceEvent(
+            id='ev-compose', step='compose-directions', status='ok' if composed else 'skipped',
+            resultCount=len(composed),
+            detail=('Composed %d direction(s) from the returned evidence.' % len(composed)) if composed
+                    else 'The returned evidence did not support a distinct business direction.',
+            evidenceIds=[eid for c in composed for eid in c.evidence_ids],
+        ))
+
+        if composed:
+            concepts = [self._composed_concept(project, c, index, trace) for index, c in enumerate(composed)]
+            concept_mode = 'evidence_composed'
+            notice = (
+                'Qloo supplied the audience tags and the local venues below. The three business '
+                'directions are CultureForge’s interpretation of that evidence, and each one names '
+                'the returned venue it was built from. Fit scores are omitted because affinity '
+                'does not measure business fit.'
+            )
+        else:
+            # Abstain rather than pad the answer with catalog concepts.
+            concepts = []
+            concept_mode = 'evidence_composed'
+            notice = (
+                'Qloo returned live evidence for this audience and location, but it did not support '
+                'three distinct business directions. Refine the audience description and try again.'
+            )
+
         response = GenerateResponse(
             projectId=f'cf-{uuid4().hex[:10]}', project=project,
-            concepts=sample.concepts, signals=signals, dataMode='live', conceptMode='sample',
-            notice='Qloo aggregate signals are live. Concept narratives and fit scores remain illustrative sample templates.',
+            concepts=concepts, signals=signals, dataMode='live', conceptMode=concept_mode,
+            notice=notice,
             provenance=ProvenanceMetadata(source='Qloo API', endpoint='qloo exec find_tags → recommend', documentation='https://github.com/qloo/qloo-hackathon-kit', resolved_tags=matched_tags),
+            evidence=evidence, trace=trace,
+            delivery=Delivery(kind='fresh', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(),
+                              expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()),
         )
         with self._lock:
             if len(self._cache) >= self.CACHE_MAX_ENTRIES:
@@ -236,6 +350,55 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(oldest_key, None)
             self._cache[cache_key] = (time.monotonic(), response)
         return response
+
+    @staticmethod
+    def _tag_label(tag_id: str) -> str:
+        return tag_id.rsplit(':', 1)[-1].replace('_', ' ').strip().capitalize()
+
+    @staticmethod
+    def _trace_event(step: str, workflow: str, envelope: dict, result_count: int) -> TraceEvent:
+        """Build a trace event from the harness execution block."""
+        execution = envelope.get('execution') if isinstance(envelope.get('execution'), dict) else {}
+        provenance = envelope.get('provenance') if isinstance(envelope.get('provenance'), dict) else {}
+        endpoint = provenance.get('endpoint')
+        detail = f'Qloo {workflow} → {endpoint}' if endpoint else f'Qloo {workflow}'
+        return TraceEvent(
+            id=f'trace-{workflow}-{step}',
+            step=step, workflow=workflow,
+            status='ok' if envelope.get('status', 'ok') == 'ok' else 'needs_input',
+            durationMs=execution.get('duration_ms') if isinstance(execution.get('duration_ms'), int) else None,
+            correlationId=execution.get('correlation_id') if isinstance(execution.get('correlation_id'), str) else None,
+            resultCount=result_count, detail=detail,
+            acquiredAt=datetime.now(timezone.utc).isoformat(),
+        )
+
+    @staticmethod
+    def _composed_concept(project, composed, index: int, trace: list[TraceEvent]) -> Concept:
+        """Turn a composed direction into a Concept card."""
+        return Concept(
+            id=f'live-{index + 1}-{composed.name.lower().replace(" ", "-")}',
+            name=composed.name,
+            tagline=composed.tagline,
+            description=composed.description,
+            audienceFit=None, culturalRelevance=None, feasibility=None,
+            budget=project.budget,
+            investment='Derived from live Qloo evidence',
+            signals=list(composed.signals),
+            accent=composed.accent,
+            image=composed.image or '',
+            direction=str(index + 1).zfill(2),
+            imageAlt=composed.image_alt,
+            personality=composed.personality,
+            audienceRationale=composed.positioning,
+            implementationNote=composed.ritual,
+            moments=[
+                ExperienceMoment(title='Why this direction', description=composed.offering),
+                ExperienceMoment(title='Signature moment', description=composed.ritual),
+            ],
+            evidenceIds=list(composed.evidence_ids),
+            decisions=[Decision(**d) for d in composed.decisions],
+            limitations=list(composed.limitations),
+        )
 
 def _is_qloo_configured() -> bool:
     if os.getenv('QLOO_API_KEY'):

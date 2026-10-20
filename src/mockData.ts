@@ -43,6 +43,7 @@ export function mockGenerate(project: ProjectRequest): GenerateResponse {
       delivery,
       `Trial this in ${project.location} and collect feedback against your objective: ${objective}.`,
     ][momentIndex] })),
+    evidenceIds: [], decisions: [], limitations: [],
   }))
   return {
     projectId: `cf-${Date.now().toString(36)}`, project, concepts,
@@ -50,5 +51,7 @@ export function mockGenerate(project: ProjectRequest): GenerateResponse {
     dataMode: 'mock', conceptMode: 'sample',
     notice: `Rule-based mock generation for ${project.businessType} using the “${profile.label}” lens. Concepts, cultural hypotheses, scores, and pilot budgets are illustrative. Qloo is not connected to this mock run.`,
     provenance: { source: 'Mock', endpoint: null, documentation: null, resolved_tags: [] },
+    evidence: [], trace: [],
+    delivery: null,
   }
 }

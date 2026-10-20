@@ -1,4 +1,4 @@
-import type { GenerateResponse, ProjectRequest } from './contracts'
+import type { Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, ProjectRequest, TraceEvent } from './contracts'
 import { mockGenerate } from './mockData'
 
 /**
@@ -48,4 +48,39 @@ export async function fetchHealth(): Promise<'live' | 'mock' | 'offline'> {
   } catch {
     return 'offline'
   }
+}
+
+/** The payload the scenario lab needs to re-research a brief for another audience. */
+export interface AudienceComparison {
+  audience: string
+  concepts: Concept[]
+  evidence: Evidence[]
+  signals: CulturalSignal[]
+  trace: TraceEvent[]
+  delivery: Delivery | null
+  resolvedTags: string[]
+  notice: string
+}
+
+/**
+ * Re-research the same brief for a different audience, with real Qloo calls.
+ *
+ * The scenario lab used to shift a locally computed score. For an
+ * evidence-composed exploration that would be a lie, so this re-runs the same
+ * two Qloo workflows against the new audience and returns fresh evidence.
+ */
+export async function compareAudience(
+  project: ProjectRequest,
+  audience: string
+): Promise<AudienceComparison> {
+  const response = await fetch('/api/projects/compare', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project, audience }),
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(detailMessage(body, `Comparison failed (${response.status})`))
+  }
+  return await response.json() as AudienceComparison
 }

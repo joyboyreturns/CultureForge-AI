@@ -50,9 +50,9 @@ const CONTRACT = {
     name: { type: 'string', required: true },
     tagline: { type: 'string', required: true },
     description: { type: 'string', required: true },
-    audienceFit: { type: 'number', required: true },
-    culturalRelevance: { type: 'number', required: true },
-    feasibility: { type: 'number', required: true },
+    audienceFit: { type: 'number', nullable: true },
+    culturalRelevance: { type: 'number', nullable: true },
+    feasibility: { type: 'number', nullable: true },
     budget: { type: 'string', required: true },
     investment: { type: 'string', required: true },
     signals: { type: 'array', required: true },
@@ -64,6 +64,51 @@ const CONTRACT = {
     audienceRationale: { type: 'string', nullable: true },
     implementationNote: { type: 'string', nullable: true },
     moments: { type: 'array' },
+    evidenceIds: { type: 'array', required: true },
+    decisions: { type: 'array', required: true },
+    limitations: { type: 'array', required: true },
+  },
+  Evidence: {
+    id: { type: 'string', required: true },
+    kind: { type: 'string', oneOf: ['entity', 'tag'], required: true },
+    label: { type: 'string', required: true },
+    entityId: { type: 'string', nullable: true },
+    entityType: { type: 'string', nullable: true },
+    tagId: { type: 'string', nullable: true },
+    affinity: { type: 'number', nullable: true },
+    popularity: { type: 'number', nullable: true },
+    rating: { type: 'number', nullable: true },
+    priceLevel: { type: 'number', nullable: true },
+    description: { type: 'string', nullable: true },
+    image: { type: 'string', nullable: true },
+    location: { type: 'string', nullable: true },
+    traceId: { type: 'string', nullable: true },
+  },
+  Decision: {
+    id: { type: 'string', required: true },
+    field: { type: 'string', required: true },
+    proposal: { type: 'string', required: true },
+    evidenceIds: { type: 'array', required: true },
+    ruleId: { type: 'string', required: true },
+    origin: { type: 'string', oneOf: ['cultureforge_rule'], required: true },
+  },
+  TraceEvent: {
+    id: { type: 'string', required: true },
+    step: { type: 'string', required: true },
+    workflow: { type: 'string', nullable: true },
+    status: { type: 'string', oneOf: ['ok', 'needs_input', 'error', 'cached', 'skipped'], required: true },
+    durationMs: { type: 'number', nullable: true },
+    correlationId: { type: 'string', nullable: true },
+    resultCount: { type: 'number', nullable: true },
+    detail: { type: 'string', nullable: true },
+    evidenceIds: { type: 'array', required: true },
+    acquiredAt: { type: 'string', nullable: true },
+  },
+  Delivery: {
+    kind: { type: 'string', oneOf: ['fresh', 'cache', 'snapshot', 'mock'], required: true },
+    acquiredAt: { type: 'string', nullable: true },
+    servedAt: { type: 'string', nullable: true },
+    expiresAt: { type: 'string', nullable: true },
   },
   ProvenanceMetadata: {
     source: { type: 'string', oneOf: ['Qloo API', 'Mock'], required: true },
@@ -77,9 +122,12 @@ const CONTRACT = {
     concepts: { type: 'array', required: true },
     signals: { type: 'array', required: true },
     dataMode: { type: 'string', oneOf: ['mock', 'live'], required: true },
-    conceptMode: { type: 'string', oneOf: ['sample'], required: true },
+    conceptMode: { type: 'string', oneOf: ['sample', 'evidence_composed'], required: true },
     notice: { type: 'string', required: true },
     provenance: { type: 'object', nullable: true },
+    evidence: { type: 'array', required: true },
+    trace: { type: 'array', required: true },
+    delivery: { type: 'object', nullable: true },
   },
 };
 
@@ -148,19 +196,70 @@ function checkResponse(where, response) {
     for (const [m, moment] of (concept.moments || []).entries()) {
       checkObject(`${where}.concepts[${index}].moments[${m}]`, moment, CONTRACT.ExperienceMoment);
     }
+    for (const [d, decision] of (concept.decisions || []).entries()) {
+      checkObject(`${where}.concepts[${index}].decisions[${d}]`, decision, CONTRACT.Decision);
+    }
   }
   for (const [index, signal] of (response.signals || []).entries()) {
     checkObject(`${where}.signals[${index}]`, signal, CONTRACT.CulturalSignal);
   }
+  for (const [index, item] of (response.evidence || []).entries()) {
+    checkObject(`${where}.evidence[${index}]`, item, CONTRACT.Evidence);
+  }
+  for (const [index, event] of (response.trace || []).entries()) {
+    checkObject(`${where}.trace[${index}]`, event, CONTRACT.TraceEvent);
+  }
+  if (response.delivery) {
+    checkObject(`${where}.delivery`, response.delivery, CONTRACT.Delivery);
+  }
   if (response.provenance) {
     checkObject(`${where}.provenance`, response.provenance, CONTRACT.ProvenanceMetadata);
   }
+
+  // Every evidence reference must resolve, and every cited decision must point
+  // at evidence that actually exists. A dangling reference is the exact way a
+  // "real data" claim turns out to be fake.
+  const evidenceIds = new Set((response.evidence || []).map((e) => e.id));
+  for (const [index, concept] of (response.concepts || []).entries()) {
+    for (const id of concept.evidenceIds || []) {
+      if (!evidenceIds.has(id)) {
+        fail(where, `concepts[${index}].evidenceIds references unknown evidence "${id}"`);
+      }
+    }
+    for (const [d, decision] of (concept.decisions || []).entries()) {
+      for (const id of decision.evidenceIds || []) {
+        if (!evidenceIds.has(id)) {
+          fail(where, `concepts[${index}].decisions[${d}] references unknown evidence "${id}"`);
+        }
+      }
+      if (!decision.evidenceIds?.length) {
+        fail(where, `concepts[${index}].decisions[${d}] cites no evidence`);
+      }
+    }
+  }
+
   // The UI renders these directly.
   if (response.concepts?.length && response.concepts.some((c) => !c.image)) {
     fail(where, 'at least one concept has an empty image');
   }
-  if (response.concepts?.some((c) => typeof c.audienceFit !== 'number')) {
-    fail(where, 'concept audienceFit is not numeric - the UI renders it as a score');
+
+  // Mode-aware: sample concepts keep their numeric scores, evidence-composed
+  // ones must not invent a business-fit percentage.
+  if (response.conceptMode === 'evidence_composed') {
+    for (const [index, concept] of (response.concepts || []).entries()) {
+      if (typeof concept.audienceFit === 'number') {
+        fail(where, `concepts[${index}] has a numeric audienceFit but conceptMode is evidence_composed`);
+      }
+      if (!concept.evidenceIds?.length) {
+        fail(where, `concepts[${index}] has no evidence attached`);
+      }
+    }
+  } else {
+    for (const [index, concept] of (response.concepts || []).entries()) {
+      if (typeof concept.audienceFit !== 'number') {
+        fail(where, `concepts[${index}].audienceFit is not numeric but conceptMode is "${response.conceptMode}"`);
+      }
+    }
   }
 }
 

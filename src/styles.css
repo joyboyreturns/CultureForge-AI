@@ -148,3 +148,214 @@
   .concept-card:hover { transform: none; }
   .concept-card:hover .concept-photo img { transform: none; }
 }
+
+/* ==========================================================================
+   EVIDENCE LAYER — why a direction exists, and where it came from
+   ========================================================================== */
+
+/* A live concept has no invented fit score, so the badge says so. */
+.mini-score.is-evidence {
+  color: var(--sage);
+  font-size: 9px;
+  line-height: 1.25;
+  letter-spacing: 0.1em;
+  text-align: right;
+  min-width: 74px;
+}
+
+.mini-score.is-evidence small { font-size: 6px; opacity: 0.7; letter-spacing: 0.16em; }
+
+/* "Why this direction?" disclosure */
+.why-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font: 500 10px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.3s ease;
+}
+
+.why-toggle:hover { color: var(--accent); }
+.why-toggle svg { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.why-toggle svg.is-open { transform: rotate(90deg); }
+
+/* Observed -> interpreted -> proposed */
+.evidence-panel {
+  margin-top: 12px;
+  padding: 16px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  animation: panelIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.evidence-panel-head { margin-bottom: 12px; }
+.evidence-panel-head .small-cap { font-size: 6px; }
+
+.decision { padding: 11px 0; border-top: 1px solid var(--line); }
+.decision:first-of-type { border-top: 0; padding-top: 0; }
+
+.decision-field {
+  display: block;
+  font: 500 7px 'DM Mono';
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+
+.decision-proposal { margin: 0; font: 400 12px/1.65 var(--font-sans); color: var(--text); }
+
+.decision-sources { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 9px; }
+
+.decision-origin {
+  font: 400 8px 'DM Mono';
+  color: var(--subtle);
+  letter-spacing: 0.06em;
+  margin-right: 2px;
+}
+
+.evidence-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  font: 400 10px/1.3 var(--font-sans);
+  color: var(--text);
+}
+
+.evidence-chip b {
+  font: 600 6px 'DM Mono';
+  letter-spacing: 0.14em;
+  color: var(--sage);
+}
+
+.evidence-chip i {
+  font: 400 8px 'DM Mono';
+  font-style: normal;
+  color: var(--subtle);
+}
+
+.decision-limitations {
+  margin: 14px 0 0;
+  padding: 11px 0 0 15px;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.decision-limitations li {
+  position: relative;
+  font: 400 10px/1.6 var(--font-sans);
+  color: var(--subtle);
+  margin-bottom: 5px;
+}
+
+.decision-limitations li::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--subtle);
+  opacity: 0.6;
+}
+
+/* The real research trace */
+.research-trace {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.research-trace > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: 400 10px/1.4 var(--font-sans);
+  color: var(--muted);
+  list-style: none;
+}
+
+.research-trace > summary::-webkit-details-marker { display: none; }
+.research-trace > summary em { font: 400 8px 'DM Mono'; font-style: normal; color: var(--subtle); margin-left: auto; }
+
+.trace-badge {
+  font: 600 6px 'DM Mono';
+  letter-spacing: 0.16em;
+  padding: 4px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.trace-badge.is-fresh { color: #b6e0a8; background: rgba(182, 224, 168, 0.12); }
+.trace-badge.is-cache { color: #f0c98a; background: rgba(240, 201, 138, 0.12); }
+.trace-badge.is-snapshot { color: #c7a3ff; background: rgba(199, 163, 255, 0.12); }
+.trace-badge.is-mock { color: var(--subtle); background: rgba(255, 255, 255, 0.06); }
+
+.trace-list { padding: 4px 12px 12px; border-top: 1px solid var(--line); }
+
+.trace-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font: 400 10px/1.4 var(--font-sans);
+}
+
+.trace-row:last-child { border-bottom: 0; }
+
+.trace-status { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.trace-status.is-ok { background: #b6e0a8; box-shadow: 0 0 7px rgba(182, 224, 168, 0.7); }
+.trace-status.is-needs_input { background: #f0c98a; }
+.trace-status.is-error { background: #e58459; }
+.trace-status.is-skipped { background: var(--subtle); }
+
+.trace-step { text-transform: capitalize; color: var(--text); min-width: 128px; }
+.trace-workflow { font: 400 9px 'DM Mono'; color: var(--accent); }
+.trace-duration { font: 400 9px 'DM Mono'; color: var(--muted); }
+.trace-count { font: 400 9px 'DM Mono'; color: var(--subtle); }
+.trace-detail { font: 400 9px/1.4 var(--font-sans); color: var(--subtle); width: 100%; }
+
+.brief-notice {
+  margin: 7px 0 0;
+  font: 400 11px/1.6 var(--font-sans);
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evidence-panel { animation: none !important; }
+  .why-toggle svg { transition: none !important; }
+}
+
+.scenario-busy {
+  display: block;
+  margin-top: 8px;
+  font: 400 9px/1.5 var(--font-sans);
+  color: var(--accent);
+}

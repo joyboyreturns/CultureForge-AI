@@ -117,6 +117,35 @@ The background video uses the attributes Safari requires for inline autoplay —
 - **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `main.js` therefore retries playback on the first pointer, touch, key, or scroll event.
 - **The page never shows a white panel.** Safari paints a video's own surface white until a frame is decoded, and it draws the native play/pause bar over a paused video. The poster is therefore painted on the `.bg` container as a CSS background, and the `<video>` element stays at `opacity: 0` until it fires `playing` and gets the `is-playing` class. A blocked or paused video is invisible, so there is nothing to flash white and no control bar to show. The video is decorative, so it is paused entirely for visitors who prefer reduced motion.
 
+## How Qloo drives the answer
+
+The app does not display Qloo data next to a mock answer. The Qloo data *is* the answer.
+
+```
+audience text
+  → find_tags   → real Qloo audience tags        (varies per audience)
+  → recommend   → real local venues for the brief (varies per location)
+  → composer    → three business directions, each citing the venues it used
+```
+
+- **The audience lens** is the set of Qloo tags `find_tags` resolves for the founder's audience description. A brief about "mindful professionals" resolves to `mindful_dining` and `mindful_nutrition`; a brief about "design-conscious Gen Z" resolves to `gen_z_foodies` and `modern_restaurant_design`. These tags select which business direction the composer builds.
+- **The local evidence** is the set of venues `recommend` returns for the location, each with its real name, description, popularity, affinity, local rating, price level, geocode and image. Every concept cites the venue it was built from.
+- **The business reading** is CultureForge's, and is labelled as such. `backend/concept_composer.py` holds the rules; every proposal records the evidence it came from, and the UI shows them under "Why this direction?".
+- **No invented scores.** An evidence-composed concept has no audience-fit percentage, because Qloo's affinity does not measure business fit. The UI says so rather than showing a number that means nothing.
+- **Abstention beats padding.** If the evidence does not support three distinct directions, the app returns fewer and says why, rather than filling the gap with catalog concepts.
+
+The scenario lab re-researches for real. Changing the audience calls `POST /api/projects/compare`, which runs the same two Qloo workflows against the new audience and returns fresh evidence and freshly composed directions — not a locally computed score shift.
+
+### The honest boundary
+
+| Label | Meaning |
+|---|---|
+| `Fresh Qloo evidence` | Retrieved from the Qloo API for this request. |
+| `Cached Qloo evidence` | Retrieved earlier and reused. The acquisition time is shown. |
+| `Offline sample · no Qloo requests` | The mock catalog, used when the backend is unavailable. |
+
+`How this was researched` shows the real tool calls with their real durations, result counts, endpoints and correlation IDs.
+
 ## Verifying the backend and frontend agree
 
 `npm run test:contracts` pins the `GenerateResponse` contract from `src/contracts.ts` and checks both producers against it:
@@ -190,6 +219,8 @@ python3 scripts/vault_query.py --stats
 ```
 
 `AGENTS.md` documents the full retrieval ladder and the delegation protocol.
+
+It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, if an error stops returning a readable `detail` string, or if a concept cites evidence that does not exist. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
 
 ## Check mock generation
 
