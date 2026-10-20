@@ -66,7 +66,8 @@ def test_the_compare_endpoint_refuses_without_a_live_provider(client, monkeypatc
 def test_snapshots_round_trip_over_http(client):
     payload = {'projectId': 'cf-test', 'concepts': [], 'note': 'shared'}
     created = client.post('/api/explorations/share', json=payload)
-    assert created.status_code == 200
+    assert created.status_code == 201
+    assert created.headers.get('Location', '').startswith('/api/snapshots/')
     snapshot_id = created.json()['snapshotId']
     assert snapshot_id.startswith('snap-')
 

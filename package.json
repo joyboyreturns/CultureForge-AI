@@ -11,7 +11,8 @@
     "test:contracts": "node scripts/verify_contracts.mjs",
     "test:backend": ".venv/bin/python -m pytest backend/tests -q",
     "test:walkthrough": "node scripts/verify_walkthrough.mjs",
-    "check:api": "python3 scripts/check_api.py"
+    "check:api": "python3 scripts/check_api.py",
+    "test:endpoints": "node scripts/verify_endpoints.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

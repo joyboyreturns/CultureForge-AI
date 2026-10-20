@@ -1,5 +1,5 @@
 from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 BusinessType = Literal['Food & beverage', 'Retail', 'Hospitality', 'Wellness', 'Entertainment']
 
@@ -142,3 +142,70 @@ class RecomposeRequest(BaseModel):
     project: ProjectRequest
     excludeEntityIds: list[str] = Field(default_factory=list)
     excludeTagIds: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# The HTTP request contracts
+#
+# Every route that takes a body takes a typed one. A raw dict would let a
+# malformed request through as something plausible — a string where a list of
+# entities was meant becomes a list of single characters, and the request
+# fails later, somewhere confusing, with an upstream error instead of a
+# clear message about the field that was wrong.
+# ---------------------------------------------------------------------------
+
+class CompareAudiencesRequest(BaseModel):
+    """Qloo's own A/B between two groups of entities."""
+    model_config = ConfigDict(extra='forbid')
+    groupA: list[str] = Field(min_length=1)
+    groupB: list[str] = Field(min_length=1)
+    targetType: str = 'place'
+    limit: int = Field(default=12, ge=1, le=20)
+
+class RankRequest(BaseModel):
+    """Rank real Qloo entities by affinity for a signal set."""
+    model_config = ConfigDict(extra='forbid')
+    options: list[str] = Field(min_length=1)
+    optionType: str = 'place'
+    signals: list[str] = Field(default_factory=list)
+    includeTags: list[str] = Field(default_factory=list)
+    excludeTags: list[str] = Field(default_factory=list)
+    signalLocation: Optional[str] = None
+    demographic: Optional[str] = None
+    limit: int = Field(default=6, ge=1, le=20)
+
+class ShareRequest(BaseModel):
+    """An exploration to freeze so a shared link reopens exactly it.
+
+    Extra fields are allowed: a snapshot holds the whole exploration state,
+    including parts of it that a later version of this API may add.
+    """
+    model_config = ConfigDict(extra='allow')
+    projectId: Optional[str] = None
+    project: Optional[dict] = None
+    concepts: list[dict] = Field(default_factory=list)
+    evidence: list[dict] = Field(default_factory=list)
+    signals: list[dict] = Field(default_factory=list)
+    trace: list[dict] = Field(default_factory=list)
+    notice: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# The error contract
+#
+# Every failure answers with the same shape, so a caller can branch on the
+# code instead of on the wording. `detail` stays as well, because the studio
+# renders that string directly to the founder.
+# ---------------------------------------------------------------------------
+
+class ErrorBody(BaseModel):
+    code: str
+    message: str
+    retryable: bool = False
+    details: dict = Field(default_factory=dict)
+
+class ErrorResponse(BaseModel):
+    """The shape every failure uses."""
+    detail: str
+    error: ErrorBody
+    requestId: str

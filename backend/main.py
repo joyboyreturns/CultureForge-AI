@@ -1,18 +1,37 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from typing import Optional
 from uuid import uuid4
 
 from .comparison import compare_audiences as compare_audiences_native
 from .comparison import rank_entities, recompose
 from .evidence_store import get_store
-from .models import CompareRequest, GenerateResponse, ProjectRequest, RecomposeRequest
-from .providers import QlooHarnessError, QlooHarnessProvider, get_provider
+from .models import (CompareAudiencesRequest, CompareRequest, ErrorBody, ErrorResponse,
+                     GenerateResponse, ProjectRequest, RankRequest, RecomposeRequest,
+                     ShareRequest)
+from .providers import (COMPOSER_VERSION, QLOO_WORKFLOWS, QlooHarnessError,
+                        QlooHarnessProvider, get_provider)
 from .research import registry as research_registry, start_research
 
-app = FastAPI(title='CultureForge API', version='0.1.0')
+app = FastAPI(
+    title='CultureForge API',
+    version='0.2.0',
+    description=(
+        'CultureForge turns a business brief into evidence-backed directions, using Qloo. '
+        'Every response is either a result or the same error envelope: '
+        '{"detail": "<a sentence>", "error": {"code", "message", "retryable", "details"}, "requestId"}.'
+    ),
+    openapi_tags=[
+        {'name': 'brief', 'description': 'The brief, its directions, and the evidence behind them.'},
+        {'name': 'evidence', 'description': 'Qloo workflows run directly, and their answers.'},
+        {'name': 'agent', 'description': 'The research agent and its runs.'},
+        {'name': 'sharing', 'description': 'Frozen explorations that reopen exactly.'},
+        {'name': 'platform', 'description': 'Health, keys, and metering.'},
+    ],
+)
 
 # The frontend is served from a different port than the API whenever it is
 # hosted as static files, so allow the usual local development origins. The
@@ -27,19 +46,57 @@ app.add_middleware(
 )
 
 
-@app.get('/api/health')
-def health():
-    current_provider = get_provider()
-    return {
-        'status': 'ok',
-        'dataMode': 'live' if current_provider.__class__.__name__ == 'QlooHarnessProvider' else 'mock',
-    }
+# ---------------------------------------------------------------------------
+# The error envelope
+#
+# Every failure answers the same way, so a caller can branch on the code
+# rather than on the wording. `detail` stays because the studio renders that
+# string straight to the founder.
+# ---------------------------------------------------------------------------
+
+#: How each failure maps onto a status code.
+ERROR_STATUS = {
+    'INVALID_REQUEST': 422,
+    'INVALID_UPSTREAM_REQUEST': 422,
+    'NEEDS_INPUT': 422,
+    'NO_EVIDENCE': 422,
+    'NO_CACHED_EVIDENCE': 409,
+    'RATE_LIMITED': 429,
+    'ALLOWANCE_EXHAUSTED': 429,
+    'QUOTA_EXHAUSTED': 503,
+    'PROVIDER_UNAVAILABLE': 503,
+    'UPSTREAM_TIMEOUT': 504,
+    'RUN_TIMEOUT': 504,
+    'UPSTREAM_UNAUTHENTICATED': 502,
+    'UPSTREAM_MALFORMED': 502,
+    'UPSTREAM_REJECTED': 502,
+}
 
 
-@app.get('/health', include_in_schema=False)
-def health_alias():
-    """Alias for tools that probe a conventional /health path."""
-    return health()
+def error_response(code: str, message: str, *, status: Optional[int] = None,
+                   retryable: bool = False, details: Optional[dict] = None) -> JSONResponse:
+    """The one shape every failure uses."""
+    payload = ErrorResponse(
+        detail=message,
+        error=ErrorBody(code=code, message=message, retryable=retryable, details=details or {}),
+        requestId=f'req-{uuid4().hex[:12]}',
+    )
+    return JSONResponse(status_code=status or ERROR_STATUS.get(code, 502),
+                        content=payload.model_dump())
+
+
+@app.exception_handler(QlooHarnessError)
+async def qloo_error_handler(request: Request, exc: QlooHarnessError):
+    return error_response(exc.code, str(exc), retryable=exc.retryable, details=exc.details)
+
+
+@app.exception_handler(HTTPException)
+async def http_error_handler(request: Request, exc: HTTPException):
+    message = exc.detail if isinstance(exc.detail, str) else 'The request could not be completed.'
+    code = {400: 'INVALID_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN',
+            404: 'NOT_FOUND', 405: 'METHOD_NOT_ALLOWED', 409: 'CONFLICT',
+            429: 'RATE_LIMITED', 503: 'UNAVAILABLE'}.get(exc.status_code, 'REQUEST_FAILED')
+    return error_response(code, message, status=exc.status_code)
 
 
 @app.exception_handler(RequestValidationError)
@@ -54,18 +111,43 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         location = '.'.join(str(part) for part in error.get('loc', []) if part != 'body')
         message = error.get('msg', 'Invalid value')
         problems.append(f'{location}: {message}' if location else message)
-    return JSONResponse(status_code=422, content={'detail': '; '.join(problems) or 'Invalid request.'})
+    return error_response('VALIDATION_FAILED', '; '.join(problems) or 'Invalid request.',
+                          status=422, details={'fields': [p.split(':')[0] for p in problems if ':' in p]})
 
 
-@app.post('/api/projects/generate', response_model=GenerateResponse)
+@app.get('/api/health', tags=['platform'], summary='Which provider is active, and what it can do')
+def health():
+    current_provider = get_provider()
+    live = current_provider.__class__.__name__ == 'QlooHarnessProvider'
+    return {
+        'status': 'ok',
+        'dataMode': 'live' if live else 'mock',
+        'version': app.version,
+        'workflows': list(QLOO_WORKFLOWS) if live else [],
+        'composerVersion': COMPOSER_VERSION,
+    }
+
+
+@app.get('/health', include_in_schema=False)
+def health_alias():
+    """Alias for tools that probe a conventional /health path."""
+    return health()
+
+
+@app.post('/api/projects/generate', response_model=GenerateResponse, tags=['brief'],
+          summary='Answer a brief with evidence-backed directions')
 def generate(project: ProjectRequest) -> GenerateResponse:
-    try:
-        return get_provider().generate(project)
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    """Resolve the brief into cultural signals, retrieve the local evidence,
+    and compose three directions that each name the venues they came from.
+
+    A brief that has been answered before is served from held evidence and
+    costs no upstream request. The delivery says which it was.
+    """
+    return get_provider().generate(project)
 
 
-@app.post('/api/projects/compare')
+@app.post('/api/projects/compare', tags=['brief'],
+          summary='Re-research the same brief for a different audience')
 def compare(request: CompareRequest) -> dict:
     """Re-research the same brief for a different audience.
 
@@ -73,17 +155,11 @@ def compare(request: CompareRequest) -> dict:
     locally computed score shift. This runs the same two Qloo workflows against
     the new audience and returns the composed directions and their evidence.
     """
-    try:
-        provider = get_provider()
-    except RuntimeError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    provider = get_provider()
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='Live comparison needs the Qloo provider. Run the backend in qloo mode.')
-    try:
-        project = request.project.model_copy(update={'audience': request.audience})
-        response = provider.generate(project)
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    project = request.project.model_copy(update={'audience': request.audience})
+    response = provider.generate(project)
     return {
         'audience': request.audience,
         'concepts': [concept.model_dump() for concept in response.concepts],
@@ -99,14 +175,20 @@ def compare(request: CompareRequest) -> dict:
 # ---------------------------------------------------------------------------
 # The research agent
 # ---------------------------------------------------------------------------
-@app.post('/api/research/runs')
-def start_run(request: CompareRequest) -> dict:
-    """Start a bounded research run and return its id straight away."""
+@app.post('/api/research/runs', status_code=202, tags=['agent'],
+          summary='Start a research run and get its id straight away')
+def start_run(request: CompareRequest, response: Response) -> dict:
+    """Start a bounded research run and return its id straight away.
+
+    202 Accepted: the work continues in the background. Poll
+    `GET /api/research/runs/{runId}` for the steps it takes.
+    """
     run = start_research(request.project, request.audience, request.seedTagIds)
-    return {'runId': run.id, 'status': run.status}
+    response.headers['Location'] = f'/api/research/runs/{run.id}'
+    return {'runId': run.id, 'status': run.status, 'statusUrl': f'/api/research/runs/{run.id}'}
 
 
-@app.get('/api/research/runs/{run_id}')
+@app.get('/api/research/runs/{run_id}', tags=['agent'], summary='The state of one research run')
 def run_status(run_id: str) -> dict:
     run = research_registry.get(run_id)
     if not run:
@@ -114,7 +196,7 @@ def run_status(run_id: str) -> dict:
     return run.snapshot()
 
 
-@app.get('/api/research/runs')
+@app.get('/api/research/runs', tags=['agent'], summary='The recent research runs')
 def recent_runs() -> dict:
     return {'runs': research_registry.recent()}
 
@@ -122,27 +204,22 @@ def recent_runs() -> dict:
 # ---------------------------------------------------------------------------
 # Confirmed taste seeds
 # ---------------------------------------------------------------------------
-@app.post('/api/taste/resolve')
+@app.post('/api/taste/resolve', tags=['brief'],
+          summary='Resolve an audience into the Qloo signals it maps to')
 def resolve_taste(request: CompareRequest) -> dict:
     """Resolve an audience into candidate Qloo seeds, before any research runs.
 
     The founder confirms these, so the research queries what they meant rather
     than a guess the app made for them.
     """
-    try:
-        provider = get_provider()
-    except RuntimeError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    provider = get_provider()
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='Resolving taste seeds needs the Qloo provider.')
-    try:
-        # The same limit the provider uses, so this shares one cache entry and
-        # costs no upstream call when the audience has been resolved before.
-        envelope, cached, _requests = provider.run_workflow_cached('find_tags', {
-            'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 3,
-        })
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    # The same limit the provider uses, so this shares one cache entry and
+    # costs no upstream call when the audience has been resolved before.
+    envelope, cached, _requests = provider.run_workflow_cached('find_tags', {
+        'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 3,
+    })
     candidates = []
     for row in provider.rows(envelope):
         tag_id = provider.tag_id(row)
@@ -169,15 +246,17 @@ def resolve_taste(request: CompareRequest) -> dict:
 # ---------------------------------------------------------------------------
 # Snapshots: an exploration that can be reopened exactly as it was shown
 # ---------------------------------------------------------------------------
-@app.post('/api/explorations/share')
-def share_exploration(payload: dict) -> dict:
+@app.post('/api/explorations/share', status_code=201, tags=['sharing'],
+          summary='Freeze an exploration so a shared link reopens exactly it')
+def share_exploration(payload: ShareRequest, response: Response) -> dict:
     """Freeze an exploration so a judge can open exactly what was shown."""
     snapshot_id = f'snap-{uuid4().hex[:12]}'
-    get_store().save_snapshot(snapshot_id, payload)
-    return {'snapshotId': snapshot_id}
+    get_store().save_snapshot(snapshot_id, payload.model_dump())
+    response.headers['Location'] = f'/api/snapshots/{snapshot_id}'
+    return {'snapshotId': snapshot_id, 'url': f'/api/snapshots/{snapshot_id}'}
 
 
-@app.get('/api/snapshots/{snapshot_id}')
+@app.get('/api/snapshots/{snapshot_id}', tags=['sharing'], summary='Reopen a frozen exploration')
 def read_snapshot(snapshot_id: str) -> dict:
     payload = get_store().get_snapshot(snapshot_id)
     if not payload:
@@ -188,49 +267,48 @@ def read_snapshot(snapshot_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # Native Qloo comparisons, ranking, and recomposition
 # ---------------------------------------------------------------------------
-@app.post('/api/projects/compare/audiences')
-def compare_audiences(request: dict) -> dict:
-    """Qloo's own A/B between two groups of entities."""
-    group_a = [str(x) for x in (request.get('groupA') or [])]
-    group_b = [str(x) for x in (request.get('groupB') or [])]
-    try:
-        return compare_audiences_native(
-            group_a, group_b,
-            target_type=str(request.get('targetType') or 'place'),
-            limit=int(request.get('limit') or 12),
-        )
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+@app.post('/api/projects/compare/audiences', tags=['evidence'],
+          summary="Qloo's own A/B between two groups of entities")
+def compare_audiences(request: CompareAudiencesRequest) -> dict:
+    """Qloo's own A/B between two groups of entities.
+
+    Both groups must hold at least one entity, and no other field is accepted:
+    the request is built from these fields alone, so Qloo never sees an
+    argument the app did not intend to send.
+    """
+    return compare_audiences_native(
+        request.groupA, request.groupB,
+        target_type=request.targetType,
+        limit=request.limit,
+    )
 
 
-@app.post('/api/projects/rank')
-def rank_anchors(request: dict) -> dict:
-    """Rank real Qloo entities by affinity for a signal set."""
-    options = [str(x) for x in (request.get('options') or [])]
-    signals = [str(x) for x in (request.get('signals') or [])]
-    include_tags = [str(x) for x in (request.get('includeTags') or [])]
-    try:
-        return rank_entities(
-            options,
-            signals=signals or None,
-            include_tags=include_tags or None,
-            option_type=str(request.get('optionType') or 'place'),
-            signal_location=request.get('signalLocation') or None,
-            demographic=request.get('demographic') or None,
-            limit=int(request.get('limit') or 6),
-        )
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+@app.post('/api/projects/rank', tags=['evidence'],
+          summary='Rank real Qloo entities by affinity for a signal set')
+def rank_anchors(request: RankRequest) -> dict:
+    """Rank real Qloo entities by affinity for a signal set.
+
+    Qloo's `rank` workflow rejects unknown fields, so the request is built
+    from these fields alone. The answer includes the signal Qloo actually
+    sent, because a demographic phrase is converted on their side.
+    """
+    return rank_entities(
+        request.options,
+        signals=request.signals or None,
+        include_tags=request.includeTags or None,
+        option_type=request.optionType,
+        signal_location=request.signalLocation,
+        demographic=request.demographic,
+        limit=request.limit,
+    )
 
 
-@app.post('/api/projects/recompose')
+@app.post('/api/projects/recompose', tags=['brief'],
+          summary='Rebuild the directions without a piece of the evidence')
 def recompose_route(request: RecomposeRequest) -> dict:
     """Rebuild the directions without the given evidence, using no new call."""
-    try:
-        return recompose(
-            request.project,
-            exclude_entity_ids=request.excludeEntityIds,
-            exclude_tag_ids=request.excludeTagIds,
-        )
-    except QlooHarnessError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return recompose(
+        request.project,
+        exclude_entity_ids=request.excludeEntityIds,
+        exclude_tag_ids=request.excludeTagIds,
+    )

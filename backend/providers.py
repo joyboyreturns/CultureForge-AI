@@ -25,6 +25,21 @@ from .evidence_store import cached_call, canonical_key, get_store, known_locatio
 
 # Bumped whenever the composer changes what a concept means, so a stored
 # snapshot is never mistaken for a current result.
+#: Every read-only Qloo workflow this app can reach. The harness exposes nine;
+#: these are the ones the product actually uses, and the ones a judge can see
+#: being used in the provenance of any result.
+QLOO_WORKFLOWS = (
+    'find_tags',
+    'recommend',
+    'rank',
+    'compare_audiences',
+    'describe',
+    'where_popular',
+    'entity_tags',
+    'audience_demographics',
+    'trends',
+)
+
 COMPOSER_VERSION = '1'
 
 # The exact set of query parameters this app sends to Qloo. A provenance
@@ -68,7 +83,18 @@ class MockCultureProvider(CultureProvider):
         return generate_mock(project)
 
 class QlooHarnessError(RuntimeError):
-    """A safe-to-display provider failure; deliberately contains no CLI output or secrets."""
+    """A safe-to-display provider failure; deliberately contains no CLI output or secrets.
+
+    It carries a machine-readable code so the API can answer with a consistent
+    error envelope, and a flag saying whether trying again could work.
+    """
+
+    def __init__(self, message: str, code: str = 'UPSTREAM_REJECTED',
+                 retryable: bool = False, details: Optional[dict] = None):
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+        self.details = details or {}
 
 def mark_reused(event: TraceEvent, detail: Optional[str] = None) -> TraceEvent:
     """Record that a step reused held evidence instead of waiting on the API.
@@ -129,7 +155,7 @@ class QlooHarnessProvider(CultureProvider):
                 return [node, str(wrapper)]
         executable = shutil.which(self.command)
         if not executable:
-            raise QlooHarnessError('Qloo provider is selected but neither scripts/qloo_exec.mjs nor the qloo CLI is available. Install @qloo/qloo-harness and complete qloo setup.')
+            raise QlooHarnessError('Qloo provider is selected but neither scripts/qloo_exec.mjs nor the qloo CLI is available. Install @qloo/qloo-harness and complete qloo setup.', code='PROVIDER_UNAVAILABLE', retryable=True)
         return [executable]
 
     def _consume_call_budget(self) -> None:
@@ -144,7 +170,9 @@ class QlooHarnessProvider(CultureProvider):
             if calls_in_hour >= hour_limit or len(calls) >= day_limit:
                 raise QlooHarnessError(
                     'Qloo call budget reached for this period. Live signals are paused to protect the '
-                    'hackathon API quota. Wait for the budget to reset, or open a saved exploration.'
+                    'hackathon API quota. Wait for the budget to reset, or open a saved exploration.',
+                    code='QUOTA_EXHAUSTED', retryable=True,
+                    details={'resetsInSeconds': 3600 - int(now % 3600)},
                 )
             calls.append(now)
             self._write_call_log(calls)
@@ -180,9 +208,9 @@ class QlooHarnessProvider(CultureProvider):
                 check=False, env=os.environ.copy(),
             )
         except subprocess.TimeoutExpired as exc:
-            raise QlooHarnessError('Qloo request timed out. Try again later.') from exc
+            raise QlooHarnessError('Qloo request timed out. Try again later.', code='UPSTREAM_TIMEOUT', retryable=True) from exc
         except OSError as exc:
-            raise QlooHarnessError('Unable to start the Qloo CLI.') from exc
+            raise QlooHarnessError('Unable to start the Qloo CLI.', code='PROVIDER_UNAVAILABLE', retryable=True) from exc
         finally:
             if 'request_path' in locals():
                 Path(request_path).unlink(missing_ok=True)
@@ -197,20 +225,20 @@ class QlooHarnessProvider(CultureProvider):
             except (json.JSONDecodeError, AttributeError):
                 code = ''
             if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED'):
-                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.')
+                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.', code='RATE_LIMITED', retryable=True)
             if code == 'QLOO_AUTH':
-                raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.')
+                raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.', code='UPSTREAM_UNAUTHENTICATED')
             if code == 'TOOL_INPUT':
-                raise QlooHarnessError('Qloo rejected the shape of the request. The arguments did not match the workflow contract.')
+                raise QlooHarnessError('Qloo rejected the shape of the request. The arguments did not match the workflow contract.', code='INVALID_UPSTREAM_REQUEST')
             if code:
-                raise QlooHarnessError(f'Qloo rejected the request ({code}).')
-            raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.')
+                raise QlooHarnessError(f'Qloo rejected the request ({code}).', code='UPSTREAM_REJECTED', details={'upstreamCode': code})
+            raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.', code='UPSTREAM_REJECTED')
         try:
             result = json.loads(completed.stdout)
         except json.JSONDecodeError as exc:
-            raise QlooHarnessError('Qloo CLI returned an unreadable response.') from exc
+            raise QlooHarnessError('Qloo CLI returned an unreadable response.', code='UPSTREAM_MALFORMED') from exc
         if not isinstance(result, dict):
-            raise QlooHarnessError('Qloo CLI returned an unexpected response shape.')
+            raise QlooHarnessError('Qloo CLI returned an unexpected response shape.', code='UPSTREAM_MALFORMED')
         return result
 
     def run_workflow_cached(self, operation: str, payload: dict) -> tuple[dict, bool, int]:
@@ -328,10 +356,10 @@ class QlooHarnessProvider(CultureProvider):
             live = live or not was_cached
             reused = was_cached
         if tag_result.get('status') == 'needs_input':
-            raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.')
+            raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.', code='NEEDS_INPUT')
         matched_tags = [tag for row in self.rows(tag_result) if (tag := self.tag_id(row))][:3]
         if not matched_tags:
-            raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.')
+            raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.', code='NO_EVIDENCE')
 
         if recommendations is None:
             recommendations, was_cached, requests = self.run_workflow_cached('recommend', {
@@ -342,7 +370,7 @@ class QlooHarnessProvider(CultureProvider):
             live = live or not was_cached
             reused = reused or was_cached
         if recommendations.get('status') == 'needs_input':
-            raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.')
+            raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.', code='NEEDS_INPUT')
         rows = self.rows(recommendations)
         signals: list[CulturalSignal] = []
         for row in rows[:5]:
@@ -360,10 +388,14 @@ class QlooHarnessProvider(CultureProvider):
             if suggestion:
                 raise QlooHarnessError(
                     f"Qloo returned no places for '{project.location}' for this audience. "
-                    f"'{suggestion}' returned places for these same signals earlier."
+                    f"'{suggestion}' returned places for these same signals earlier.",
+                    code='NO_EVIDENCE',
+                    details={'location': project.location, 'suggestion': suggestion},
                 )
             raise QlooHarnessError(
-                f"Qloo returned no places for '{project.location}' for this audience."
+                f"Qloo returned no places for '{project.location}' for this audience.",
+                code='NO_EVIDENCE',
+                details={'location': project.location},
             )
 
         # ---- Evidence, trace and composition -----------------------------

@@ -141,7 +141,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
     try:
         if time.time() - started > DEFAULT_RUN_TIMEOUT_SECONDS:
-            raise QlooHarnessError('The research run took too long and was stopped.')
+            raise QlooHarnessError('The research run took too long and was stopped.', code='RUN_TIMEOUT', retryable=True)
 
         # ---- step 1: resolve the audience into confirmed Qloo seeds ----
         if run.seed_tag_ids:
@@ -188,7 +188,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
         # ---- step 2: retrieve the local evidence ----
         if run.workflow_calls >= allowance:
-            raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.')
+            raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.', code='ALLOWANCE_EXHAUSTED')
         run.workflow_calls += 1
         rec_envelope, cached, requests = provider.run_workflow_cached('recommend', {
             'target_type': 'place', 'signal_tags': tags,

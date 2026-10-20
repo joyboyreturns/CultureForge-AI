@@ -34,7 +34,7 @@ def compare_audiences(group_a: list[str], group_b: list[str], target_type: str =
     distinguish each group.
     """
     if not group_a or not group_b:
-        raise QlooHarnessError('Both sides of a comparison need at least one entity.')
+        raise QlooHarnessError('Both sides of a comparison need at least one entity.', code='INVALID_REQUEST')
     provider = QlooHarnessProvider()
     envelope, _cached, _requests = provider.run_workflow_cached('compare_audiences', {
         'group_a': group_a, 'group_b': group_b, 'target_type': target_type, 'limit': limit,
@@ -96,7 +96,7 @@ def rank_entities(options: list[str], signals: Optional[list[str]] = None,
     shown rather than assumed.
     """
     if not options:
-        raise QlooHarnessError('Ranking needs at least one entity to rank.')
+        raise QlooHarnessError('Ranking needs at least one entity to rank.', code='INVALID_REQUEST')
     provider = QlooHarnessProvider()
     # The rank workflow takes no `limit`: it returns one row per option.
     payload: dict = {'options': options, 'option_type': option_type}
@@ -110,7 +110,7 @@ def rank_entities(options: list[str], signals: Optional[list[str]] = None,
         payload['demographic'] = demographic
     envelope, _cached, _requests = provider.run_workflow_cached('rank', payload)
     if envelope.get('status') == 'needs_input':
-        raise QlooHarnessError('Qloo needs a clearer signal set for this ranking.')
+        raise QlooHarnessError('Qloo needs a clearer signal set for this ranking.', code='INVALID_UPSTREAM_REQUEST')
     rows = provider.rows(envelope)
     ranked = []
     for index, row in enumerate(rows):
@@ -148,18 +148,18 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     store = evidence_store or get_store()
     tag_envelope = store.get(tag_key)
     if tag_envelope is None:
-        raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.')
+        raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
     tags = [tag for row in provider.rows(tag_envelope) if (tag := provider.tag_id(row))][:3]
     tags = [tag for tag in tags if tag not in exclude_tag_ids]
     if not tags:
-        raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.')
+        raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.', code='INVALID_REQUEST')
     rec_key = canonical_key('recommend', {
         'target_type': 'place', 'signal_tags': tags,
         'signal_location': project.location, 'limit': 5,
     })
     rec_envelope = store.get(rec_key)
     if rec_envelope is None:
-        raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.')
+        raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
 
     response = provider.generate(project, tag_envelope, rec_envelope)
 
