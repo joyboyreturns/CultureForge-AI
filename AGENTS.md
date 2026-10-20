@@ -32,6 +32,27 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 - The vault is an **export**, not a graph input. `.graphifyignore` excludes `/CultureForge AI/` from the scan — do not remove it. Re-ingesting the vault feeds the graph its own output and inflates every query.
 - Keep `scripts/vault_query.py`'s index fresh automatically; it rebuilds on vault mtime change.
 
+## The shape of the codebase
+
+| Module | What it owns |
+|---|---|
+| `backend/main.py` | The HTTP surface. Typed requests, one error envelope, status codes that mean something. |
+| `backend/providers.py` | The Qloo provider. One request builder per workflow, because Qloo rejects fields it does not know. |
+| `backend/investigation.py` | The decision loop: the questions a direction has not answered, each one a named workflow. |
+| `backend/platform.py` | The licensable layer: workspaces, issued keys, saved explorations, metering. SQLite. |
+| `backend/evidence_store.py` | The durable evidence cache. A held answer costs nothing; a failure is never cached. |
+| `backend/concept_composer.py` | The rules that turn evidence into directions. Every proposal names its evidence. |
+| `src/wildroot.css` | The editorial layer. Imported last, so it wins over the dashboard styles. |
+
+Three rules the codebase holds to, and the tests pin them:
+
+1. **Never show a number Qloo did not return.** No invented fit scores, and no
+   borrowed durations — a reused step reports zero and states the original.
+2. **Never let a malformed request through.** Every route that takes a body
+   takes a typed one, so a string where a list was meant is a 422.
+3. **Never fail silently.** A rate limit or an exhausted budget becomes a
+   stated limitation in the report, not a crash and not a blank panel.
+
 ## Qloo live data — spend quota carefully
 
 - The key lives in the Qloo CLI's private store (`~/.qloo/config`, mode 0600) and in the gitignored `.env`. **Never** commit it, print it, or put it in a tracked file.

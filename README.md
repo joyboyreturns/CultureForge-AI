@@ -103,12 +103,18 @@ Responses are cached in memory for 24 hours per business type, audience, and loc
 6. **Inspect the evidence.** Click any venue to see the exact call that produced it, the request that was sent, and what came back.
 7. **Test the answer.** Remove a venue and recompose, with no new call, to see how many directions actually depended on it.
 8. **Change the lens.** Compare the two audiences with Qloo's own A/B, or rank the returned places against a demographic to pick the anchor.
+9. **Investigate a direction.** Open the questions that direction has not answered — where does it concentrate, do the venues share a cultural signature, who is indexed against it — and see the tools the agent used, what it found, and what it could not establish.
 
 Mock-mode signals and all concept-fit scores, narratives, and scenario deltas are illustrative demo content, not validated business advice. In live mode, only the separate cultural signal list comes from Qloo. Qloo outputs describe aggregate affinities, not individual preferences or guaranteed behavior. See the [Qloo Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) API access and safe-use guidance before using live data.
 
 ## Studio interface
 
 The interface includes persistent dark and light themes, a guided demo, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab includes audience presets and adjustable preference sliders; its scores are an explicitly illustrative model. Theme and saved concepts persist across reloads, while exploration data stays in memory for the prototype.
+
+The studio's own decision loop is **Investigate**: pick a direction, open the
+questions it has not answered, and let the agent answer them with named Qloo
+workflows. It is reachable from every concept card and from the results
+header.
 
 The concept studio has six tabs, and the last four are the ones a judge should be pointed at:
 
@@ -182,6 +188,69 @@ The scenario lab re-researches for real. Changing the audience calls `POST /api/
 
 Each result also reports how many upstream requests it actually cost. Evidence that was already held costs nothing, and the count says `0 upstream requests` rather than pretending the API was asked. The durable store keeps the evidence across restarts, so a repeated brief is instant and free, and a live demo never spends the same quota twice.
 
+## Investigating a direction
+
+A brief produces three directions, and each one rests on the venues Qloo
+returned. It also rests on things nobody has checked. The **Investigate**
+action opens them.
+
+| Question | Qloo workflow | What it answers |
+|---|---|---|
+| Where does it concentrate? | `where_popular` | Geographic cells with real latitude and longitude. |
+| Do the venues share a signature? | `entity_tags` | The concepts that characterise them. |
+| Who is indexed against it? | `audience_demographics` | A signed age and gender index. |
+| What is Qloo's full record? | `describe` | Description, address, geocode, rating, image. |
+| Is it gaining or losing momentum? | `trends` | Popularity over time. |
+
+The founder picks the direction and the questions. Each question is one named
+workflow, and the report says which workflow produced the answer, whether the
+evidence was reused or freshly fetched, and what it could **not** establish. A
+rate-limited or exhausted call becomes a stated limitation, never a crash.
+
+### The geographic interest plot
+
+`where_popular` returns geographic cells: a latitude, a longitude, an
+affinity and a popularity. The studio draws them as an interest plot.
+
+It is not a street map, and it is not where the venues are. Qloo's geocode
+carries an address rather than a coordinate, so the venues themselves cannot
+be pinned on a real map. What this plot shows is where *interest* in a kind
+of place concentrates — which is a different, and supported, claim.
+
+Within one area Qloo's affinity is often almost identical across every cell.
+Encoding a spread of 0.001 would draw twenty identical dots and imply a
+comparison the data does not support, so the plot falls back to popularity when
+the affinity spread is negligible, and the legend says which metric it is
+encoding. There is a table of every cell for anyone who would rather read the
+numbers.
+
+## Licensing the product
+
+The studio runs in a local workspace, so a founder never signs up for anything
+to try it. A partner calls the same API with an issued key and lands in their
+own workspace, where everything they save is theirs.
+
+- **Workspaces.** Every private resource belongs to one, and every read checks
+  the caller owns it.
+- **Issued keys.** A key is stored as a salted hash, shown once at issue, and
+  never recoverable. Keys carry scopes, can expire, and can be revoked.
+- **Saved explorations.** Every answer is saved automatically, with the
+  composer version that produced it, and each recomposition becomes a new
+  version rather than an overwrite.
+- **Export.** An exploration downloads as JSON or as Markdown a founder could
+  send to a partner.
+- **Metering.** API requests and the upstream Qloo calls they cause are
+  counted separately, because they are two different costs. A fresh brief is
+  one API request and two upstream calls.
+- **Share links.** A shared snapshot is immutable, explicitly created,
+  revocable, and reached through a long random token rather than a guessable
+  id.
+
+What is deliberately not here yet: self-service signup, billing, member
+invitations, role-based access, webhooks, and arbitrary workflow builders.
+There is no commerce behind the operator-provisioned keys, and pretending
+otherwise would be a bigger lie than leaving it out.
+
 ## Verifying the backend and frontend agree
 
 `npm run test:contracts` pins the `GenerateResponse` contract from `src/contracts.ts` and checks both producers against it:
@@ -197,6 +266,33 @@ All contract checks passed.
 ```
 
 It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
+
+## Testing every endpoint by hand
+
+The judges will click the API by hand, so `npm run test:endpoints` walks all
+twenty-six routes the way a person would: the happy path, the missing thing,
+the malformed thing, the wrong method, the empty body, and the same request
+with a bearer key, a wrong key, and a revoked key.
+
+```
+$ npm run test:endpoints
+[ok]   POST /api/projects/generate -> a bad brief is 422 with a readable reason
+[ok]   a failure carries the error envelope -> VALIDATION_FAILED req-9f2c1a04b7de
+[ok]   POST /api/projects/compare/audiences -> a malformed group is 422, not a silent character list
+[ok]   POST /api/qloo/where-popular -> answers in its own shape -> 200 20 results
+[ok]   POST /api/projects/investigate -> it names the workflow it called -> where_popular
+[ok]   GET /api/workspaces/{id}/keys -> the secret is not stored in the clear -> 200
+[ok]   a revoked key no longer authenticates -> 401
+[ok]   GET /api/explorations/{id}/export -> Markdown a founder could send -> 200 3827 chars
+----------------------------------------------------------
+Endpoints exercised: 26
+Every endpoint answers. 60 checks passed.
+----------------------------------------------------------
+```
+
+It is the check that found the four defects the typed request models now
+prevent: three routes took a raw dict, so a malformed request was
+reinterpreted rather than rejected.
 
 ## Walking the product as a business owner
 
@@ -249,27 +345,90 @@ Every effect respects `prefers-reduced-motion: reduce`: the grain, aurora, Ken B
 
 ## API
 
-The FastAPI backend exposes:
+Every route takes a typed request and answers with a typed response, or with one
+error envelope. The FastAPI backend exposes:
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | `{"status":"ok","dataMode":"live"\|"mock"}` — which provider is active. |
+| `GET /api/health` | Which provider is active, the version, and the Qloo workflows the app can reach. |
 | `POST /api/projects/generate` | Takes a `ProjectRequest`, returns a `GenerateResponse`. |
 | `POST /api/projects/compare` | Re-researches the same brief for another audience, with real calls. |
 | `POST /api/projects/compare/audiences` | Qloo's own A/B between two groups of entities. |
 | `POST /api/projects/rank` | Ranks real Qloo entities against a signal set or a demographic. |
 | `POST /api/projects/recompose` | Rebuilds the directions without a piece of evidence. No new call. |
+| `POST /api/projects/investigate` | Opens the questions a direction has not answered, and answers them. |
+| `GET /api/facets` | The questions an investigation can open, in plain language. |
 | `POST /api/taste/resolve` | Resolves an audience into candidate Qloo seeds, before any research. |
-| `POST /api/research/runs` | Starts a bounded research run and returns its ID. |
+| `POST /api/research/runs` | Starts a bounded research run. `202 Accepted`, with where to poll. |
 | `GET /api/research/runs/{id}` | The run's events, status, and result. |
-| `POST /api/explorations/share` | Freezes an exploration into a shareable snapshot. |
+| `GET /api/research/runs` | The recent runs. |
+| `POST /api/explorations/share` | Freezes an exploration into a shareable snapshot. `201 Created`. |
 | `GET /api/snapshots/{id}` | A stored snapshot. |
+| `GET /api/explorations` | The explorations this workspace has saved. |
+| `GET /api/explorations/{id}` | One saved exploration, with its versions and its result. |
+| `GET /api/explorations/{id}/export` | The exploration as JSON or Markdown. |
+| `POST /api/workspaces` | Provisions a workspace for a partner. |
+| `POST /api/workspaces/{id}/keys` | Issues an API key. Shown once. |
+| `GET /api/workspaces/{id}/keys` | The keys issued for a workspace. |
+| `DELETE /api/workspaces/{id}/keys/{keyId}` | Revokes a key. |
+| `GET /api/usage` | Requests served, and the upstream calls they caused. |
+
+Qloo's own workflows are reachable directly, one route each:
+
+| Endpoint | Qloo workflow |
+|---|---|
+| `POST /api/qloo/describe` | `describe` — one entity, and the metadata Qloo holds. |
+| `POST /api/qloo/entity-tags` | `entity_tags` — the concepts that characterise a set of entities. |
+| `POST /api/qloo/where-popular` | `where_popular` — geographic cells for interest mapping. |
+| `POST /api/qloo/audience-demographics` | `audience_demographics` — a signed age and gender index. |
+| `POST /api/qloo/trends` | `trends` — popularity over time. |
 
 `GET /health` is an alias of `/api/health` for tooling that probes the conventional path.
 
-The `rank` and `compare_audiences` workflows are called with exactly the arguments the Qloo contract allows. The `rank` workflow takes no `limit` and rejects unknown fields, its `signals` are entities while tags belong in `include_tags`, and a `demographic` requires an explicit location. Those three were wrong at first here, and the tests now pin them.
+### The error envelope
 
-Validation failures return `422` with a readable `detail` string rather than FastAPI's default list of objects, and a Qloo failure returns `502` with a message the UI can show directly. In development Vite proxies `/api` to port 8000; a static build of `dist/` needs the same proxying, or the browser will need the origin allowed by the backend's CORS configuration.
+Every failure answers the same way, so a caller branches on the code rather than
+on the wording:
+
+```json
+{
+  "detail": "Qloo returned no places for 'Greenpoint, Brooklyn' for this audience.",
+  "error": {
+    "code": "NO_EVIDENCE",
+    "message": "Qloo returned no places for 'Greenpoint, Brooklyn' for this audience.",
+    "retryable": false,
+    "details": { "location": "Greenpoint, Brooklyn" }
+  },
+  "requestId": "req-9f2c1a04b7de"
+}
+```
+
+`detail` is kept because the studio renders it straight to the founder. The
+codes are `INVALID_REQUEST`, `INVALID_UPSTREAM_REQUEST`, `VALIDATION_FAILED`,
+`NEEDS_INPUT`, `NO_EVIDENCE`, `NO_CACHED_EVIDENCE`, `RATE_LIMITED`,
+`ALLOWANCE_EXHAUSTED`, `QUOTA_EXHAUSTED`, `PROVIDER_UNAVAILABLE`,
+`UPSTREAM_TIMEOUT`, `UPSTREAM_UNAUTHENTICATED`, `UPSTREAM_MALFORMED`, and
+`UPSTREAM_REJECTED`.
+
+The status codes mean something: `201` for a created snapshot, `202` for
+accepted background work, `422` for a request that is wrong or that Qloo's own
+contract would reject, `404` for something that is not there, `409` for a
+conflict, `429` for a rate limit, `503` for an exhausted budget or an
+unavailable provider, `504` for a timeout, and `502` for anything else
+upstream.
+
+### The Qloo contract
+
+Each Qloo workflow has its own request contract, and each rejects fields it
+does not know. `describe` takes `type`; `where_popular` takes `entity_type`;
+`rank` has no `limit` at all; `rank`'s `signals` are entities while tags belong
+in `include_tags`; and a `demographic` requires an explicit location. The
+payloads are built per workflow, in `backend/providers.py`, so the field names
+are right by construction rather than by luck. The tests pin them.
+
+In development Vite proxies `/api` to port 8000; a static build of `dist/`
+needs the same proxying, or the browser will need the origin allowed by the
+backend's CORS configuration.
 
 
 ## Knowledge graph and Obsidian vault
