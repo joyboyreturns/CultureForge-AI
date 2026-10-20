@@ -1,1 +1,223 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#10110f"/><meta name="description" content="CultureForge turns cultural signals into business concepts that resonate."/><title>CultureForge AI — Find your cultural edge</title><script>try{const t=JSON.parse(localStorage.getItem('cultureforge-theme')||'"dark"');document.documentElement.dataset.theme=t==='light'?'light':'dark';}catch{document.documentElement.dataset.theme='dark';}</script></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intelligence Designed To Evolve</title>
+
+  <!-- Google Fonts: Inter (400, 500, 600) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- BubbledotICG-FinePos CDN (Primary Display) -->
+  <link
+    href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome 6.5.2 (Enterprise brand icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Import Map & Motion Engine -->
+  <script type="importmap">
+    {
+      "imports": {
+        "motion": "https://cdn.jsdelivr.net/npm/motion@latest/+esm"
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Full-viewport cover video background -->
+  <div class="bg">
+    <video class="bg-video" autoplay muted loop playsinline preload="auto" poster="assets/cultureforge-poster.jpg">
+      <source
+        src="assets/cultureforge-background.mp4"
+        type="video/mp4"
+      />
+    </video>
+  </div>
+
+  <div class="page">
+    <!-- 1) Header (top, shrink 0) -->
+    <header class="header">
+      <!-- Circular Logo button -->
+      <button class="logo-btn" aria-label="CultureForge home" data-nav="home">
+        <img src="assets/logo.webp" alt="" width="52" height="52" class="logo-img" />
+      </button>
+
+      <!-- Desktop Nav Pill (white) -->
+      <nav class="nav-pill" aria-label="Primary navigation">
+        <a href="#home" class="nav-link active" data-nav="home">Home</a>
+        <a href="#product" class="nav-link" data-nav="product">Product</a>
+        <a href="#case-studies" class="nav-link" data-nav="case-studies">Case Studies</a>
+        <a href="#contact" class="nav-link" data-nav="contact">Contact</a>
+      </nav>
+
+      <!-- Desktop Sign in (dark pill) -->
+      <a href="#workspace" class="signin-btn" data-open-studio>Open studio</a>
+
+      <!-- Mobile Hamburger Button (≤720px) -->
+      <button
+        class="burger-btn"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </header>
+
+    <!-- Mobile Menu Overlay & White Sheet (≤720px) -->
+    <div class="mobile-overlay" id="mobile-overlay" hidden></div>
+    <nav class="mobile-sheet" id="mobile-menu" aria-label="Mobile navigation" hidden>
+      <div class="mobile-links">
+        <a href="#home" class="mobile-link active" data-nav="home">Home</a>
+        <a href="#product" class="mobile-link" data-nav="product">Product</a>
+        <a href="#case-studies" class="mobile-link" data-nav="case-studies">Case Studies</a>
+        <a href="#contact" class="mobile-link" data-nav="contact">Contact</a>
+      </div>
+      <a href="#workspace" class="mobile-signin-btn" data-open-studio>Open studio</a>
+    </nav>
+
+    <!-- 2) Hero (flex 1, centered) -->
+    <main class="landing-hero" data-landing-view="home">
+      <!-- Trust row (“Trusted by 2000+ Enterprises”) -->
+      <div class="trust-row anim" style="--d: 0.05s">
+        <div class="avatar-ring a1" title="Microsoft">
+          <div class="avatar-inner">
+            <i class="fa-brands fa-microsoft"></i>
+          </div>
+        </div>
+        <div class="avatar-ring a2" title="Amazon">
+          <div class="avatar-inner">
+            <i class="fa-brands fa-amazon"></i>
+          </div>
+        </div>
+        <div class="avatar-ring a3" title="Google">
+          <div class="avatar-inner">
+            <i class="fa-brands fa-google"></i>
+          </div>
+        </div>
+        <div class="trust-pill">
+          <span>A prototype for culturally curious founders</span>
+        </div>
+      </div>
+
+      <!-- Headline (Solid White, BubbledotICG-FinePos, Per-Line Fade) -->
+      <h1 class="headline anim" style="--d: 0.12s">
+        <span class="headline-line line-1">Intelligence</span>
+        <span class="headline-line line-2">Designed To Evolve</span>
+      </h1>
+
+      <!-- Subhead -->
+      <p class="subhead anim" style="--d: 0.28s">
+        Discover the cultural connections behind your audience, then shape
+        business experiences around what makes them unique.
+      </p>
+
+      <!-- CTA (White pill, black text, soft white glow, revealPulse) -->
+      <a href="#workspace" class="cta-btn anim-pulse" data-open-studio style="--d: 0.4s">
+        <span>Start an exploration</span>
+      </a>
+    </main>
+
+    <main class="landing-detail" data-landing-view="product" hidden>
+      <div class="detail-kicker">THE CULTUREFORGE WORKFLOW</div>
+      <h1 class="detail-title">From audience signals<br />to <span>a point of view.</span></h1>
+      <p class="detail-lede">CultureForge helps founders turn a business brief into audience-aware experience concepts, with the assumptions clearly in view.</p>
+      <div class="product-steps">
+        <article><span>01 / UNDERSTAND</span><h2>Start with people.</h2><p>Describe your audience, location, business category, budget, and what success could look like.</p></article>
+        <article><span>02 / EXPLORE</span><h2>Find three directions.</h2><p>Review distinct concepts, sample cultural hypotheses, experience moments, and illustrative pilot ranges.</p></article>
+        <article><span>03 / REFINE</span><h2>Change the lens.</h2><p>Compare a new audience and see how the sample model reshapes the concept fit.</p></article>
+      </div>
+      <p class="detail-note">Prototype mode uses clearly labeled mock data. Qloo is not connected unless the backend reports live signals.</p>
+      <a href="#workspace" class="cta-btn" data-open-studio><span>Open the exploration studio</span></a>
+    </main>
+
+    <main class="landing-detail" data-landing-view="case-studies" hidden>
+      <div class="detail-kicker">ILLUSTRATIVE CONCEPT STUDIES · MOCK DATA</div>
+      <h1 class="detail-title">A few ways culture<br />can shape <span>an experience.</span></h1>
+      <p class="detail-lede">These are example directions from the prototype catalog, not customer case studies or measured outcomes.</p>
+      <div class="study-grid">
+        <article><span>FOOD &amp; BEVERAGE</span><h2>Taste discovery</h2><p>A compact tasting format built around rotating menus and small-group discovery.</p><small>Sample direction · Experience concept</small></article>
+        <article><span>RETAIL</span><h2>Independent makers</h2><p>A neighborhood retail experience that gives local makers a changing spotlight.</p><small>Sample direction · Experience concept</small></article>
+        <article><span>WELLNESS</span><h2>Outdoor connection</h2><p>A low-pressure movement series shaped around shared outdoor routines.</p><small>Sample direction · Experience concept</small></article>
+      </div>
+      <p class="detail-note">Concept narratives, fit scores, and investment ranges are illustrative. Use them to begin research, not as validated business advice.</p>
+      <a href="#workspace" class="cta-btn" data-open-studio><span>Create your own exploration</span></a>
+    </main>
+
+    <main class="landing-detail contact-detail" data-landing-view="contact" hidden>
+      <div class="detail-kicker">LET’S START WITH YOUR IDEA</div>
+      <h1 class="detail-title">What are you<br /><span>curious about?</span></h1>
+      <p class="detail-lede">Bring a business idea, an audience you want to understand, or a neighborhood you want to serve. The studio will help you shape a first set of directions.</p>
+      <div class="contact-card">
+        <div><span>BUILT FOR</span><strong>Founders and experience builders</strong></div>
+        <div><span>IN THIS PROTOTYPE</span><strong>Five business categories · Mock research · Scenario comparison</strong></div>
+        <div><span>DATA NOTE</span><strong>No enquiry form or external contact service is connected.</strong></div>
+      </div>
+      <a href="#workspace" class="cta-btn" data-open-studio><span>Start an exploration</span></a>
+    </main>
+
+    <!-- 3) Stats footer (bottom, shrink 0, exact 4 metrics) -->
+    <footer class="stats-footer">
+      <div class="stat-card anim" style="--d: 0.5s" data-index="0">
+        <span class="stat-glyph">&lt;</span>
+        <div class="stat-meta">
+          <span class="stat-value" data-target="3" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">Concept directions</span>
+        </div>
+      </div>
+      <div class="stat-card anim" style="--d: 0.58s" data-index="1">
+        <span class="stat-glyph">%</span>
+        <div class="stat-meta">
+          <span class="stat-value" data-target="5" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">Business categories</span>
+        </div>
+      </div>
+      <div class="stat-card anim" style="--d: 0.66s" data-index="2">
+        <span class="stat-glyph">*</span>
+        <div class="stat-meta">
+          <span class="stat-value" data-target="1" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">Mock provider, Qloo-ready</span>
+        </div>
+      </div>
+      <div class="stat-card anim" style="--d: 0.74s" data-index="3">
+        <span class="stat-glyph">#</span>
+        <div class="stat-meta">
+          <span class="stat-value" data-target="0" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">API keys in the browser</span>
+        </div>
+      </div>
+    </footer>
+
+    <section class="home-followup" data-home-followup>
+      <div class="detail-kicker">CULTURE → COMMERCE</div>
+      <h2>Start with a better question.</h2>
+      <p>Who is this for? What do they care about? What might you build around that?</p>
+      <button class="followup-link" data-nav="product">See how the studio works <span aria-hidden="true">↗</span></button>
+    </section>
+  </div>
+
+  <script type="module" src="main.js"></script>
+  <!-- Mount point for the React studio, which "Open studio" loads on demand. -->
+  <div id="root" aria-live="polite"></div>
+</body>
+</html>

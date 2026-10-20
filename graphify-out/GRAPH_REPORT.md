@@ -9,7 +9,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `eb306406`
+- Built from commit: `2df0a490`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -33,7 +33,7 @@
 - Graphify MCP Wrapper
 - Contract Verification Tool
 - validation_exception_handler
-- Prototype Script Interactions
+- Front Page Script Interactions
 - Agent Workflow Documentation
 - Qloo Execution Wrapper
 
@@ -67,7 +67,7 @@
 ## Communities (25 total, 6 thin omitted)
 
 ### Community 0 - "Backend Provider Models"
-Cohesion: 0.08
+Cohesion: 0.07
 Nodes (22): generate(), health(), health_alias(), clamp(), fingerprint(), generate_mock(), investment(), normalize() (+14 more)
 
 ### Community 1 - "Frontend Types and State"
@@ -95,7 +95,7 @@ Cohesion: 0.32
 Nodes (11): CultureForge Concept Studio Desktop Mockup, CultureForge Concept Studio Mobile Mockup, Audience Lens Scenario Exploration, Cultural Signals and Experience Blueprint Panel, Family Market Day Makers Market, Flexible Timing Cultural Signal, Hand-Me-Down House Repair and Resale Shop, Little & Local Concept Store (+3 more)
 
 ### Community 7 - "Vault Retrieval Tool"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (15): load_qloo_config(), main(), mask(), read_budget_log(), _build_index(), _code_excerpt(), find_notes(), load_index() (+7 more)
 
 ### Community 8 - "TypeScript Node Build Settings"
@@ -130,7 +130,7 @@ Nodes (3): CultureForge Page Metadata, React Application Root, Stored Theme Pref
 Cohesion: 0.31
 Nodes (9): BUSINESS_TYPES, checkObject(), checkResponse(), CONTRACT, fail(), failures, main(), notes (+1 more)
 
-### Community 45 - "Prototype Script Interactions"
+### Community 45 - "Front Page Script Interactions"
 Cohesion: 0.15
 Nodes (13): easeOutCubic(), init(), initBackgroundVideo(), attemptPlay(), unlock(), initFramerMotionEnhancements(), initLandingNavigation(), initMobileMenu() (+5 more)
 
@@ -157,7 +157,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `autoprefixer`, `motion`, `postcss` to the rest of the system?**
   _25 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Backend Provider Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.0750925436277102 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07373271889400922 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `Frontend Types and State` to `Build Tooling and Dependencies`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `GenerateResponse` (e.g. with `generate()` and `CultureProvider`) actually correct?**

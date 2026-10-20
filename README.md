@@ -41,10 +41,12 @@ Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAP
 
 | Route | What it is |
 |---|---|
-| `/` | The React application — concept studio, agent workspace, scenario lab. This is the Vite entry point, so it is what `npm run dev` serves and what `npm run build` produces. Its "Landing" button returns to the app's own home screen. |
-| `/prototype/` | The standalone vanilla-JS marketing landing page (`prototype/index.html`, `prototype/main.js`, `prototype/styles.css`, plus `prototype/assets/` and `prototype/fonts/`). Static, no API calls. Its "Open studio" link loads the React app in place, and the studio's "Landing" button hands control back to the marketing page. |
+| `/` | **The front page** — the marketing landing page with the full-screen background video (`index.html`, `main.js`, `styles.css`, `assets/`, `fonts/`). Static, no API calls. Its "Open studio" button loads the concept studio in place. |
+| `/studio/` | The React concept studio — agent workspace, concept studio, scenario lab. Also reachable directly. |
 
-`index.html` at the repository root must stay the React entry (`<div id="root">` plus `/src/main.tsx`). Vite builds from it, so replacing it with another page silently drops the whole React app from both `npm run dev` and `npm run build`.
+The studio is a Vite entry point (`studio/index.html` → `/src/main.tsx`), so `npm run build` emits both `dist/index.html` and `dist/studio/index.html`. The front page reaches the studio in two ways: the "Open studio" button loads `/src/main.tsx` in place, and the studio's "Landing" button hands control back to the front page. The studio also carries a "Front page" link in its topbar for when it is opened directly.
+
+`index.html` at the repository root must stay the front page. Vite builds from it, so replacing it with another page silently drops the marketing site from both `npm run dev` and `npm run build`.
 
 ## Optional live Qloo signals
 
@@ -105,14 +107,14 @@ Mock-mode signals and all concept-fit scores, narratives, and scenario deltas ar
 
 The interface includes persistent dark and light themes, a guided demo, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab includes audience presets and adjustable preference sliders; its scores are an explicitly illustrative model. Theme and saved concepts persist across reloads, while exploration data stays in memory for the prototype.
 
-The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `prototype/assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
+The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
 ### Background video and Safari
 
 The background video uses the attributes Safari requires for inline autoplay — `autoplay muted loop playsinline` — plus `preload="auto"` and a `poster`. Two details matter:
 
-- **The MP4 is faststart.** Its `moov` index sits in the first 40 KB rather than at the end of the 13.8 MB file. Without that, a browser that does not do a tail-range lookup has to download the entire file before it can play anything. The file is remuxed by `python3 scripts/fix_mp4_faststart.py prototype/assets/cultureforge-background.mp4`, which moves `moov` ahead of `mdat` and rewrites the `stco` chunk offsets to match. It is a container-only operation, so there is no re-encoding and no quality loss.
-- **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `prototype/main.js` therefore retries playback on the first pointer, touch, key, or scroll event.
+- **The MP4 is faststart.** Its `moov` index sits in the first 40 KB rather than at the end of the 13.8 MB file. Without that, a browser that does not do a tail-range lookup has to download the entire file before it can play anything. The file is remuxed by `python3 scripts/fix_mp4_faststart.py assets/cultureforge-background.mp4`, which moves `moov` ahead of `mdat` and rewrites the `stco` chunk offsets to match. It is a container-only operation, so there is no re-encoding and no quality loss.
+- **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `main.js` therefore retries playback on the first pointer, touch, key, or scroll event.
 - **The page never shows a white panel.** Safari paints a video's own surface white until a frame is decoded, and it draws the native play/pause bar over a paused video. The poster is therefore painted on the `.bg` container as a CSS background, and the `<video>` element stays at `opacity: 0` until it fires `playing` and gets the `is-playing` class. A blocked or paused video is invisible, so there is nothing to flash white and no control bar to show. The video is decorative, so it is paused entirely for visitors who prefer reduced motion.
 
 ## Verifying the backend and frontend agree
