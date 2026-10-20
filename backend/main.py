@@ -3,8 +3,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from uuid import uuid4
+
+from .evidence_store import get_store
 from .models import CompareRequest, GenerateResponse, ProjectRequest
 from .providers import QlooHarnessError, QlooHarnessProvider, get_provider
+from .research import registry as research_registry, start_research
 
 app = FastAPI(title='CultureForge API', version='0.1.0')
 
@@ -88,3 +92,86 @@ def compare(request: CompareRequest) -> dict:
         'resolvedTags': response.provenance.resolved_tags if response.provenance else [],
         'notice': response.notice,
     }
+
+
+# ---------------------------------------------------------------------------
+# The research agent
+# ---------------------------------------------------------------------------
+@app.post('/api/research/runs')
+def start_run(request: CompareRequest) -> dict:
+    """Start a bounded research run and return its id straight away."""
+    run = start_research(request.project, request.audience)
+    return {'runId': run.id, 'status': run.status}
+
+
+@app.get('/api/research/runs/{run_id}')
+def run_status(run_id: str) -> dict:
+    run = research_registry.get(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail='That research run is no longer available.')
+    return run.snapshot()
+
+
+@app.get('/api/research/runs')
+def recent_runs() -> dict:
+    return {'runs': research_registry.recent()}
+
+
+# ---------------------------------------------------------------------------
+# Confirmed taste seeds
+# ---------------------------------------------------------------------------
+@app.post('/api/taste/resolve')
+def resolve_taste(request: CompareRequest) -> dict:
+    """Resolve an audience into candidate Qloo seeds, before any research runs.
+
+    The founder confirms these, so the research queries what they meant rather
+    than a guess the app made for them.
+    """
+    try:
+        provider = get_provider()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if not isinstance(provider, QlooHarnessProvider):
+        raise HTTPException(status_code=409, detail='Resolving taste seeds needs the Qloo provider.')
+    try:
+        envelope, cached, _requests = provider.run_workflow_cached('find_tags', {
+            'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 6,
+        })
+    except QlooHarnessError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    candidates = []
+    for row in provider.rows(envelope):
+        tag_id = provider.tag_id(row)
+        if not tag_id:
+            continue
+        candidates.append({
+            'tagId': tag_id,
+            'label': tag_id.rsplit(':', 1)[-1].replace('_', ' ').strip().capitalize(),
+            'popularity': row.get('popularity'),
+            'type': row.get('type'),
+        })
+    return {
+        'audience': request.audience,
+        'candidates': candidates,
+        'cached': cached,
+        'unresolved': envelope.get('query_intent', {}).get('unresolved', []),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Snapshots: an exploration that can be reopened exactly as it was shown
+# ---------------------------------------------------------------------------
+@app.post('/api/explorations/share')
+def share_exploration(payload: dict) -> dict:
+    """Freeze an exploration so a judge can open exactly what was shown."""
+    snapshot_id = f'snap-{uuid4().hex[:12]}'
+    get_store().save_snapshot(snapshot_id, payload)
+    return {'snapshotId': snapshot_id}
+
+
+@app.get('/api/snapshots/{snapshot_id}')
+def read_snapshot(snapshot_id: str) -> dict:
+    payload = get_store().get_snapshot(snapshot_id)
+    if not payload:
+        raise HTTPException(status_code=404, detail='That snapshot is no longer available.')
+    return payload

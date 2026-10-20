@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test:mock": "node scripts/verify-mock.mjs",
     "test:contracts": "node scripts/verify_contracts.mjs",
+    "test:backend": ".venv/bin/python -m pytest backend/tests -q",
     "check:api": "python3 scripts/check_api.py"
   },
   "dependencies": {

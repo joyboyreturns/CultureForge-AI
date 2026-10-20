@@ -20,6 +20,7 @@ except ImportError:
     pass
 
 from .concept_composer import compose
+from .evidence_store import cached_call, canonical_key, get_store
 from .models import (Concept, CulturalSignal, Decision, Delivery, Evidence, ExperienceMoment,
                       GenerateResponse, ProjectRequest, ProvenanceMetadata, TraceEvent)
 
@@ -161,15 +162,30 @@ class QlooHarnessProvider(CultureProvider):
             raise QlooHarnessError('Qloo CLI returned an unexpected response shape.')
         return result
 
+    def run_workflow_cached(self, operation: str, payload: dict) -> tuple[dict, bool, int]:
+        """Run a workflow through the durable store.
+
+        Returns (envelope, was_cached, transport_requests). Concurrent callers
+        asking for the same evidence collapse into one upstream call, and the
+        result survives a restart, so a demo never waits on the API twice.
+        """
+        key = canonical_key(operation, payload)
+        store = get_store()
+        cached = store.get(key)
+        if cached is not None:
+            return cached, True, store.transport_requests(key)
+        envelope, was_cached, requests = cached_call(key, lambda: self._run_workflow(operation, payload))
+        return envelope, was_cached, requests
+
     @staticmethod
-    def _rows(envelope: dict) -> list[dict]:
+    def rows(envelope: dict) -> list[dict]:
         rows = envelope.get('results', [])
         if isinstance(rows, dict):
             rows = rows.get('entities', rows.get('tags', []))
         return [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
 
     @staticmethod
-    def _tag_id(row: dict) -> str | None:
+    def tag_id(row: dict) -> str | None:
         value = row.get('id') or row.get('tag_id') or row.get('tag_value')
         return value if isinstance(value, str) and value.startswith('urn:tag:') else None
 
@@ -207,20 +223,20 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(cache_key, None)
 
         query = f'{project.businessType} {project.audience}'.strip()
-        tag_result = self._run_workflow('find_tags', {'query': query, 'limit': 3})
+        tag_result, _cached, _requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
         if tag_result.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.')
-        matched_tags = [tag for row in self._rows(tag_result) if (tag := self._tag_id(row))][:3]
+        matched_tags = [tag for row in self.rows(tag_result) if (tag := self.tag_id(row))][:3]
         if not matched_tags:
             raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.')
 
-        recommendations = self._run_workflow('recommend', {
+        recommendations, _cached, _requests = self.run_workflow_cached('recommend', {
             'target_type': 'place', 'signal_tags': matched_tags,
             'signal_location': project.location, 'limit': 5,
         })
         if recommendations.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.')
-        rows = self._rows(recommendations)
+        rows = self.rows(recommendations)
         signals: list[CulturalSignal] = []
         for row in rows[:5]:
             label = row.get('name')
