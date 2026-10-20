@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { TasteSeed } from '../api'
 
 /**
@@ -9,19 +8,22 @@ import type { TasteSeed } from '../api'
  * The research then queries what they confirmed, not what the app guessed.
  */
 export function TasteSeeds({
-  candidates, audience, onConfirm, onCancel, busy,
+  candidates, audience, selected, onChange, onConfirm, onCancel, busy,
 }: {
   candidates: TasteSeed[]
   audience: string
+  /** The founder's current choice. It lives outside this component, so a
+      clarification that sends them back to the brief does not wipe it. */
+  selected: string[]
+  onChange: (tagIds: string[]) => void
   onConfirm: (tagIds: string[]) => void
   onCancel: () => void
   busy?: boolean
 }) {
-  const [selected, setSelected] = useState<string[]>(candidates.map((candidate) => candidate.tagId))
-
   function toggle(tagId: string) {
-    setSelected((current) =>
-      current.includes(tagId) ? current.filter((id) => id !== tagId) : [...current, tagId])
+    onChange(selected.includes(tagId)
+      ? selected.filter((id) => id !== tagId)
+      : [...selected, tagId])
   }
 
   return (

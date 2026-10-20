@@ -50,6 +50,10 @@ export default function App() {
   const [provenanceId, setProvenanceId] = useState<string | null>(null)
   const [researchRunId, setResearchRunId] = useState<string | null>(null)
   const [seedCandidates, setSeedCandidates] = useState<TasteSeed[] | null>(null)
+  // The founder's seed choice outlives the seeds screen. If the agent has to
+  // ask for clarification and sends them back to the brief, the signals they
+  // already chose — and the ones they dropped — are still what they chose.
+  const [seedSelection, setSeedSelection] = useState<string[] | null>(null)
   const [seedBusy, setSeedBusy] = useState(false)
   const [clarification, setClarification] = useState<{ reason: string; question: string; field: string } | null>(null)
   const [shareUrl, setShareUrl] = useState('')
@@ -122,6 +126,14 @@ export default function App() {
     try {
       const resolution = await resolveTaste(project, project.audience)
       setSeedCandidates(resolution.candidates)
+      setSeedSelection((current) => {
+        const ids = resolution.candidates.map((candidate) => candidate.tagId)
+        if (!current) return ids
+        const kept = current.filter((id) => ids.includes(id))
+        // A different audience resolves to different signals, so the old
+        // choice does not carry over; everything is offered again.
+        return kept.length ? kept : ids
+      })
     } catch (error) {
       setProviderError(error instanceof Error ? error.message : 'The audience could not be resolved.')
     }
@@ -221,6 +233,8 @@ export default function App() {
         {screen === 'home' && <Home start={() => navigate('create')} demo={() => create(initial, true)} explore={() => navigate('results')}/>}
         {screen === 'create' && (seedCandidates
           ? <TasteSeeds candidates={seedCandidates} audience={form.audience} busy={seedBusy}
+              selected={seedSelection ?? seedCandidates.map((candidate) => candidate.tagId)}
+              onChange={setSeedSelection}
               onConfirm={confirmSeeds} onCancel={() => setSeedCandidates(null)}/>
           : <Create form={form} setForm={setForm} submit={() => beginResearch()} error={providerError} back={() => navigate('home')}/>)}
         {screen === 'create' && clarification && <div className="clarification" role="alert"><strong>{clarification.question}</strong><p>{clarification.reason}</p></div>}
