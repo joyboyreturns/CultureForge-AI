@@ -41,8 +41,8 @@ Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAP
 
 | Route | What it is |
 |---|---|
-| `/` | The React application — concept studio, agent workspace, scenario lab. This is the Vite entry point, so it is what `npm run dev` serves and what `npm run build` produces. |
-| `/prototype/` | The standalone vanilla-JS marketing landing page (`prototype/index.html`, `prototype/main.js`, `prototype/styles.css`, plus `prototype/assets/` and `prototype/fonts/`). Static, no API calls. |
+| `/` | The React application — concept studio, agent workspace, scenario lab. This is the Vite entry point, so it is what `npm run dev` serves and what `npm run build` produces. Its "Landing" button returns to the app's own home screen. |
+| `/prototype/` | The standalone vanilla-JS marketing landing page (`prototype/index.html`, `prototype/main.js`, `prototype/styles.css`, plus `prototype/assets/` and `prototype/fonts/`). Static, no API calls. Its "Open studio" link loads the React app in place, and the studio's "Landing" button hands control back to the marketing page. |
 
 `index.html` at the repository root must stay the React entry (`<div id="root">` plus `/src/main.tsx`). Vite builds from it, so replacing it with another page silently drops the whole React app from both `npm run dev` and `npm run build`.
 
@@ -112,7 +112,24 @@ The landing page provides separate Product, Case Studies, and Contact views. Its
 The background video uses the attributes Safari requires for inline autoplay — `autoplay muted loop playsinline` — plus `preload="auto"` and a `poster`. Two details matter:
 
 - **The MP4 is faststart.** Its `moov` index sits in the first 40 KB rather than at the end of the 13.8 MB file. Without that, a browser that does not do a tail-range lookup has to download the entire file before it can play anything. The file is remuxed by `python3 scripts/fix_mp4_faststart.py prototype/assets/cultureforge-background.mp4`, which moves `moov` ahead of `mdat` and rewrites the `stco` chunk offsets to match. It is a container-only operation, so there is no re-encoding and no quality loss.
-- **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `prototype/main.js` therefore retries playback on the first pointer, touch, key, or scroll event, and `prototype/assets/cultureforge-poster.jpg` shows the first frame so the page never looks broken while waiting. The video is decorative, so it is also paused entirely for visitors who prefer reduced motion.
+- **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `prototype/main.js` therefore retries playback on the first pointer, touch, key, or scroll event.
+- **The page never shows a white panel.** Safari paints a video's own surface white until a frame is decoded, and it draws the native play/pause bar over a paused video. The poster is therefore painted on the `.bg` container as a CSS background, and the `<video>` element stays at `opacity: 0` until it fires `playing` and gets the `is-playing` class. A blocked or paused video is invisible, so there is nothing to flash white and no control bar to show. The video is decorative, so it is paused entirely for visitors who prefer reduced motion.
+
+## Verifying the backend and frontend agree
+
+`npm run test:contracts` pins the `GenerateResponse` contract from `src/contracts.ts` and checks both producers against it:
+
+```
+$ npm run test:contracts
+[ok]   GET /api/health -> live
+[ok]   GET /health alias -> 200
+[ok]   POST /api/projects/generate -> live, 3 concepts, 5 signals
+[ok]   frontend mockGenerate -> mock, 3 concepts
+[ok]   422 detail is readable -> "businessType: Input should be 'Food & beverage', ..."
+All contract checks passed.
+```
+
+It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
 
 ## API
 

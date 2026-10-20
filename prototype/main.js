@@ -275,6 +275,23 @@
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
 
+    // Safari draws the native play/pause bar over a paused video. The
+    // element is hidden until it is genuinely playing, so the bar can never
+    // appear; make sure the controls are off in every case.
+    video.controls = false;
+    video.removeAttribute('controls');
+    video.classList.remove('is-playing');
+
+    // Only reveal the video once it is actually rendering frames. Until then
+    // the container's poster stands in for it.
+    function markPlaying() {
+      video.classList.add('is-playing');
+    }
+    video.addEventListener('playing', markPlaying);
+    video.addEventListener('timeupdate', function () {
+      if (!video.paused) markPlaying();
+    });
+
     // A decorative background loop should not run for visitors who asked for
     // reduced motion; the .bg fallback colour keeps the page looking right.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

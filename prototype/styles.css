@@ -59,6 +59,13 @@ html, body {
   position: absolute;
   inset: 0;
   background-color: #000000;
+  /* The poster is painted on the container, not only on the video element.
+     Safari paints a video's own surface white until a frame is decoded, so a
+     paused or blocked video would otherwise flash a white panel over the
+     whole viewport. With the poster here, the fallback is always correct. */
+  background-image: url("assets/cultureforge-poster.jpg");
+  background-size: cover;
+  background-position: center center;
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
@@ -72,6 +79,15 @@ html, body {
   object-fit: cover;
   pointer-events: none;
   z-index: 0;
+  /* Stay invisible until the video is actually playing. Safari shows the
+     native play/pause bar on a paused video; hiding the element keeps that
+     bar off the page and lets the container's poster show through. */
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.bg-video.is-playing {
+  opacity: 1;
 }
 
 /* --------------------------------------------------------------------------
