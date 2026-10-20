@@ -1,0 +1,40 @@
+# Project knowledge workflow
+
+Two retrieval surfaces: a **graphify** knowledge graph over the code, and an **Obsidian vault** of per-node notes. Both are scoped queries — never load `graph.json`, `GRAPH_REPORT.md`, or the whole vault into context.
+
+## Tools
+
+| Surface | How to reach it |
+|---|---|
+| Graph MCP (OpenCode) | `mcp.servers.cultureforge-graph` in `opencode.json` → `scripts/graphify_mcp.sh`. Tools: `query_graph`, `get_node`, `get_neighbors`, `get_community`, `shortest_path`, `god_nodes`, `graph_stats`. |
+| Graph CLI (fallback / Antigravity) | `graphify query "..." --budget 1500`, `graphify explain "X"`, `graphify path "A" "B"`, `graphify god-nodes --top 5` |
+| Obsidian vault (retrieval) | `python3 scripts/vault_query.py "<label>" [--code]` — one note, scoped, with frontmatter + connections. |
+
+## Retrieval ladder
+
+Climb and stop at the first rung that answers the question.
+
+1. **`query_graph(question, token_budget=1500, context_filter=[...])`** — scoped subgraph. Use `context_filter` (`["call"]`, `["def"]`) to cut noise. Drop to `token_budget=700` for narrow questions.
+2. **`get_node(label)` / `get_neighbors(label, token_budget=800)`** — one concept and its edges.
+3. **`get_community(community_id, token_budget=1200)`** — one cluster. Use `god_nodes(top_n=5)` and `graph_stats()` to orient first.
+4. **`shortest_path(source, target)`** — how two concepts connect, without pulling in either neighborhood.
+5. **`scripts/vault_query.py "<label>"`** — the Obsidian note for a node: frontmatter (`source_file`, `location`, `community`) plus its `## Connections`. Add `--code` to append the exact source excerpt. Other modes: `--search "<text>"`, `--source "<path>"`, `--list [--community X]`, `--stats`, `--json`.
+6. **Source file** — only when exact behavior or an edit matters. Use `rg` with a tight pattern; read only the cited line range.
+
+The vault is a retrieval source *and* a human browsing surface. Prefer a vault note over grepping raw files: it is smaller and already normalized to graph structure.
+
+## Maintenance
+
+- Refresh the graph after substantial source changes: `graphify update .` (AST-only, no API cost).
+- Re-export the vault: `graphify export obsidian --dir "CultureForge AI"`.
+- Re-label communities after a major refactor: `graphify label . --missing-only`.
+- The vault is an **export**, not a graph input. `.graphifyignore` excludes `/CultureForge AI/` from the scan — do not remove it. Re-ingesting the vault feeds the graph its own output and inflates every query.
+- Keep `scripts/vault_query.py`'s index fresh automatically; it rebuilds on vault mtime change.
+
+## Delegation protocol
+
+- Do **not** spawn a subagent without explicit user permission, every time. No self-authorized escalation.
+- When a task is difficult, ambiguous, or beyond this model's capability, stop and report back: state what was attempted, what is blocked, and why a higher-intelligence model would help.
+- End that report with a direct request for permission to delegate, naming the agent role and the specific scope of work.
+- Wait for an explicit yes. If the user says no, continue with the best available approach and state the remaining limitation.
+- Delegation is for a well-scoped slice of work, not a blind handoff of the whole task.

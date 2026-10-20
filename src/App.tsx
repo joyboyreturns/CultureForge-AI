@@ -26,7 +26,7 @@ function readStored<T,>(key: string, fallback: T): T {
 function writeStored(key: string, value: unknown) { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* Storage can be disabled in private browser sessions. */ } }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home')
+  const [screen, setScreen] = useState<Screen>(() => window.location.hash === '#workspace/create' ? 'create' : 'home')
   const [theme, setTheme] = useState<Theme>(() => readStored('cultureforge-theme', 'dark'))
   const [form, setForm] = useState<ProjectRequest>(initial)
   const [result, setResult] = useState<GenerateResponse>(() => mockGenerate(initial))
@@ -45,6 +45,11 @@ export default function App() {
     writeStored('cultureforge-theme', theme)
   }, [theme])
   useEffect(() => { writeStored('cultureforge-saved', saved) }, [saved])
+  useEffect(() => {
+    function startNewExploration() { setProviderError(''); setSavedOnly(false); setScreen('create') }
+    window.addEventListener('cultureforge:open-create', startNewExploration)
+    return () => window.removeEventListener('cultureforge:open-create', startNewExploration)
+  }, [])
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 3000); return () => clearTimeout(timer) }, [toast])
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); setMenuOpen(false) }, [screen])
   function navigate(next: Screen) { if (screen === 'progress') runId.current++; setMenuOpen(false); setScreen(next) }
@@ -94,7 +99,7 @@ export default function App() {
       <div className="sidebar-bottom"><div className="demo-promo"><span className="small-cap"><span className="orange-dot"/> THE CULTUREFORGE EXPERIENCE</span><h3>One idea.<br/>A world of possibilities.</h3><button onClick={() => create(initial, true)}>Take a guided demo <Play size={13} fill="currentColor"/></button><span className="demo-promo-art"><Waves size={67} strokeWidth={1}/></span></div>
       <div className="sidebar-foot"><div className="founder-avatar">V</div><span><strong>Vincent’s workspace</strong><small>Qloo Agentic Hackathon</small></span><span className="workspace-indicator"/></div></div>
     </aside>
-    <main className="main-area"><header className="topbar"><div className="topbar-left"><button className="mobile-menu icon-button" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20}/></button><span className="topbar-workspace">Workspace</span><ChevronRight size={12}/><span>{titles[screen]}</span></div><div className="topbar-right"><span className="prototype-badge"><span/> {result.dataMode === 'live' ? 'Qloo signals connected' : 'Prototype · mock data'}</span><span className="topbar-separator"/><button className="theme-toggle" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={17}/> : <Moon size={17}/>}<span>{theme === 'dark' ? 'Light' : 'Dark'} mode</span></button><button className="top-new icon-button" aria-label="Create a new exploration" onClick={() => navigate('create')}><Plus size={18}/></button></div></header>
+    <main className="main-area"><header className="topbar"><div className="topbar-left"><button className="studio-return" onClick={() => window.dispatchEvent(new Event('cultureforge:show-landing'))}><ArrowLeft size={14}/> Landing</button><button className="mobile-menu icon-button" aria-label="Open navigation" onClick={() => setMenuOpen(true)}><Menu size={20}/></button><span className="topbar-workspace">Workspace</span><ChevronRight size={12}/><span>{titles[screen]}</span></div><div className="topbar-right"><span className="prototype-badge"><span/> {result.dataMode === 'live' ? 'Qloo signals connected' : 'Prototype · mock data'}</span><span className="topbar-separator"/><button className="theme-toggle" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={17}/> : <Moon size={17}/>}<span>{theme === 'dark' ? 'Light' : 'Dark'} mode</span></button><button className="top-new icon-button" aria-label="Create a new exploration" onClick={() => navigate('create')}><Plus size={18}/></button></div></header>
       <div className="page-content" key={screen}>
         {screen === 'home' && <Home start={() => navigate('create')} demo={() => create(initial, true)} explore={() => navigate('results')}/>}
         {screen === 'create' && <Create form={form} setForm={setForm} submit={() => create()} error={providerError} back={() => navigate('home')}/>}

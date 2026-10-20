@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "cultureforge-graph": {
+        "type": "local",
+        "command": ["bash", "scripts/graphify_mcp.sh"],
+        "cwd": ".",
+        "codemode": true,
+        "enabled": true,
+        "timeout": {
+          "startup": 20000,
+          "execution": 30000
+        }
+      }
+    }
+  }
+}
