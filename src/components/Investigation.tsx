@@ -28,6 +28,9 @@ export function Investigation({
   onClose: () => void
 }) {
   const [facets, setFacets] = useState<Facet[]>([])
+  // The founder chooses. Two are offered by default because they answer the
+  // biggest uncertainties, and the rest are one click away.
+  const [chosen, setChosen] = useState<string[]>(['geography', 'tags'])
   const [report, setReport] = useState<Investigation | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -47,9 +50,9 @@ export function Investigation({
   }
 
   function toggle(id: string) {
-    setFacets((current) => current.some((facet) => facet.id === id)
-      ? current.filter((facet) => facet.id !== id)
-      : [...current, { id, workflow: id, question: '' }])
+    setChosen((current) => current.includes(id)
+      ? current.filter((value) => value !== id)
+      : [...current, id])
   }
 
   async function run() {
@@ -62,7 +65,7 @@ export function Investigation({
         entityIds,
         reference: referenceId,
         within: project.location,
-        facets: facets.map((facet) => facet.id),
+        facets: chosen,
         seedTagIds,
       })
       setReport(result)
@@ -94,16 +97,16 @@ export function Investigation({
 
     {facets.length > 0 && !report && (
       <div className="investigation-questions">
-        {facets.map((facet) => <label key={facet.id} className={`investigation-facet${facets.some((f) => f.id === facet.id) ? ' is-on' : ''}`}>
-          <input type="checkbox" checked={facets.some((f) => f.id === facet.id)} onChange={() => toggle(facet.id)}/>
+        {facets.map((facet) => <label key={facet.id} className={`investigation-facet${chosen.includes(facet.id) ? ' is-on' : ''}`}>
+          <input type="checkbox" checked={chosen.includes(facet.id)} onChange={() => toggle(facet.id)}/>
           <span>
             <b>{facet.workflow}</b>
             {facet.question}
           </span>
         </label>)}
         <div className="investigation-actions">
-          <button className="button button-primary" onClick={run} disabled={busy || !facets.length}>
-            {busy ? 'Investigating…' : `Investigate ${facets.length} question${facets.length === 1 ? '' : 's'}`}
+          <button className="button button-primary" onClick={run} disabled={busy || !chosen.length}>
+            {busy ? 'Investigating…' : `Investigate ${chosen.length} question${chosen.length === 1 ? '' : 's'}`}
           </button>
           {busy && <span className="scenario-busy">Calling Qloo. The first look takes a few seconds; a second costs nothing.</span>}
         </div>
@@ -174,7 +177,7 @@ export function Investigation({
 
       <footer className="investigation-foot">
         <span>{report.transportRequests} upstream request{report.transportRequests === 1 ? '' : 's'} · {report.investigatedAt.slice(0, 19).replace('T', ' ')}</span>
-        <button className="button button-secondary" onClick={() => { setReport(null); setFacets([]) }}>Ask something else</button>
+        <button className="button button-secondary" onClick={() => { setReport(null) }}>Ask something else</button>
       </footer>
     </>}
   </div>

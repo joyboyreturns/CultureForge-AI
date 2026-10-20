@@ -33,7 +33,7 @@ export interface GeoLayer {
 
 const WIDTH = 860
 const HEIGHT = 460
-const PAD = 34
+const PAD = 62
 
 /** An equirectangular projection, which is the honest one for a small area. */
 function project(point: GeoPoint, bounds: { west: number; south: number; east: number; north: number }) {
@@ -69,11 +69,22 @@ export function GeoMap({ layer, label = 'Geographic interest' }: { layer: GeoLay
   }
 
   const placed = points.map((point) => ({ point, ...project(point, bounds) }))
+
+  // Affinity is the metric that matters, but within one area it is often
+  // almost identical across every cell. Encoding a spread of 0.001 would draw
+  // twenty identical dots and imply a comparison the data does not support,
+  // so popularity is used instead, and the legend says which.
   const affinities = points.map((p) => p.affinity).filter((a): a is number => typeof a === 'number')
-  const top = affinities.length ? Math.max(...affinities) : 1
-  const bottom = affinities.length ? Math.min(...affinities) : 0
+  const popularities = points.map((p) => p.popularity).filter((a): a is number => typeof a === 'number')
+  const affinitySpread = affinities.length ? Math.max(...affinities) - Math.min(...affinities) : 0
+  const useAffinity = affinitySpread > 0.005
+  const values = useAffinity ? affinities : popularities
+  const top = values.length ? Math.max(...values) : 1
+  const bottom = values.length ? Math.min(...values) : 0
   const span = Math.max(0.0001, top - bottom)
   const scale = (value?: number | null) => (typeof value === 'number' ? (value - bottom) / span : 0)
+  const metricName = useAffinity ? 'affinity' : 'popularity'
+  const metricOf = (point: GeoPoint) => (useAffinity ? point.affinity : point.popularity)
 
   // Gridlines at round latitudes and longitudes, so the plot can be read.
   const gridLat = [0.25, 0.5, 0.75].map((f) => bounds.south + span * 0 + (bounds.north - bounds.south) * f)
@@ -100,19 +111,19 @@ export function GeoMap({ layer, label = 'Geographic interest' }: { layer: GeoLay
         const { x } = project({ lat: bounds.south, lon }, bounds)
         return <g key={`lon-${index}`}>
           <line x1={x} y1={PAD} x2={x} y2={HEIGHT - PAD} stroke="var(--line)" strokeWidth="1" strokeDasharray="3 7" />
-          <text x={x} y={HEIGHT - PAD + 16} textAnchor="middle" className="geo-axis">{lon.toFixed(2)}°</text>
+          <text x={x} y={HEIGHT - PAD + 18} textAnchor="middle" className="geo-axis">{lon.toFixed(2)}°</text>
         </g>
       })}
       {gridLat.map((lat, index) => {
         const { y } = project({ lat, lon: bounds.west }, bounds)
         return <g key={`lat-${index}`}>
           <line x1={PAD} y1={y} x2={WIDTH - PAD} y2={y} stroke="var(--line)" strokeWidth="1" strokeDasharray="3 7" />
-          <text x={PAD - 6} y={y - 5} textAnchor="end" className="geo-axis">{lat.toFixed(2)}°</text>
+          <text x={PAD - 12} y={y - 5} textAnchor="end" className="geo-axis">{lat.toFixed(2)}°</text>
         </g>
       })}
 
       {placed.map(({ point, x, y }, index) => {
-        const heat = scale(point.affinity)
+        const heat = scale(metricOf(point))
         const radius = 7 + heat * 26
         const active = hovered === index
         return <g key={`${point.lat}-${point.lon}-${index}`} className={`geo-point${active ? ' is-active' : ''}`}
@@ -125,10 +136,10 @@ export function GeoMap({ layer, label = 'Geographic interest' }: { layer: GeoLay
             <line x1={x} y1={y} x2={x} y2={y - 34} stroke="var(--sun)" strokeWidth="1.2" />
             <circle cx={x} cy={y - 34} r="3" fill="var(--sun)" />
             <text x={x} y={y - 42} textAnchor="middle" className="geo-tip">
-              {point.affinity != null ? `affinity ${point.affinity.toFixed(4)}` : 'affinity n/a'}
+              {metricOf(point) != null ? `${metricName} ${metricOf(point)!.toFixed(4)}` : `${metricName} n/a`}
             </text>
             <text x={x} y={y - 28} textAnchor="middle" className="geo-tip is-dim">
-              {point.popularity != null ? `popularity ${point.popularity.toFixed(4)}` : `lat ${point.lat.toFixed(3)}, lon ${point.lon.toFixed(3)}`}
+              {point.affinity != null ? `affinity ${point.affinity.toFixed(4)}` : `lat ${point.lat.toFixed(3)}, lon ${point.lon.toFixed(3)}`}
             </text>
           </g>}
         </g>
@@ -136,7 +147,7 @@ export function GeoMap({ layer, label = 'Geographic interest' }: { layer: GeoLay
     </svg>
 
     <div className="geo-map-foot">
-      <span className="geo-legend"><i /> lower affinity <i className="is-high" /> higher affinity</span>
+      <span className="geo-legend"><i /> lower {metricName} <i className="is-high" /> higher {metricName}</span>
       <span className="geo-note">
         {layer?.note ?? 'Qloo supplies geographic popularity cells for interest mapping. These are distinct from precise venue coordinates.'}
       </span>
