@@ -3,6 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import json
+import time
 from typing import Optional
 from uuid import uuid4
 
@@ -12,7 +14,12 @@ from .evidence_store import get_store
 from .models import (CompareAudiencesRequest, CompareRequest, ErrorBody, ErrorResponse,
                      GenerateResponse, ProjectRequest, RankRequest, RecomposeRequest,
                      ShareRequest)
+from .platform import get_platform
+from . import metering
+from .investigation import FACET_QUESTIONS, FACETS, _bounds, _demographics, _geography_points, _workflow_for, investigate
 from .providers import (COMPOSER_VERSION, QLOO_WORKFLOWS, QlooHarnessError,
+                        audience_demographics_payload, describe_payload, entity_tags_payload,
+                        trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
 from .research import registry as research_registry, start_research
 
@@ -136,14 +143,29 @@ def health_alias():
 
 @app.post('/api/projects/generate', response_model=GenerateResponse, tags=['brief'],
           summary='Answer a brief with evidence-backed directions')
-def generate(project: ProjectRequest) -> GenerateResponse:
+def generate(project: ProjectRequest, request: Request) -> GenerateResponse:
     """Resolve the brief into cultural signals, retrieve the local evidence,
     and compose three directions that each name the venues they came from.
 
     A brief that has been answered before is served from held evidence and
     costs no upstream request. The delivery says which it was.
+
+    Every answer is saved to the caller's workspace, so it is still there
+    after the tab closes and can be exported or handed to somebody else.
     """
-    return get_provider().generate(project)
+    response = get_provider().generate(project)
+    try:
+        if request is not None:
+            workspace, _prefix = resolve_workspace(request)
+            get_platform().save_exploration(
+                workspace['id'], response.model_dump(),
+                title=f"{project.businessType} in {project.location}",
+                brief=project.model_dump(),
+                project_id=response.projectId,
+                delivery=response.delivery.model_dump() if response.delivery else None)
+    except Exception:  # pragma: no cover - saving must never break an answer
+        pass
+    return response
 
 
 @app.post('/api/projects/compare', tags=['brief'],
@@ -169,6 +191,322 @@ def compare(request: CompareRequest) -> dict:
         'delivery': response.delivery.model_dump() if response.delivery else None,
         'resolvedTags': response.provenance.resolved_tags if response.provenance else [],
         'notice': response.notice,
+    }
+
+
+# ---------------------------------------------------------------------------
+# The platform: workspaces, issued keys, metering, saved explorations
+#
+# The studio runs in a local workspace so a founder never has to sign up for
+# anything to try it. A partner calls the same API with an issued key, and
+# lands in their own workspace, where everything they save is theirs.
+# ---------------------------------------------------------------------------
+
+#: The workspace the studio uses when no key is presented.
+LOCAL_WORKSPACE_NAME = 'Local studio'
+
+
+def resolve_workspace(request: Request) -> tuple[dict, Optional[str]]:
+    """Which workspace this request belongs to, and the key prefix that opened it.
+
+    A presented bearer key decides. Without one, the request lands in the
+    local studio workspace, which is created once and reused.
+    """
+    header = request.headers.get('authorization', '')
+    presented = header[7:].strip() if header.lower().startswith('bearer ') else ''
+    if presented:
+        identity = get_platform().authenticate(presented)
+        if identity is None:
+            raise HTTPException(status_code=401, detail='That API key is not valid, has expired, or has been revoked.')
+        workspace = get_platform().workspace(identity['workspaceId'])
+        if not workspace:
+            raise HTTPException(status_code=403, detail='That key belongs to a workspace that no longer exists.')
+        return workspace, identity['prefix']
+    platform = get_platform()
+    existing = next((w for w in platform.workspaces() if w['name'] == LOCAL_WORKSPACE_NAME), None)
+    return existing or platform.create_workspace(LOCAL_WORKSPACE_NAME, plan='studio'), None
+
+
+@app.middleware('http')
+async def meter_requests(request: Request, call_next):
+    """Count every API request, and every upstream call it caused.
+
+    The two are different costs: an API request is what a partner pays for,
+    and an upstream call is what the hackathon quota pays for.
+    """
+    started = time.monotonic()
+    counter = metering.begin()
+    response = await call_next(request)
+    duration_ms = int((time.monotonic() - started) * 1000)
+    try:
+        workspace, prefix = resolve_workspace(request)
+        get_platform().record_usage(
+            route=request.url.path, method=request.method, status=response.status_code,
+            workspace_id=workspace['id'], key_prefix=prefix,
+            upstream_calls=counter[0], duration_ms=duration_ms)
+    except HTTPException:
+        pass
+    except Exception:  # pragma: no cover - metering must never break a request
+        pass
+    return response
+
+
+@app.post('/api/workspaces', status_code=201, tags=['platform'],
+          summary='Provision a workspace for a partner')
+def create_workspace(payload: dict) -> dict:
+    """Provision a workspace. The operator does this; there is no self-service
+    signup, because there is no billing behind it yet."""
+    name = str(payload.get('name') or '').strip()
+    if not name:
+        raise HTTPException(status_code=422, detail='A workspace needs a name.')
+    return get_platform().create_workspace(name, plan=str(payload.get('plan') or 'partner'))
+
+
+@app.post('/api/workspaces/{workspace_id}/keys', status_code=201, tags=['platform'],
+          summary='Issue an API key for a workspace')
+def issue_key(workspace_id: str, payload: dict) -> dict:
+    """Issue an API key. The key is shown once, here, and never again."""
+    try:
+        return get_platform().issue_key(
+            workspace_id,
+            [str(scope) for scope in (payload.get('scopes') or ['read'])],
+            expires_at=payload.get('expiresAt'))
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get('/api/workspaces/{workspace_id}/keys', tags=['platform'],
+         summary='The keys issued for a workspace')
+def list_keys(workspace_id: str) -> dict:
+    return {'keys': get_platform().keys(workspace_id)}
+
+
+@app.delete('/api/workspaces/{workspace_id}/keys/{key_id}', status_code=204, tags=['platform'],
+            summary='Revoke an API key')
+def revoke_key(workspace_id: str, key_id: str) -> Response:
+    if not get_platform().revoke_key(key_id):
+        raise HTTPException(status_code=404, detail='That key does not exist.')
+    return Response(status_code=204)
+
+
+@app.get('/api/usage', tags=['platform'],
+         summary='How much this API has been used')
+def usage(days: int = 30) -> dict:
+    """Metered usage: requests, and the upstream calls they caused."""
+    return get_platform().usage(days=max(1, min(days, 365)))
+
+
+@app.get('/api/explorations', tags=['brief'],
+         summary='The explorations this workspace has saved')
+def list_explorations(request: Request, limit: int = 50) -> dict:
+    workspace, _prefix = resolve_workspace(request)
+    return {'explorations': get_platform().explorations(workspace['id'], limit=max(1, min(limit, 200)))}
+
+
+@app.get('/api/explorations/{exploration_id}', tags=['brief'],
+         summary='One saved exploration, with its versions')
+def read_exploration(request: Request, exploration_id: str) -> dict:
+    workspace, _prefix = resolve_workspace(request)
+    record = get_platform().exploration(exploration_id)
+    if not record or record['workspaceId'] != workspace['id']:
+        raise HTTPException(status_code=404, detail='That exploration does not exist.')
+    record['result'] = get_platform().exploration_payload(exploration_id)
+    return record
+
+
+@app.get('/api/explorations/{exploration_id}/export', tags=['brief'],
+         summary='Download an exploration as JSON or Markdown')
+def export_exploration(request: Request, exploration_id: str, format: str = 'json') -> Response:
+    workspace, _prefix = resolve_workspace(request)
+    record = get_platform().exploration(exploration_id)
+    if not record or record['workspaceId'] != workspace['id']:
+        raise HTTPException(status_code=404, detail='That exploration does not exist.')
+    payload = get_platform().exploration_payload(exploration_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail='That exploration has no saved result.')
+    if format == 'markdown':
+        body = render_markdown(payload)
+        return Response(body, media_type='text/markdown; charset=utf-8',
+                        headers={'Content-Disposition': f'attachment; filename="{exploration_id}.md"'})
+    if format != 'json':
+        raise HTTPException(status_code=422, detail="The export format must be 'json' or 'markdown'.")
+    return Response(json.dumps(payload, indent=2, ensure_ascii=False),
+                    media_type='application/json',
+                    headers={'Content-Disposition': f'attachment; filename="{exploration_id}.json"'})
+
+
+def render_markdown(payload: dict) -> str:
+    """The export a founder would actually send to a partner."""
+    brief = payload.get('project') or {}
+    lines = [
+        f"# {brief.get('businessType', 'CultureForge')} — {brief.get('location', 'exploration')}",
+        '',
+        f"- **Audience**: {brief.get('audience', 'not stated')}",
+        f"- **Location**: {brief.get('location', 'not stated')}",
+        f"- **Budget**: {brief.get('budget', 'not stated')}",
+        f"- **Objectives**: {', '.join(brief.get('objectives') or []) or 'none stated'}",
+        '',
+    ]
+    for concept in payload.get('concepts') or []:
+        lines += [f"## {concept.get('name')}", f"*{concept.get('tagline')}*", '',
+                  concept.get('description') or '', '']
+        if concept.get('decisions'):
+            lines.append('### Why this direction')
+            for decision in concept['decisions']:
+                lines.append(f"- **{decision.get('field')}**: {decision.get('proposal')}")
+            lines.append('')
+        if concept.get('limitations'):
+            lines.append('### What this does not establish')
+            lines += [f"- {line}" for line in concept['limitations']]
+            lines.append('')
+    if payload.get('notice'):
+        lines += ['---', '', payload['notice']]
+    lines += ['', '---', '', '_Produced by CultureForge AI. Cultural evidence from the Qloo API; '
+              'business directions are CultureForge\'s interpretation of it._']
+    return '\n'.join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Investigating a direction, and Qloo's full workflow surface
+# ---------------------------------------------------------------------------
+
+@app.post('/api/projects/investigate', tags=['evidence'],
+          summary='Investigate one direction: what does it still not know?')
+def investigate_route(request: dict) -> dict:
+    """Open the questions a direction has not answered yet, and answer them.
+
+    The founder picks the direction and the questions. Each question is one
+    named Qloo workflow, the answer records which workflow produced it, and
+    every call is cached so a second look costs nothing.
+    """
+    try:
+        project = ProjectRequest.model_validate(request.get('project') or {})
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f'The brief could not be read: {exc}') from exc
+    facets = [str(f) for f in (request.get('facets') or [])]
+    entity_ids = [str(e) for e in (request.get('entityIds') or []) if e]
+    return investigate(
+        project,
+        direction_id=str(request.get('directionId') or '') or None,
+        entity_ids=entity_ids,
+        within=str(request.get('within') or request.get('project', {}).get('location') or 'United States'),
+        facets=facets,
+        seed_tag_ids=[str(t) for t in (request.get('seedTagIds') or [])] or None,
+        reference=str(request.get('reference') or '') or None,
+    )
+
+
+@app.get('/api/facets', tags=['evidence'], summary='The questions an investigation can open')
+def list_facets() -> dict:
+    """What the founder can choose to have investigated, in plain language."""
+    return {
+        'facets': [
+            {'id': facet, 'workflow': _workflow_for(facet), 'question': FACET_QUESTIONS[facet]}
+            for facet in FACETS
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Qloo's workflows, one route each, so a partner can reach the full surface
+# ---------------------------------------------------------------------------
+
+@app.post('/api/qloo/describe', tags=['evidence'], summary='Resolve one entity and describe it')
+def qloo_describe(request: dict) -> dict:
+    """Qloo's `describe` workflow: one named entity, and the metadata Qloo holds."""
+    entity = str(request.get('entity') or '').strip()
+    if not entity:
+        raise HTTPException(status_code=422, detail='Name the entity to describe.')
+    provider = QlooHarnessProvider()
+    envelope, cached, requests = provider.run_workflow_cached(
+        'describe', describe_payload(entity, request.get('entityType')))
+    return _workflow_response('describe', envelope, cached, requests)
+
+
+@app.post('/api/qloo/entity-tags', tags=['evidence'], summary='The concepts that characterise entities')
+def qloo_entity_tags(request: dict) -> dict:
+    """Qloo's `entity_tags` workflow."""
+    entities = [str(e) for e in (request.get('entities') or []) if e]
+    if not entities:
+        raise HTTPException(status_code=422, detail='Name at least one entity.')
+    provider = QlooHarnessProvider()
+    envelope, cached, requests = provider.run_workflow_cached(
+        'entity_tags', entity_tags_payload(entities, request.get('entityType'), int(request.get('limit') or 10)))
+    return _workflow_response('entity_tags', envelope, cached, requests)
+
+
+@app.post('/api/qloo/where-popular', tags=['evidence'],
+          summary='Where an entity has strong affinity, as geographic cells')
+def qloo_where_popular(request: dict) -> dict:
+    """Qloo's `where_popular` workflow.
+
+    The answer is a set of geographic cells for interest mapping. They are not
+    the coordinates of venues.
+    """
+    entity = str(request.get('entity') or '').strip()
+    within = str(request.get('within') or '').strip()
+    if not entity:
+        raise HTTPException(status_code=422, detail='Name the entity to map.')
+    if not within:
+        raise HTTPException(status_code=422, detail='Name the area to map it within.')
+    provider = QlooHarnessProvider()
+    envelope, cached, requests = provider.run_workflow_cached(
+        'where_popular', where_popular_payload(entity, within, request.get('entityType'), int(request.get('limit') or 20)))
+    response = _workflow_response('where_popular', envelope, cached, requests)
+    points = _geography_points(envelope)
+    response['points'] = points
+    response['bounds'] = _bounds(points)
+    response['note'] = ('Qloo supplies geographic popularity cells for interest mapping. '
+                        'These are distinct from precise venue coordinates.')
+    return response
+
+
+@app.post('/api/qloo/audience-demographics', tags=['evidence'],
+          summary='The demographic index for one entity')
+def qloo_audience_demographics(request: dict) -> dict:
+    """Qloo's `audience_demographics` workflow."""
+    entity = str(request.get('entity') or '').strip()
+    if not entity:
+        raise HTTPException(status_code=422, detail='Name the entity to profile.')
+    provider = QlooHarnessProvider()
+    envelope, cached, requests = provider.run_workflow_cached(
+        'audience_demographics', audience_demographics_payload(entity, request.get('entityType'), int(request.get('limit') or 5)))
+    response = _workflow_response('audience_demographics', envelope, cached, requests)
+    response['demographics'] = _demographics(envelope)
+    return response
+
+
+@app.post('/api/qloo/trends', tags=['evidence'],
+          summary='Popularity over time for one to five entities')
+def qloo_trends(request: dict) -> dict:
+    """Qloo's `trends` workflow."""
+    entities = [str(e) for e in (request.get('entities') or []) if e]
+    if not entities:
+        raise HTTPException(status_code=422, detail='Name at least one entity.')
+    provider = QlooHarnessProvider()
+    envelope, cached, requests = provider.run_workflow_cached('trends', trends_payload(
+        entities, str(request.get('entityType') or 'place'),
+        str(request.get('startDate') or ''), str(request.get('endDate') or ''),
+        int(request.get('limit') or 10)))
+    return _workflow_response('trends', envelope, cached, requests)
+
+
+def _workflow_response(operation: str, envelope: dict, cached: bool, requests: int) -> dict:
+    """One shape for every Qloo workflow answer, so a caller can read them all
+    the same way."""
+    execution = envelope.get('execution') if isinstance(envelope.get('execution'), dict) else {}
+    provenance = envelope.get('provenance') if isinstance(envelope.get('provenance'), dict) else {}
+    return {
+        'workflow': operation,
+        'status': envelope.get('status', 'ok'),
+        'results': envelope.get('results') or [],
+        'resultCount': len(envelope.get('results') or []) if isinstance(envelope.get('results'), list) else 0,
+        'cached': cached,
+        'transportRequests': requests,
+        'durationMs': execution.get('duration_ms') if isinstance(execution.get('duration_ms'), int) else None,
+        'endpoint': provenance.get('endpoint'),
+        'documentation': provenance.get('documentation'),
+        'queryIntent': envelope.get('query_intent'),
     }
 
 
@@ -250,15 +588,16 @@ def resolve_taste(request: CompareRequest) -> dict:
           summary='Freeze an exploration so a shared link reopens exactly it')
 def share_exploration(payload: ShareRequest, response: Response) -> dict:
     """Freeze an exploration so a judge can open exactly what was shown."""
-    snapshot_id = f'snap-{uuid4().hex[:12]}'
-    get_store().save_snapshot(snapshot_id, payload.model_dump())
+    snapshot_id = get_platform().save_share(payload.model_dump())
     response.headers['Location'] = f'/api/snapshots/{snapshot_id}'
     return {'snapshotId': snapshot_id, 'url': f'/api/snapshots/{snapshot_id}'}
 
 
 @app.get('/api/snapshots/{snapshot_id}', tags=['sharing'], summary='Reopen a frozen exploration')
 def read_snapshot(snapshot_id: str) -> dict:
-    payload = get_store().get_snapshot(snapshot_id)
+    # The platform store is the durable one; the evidence store still holds
+    # snapshots taken before the platform existed.
+    payload = get_platform().share(snapshot_id) or get_store().get_snapshot(snapshot_id)
     if not payload:
         raise HTTPException(status_code=404, detail='That snapshot is no longer available.')
     return payload

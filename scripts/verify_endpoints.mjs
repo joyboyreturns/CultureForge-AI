@@ -266,6 +266,165 @@ async function main() {
       result.status === 422 && readableDetail(result), `${result.status}`);
   }
 
+  // ------------------------------------------- Qloo's own workflow surface
+  // Each of the five workflows the app can reach, called directly.
+  const workflows = [
+    {
+      name: 'describe', path: '/api/qloo/describe',
+      body: { entity: 'Union Square Park', entityType: 'place' },
+      expect: (body) => body.workflow === 'describe' && body.resultCount >= 1,
+    },
+    {
+      name: 'entity_tags', path: '/api/qloo/entity-tags',
+      body: { entities: ['Union Square Park'], entityType: 'place' },
+      expect: (body) => body.workflow === 'entity_tags' && Array.isArray(body.results),
+    },
+    {
+      name: 'where_popular', path: '/api/qloo/where-popular',
+      body: { entity: 'Starbucks', entityType: 'brand', within: 'United States' },
+      expect: (body) => body.workflow === 'where_popular' && Array.isArray(body.points),
+    },
+    {
+      name: 'audience_demographics', path: '/api/qloo/audience-demographics',
+      body: { entity: 'Starbucks', entityType: 'brand' },
+      expect: (body) => body.workflow === 'audience_demographics',
+    },
+  ];
+  for (const workflow of workflows) {
+    const result = await api(workflow.path, { method: 'POST', body: workflow.body });
+    check(`POST ${workflow.path} -> answers in its own shape`,
+      result.status === 200 && workflow.expect(result.body ?? {}),
+      `${result.status} ${result.body?.error?.code ?? `${result.body?.resultCount ?? 0} results`}`);
+    seen.add(`POST ${workflow.path}`);
+  }
+  {
+    const result = await api('/api/qloo/describe', { method: 'POST', body: {} });
+    check('POST /api/qloo/describe -> no entity is 422',
+      result.status === 422 && readableDetail(result), `${result.status}`);
+  }
+  {
+    const result = await api('/api/qloo/where-popular', { method: 'POST', body: { entity: 'Starbucks' } });
+    check('POST /api/qloo/where-popular -> no area is 422',
+      result.status === 422 && readableDetail(result), `${result.status}`);
+  }
+
+  // ---------------------------------------------------- the investigation loop
+  {
+    const facets = await api('/api/facets');
+    check('GET /api/facets -> the questions an investigation can open',
+      facets.status === 200 && Array.isArray(facets.body?.facets) && facets.body.facets.length > 0,
+      `${facets.status} ${facets.body?.facets?.length ?? 0} facets`);
+    seen.add('GET /api/facets');
+  }
+  if (entities.length) {
+    const investigation = await api('/api/projects/investigate', {
+      method: 'POST',
+      body: {
+        project: BRIEF,
+        directionId: live.concepts?.[0]?.id,
+        entityIds: entities,
+        reference: entities[0],
+        within: 'United States',
+        facets: ['geography'],
+      },
+    });
+    check('POST /api/projects/investigate -> answers with the tools it used',
+      investigation.status === 200 && Array.isArray(investigation.body?.tools) && investigation.body.tools.length > 0,
+      `${investigation.status} ${investigation.body?.tools?.length ?? 0} tools`);
+    check('POST /api/projects/investigate -> it names the workflow it called',
+      (investigation.body?.tools ?? []).every((tool) => typeof tool.workflow === 'string'),
+      (investigation.body?.tools ?? []).map((t) => t.workflow).join(', '));
+    check('POST /api/projects/investigate -> it states what it did not establish',
+      Array.isArray(investigation.body?.limitations),
+      `${investigation.body?.limitations?.length ?? 0} limitations`);
+    seen.add('POST /api/projects/investigate');
+  }
+  {
+    const result = await api('/api/projects/investigate', {
+      method: 'POST', body: { project: BRIEF, entityIds: [], facets: [] },
+    });
+    check('POST /api/projects/investigate -> nothing to investigate is 422',
+      result.status === 422 && readableDetail(result), `${result.status}`);
+  }
+
+  // ------------------------------------------------------ the platform layer
+  {
+    const created = await api('/api/workspaces', { method: 'POST', body: { name: 'Endpoint Audit Co' } });
+    check('POST /api/workspaces -> 201 with a workspace',
+      created.status === 201 && typeof created.body?.id === 'string', `${created.status} ${created.body?.id}`);
+    seen.add('POST /api/workspaces');
+
+    const key = await api(`/api/workspaces/${created.body.id}/keys`, {
+      method: 'POST', body: { scopes: ['read', 'export'] },
+    });
+    check('POST /api/workspaces/{id}/keys -> 201 with a key shown once',
+      key.status === 201 && typeof key.body?.key === 'string' && key.body.key.startsWith(key.body.prefix),
+      `${key.status} ${key.body?.prefix}`);
+    const listed = await api(`/api/workspaces/${created.body.id}/keys`);
+    check('GET /api/workspaces/{id}/keys -> the secret is not stored in the clear',
+      listed.status === 200 && !JSON.stringify(listed.body).includes(key.body.key),
+      `${listed.status}`);
+    seen.add('GET /api/workspaces/{id}/keys');
+
+    const authenticated = await fetch(`${BASE_URL}/api/explorations`, {
+      headers: { Authorization: `Bearer ${key.body.key}` },
+    });
+    check('a bearer key authenticates -> 200', authenticated.status === 200, `${authenticated.status}`);
+
+    const bad = await fetch(`${BASE_URL}/api/explorations`, {
+      headers: { Authorization: 'Bearer cfk_nope.nope' },
+    });
+    check('a wrong key is rejected -> 401', bad.status === 401, `${bad.status}`);
+
+    const revoked = await api(`/api/workspaces/${created.body.id}/keys/${key.body.id}`, { method: 'DELETE' });
+    check('DELETE a key -> 204, and it stops working', revoked.status === 204, `${revoked.status}`);
+    const after = await fetch(`${BASE_URL}/api/explorations`, {
+      headers: { Authorization: `Bearer ${key.body.key}` },
+    });
+    check('a revoked key no longer authenticates -> 401', after.status === 401, `${after.status}`);
+    seen.add('DELETE /api/workspaces/{id}/keys/{keyId}');
+  }
+  {
+    const usage = await api('/api/usage');
+    check('GET /api/usage -> the requests it has served',
+      usage.status === 200 && typeof usage.body?.requests === 'number' && usage.body.requests > 0,
+      `${usage.status} ${usage.body?.requests} requests, ${usage.body?.upstreamCalls} upstream`);
+    seen.add('GET /api/usage');
+  }
+  {
+    const list = await api('/api/explorations');
+    check('GET /api/explorations -> the saved explorations',
+      list.status === 200 && Array.isArray(list.body?.explorations) && list.body.explorations.length > 0,
+      `${list.status} ${list.body?.explorations?.length ?? 0} saved`);
+    seen.add('GET /api/explorations');
+
+    const id = list.body.explorations[0].id;
+    const one = await api(`/api/explorations/${id}`);
+    check('GET /api/explorations/{id} -> one saved exploration, with its result',
+      one.status === 200 && one.body?.id === id && Boolean(one.body?.result),
+      `${one.status}`);
+    seen.add('GET /api/explorations/{id}');
+
+    const markdown = await fetch(`${BASE_URL}/api/explorations/${id}/export?format=markdown`);
+    const text = await markdown.text();
+    check('GET /api/explorations/{id}/export -> Markdown a founder could send',
+      markdown.status === 200 && text.includes('#') && text.length > 200,
+      `${markdown.status} ${text.length} chars`);
+    const asJson = await fetch(`${BASE_URL}/api/explorations/${id}/export?format=json`);
+    check('GET /api/explorations/{id}/export -> JSON with a download name',
+      asJson.status === 200 && (asJson.headers.get('content-disposition') ?? '').includes('.json'),
+      `${asJson.status}`);
+    const badFormat = await fetch(`${BASE_URL}/api/explorations/${id}/export?format=pdf`);
+    check('GET /api/explorations/{id}/export -> an unknown format is 422',
+      badFormat.status === 422, `${badFormat.status}`);
+    seen.add('GET /api/explorations/{id}/export');
+  }
+  {
+    const result = await api('/api/explorations/exp-does-not-exist');
+    check('GET /api/explorations/{unknown} -> 404',
+      result.status === 404 && readableDetail(result), `${result.status}`);
+  }
+
   // ------------------------------------------------------------- the surface
   {
     const result = await api('/openapi.json');

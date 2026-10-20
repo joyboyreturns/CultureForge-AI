@@ -20,6 +20,7 @@ try:
 except ImportError:
     pass
 
+from . import metering
 from .concept_composer import compose
 from .evidence_store import cached_call, canonical_key, get_store, known_location
 
@@ -81,6 +82,59 @@ class MockCultureProvider(CultureProvider):
     def generate(self, project: ProjectRequest) -> GenerateResponse:
         from .mock_generator import generate_mock
         return generate_mock(project)
+
+# ---------------------------------------------------------------------------
+# The request shape of each Qloo workflow
+#
+# Every Qloo workflow has its own contract, and each contract rejects fields
+# it does not know. `describe` takes `type`; `where_popular` takes
+# `entity_type`; `rank` has no `limit` at all. Building the payloads from one
+# shared shape would be wrong in a way that only shows up as an upstream
+# error, so each workflow gets its own builder here.
+# ---------------------------------------------------------------------------
+
+def describe_payload(entity: str, entity_type: Optional[str] = None) -> dict:
+    payload: dict = {'entity': entity}
+    if entity_type:
+        payload['type'] = entity_type
+    return payload
+
+
+def entity_tags_payload(entities: list[str], entity_type: Optional[str] = None,
+                        limit: int = 10) -> dict:
+    payload: dict = {'entities': list(entities)[:5]}
+    if entity_type:
+        payload['entity_type'] = entity_type
+    payload['limit'] = limit
+    return payload
+
+
+def where_popular_payload(entity: str, within: str, entity_type: Optional[str] = None,
+                          limit: int = 20) -> dict:
+    payload: dict = {'entity': entity, 'within': within, 'limit': limit}
+    if entity_type:
+        payload['entity_type'] = entity_type
+    return payload
+
+
+def audience_demographics_payload(entity: str, entity_type: Optional[str] = None,
+                                  limit: int = 5) -> dict:
+    payload: dict = {'entity': entity, 'limit': limit}
+    if entity_type:
+        payload['entity_type'] = entity_type
+    return payload
+
+
+def trends_payload(entities: list[str], entity_type: str, start_date: str,
+                   end_date: str, limit: int = 10) -> dict:
+    return {
+        'entities': list(entities)[:5],
+        'entity_type': entity_type,
+        'start_date': start_date,
+        'end_date': end_date,
+        'limit': limit,
+    }
+
 
 class QlooHarnessError(RuntimeError):
     """A safe-to-display provider failure; deliberately contains no CLI output or secrets.
@@ -258,6 +312,9 @@ class QlooHarnessProvider(CultureProvider):
         if cached is not None:
             return cached, True, 0
         envelope, was_cached, requests = cached_call(key, lambda: self._run_workflow(operation, payload))
+        # Count it against the request being served, so the usage record can
+        # tell an API request from the upstream calls it caused.
+        metering.count(requests)
         return envelope, was_cached, requests
 
     @staticmethod
@@ -530,6 +587,40 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(oldest_key, None)
             self._cache[cache_key] = (time.monotonic(), response)
         return response
+
+    # ------------------------------------------------------------------
+    # The remaining Qloo workflows
+    #
+    # Each one is read-only, cached the same way the others are, and reports
+    # what it spent. They are the app's direct line to Qloo's full surface.
+    # ------------------------------------------------------------------
+    def describe_entity(self, entity: str, entity_type: Optional[str] = None) -> dict:
+        """Resolve one named entity and return the metadata Qloo holds for it."""
+        return self.run_workflow_cached('describe', describe_payload(entity, entity_type))[0]
+
+    def entity_tags(self, entities: list[str], entity_type: Optional[str] = None,
+                    limit: int = 10) -> dict:
+        """The concepts that jointly characterise these entities."""
+        return self.run_workflow_cached('entity_tags', entity_tags_payload(entities, entity_type, limit))[0]
+
+    def where_popular(self, entity: str, within: str, entity_type: Optional[str] = None,
+                      limit: int = 20) -> dict:
+        """Where an entity has strong affinity, as geographic cells.
+
+        These are popularity cells for interest mapping. They are not the
+        coordinates of the venues themselves.
+        """
+        return self.run_workflow_cached('where_popular', where_popular_payload(entity, within, entity_type, limit))[0]
+
+    def audience_demographics(self, entity: str, entity_type: Optional[str] = None,
+                              limit: int = 5) -> dict:
+        """Aggregate demographic indexing for one entity."""
+        return self.run_workflow_cached('audience_demographics', audience_demographics_payload(entity, entity_type, limit))[0]
+
+    def trends(self, entities: list[str], entity_type: str, start_date: str,
+               end_date: str, limit: int = 10) -> dict:
+        """Time-series popularity for one to five entities."""
+        return self.run_workflow_cached('trends', trends_payload(entities, entity_type, start_date, end_date, limit))[0]
 
     @staticmethod
     def _known_location(tags: list[str], failed: str) -> Optional[str]:

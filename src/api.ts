@@ -193,4 +193,105 @@ export async function recompose(
   return postJson('/api/projects/recompose', { project, excludeEntityIds, excludeTagIds })
 }
 
+// ---------------------------------------------------------------------------
+// Investigating a direction
+// ---------------------------------------------------------------------------
+
+/** One question an investigation can open. Each is a named Qloo workflow. */
+export interface Facet {
+  id: string
+  workflow: string
+  question: string
+}
+
+export interface InvestigationTool {
+  facet: string
+  workflow: string
+  question?: string
+  status: 'ok' | 'error' | 'needs_input'
+  cached: boolean
+  transportRequests: number
+  durationMs?: number | null
+  resultCount: number
+  detail?: string
+  acquiredAt: string
+}
+
+export interface GeoPoint {
+  lat: number
+  lon: number
+  geohash?: string | null
+  affinity?: number | null
+  popularity?: number | null
+}
+
+export interface Investigation {
+  directionId: string | null
+  project: ProjectRequest
+  facets: string[]
+  questions: string[]
+  reference: string | null
+  within: string
+  tools: InvestigationTool[]
+  geography: {
+    entityId: string | null
+    within: string
+    points: GeoPoint[]
+    bounds: { west: number; south: number; east: number; north: number }
+    metric: string
+    note: string
+  } | null
+  tags: { id: string; name: string; type?: string | null; popularity?: number | null; affinity?: number | null }[]
+  demographics: {
+    entityId: string | null
+    age: Record<string, number>
+    gender: Record<string, number>
+    note: string
+  } | null
+  findings: string[]
+  limitations: string[]
+  transportRequests: number
+  investigatedAt: string
+}
+
+export async function listFacets(): Promise<{ facets: Facet[] }> {
+  const response = await fetch('/api/facets')
+  if (!response.ok) throw new Error('The open questions could not be loaded.')
+  return await response.json() as { facets: Facet[] }
+}
+
+export async function investigate(payload: {
+  project: ProjectRequest
+  directionId?: string
+  entityIds: string[]
+  reference?: string
+  within: string
+  facets: string[]
+  seedTagIds?: string[]
+}): Promise<Investigation> {
+  return postJson<Investigation>('/api/projects/investigate', payload)
+}
+
+/** The explorations this workspace has saved. */
+export interface SavedExploration {
+  id: string
+  title: string
+  brief: Record<string, unknown>
+  createdAt: number
+  updatedAt: number
+  versions: { id: string; version: number; createdAt: number; note: string | null }[]
+}
+
+export async function listExplorations(): Promise<{ explorations: SavedExploration[] }> {
+  const response = await fetch('/api/explorations')
+  if (!response.ok) throw new Error('The saved explorations could not be loaded.')
+  return await response.json() as { explorations: SavedExploration[] }
+}
+
+export async function fetchUsage(): Promise<{ requests: number; upstreamCalls: number; byRoute: Record<string, number> }> {
+  const response = await fetch('/api/usage')
+  if (!response.ok) throw new Error('The usage could not be read.')
+  return await response.json() as { requests: number; upstreamCalls: number; byRoute: Record<string, number> }
+}
+
 import { mockGenerate } from './mockData'
