@@ -148,9 +148,20 @@ async function main() {
   const realCalls = trace.filter((event) => event.workflow);
   check('the trace names the Qloo workflows it called',
     realCalls.length >= 2, realCalls.map((e) => e.workflow).join(', '));
-  check('the trace reports real durations',
-    realCalls.some((event) => typeof event.durationMs === 'number' && event.durationMs > 0),
-    realCalls.map((e) => `${e.workflow} ${e.durationMs}ms`).join(', '));
+  // A step that reused held evidence spent no time on the network, so it must
+  // not report the duration of the call that fetched it. The original time is
+  // still stated in the detail, so nothing is hidden.
+  const reused = trace.filter((event) => event.workflow && /reused from cache/i.test(event.detail ?? ''));
+  const fresh = trace.filter((event) => event.workflow && !/reused from cache/i.test(event.detail ?? ''));
+  check('a reused step claims no duration of its own',
+    reused.every((event) => event.durationMs === 0),
+    reused.map((e) => `${e.workflow} ${e.durationMs}ms`).join(', ') || 'no reused steps');
+  check('a reused step still states the original call\'s duration',
+    reused.every((event) => /original call took/i.test(event.detail ?? '')),
+    reused.map((e) => e.detail).join(' | ').slice(0, 120) || 'no reused steps');
+  check('a fresh step reports the time it actually took',
+    fresh.every((event) => typeof event.durationMs === 'number' && event.durationMs >= 0),
+    fresh.map((e) => `${e.workflow} ${e.durationMs}ms`).join(', ') || 'every step reused held evidence');
   const withRequest = trace.filter((event) => event.request?.query && Object.keys(event.request.query).length);
   check('the request that was sent is recorded', withRequest.length > 0,
     withRequest.map((e) => Object.keys(e.request.query).join('+')).join(' | '));
@@ -253,6 +264,14 @@ async function main() {
   });
   check('changing the audience re-researches', scenario.status === 200 && (scenario.body?.concepts ?? []).length > 0,
     scenario.body?.concepts?.map((c) => c.name).join(' | '));
+
+  // The same rule, checked on a second, independent result.
+  const scenarioTrace = scenario.body?.trace ?? [];
+  check('the re-research trace is consistent about what it spent',
+    scenarioTrace.filter((event) => event.workflow).every((event) => (/reused from cache/i.test(event.detail ?? '')
+      ? event.durationMs === 0
+      : typeof event.durationMs === 'number')),
+    scenarioTrace.filter((event) => event.workflow).map((e) => `${e.workflow} ${e.durationMs}ms${/reused/i.test(e.detail ?? '') ? ' (reused)' : ''}`).join(', '));
 
   console.log('\n----------------------------------------------------------');
   if (failures === 0) {

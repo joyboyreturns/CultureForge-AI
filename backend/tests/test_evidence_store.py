@@ -157,3 +157,38 @@ def test_a_repeated_brief_reports_that_it_spent_nothing(monkeypatch, recommend_p
     assert second.delivery.kind == 'cache'
     assert second.delivery.transportRequests == 0
     assert calls == ['find_tags', 'recommend'], 'the replay must not call Qloo again'
+
+
+def test_a_reused_step_does_not_claim_the_original_calls_duration():
+    """A held envelope carries the time of the call that fetched it.
+
+    If a run that reused that evidence reported that duration, a free and
+    instant answer would look like it waited on the network for twenty
+    seconds. The step's own duration is zero, and the original time is stated
+    in the detail rather than presented as this run's latency.
+    """
+    from backend.providers import mark_reused
+    from backend.models import TraceEvent
+
+    event = TraceEvent(id='t1', step='retrieve-evidence', workflow='recommend', status='ok',
+                       durationMs=23299, resultCount=5, evidenceIds=[])
+    mark_reused(event)
+
+    assert event.durationMs == 0
+    assert '23.3s' in (event.detail or ''), 'the original duration is still stated'
+    assert 'no time waiting' in (event.detail or '')
+
+
+def test_a_fresh_step_keeps_the_duration_of_the_call_that_made_it():
+    """A step that really called the API reports the time it really took."""
+    from backend.providers import QlooHarnessProvider
+
+    envelope = {
+        'status': 'ok', 'results': [],
+        'execution': {'duration_ms': 23299, 'correlation_id': 'abc'},
+        'provenance': {'endpoint': '/v2/insights', 'requests': []},
+    }
+    event = QlooHarnessProvider._trace_event('retrieve-local-evidence', 'recommend', envelope, 0)
+
+    assert event.durationMs == 23299
+    assert event.correlationId == 'abc'

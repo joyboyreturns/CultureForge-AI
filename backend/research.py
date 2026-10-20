@@ -23,7 +23,7 @@ import uuid
 from typing import Optional
 
 from .models import ProjectRequest, TraceEvent
-from .providers import QlooHarnessError, QlooHarnessProvider
+from .providers import QlooHarnessError, QlooHarnessProvider, mark_reused
 
 # A cold research run may not spend more than this many Qloo workflows.
 DEFAULT_RUN_ALLOWANCE = 3
@@ -161,8 +161,10 @@ def _execute(run: ResearchRun, allowance: int) -> None:
                 'query': f'{run.project.businessType} {run.audience}'.strip(), 'limit': 3,
             })
             run.transport_requests += requests
-            run.add_event(_event(run, 'resolve-audience', tag_envelope, result_count=3,
-                                 detail=('Reused cached Qloo find_tags.' if cached else None)))
+            tag_event = _event(run, 'resolve-audience', tag_envelope, result_count=3)
+            if cached:
+                mark_reused(tag_event, detail='Reused cached Qloo find_tags.')
+            run.add_event(tag_event)
 
         if tag_envelope.get('status') == 'needs_input':
             run.status = STATUS_CLARIFY
@@ -192,9 +194,11 @@ def _execute(run: ResearchRun, allowance: int) -> None:
             'signal_location': run.project.location, 'limit': 5,
         })
         run.transport_requests += requests
-        run.add_event(_event(run, 'retrieve-evidence', rec_envelope,
-                             result_count=len(provider.rows(rec_envelope)),
-                             detail=('Reused cached Qloo recommend.' if cached else None)))
+        rec_event = _event(run, 'retrieve-evidence', rec_envelope,
+                           result_count=len(provider.rows(rec_envelope)))
+        if cached:
+            mark_reused(rec_event, detail='Reused cached Qloo recommend.')
+        run.add_event(rec_event)
 
         if rec_envelope.get('status') == 'needs_input':
             run.status = STATUS_CLARIFY

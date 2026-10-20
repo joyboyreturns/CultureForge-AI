@@ -70,6 +70,21 @@ class MockCultureProvider(CultureProvider):
 class QlooHarnessError(RuntimeError):
     """A safe-to-display provider failure; deliberately contains no CLI output or secrets."""
 
+def mark_reused(event: TraceEvent, detail: Optional[str] = None) -> TraceEvent:
+    """Record that a step reused held evidence instead of waiting on the API.
+
+    The duration inside a held envelope belongs to the call that fetched it,
+    not to this run. Reporting it as-is would make a free, instant answer look
+    like it sat waiting on the network for twenty seconds, so the step's own
+    duration is zeroed and the original time is stated in the detail instead.
+    """
+    original = event.durationMs
+    event.durationMs = 0
+    when = f'{original / 1000:.1f}s' if original is not None else 'an unrecorded time'
+    text = detail or event.detail or ''
+    event.detail = f'{text} (reused from cache — the original call took {when}, this run spent no time waiting)'
+    return event
+
 class QlooHarnessProvider(CultureProvider):
     """Use the official qloo CLI to resolve tags and fetch bounded recommendations.
 
@@ -355,7 +370,7 @@ class QlooHarnessProvider(CultureProvider):
 
         tag_trace = self._trace_event('resolve-audience-tags', 'find_tags', tag_result, len(matched_tags))
         if reused:
-            tag_trace.detail = f'{tag_trace.detail} (reused from cache)'
+            mark_reused(tag_trace)
         trace.append(tag_trace)
 
         # The resolved tag rows, so each seed carries the name and the
@@ -380,7 +395,7 @@ class QlooHarnessProvider(CultureProvider):
 
         entity_trace = self._trace_event('retrieve-local-evidence', 'recommend', recommendations, len(rows))
         if reused:
-            entity_trace.detail = f'{entity_trace.detail} (reused from cache)'
+            mark_reused(entity_trace)
         trace.append(entity_trace)
 
         entity_rows: list[dict] = []
