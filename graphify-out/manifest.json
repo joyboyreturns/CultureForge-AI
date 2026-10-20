@@ -6,10 +6,10 @@
     "semantic_hash": "68b329da9893e34099c7d8ad5cb9c940"
   },
   "backend/main.py": {
-    "mtime": 1792236733.3315973,
-    "seen": 1792392636.6255622,
-    "ast_hash": "99a5602effc34660acfc6b662a04eb6b",
-    "semantic_hash": "99a5602effc34660acfc6b662a04eb6b"
+    "mtime": 1792500924.503735,
+    "seen": 1792502518.971308,
+    "ast_hash": "f972d8c368e28c4b5af690ec0fc4d530",
+    "semantic_hash": ""
   },
   "backend/mock_generator.py": {
     "mtime": 1792236029.804112,
@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "src/api.ts": {
-    "mtime": 1792395223.4807355,
-    "seen": 1792497285.076472,
-    "ast_hash": "07bafcdde7fc91dada77907361c88270",
+    "mtime": 1792500947.9138582,
+    "seen": 1792502518.9713302,
+    "ast_hash": "945b5c51da24ded1e5251bc26cad7265",
     "semantic_hash": ""
   },
   "src/contracts.ts": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1792500566.666123,
-    "seen": 1792500573.322927,
-    "ast_hash": "aada27ca9ab3ffbe5486777830b0b086",
+    "mtime": 1792502509.1426764,
+    "seen": 1792502518.9713411,
+    "ast_hash": "42708702bfadf67183ada479e4012999",
     "semantic_hash": ""
   },
   "index.html": {
@@ -204,15 +204,15 @@
     "semantic_hash": ""
   },
   "prototype/index.html": {
-    "mtime": 1792500530.161669,
-    "seen": 1792500573.3229299,
-    "ast_hash": "d80c66140205748950fd77374b7d8bfc",
+    "mtime": 1792502392.3904338,
+    "seen": 1792502518.971343,
+    "ast_hash": "d3d30c66d56fa68e5ab79dee29506178",
     "semantic_hash": ""
   },
   "prototype/main.js": {
-    "mtime": 1792395714.5228703,
-    "seen": 1792500573.322905,
-    "ast_hash": "b94d015312dedb36b519e499fa579c9a",
+    "mtime": 1792501017.5229187,
+    "seen": 1792502518.971319,
+    "ast_hash": "c0eb813208b0f38e95b55a1d22669952",
     "semantic_hash": ""
   },
   "prototype/assets/logo.webp": {
@@ -222,9 +222,21 @@
     "semantic_hash": ""
   },
   "prototype/assets/cultureforge-background.mp4": {
-    "mtime": 1792395745.1828494,
-    "seen": 1792500573.3229399,
-    "ast_hash": "bcb92b4728186eb5800832ef4124c7bc",
+    "mtime": 1792502285.2853613,
+    "seen": 1792502518.971354,
+    "ast_hash": "9bcd194efc12b5fde9a36efae0f2d1b9",
+    "semantic_hash": ""
+  },
+  "scripts/fix_mp4_faststart.py": {
+    "mtime": 1792502273.134898,
+    "seen": 1792502518.971321,
+    "ast_hash": "8b61168c3df77a510e16bac00b92fa9f",
+    "semantic_hash": ""
+  },
+  "prototype/assets/cultureforge-poster.jpg": {
+    "mtime": 1792502370.8311307,
+    "seen": 1792502518.9713511,
+    "ast_hash": "cb545d96defc831731dcb22b6bd4baf0",
     "semantic_hash": ""
   }
 }

@@ -261,7 +261,62 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 4. Framer Motion / Motion Spring & Micro-Interactions
+  // 4. Background Video (Safari-safe playback)
+  // ---------------------------------------------------------------------------
+  function initBackgroundVideo() {
+    const video = document.querySelector('.bg-video');
+    if (!video) return;
+
+    // Safari checks the muted *property* before it will autoplay, and it has
+    // to be set before play() is called - the HTML attribute alone is not
+    // enough on every Safari version.
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+
+    // A decorative background loop should not run for visitors who asked for
+    // reduced motion; the .bg fallback colour keeps the page looking right.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      video.removeAttribute('autoplay');
+      video.pause();
+      return;
+    }
+
+    let started = false;
+    function attemptPlay() {
+      if (started) return;
+      const playback = video.play();
+      if (playback && typeof playback.catch === 'function') {
+        playback
+          .then(function () { started = true; })
+          .catch(function () { /* autoplay blocked - wait for a user gesture */ });
+      } else {
+        started = true;
+      }
+    }
+
+    // Safari rejects play() when the element has not buffered enough yet, so
+    // retry as the data arrives.
+    video.addEventListener('canplay', attemptPlay);
+    video.addEventListener('loadeddata', attemptPlay);
+    attemptPlay();
+
+    // If autoplay was refused outright, the first interaction unlocks it.
+    const unlockEvents = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'wheel'];
+    function unlock() {
+      attemptPlay();
+      if (started) {
+        unlockEvents.forEach(function (type) { window.removeEventListener(type, unlock); });
+      }
+    }
+    unlockEvents.forEach(function (type) {
+      window.addEventListener(type, unlock, { passive: true });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5. Framer Motion / Motion Spring & Micro-Interactions
   // ---------------------------------------------------------------------------
   function initFramerMotionEnhancements() {
     if (!window.Motion || typeof window.Motion.animate !== 'function') return;
@@ -316,6 +371,7 @@
     initLandingNavigation();
     initPrototypeJourney();
     initFramerMotionEnhancements();
+    initBackgroundVideo();
 
     // In case Motion script was slightly delayed
     if (!window.Motion) {

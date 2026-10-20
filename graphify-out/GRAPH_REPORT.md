@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 340 nodes · 530 edges · 22 communities (17 shown, 5 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 28 edges (avg confidence: 0.89)
+- 374 nodes · 597 edges · 23 communities (18 shown, 5 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 30 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e7f6e201`
+- Built from commit: `bb063a57`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -27,10 +27,11 @@
 - Desktop Dashboard Mockup Content
 - Mobile Mockup Content
 - Audience and Ritual Matches
+- MP4 Faststart Remux Tool
 - App Shell and Metadata
 - TypeScript Project References
 - Graphify MCP Wrapper
-- main.js
+- Prototype Script Interactions
 - Agent Workflow Documentation
 - Qloo Execution Wrapper
 
@@ -43,8 +44,8 @@
 6. `generate_mock()` - 13 edges
 7. `CultureForge Light Dashboard Screenshot` - 13 edges
 8. `mockGenerate()` - 12 edges
-9. `main()` - 10 edges
-10. `CultureForge Concept Studio Desktop Mockup` - 10 edges
+9. `remux()` - 11 edges
+10. `main()` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `CultureForge Concept Studio Desktop Mockup` --semantically_similar_to--> `CultureForge Concept Studio Mobile Mockup`  [INFERRED] [semantically similar]
@@ -61,19 +62,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (22 total, 5 thin omitted)
+## Communities (23 total, 5 thin omitted)
 
 ### Community 0 - "Backend Provider Models"
-Cohesion: 0.08
-Nodes (21): generate(), health(), clamp(), fingerprint(), generate_mock(), investment(), normalize(), round_positive() (+13 more)
+Cohesion: 0.07
+Nodes (23): generate(), health(), health_alias(), validation_exception_handler(), clamp(), fingerprint(), generate_mock(), investment() (+15 more)
 
 ### Community 1 - "Frontend Types and State"
-Cohesion: 0.08
-Nodes (40): generateConcepts(), App(), applyScenario(), create(), navigate(), save(), audiencePresets, BarIcon() (+32 more)
+Cohesion: 0.07
+Nodes (43): react, react-dom, detailMessage(), generateConcepts(), App(), applyScenario(), create(), navigate() (+35 more)
 
 ### Community 2 - "Build Tooling and Dependencies"
-Cohesion: 0.05
-Nodes (35): dependencies, lucide-react, motion, react, react-dom, devDependencies, autoprefixer, postcss (+27 more)
+Cohesion: 0.06
+Nodes (33): dependencies, lucide-react, motion, react, react-dom, devDependencies, autoprefixer, postcss (+25 more)
 
 ### Community 3 - "TypeScript App Compiler Settings"
 Cohesion: 0.11
@@ -92,7 +93,7 @@ Cohesion: 0.32
 Nodes (11): CultureForge Concept Studio Desktop Mockup, CultureForge Concept Studio Mobile Mockup, Audience Lens Scenario Exploration, Cultural Signals and Experience Blueprint Panel, Family Market Day Makers Market, Flexible Timing Cultural Signal, Hand-Me-Down House Repair and Resale Shop, Little & Local Concept Store (+3 more)
 
 ### Community 7 - "Vault Retrieval Tool"
-Cohesion: 0.12
+Cohesion: 0.14
 Nodes (15): load_qloo_config(), main(), mask(), read_budget_log(), _build_index(), _code_excerpt(), find_notes(), load_index() (+7 more)
 
 ### Community 8 - "TypeScript Node Build Settings"
@@ -115,13 +116,17 @@ Nodes (8): CultureForge Concept Studio Mobile Mockup, Three Cultural Connections
 Cohesion: 1.00
 Nodes (3): Café Rituals, Shared Audience, Vinyl Culture
 
+### Community 13 - "MP4 Faststart Remux Tool"
+Cohesion: 0.21
+Nodes (11): analyze(), _boxes(), _child(), _find(), is_faststart(), main(), _patch_co64(), _patch_stco() (+3 more)
+
 ### Community 14 - "App Shell and Metadata"
 Cohesion: 0.67
 Nodes (3): CultureForge Page Metadata, React Application Root, Stored Theme Preference
 
-### Community 45 - "main.js"
-Cohesion: 0.18
-Nodes (10): easeOutCubic(), init(), initFramerMotionEnhancements(), initLandingNavigation(), initMobileMenu(), initPrototypeJourney(), openStudio(), initStatsObserver() (+2 more)
+### Community 45 - "Prototype Script Interactions"
+Cohesion: 0.16
+Nodes (13): easeOutCubic(), init(), initBackgroundVideo(), attemptPlay(), unlock(), initFramerMotionEnhancements(), initLandingNavigation(), initMobileMenu() (+5 more)
 
 ### Community 90 - "Agent Workflow Documentation"
 Cohesion: 0.29
@@ -133,23 +138,23 @@ Nodes (15): typescript, argv, client, distDir, executor, harnessDir, MAX_ATTEMPT
 
 ## Knowledge Gaps
 - **25 isolated node(s):** `autoprefixer`, `motion`, `postcss`, `tailwindcss`, `@types/react` (+20 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 160 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 173 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `typescript` connect `Qloo Execution Wrapper` to `Build Tooling and Dependencies`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `QlooHarnessProvider` (e.g. with `CulturalSignal` and `GenerateResponse`) actually correct?**
   _`QlooHarnessProvider` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `autoprefixer`, `motion`, `postcss` to the rest of the system?**
   _25 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Backend Provider Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.08458646616541353 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `Build Tooling and Dependencies` to `Frontend Types and State`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+  _Cohesion score 0.06540825285338016 - nodes in this community are weakly interconnected._
+- **Why does `react` connect `Frontend Types and State` to `Build Tooling and Dependencies`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `GenerateResponse` (e.g. with `generate()` and `CultureProvider`) actually correct?**
   _`GenerateResponse` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Frontend Types and State` be split into smaller, more focused modules?**
-  _Cohesion score 0.08326530612244898 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07017543859649122 - nodes in this community are weakly interconnected._

@@ -107,6 +107,27 @@ The interface includes persistent dark and light themes, a guided demo, a saved-
 
 The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `prototype/assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
+### Background video and Safari
+
+The background video uses the attributes Safari requires for inline autoplay — `autoplay muted loop playsinline` — plus `preload="auto"` and a `poster`. Two details matter:
+
+- **The MP4 is faststart.** Its `moov` index sits in the first 40 KB rather than at the end of the 13.8 MB file. Without that, a browser that does not do a tail-range lookup has to download the entire file before it can play anything. The file is remuxed by `python3 scripts/fix_mp4_faststart.py prototype/assets/cultureforge-background.mp4`, which moves `moov` ahead of `mdat` and rewrites the `stco` chunk offsets to match. It is a container-only operation, so there is no re-encoding and no quality loss.
+- **Autoplay can still be refused.** Safari applies its own autoplay policy, and a visitor who has blocked autoplay for the site will not get motion. `initBackgroundVideo()` in `prototype/main.js` therefore retries playback on the first pointer, touch, key, or scroll event, and `prototype/assets/cultureforge-poster.jpg` shows the first frame so the page never looks broken while waiting. The video is decorative, so it is also paused entirely for visitors who prefer reduced motion.
+
+## API
+
+The FastAPI backend exposes two endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | `{"status":"ok","dataMode":"live"\|"mock"}` — which provider is active. |
+| `POST /api/projects/generate` | Takes a `ProjectRequest`, returns a `GenerateResponse`. |
+
+`GET /health` is an alias of `/api/health` for tooling that probes the conventional path.
+
+Validation failures return `422` with a readable `detail` string rather than FastAPI's default list of objects, and a Qloo failure returns `502` with a message the UI can show directly. In development Vite proxies `/api` to port 8000; a static build of `dist/` needs the same proxying, or the browser will need the origin allowed by the backend's CORS configuration.
+
+
 ## Knowledge graph and Obsidian vault
 
 This repo ships a **graphify** knowledge graph over the code at `graphify-out/graph.json` and an **Obsidian vault** of per-node notes at `CultureForge AI/`. Both are scoped retrieval surfaces for AI coding assistants — a graph query returns a small subgraph, and a vault note returns one node's frontmatter (`source_file`, `location`, `community`) plus its connections.
