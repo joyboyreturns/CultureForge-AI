@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "backend/providers.py": {
-    "mtime": 1792512123.409463,
-    "seen": 1792513831.9209092,
-    "ast_hash": "a11ea9bdaafcf50d898f631f87529ffa",
+    "mtime": 1792518510.956648,
+    "seen": 1792519357.703508,
+    "ast_hash": "083d173574ff91d809caa0b5a360b2c7",
     "semantic_hash": ""
   },
   "package.json": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "backend/research.py": {
-    "mtime": 1792508442.1889732,
-    "seen": 1792509956.542207,
-    "ast_hash": "c9161fbf0daba437a5d358a8be458b0b",
+    "mtime": 1792518573.0840652,
+    "seen": 1792519357.70351,
+    "ast_hash": "69bf63faa2e3fc8b01ad9e8a294d26b4",
     "semantic_hash": ""
   },
   "backend/tests/__init__.py": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_evidence_store.py": {
-    "mtime": 1792513437.9718988,
-    "seen": 1792513831.920915,
-    "ast_hash": "61b2275c94f60ff49ea5955aee4739a8",
+    "mtime": 1792519194.5839593,
+    "seen": 1792519357.703518,
+    "ast_hash": "c84bc7aa4190cb5570830abcc3ef5931",
     "semantic_hash": ""
   },
   "backend/tests/test_research.py": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "scripts/verify_walkthrough.mjs": {
-    "mtime": 1792511901.3837953,
-    "seen": 1792513831.920923,
-    "ast_hash": "6966777921ede7255f59ff1a5ec329ea",
+    "mtime": 1792519263.3142455,
+    "seen": 1792519357.703535,
+    "ast_hash": "4dc4ca2e7f871e40011654818b5ed0a6",
     "semantic_hash": ""
   },
   "src/components/PlaceStrip.tsx": {
