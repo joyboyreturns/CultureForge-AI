@@ -130,6 +130,9 @@ class CompareRequest(BaseModel):
     """Re-research a brief for a different audience."""
     project: ProjectRequest
     audience: str = Field(min_length=2, max_length=240)
+    # When the founder confirmed the audience seeds, the research uses exactly
+    # these instead of resolving the audience again.
+    seedTagIds: list[str] = Field(default_factory=list)
 
 class RecomposeRequest(BaseModel):
     """Rebuild the directions without a piece of the evidence."""

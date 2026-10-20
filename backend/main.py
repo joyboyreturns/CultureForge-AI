@@ -102,7 +102,7 @@ def compare(request: CompareRequest) -> dict:
 @app.post('/api/research/runs')
 def start_run(request: CompareRequest) -> dict:
     """Start a bounded research run and return its id straight away."""
-    run = start_research(request.project, request.audience)
+    run = start_research(request.project, request.audience, request.seedTagIds)
     return {'runId': run.id, 'status': run.status}
 
 
@@ -136,8 +136,10 @@ def resolve_taste(request: CompareRequest) -> dict:
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='Resolving taste seeds needs the Qloo provider.')
     try:
+        # The same limit the provider uses, so this shares one cache entry and
+        # costs no upstream call when the audience has been resolved before.
         envelope, cached, _requests = provider.run_workflow_cached('find_tags', {
-            'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 6,
+            'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 3,
         })
     except QlooHarnessError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

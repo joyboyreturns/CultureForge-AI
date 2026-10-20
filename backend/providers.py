@@ -205,7 +205,8 @@ class QlooHarnessProvider(CultureProvider):
             return None
 
     def generate(self, project: ProjectRequest, tag_result: Optional[dict] = None,
-                 recommendations: Optional[dict] = None) -> GenerateResponse:
+                 recommendations: Optional[dict] = None,
+                 seed_tag_ids: Optional[list[str]] = None) -> GenerateResponse:
         """Compose the answer for a brief.
 
         `tag_result` and `recommendations` may be supplied to reuse envelopes
@@ -236,6 +237,17 @@ class QlooHarnessProvider(CultureProvider):
 
         query = f'{project.businessType} {project.audience}'.strip()
         reused = tag_result is not None and recommendations is not None
+        if tag_result is None and seed_tag_ids:
+            # The founder confirmed these seeds, so the audience does not need
+            # resolving again and no find_tags call is spent.
+            tag_result = {
+                'operation': 'find_tags',
+                'status': 'ok',
+                'results': [{'id': tag_id} for tag_id in seed_tag_ids],
+                'execution': {'duration_ms': 0},
+                'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+            }
+            reused = True
         if tag_result is None:
             tag_result, was_cached, _requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
             reused = was_cached

@@ -1,5 +1,6 @@
-import type { Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, ProjectRequest, TraceEvent } from './contracts'
-import { mockGenerate } from './mockData'
+import type {
+  Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, ProjectRequest, TraceEvent,
+} from './contracts'
 
 /**
  * Extract a human-readable message from an error body.
@@ -21,6 +22,19 @@ function detailMessage(body: unknown, fallback: string): string {
     if (parts.length) return parts.join('; ')
   }
   return fallback
+}
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(detailMessage(payload, `Request failed (${response.status})`))
+  }
+  return await response.json() as T
 }
 
 /** Provider boundary: replace MockCultureProvider with a documented Qloo adapter when credentials/API access are ready. */
@@ -69,18 +83,101 @@ export interface AudienceComparison {
  * evidence-composed exploration that would be a lie, so this re-runs the same
  * two Qloo workflows against the new audience and returns fresh evidence.
  */
-export async function compareAudience(
-  project: ProjectRequest,
-  audience: string
-): Promise<AudienceComparison> {
-  const response = await fetch('/api/projects/compare', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ project, audience }),
-  })
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({})) as { detail?: unknown }
-    throw new Error(detailMessage(body, `Comparison failed (${response.status})`))
-  }
-  return await response.json() as AudienceComparison
+export async function compareAudience(project: ProjectRequest, audience: string): Promise<AudienceComparison> {
+  return postJson<AudienceComparison>('/api/projects/compare', { project, audience })
 }
+
+/** A candidate Qloo audience seed, before the founder confirms it. */
+export interface TasteSeed {
+  tagId: string
+  label: string
+  popularity: number | null
+  type?: string | null
+}
+
+export interface TasteResolution {
+  audience: string
+  candidates: TasteSeed[]
+  cached: boolean
+  unresolved: unknown[]
+}
+
+/** Resolve an audience into candidate Qloo seeds, before any research runs. */
+export async function resolveTaste(project: ProjectRequest, audience: string): Promise<TasteResolution> {
+  return postJson<TasteResolution>('/api/taste/resolve', { project, audience })
+}
+
+/** A run of the research agent. */
+export interface ResearchRun {
+  runId: string
+  status: 'running' | 'complete' | 'clarify' | 'failed'
+  createdAt: number
+  audience: string
+  events: TraceEvent[]
+  result: GenerateResponse | null
+  clarification: { reason: string; question: string; field: string } | null
+  error: string | null
+  transportRequests: number
+  workflowCalls: number
+}
+
+export async function startResearch(project: ProjectRequest, audience: string, seedTagIds: string[] = []): Promise<{ runId: string; status: string }> {
+  return postJson('/api/research/runs', { project, audience, seedTagIds })
+}
+
+export async function fetchResearchRun(runId: string): Promise<ResearchRun> {
+  const response = await fetch(`/api/research/runs/${runId}`)
+  if (!response.ok) throw new Error('That research run is no longer available.')
+  return await response.json() as ResearchRun
+}
+
+/** A shared, frozen exploration. */
+export async function shareExploration(payload: unknown): Promise<{ snapshotId: string }> {
+  return postJson('/api/explorations/share', payload)
+}
+
+export async function fetchSnapshot(snapshotId: string): Promise<GenerateResponse> {
+  const response = await fetch(`/api/snapshots/${snapshotId}`)
+  if (!response.ok) throw new Error('That snapshot is no longer available.')
+  return await response.json() as GenerateResponse
+}
+
+/** Qloo's own A/B between two groups of entities. */
+export interface AudienceComparisonResult {
+  shared: {
+    tagId: string | null
+    label: string | null
+    subtype: string | null
+    popularity: number | null
+    score: number | null
+    groupAHits: number | null
+    groupBHits: number | null
+  }[]
+  groupA: { tagId: string | null; label: string | null; subtype: string | null; popularity: number | null }[]
+  groupB: { tagId: string | null; label: string | null; subtype: string | null; popularity: number | null }[]
+  matchedEntities: number
+  interpretation: unknown
+  trace: TraceEvent
+}
+
+export async function compareAudiences(
+  groupA: string[], groupB: string[], targetType = 'place'
+): Promise<AudienceComparisonResult> {
+  return postJson<AudienceComparisonResult>('/api/projects/compare/audiences', { groupA, groupB, targetType })
+}
+
+/** A tournament between real Qloo entities. */
+export async function rankAnchors(
+  options: string[], includeTags: string[], signalLocation?: string, optionType = 'place'
+): Promise<{ ranked: { entityId: string | null; label: string | null; affinity: number | null; popularity: number | null; position: number }[]; trace: TraceEvent }> {
+  return postJson('/api/projects/rank', { options, includeTags, signalLocation, optionType })
+}
+
+/** Rebuild the directions without a piece of evidence, using no new call. */
+export async function recompose(
+  project: ProjectRequest, excludeEntityIds: string[], excludeTagIds: string[] = []
+): Promise<{ concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string }> {
+  return postJson('/api/projects/recompose', { project, excludeEntityIds, excludeTagIds })
+}
+
+import { mockGenerate } from './mockData'

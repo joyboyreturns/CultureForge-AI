@@ -51,6 +51,7 @@ class ResearchRun:
         self.error: Optional[str] = None
         self.transport_requests = 0
         self.workflow_calls = 0
+        self.seed_tag_ids: list[str] = []
         self._lock = threading.Lock()
 
     def add_event(self, event: TraceEvent) -> None:
@@ -122,9 +123,11 @@ def _event(run: ResearchRun, step: str, envelope: dict, *, status: str = 'ok',
 
 
 def start_research(project: ProjectRequest, audience: Optional[str] = None,
+                   seed_tag_ids: Optional[list[str]] = None,
                    allowance: int = DEFAULT_RUN_ALLOWANCE) -> ResearchRun:
     """Start a run in the background and return it immediately."""
     run = ResearchRun(project, audience)
+    run.seed_tag_ids = list(seed_tag_ids or [])
     registry.add(run)
     thread = threading.Thread(target=_execute, args=(run, allowance), daemon=True)
     thread.start()
@@ -140,13 +143,26 @@ def _execute(run: ResearchRun, allowance: int) -> None:
             raise QlooHarnessError('The research run took too long and was stopped.')
 
         # ---- step 1: resolve the audience into confirmed Qloo seeds ----
-        run.workflow_calls += 1
-        tag_envelope, cached, requests = provider.run_workflow_cached('find_tags', {
-            'query': f'{run.project.businessType} {run.audience}'.strip(), 'limit': 3,
-        })
-        run.transport_requests += requests
-        run.add_event(_event(run, 'resolve-audience', tag_envelope, result_count=3,
-                             detail=('Reused cached Qloo find_tags.' if cached else None)))
+        if run.seed_tag_ids:
+            # The founder already confirmed these, so the audience is not
+            # resolved again and no call is spent.
+            run.workflow_calls += 1
+            tag_envelope = {
+                'operation': 'find_tags', 'status': 'ok',
+                'results': [{'id': tag_id} for tag_id in run.seed_tag_ids],
+                'execution': {'duration_ms': 0},
+                'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+            }
+            run.add_event(_event(run, 'use-confirmed-seeds', tag_envelope, result_count=len(run.seed_tag_ids),
+                                 detail='Used the audience seeds the founder confirmed.'))
+        else:
+            run.workflow_calls += 1
+            tag_envelope, cached, requests = provider.run_workflow_cached('find_tags', {
+                'query': f'{run.project.businessType} {run.audience}'.strip(), 'limit': 3,
+            })
+            run.transport_requests += requests
+            run.add_event(_event(run, 'resolve-audience', tag_envelope, result_count=3,
+                                 detail=('Reused cached Qloo find_tags.' if cached else None)))
 
         if tag_envelope.get('status') == 'needs_input':
             run.status = STATUS_CLARIFY
@@ -200,7 +216,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
         # ---- step 3: compose, using the evidence just cached ----
         # generate() reuses the two cached envelopes, so this costs no new call.
-        response = provider.generate(run.project)
+        response = provider.generate(run.project, seed_tag_ids=run.seed_tag_ids or None)
         run.add_event(TraceEvent(
             id=f'trace-{uuid.uuid4().hex[:8]}',
             step='compose-directions',
