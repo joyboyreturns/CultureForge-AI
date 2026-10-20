@@ -111,6 +111,7 @@ const CONTRACT = {
     acquiredAt: { type: 'string', nullable: true },
     servedAt: { type: 'string', nullable: true },
     expiresAt: { type: 'string', nullable: true },
+    transportRequests: { type: 'number', nullable: true },
   },
   ProvenanceMetadata: {
     source: { type: 'string', oneOf: ['Qloo API', 'Mock'], required: true },

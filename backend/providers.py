@@ -26,6 +26,33 @@ from .evidence_store import cached_call, canonical_key, get_store
 # Bumped whenever the composer changes what a concept means, so a stored
 # snapshot is never mistaken for a current result.
 COMPOSER_VERSION = '1'
+
+# The exact set of query parameters this app sends to Qloo. A provenance
+# panel may only show a parameter that appears here. Anything else is dropped
+# before it can reach the panel, so a future change to the harness cannot
+# quietly start exposing a new field.
+SAFE_QUERY_KEYS = {
+    # find_tags
+    'filter.query', 'feature.semantic_search',
+    # recommend and rank
+    'filter.type', 'filter.location.query', 'signal.location.query',
+    'take', 'feature.explainability',
+    'signal.interests.tags', 'operator.signal.interests.tags',
+    'signal.interests.entities',
+    'signal.demographics.gender', 'signal.demographics.age',
+    'filter.tags', 'operator.filter.tags',
+    'filter.exclude.tags', 'operator.filter.exclude.tags',
+    'filter.results.entities',
+    # compare_audiences
+    'a.signal.interests.entities', 'b.signal.interests.entities',
+}
+
+
+def safe_query(query: dict) -> dict:
+    """Keep only the parameters that are safe to display."""
+    if not isinstance(query, dict):
+        return {}
+    return {key: value for key, value in query.items() if key in SAFE_QUERY_KEYS}
 from .models import (Concept, CulturalSignal, Decision, Delivery, Evidence, ExperienceMoment,
                       GenerateResponse, ProjectRequest, ProvenanceMetadata, TraceEvent)
 
@@ -154,10 +181,14 @@ class QlooHarnessProvider(CultureProvider):
                 code = str(failure.get('error', {}).get('code', '')) if isinstance(failure, dict) else ''
             except (json.JSONDecodeError, AttributeError):
                 code = ''
-            if code == 'QLOO_RATE_LIMITED':
+            if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED'):
                 raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.')
             if code == 'QLOO_AUTH':
                 raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.')
+            if code == 'TOOL_INPUT':
+                raise QlooHarnessError('Qloo rejected the shape of the request. The arguments did not match the workflow contract.')
+            if code:
+                raise QlooHarnessError(f'Qloo rejected the request ({code}).')
             raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.')
         try:
             result = json.loads(completed.stdout)
@@ -173,12 +204,16 @@ class QlooHarnessProvider(CultureProvider):
         Returns (envelope, was_cached, transport_requests). Concurrent callers
         asking for the same evidence collapse into one upstream call, and the
         result survives a restart, so a demo never waits on the API twice.
+
+        The request count is what this call spent. Evidence that was already
+        held cost nothing, and reporting it as anything else would overstate
+        what the quota was asked for.
         """
         key = canonical_key(operation, payload)
         store = get_store()
         cached = store.get(key)
         if cached is not None:
-            return cached, True, store.transport_requests(key)
+            return cached, True, 0
         envelope, was_cached, requests = cached_call(key, lambda: self._run_workflow(operation, payload))
         return envelope, was_cached, requests
 
@@ -238,18 +273,41 @@ class QlooHarnessProvider(CultureProvider):
         query = f'{project.businessType} {project.audience}'.strip()
         reused = tag_result is not None and recommendations is not None
         if tag_result is None and seed_tag_ids:
-            # The founder confirmed these seeds, so the audience does not need
-            # resolving again and no find_tags call is spent.
-            tag_result = {
-                'operation': 'find_tags',
-                'status': 'ok',
-                'results': [{'id': tag_id} for tag_id in seed_tag_ids],
-                'execution': {'duration_ms': 0},
-                'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
-            }
+            # The founder confirmed these seeds, so the audience is not
+            # resolved again and no find_tags call is spent. The cached
+            # resolution still holds the name and the popularity Qloo
+            # returned for each seed, so the evidence keeps them.
+            query = f'{project.businessType} {project.audience}'.strip()
+            confirmed = set(seed_tag_ids)
+            cached_rows = [
+                row for row in self._cached_tag_rows(query)
+                if row.get('id') in confirmed
+            ]
+            if cached_rows:
+                tag_result = {
+                    'operation': 'find_tags',
+                    'status': 'ok',
+                    'results': cached_rows,
+                    'execution': {'duration_ms': 0},
+                    'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+                }
+            else:
+                tag_result = {
+                    'operation': 'find_tags',
+                    'status': 'ok',
+                    'results': [{'id': tag_id} for tag_id in seed_tag_ids],
+                    'execution': {'duration_ms': 0},
+                    'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+                }
             reused = True
+        spent = 0
+        # Whether any part of this answer had to be fetched live. The delivery
+        # label follows this, not whether one part happened to be cached.
+        live = False
         if tag_result is None:
-            tag_result, was_cached, _requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
+            tag_result, was_cached, requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
+            spent += requests
+            live = live or not was_cached
             reused = was_cached
         if tag_result.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.')
@@ -258,10 +316,12 @@ class QlooHarnessProvider(CultureProvider):
             raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.')
 
         if recommendations is None:
-            recommendations, was_cached, _requests = self.run_workflow_cached('recommend', {
+            recommendations, was_cached, requests = self.run_workflow_cached('recommend', {
                 'target_type': 'place', 'signal_tags': matched_tags,
                 'signal_location': project.location, 'limit': 5,
             })
+            spent += requests
+            live = live or not was_cached
             reused = reused or was_cached
         if recommendations.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.')
@@ -295,11 +355,23 @@ class QlooHarnessProvider(CultureProvider):
             tag_trace.detail = f'{tag_trace.detail} (reused from cache)'
         trace.append(tag_trace)
 
+        # The resolved tag rows, so each seed carries the name and the
+        # popularity Qloo actually returned for it.
+        tag_rows = {
+            row.get('id'): row for row in self.rows(tag_result)
+            if isinstance(row, dict) and isinstance(row.get('id'), str)
+        }
         for tag in matched_tags:
             evidence_id = f'ev-tag-{len(evidence)}'
             tag_evidence_ids[tag] = evidence_id
+            row = tag_rows.get(tag) or {}
+            popularity = row.get('popularity')
+            name = row.get('name')
             evidence.append(Evidence(
-                id=evidence_id, kind='tag', label=self._tag_label(tag), tagId=tag,
+                id=evidence_id, kind='tag',
+                label=name if isinstance(name, str) and name.strip() else self._tag_label(tag),
+                tagId=tag,
+                popularity=popularity if isinstance(popularity, (int, float)) else None,
                 traceId=tag_trace.id, description='Audience seed resolved by Qloo from the founder’s audience description.',
             ))
 
@@ -391,7 +463,7 @@ class QlooHarnessProvider(CultureProvider):
             provenance=ProvenanceMetadata(source='Qloo API', endpoint='qloo exec find_tags → recommend', documentation='https://github.com/qloo/qloo-hackathon-kit', resolved_tags=matched_tags),
             evidence=evidence, trace=trace,
             composerVersion=COMPOSER_VERSION,
-            delivery=Delivery(kind='cache' if reused else 'fresh', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(),
+            delivery=Delivery(kind='fresh' if live else 'cache', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(), transportRequests=spent,
                               expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()),
         )
         with self._lock:
@@ -400,6 +472,16 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(oldest_key, None)
             self._cache[cache_key] = (time.monotonic(), response)
         return response
+
+    @staticmethod
+    def _cached_tag_rows(query: str) -> list[dict]:
+        """The rows of an already-resolved audience, if it is still held."""
+        key = canonical_key('find_tags', {'query': query, 'limit': 3})
+        envelope = get_store().get(key)
+        if not isinstance(envelope, dict):
+            return []
+        rows = envelope.get('results')
+        return [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
 
     @staticmethod
     def _tag_label(tag_id: str) -> str:
@@ -422,10 +504,12 @@ class QlooHarnessProvider(CultureProvider):
         requests = provenance.get('requests')
         if isinstance(requests, list) and requests and isinstance(requests[0], dict):
             first = requests[0]
+            raw_query = first.get('query')
             request = {
                 'method': first.get('method'),
                 'path': first.get('path'),
-                'query': first.get('query'),
+                # Allowlisted field by field. The raw query is never shown.
+                'query': safe_query(raw_query if isinstance(raw_query, dict) else {}),
                 'endpoint': endpoint,
                 'documentation': provenance.get('documentation'),
             }

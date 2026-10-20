@@ -186,18 +186,22 @@ def transport_request_count(envelope: dict) -> int:
 def cached_call(key: str, run: Callable[[], dict], ttl_seconds: int = DEFAULT_TTL_SECONDS) -> tuple[dict, bool, int]:
     """Run a workflow through the cache, collapsing concurrent duplicates.
 
-    Returns (envelope, was_cached, transport_requests).
+    Returns (envelope, was_cached, transport_requests). The count is what
+    *this* call spent upstream, not what the key has cost in total: evidence
+    that was already held cost nothing, and saying so is the point of the
+    store. The cumulative total stays on the entry.
     """
     store = get_store()
     cached = store.get(key, ttl_seconds)
     if cached is not None:
-        return cached, True, store.transport_requests(key)
+        return cached, True, 0
 
     if not store.acquire(key):
         # Another request is already making this exact call; wait for it.
         envelope = store.wait_for(key)
         if envelope is not None:
-            return envelope, True, store.transport_requests(key)
+            # This caller did not make the upstream request, so it spent nothing.
+            return envelope, True, 0
         # The other call failed; fall through and try it ourselves.
         store.acquire(key)
 

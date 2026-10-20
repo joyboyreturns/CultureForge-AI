@@ -28,6 +28,7 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 - Refresh the graph after substantial source changes: `graphify update .` (AST-only, no API cost).
 - Re-export the vault: `graphify export obsidian --dir "CultureForge AI"`.
 - Re-label communities after a major refactor: `graphify label . --missing-only`.
+- `graphify label` needs an LLM backend (a Gemini key, or a logged-in `claude` CLI). With neither available it falls back to hub-derived names like `main.py` or `providers.py`, which are not useful labels. In that case, write the names by hand: put them in `graphify-out/.graphify_labels.json` keyed by community index, then set each node's `community_name` in `graphify-out/graph.json` to match, and re-run `graphify export obsidian --dir "CultureForge AI"`. The MCP reads `community_name` off the node, not the labels file, so editing only the labels file changes nothing.
 - The vault is an **export**, not a graph input. `.graphifyignore` excludes `/CultureForge AI/` from the scan — do not remove it. Re-ingesting the vault feeds the graph its own output and inflates every query.
 - Keep `scripts/vault_query.py`'s index fresh automatically; it rebuilds on vault mtime change.
 

@@ -97,15 +97,36 @@ Responses are cached in memory for 24 hours per business type, audience, and loc
 
 1. Overview landing page → **Start creating**.
 2. Enter business type, audience, location, budget, and objectives.
-3. Review the agent progress sequence.
-4. Select among three concept proposals and inspect fit scores and supporting sample signals.
-5. Compare scenarios by changing the target audience and applying the draft.
+3. **Confirm the audience seeds.** The brief is resolved into the Qloo cultural signals it actually maps to. Each one is shown with its tag URN and its popularity. Drop anything that is not really your audience.
+4. **Watch the agent work.** The workspace polls a real run and shows the steps the agent made, with the durations and correlation IDs the Qloo harness reported. If Qloo cannot resolve something, the agent asks rather than guesses.
+5. **Read the three directions.** Each cites the venues it was built from.
+6. **Inspect the evidence.** Click any venue to see the exact call that produced it, the request that was sent, and what came back.
+7. **Test the answer.** Remove a venue and recompose, with no new call, to see how many directions actually depended on it.
+8. **Change the lens.** Compare the two audiences with Qloo's own A/B, or rank the returned places against a demographic to pick the anchor.
 
 Mock-mode signals and all concept-fit scores, narratives, and scenario deltas are illustrative demo content, not validated business advice. In live mode, only the separate cultural signal list comes from Qloo. Qloo outputs describe aggregate affinities, not individual preferences or guaranteed behavior. See the [Qloo Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) API access and safe-use guidance before using live data.
 
 ## Studio interface
 
 The interface includes persistent dark and light themes, a guided demo, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab includes audience presets and adjustable preference sliders; its scores are an explicitly illustrative model. Theme and saved concepts persist across reloads, while exploration data stays in memory for the prototype.
+
+The concept studio has six tabs, and the last four are the ones a judge should be pointed at:
+
+| Tab | What it shows |
+|---|---|
+| Cultural signals | The aggregate Qloo signals behind the brief. |
+| Constellation | The evidence-to-idea graph: seeds at the centre, the places Qloo returned around them, the business decisions on the outside. Solid lines are relationships Qloo returned; dashed lines are CultureForge's reading of them. A popularity heat overlay draws each node's size from Qloo's own popularity metric. |
+| Cultural heat | Qloo's popularity for everything retrieved, as a heat grid. It measures how widely a place or a signal is known, not how well it fits the brief, and the labels say so. |
+| Anchor tournament | Qloo's `rank` workflow comparing the returned places against a demographic near the brief's location. The converted age and gender signal is shown, taken from the request Qloo actually sent. |
+| Blueprint | The experience the concept implies. |
+| Evidence & source | What is behind the idea, and what is not. |
+
+### The evidence surfaces
+
+- **Provenance inspector.** Any piece of evidence opens a panel showing the workflow that produced it, the allowlisted request that was sent, the duration, the correlation ID, and an excerpt of what came back. The request is filtered through a fixed allowlist of query keys, so a new field cannot quietly start being exposed.
+- **The evidence test.** Removing a venue and recomposing costs no upstream call, because the envelopes are already held. It is the strongest claim the app makes, so it is a button rather than a claim: if a direction survives without a venue, that direction was not really resting on it.
+- **A/B with Qloo.** The scenario lab asks Qloo to compare the two audiences' venues directly, and shows the cultural tags the two groups share, the comparison score, and how many entities in each side carry each tag.
+- **Sharing.** A share link reopens exactly the exploration, from a stored snapshot, rather than re-running the research.
 
 The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
@@ -146,6 +167,8 @@ The scenario lab re-researches for real. Changing the audience calls `POST /api/
 
 `How this was researched` shows the real tool calls with their real durations, result counts, endpoints and correlation IDs.
 
+Each result also reports how many upstream requests it actually cost. Evidence that was already held costs nothing, and the count says `0 upstream requests` rather than pretending the API was asked. The durable store keeps the evidence across restarts, so a repeated brief is instant and free, and a live demo never spends the same quota twice.
+
 ## Verifying the backend and frontend agree
 
 `npm run test:contracts` pins the `GenerateResponse` contract from `src/contracts.ts` and checks both producers against it:
@@ -178,14 +201,25 @@ Every effect respects `prefers-reduced-motion: reduce`: the grain, aurora, Ken B
 
 ## API
 
-The FastAPI backend exposes two endpoints:
+The FastAPI backend exposes:
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/health` | `{"status":"ok","dataMode":"live"\|"mock"}` — which provider is active. |
 | `POST /api/projects/generate` | Takes a `ProjectRequest`, returns a `GenerateResponse`. |
+| `POST /api/projects/compare` | Re-researches the same brief for another audience, with real calls. |
+| `POST /api/projects/compare/audiences` | Qloo's own A/B between two groups of entities. |
+| `POST /api/projects/rank` | Ranks real Qloo entities against a signal set or a demographic. |
+| `POST /api/projects/recompose` | Rebuilds the directions without a piece of evidence. No new call. |
+| `POST /api/taste/resolve` | Resolves an audience into candidate Qloo seeds, before any research. |
+| `POST /api/research/runs` | Starts a bounded research run and returns its ID. |
+| `GET /api/research/runs/{id}` | The run's events, status, and result. |
+| `POST /api/explorations/share` | Freezes an exploration into a shareable snapshot. |
+| `GET /api/snapshots/{id}` | A stored snapshot. |
 
 `GET /health` is an alias of `/api/health` for tooling that probes the conventional path.
+
+The `rank` and `compare_audiences` workflows are called with exactly the arguments the Qloo contract allows. The `rank` workflow takes no `limit` and rejects unknown fields, its `signals` are entities while tags belong in `include_tags`, and a `demographic` requires an explicit location. Those three were wrong at first here, and the tests now pin them.
 
 Validation failures return `422` with a readable `detail` string rather than FastAPI's default list of objects, and a Qloo failure returns `502` with a message the UI can show directly. In development Vite proxies `/api` to port 8000; a static build of `dist/` needs the same proxying, or the browser will need the origin allowed by the backend's CORS configuration.
 

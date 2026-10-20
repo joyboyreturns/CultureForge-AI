@@ -83,6 +83,20 @@ export function AgentTrace({ runId, onComplete, onClarify }: {
       ))}
 
       {error && <div className="agent-trace-error" role="alert">{error}</div>}
+
+      {run && !error && (
+        <div className="agent-trace-foot">
+          <span>
+            {run.transportRequests} upstream {run.transportRequests === 1 ? 'request' : 'requests'} ·{' '}
+            {run.workflowCalls} {run.workflowCalls === 1 ? 'workflow' : 'workflows'}
+          </span>
+          <em>
+            {run.transportRequests === 0
+              ? 'Every piece of evidence was already held, so the quota was not touched.'
+              : 'Only what was missing had to be fetched.'}
+          </em>
+        </div>
+      )}
     </div>
   )
 }

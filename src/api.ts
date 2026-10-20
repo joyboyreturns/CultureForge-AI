@@ -167,10 +167,23 @@ export async function compareAudiences(
 }
 
 /** A tournament between real Qloo entities. */
+export interface AnchorRanking {
+  ranked: {
+    entityId: string | null
+    label: string | null
+    affinity: number | null
+    popularity: number | null
+    position: number
+  }[]
+  /** The signal Qloo actually sent, taken from its own request. */
+  signalsUsed: Record<string, unknown>
+  trace: TraceEvent
+}
+
 export async function rankAnchors(
-  options: string[], includeTags: string[], signalLocation?: string, optionType = 'place'
-): Promise<{ ranked: { entityId: string | null; label: string | null; affinity: number | null; popularity: number | null; position: number }[]; trace: TraceEvent }> {
-  return postJson('/api/projects/rank', { options, includeTags, signalLocation, optionType })
+  options: string[], signalLocation?: string, demographic?: string, optionType = 'place'
+): Promise<AnchorRanking> {
+  return postJson<AnchorRanking>('/api/projects/rank', { options, signalLocation, demographic, optionType })
 }
 
 /** Rebuild the directions without a piece of evidence, using no new call. */

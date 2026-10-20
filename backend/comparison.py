@@ -21,23 +21,9 @@ from __future__ import annotations
 from typing import Optional
 
 from .evidence_store import canonical_key, get_store
-from .providers import QlooHarnessError, QlooHarnessProvider
+from .providers import QlooHarnessError, QlooHarnessProvider, safe_query
 
-# A parameter is safe to show in a provenance panel only if it cannot carry
-# anything sensitive. Everything else is dropped rather than redacted later.
-SAFE_QUERY_KEYS = {
-    'filter.type', 'filter.location.query', 'signal.location.query', 'take',
-    'operator.signal.interests.tags', 'signal.interests.tags',
-    'signal.interests.entities', 'a.signal.interests.entities',
-    'b.signal.interests.entities', 'feature.explainability', 'limit',
-}
-
-
-def safe_query(query: dict) -> dict:
-    """Keep only the parameters that are safe to display."""
-    if not isinstance(query, dict):
-        return {}
-    return {key: value for key, value in query.items() if key in SAFE_QUERY_KEYS}
+__all__ = ['compare_audiences', 'rank_entities', 'recompose', 'safe_query']
 
 
 def compare_audiences(group_a: list[str], group_b: list[str], target_type: str = 'place',
@@ -99,12 +85,15 @@ def compare_audiences(group_a: list[str], group_b: list[str], target_type: str =
 
 def rank_entities(options: list[str], signals: Optional[list[str]] = None,
                   include_tags: Optional[list[str]] = None, option_type: str = 'place',
-                  signal_location: Optional[str] = None, limit: int = 6) -> dict:
+                  signal_location: Optional[str] = None, demographic: Optional[str] = None,
+                  limit: int = 6) -> dict:
     """Rank real Qloo entities by affinity for a signal set.
 
     The Qloo `rank` workflow takes entity inputs for `options` and `signals`,
-    and tag inputs for `include_tags`. The audience enters as tags, which is
-    how a tournament between real venues becomes an answer about an audience.
+    and tag inputs for `include_tags`. A `demographic` is the natural way to
+    bring an audience in: Qloo converts the phrase into its own documented
+    age and gender signals, and the converted signal is returned so it can be
+    shown rather than assumed.
     """
     if not options:
         raise QlooHarnessError('Ranking needs at least one entity to rank.')
@@ -117,6 +106,8 @@ def rank_entities(options: list[str], signals: Optional[list[str]] = None,
         payload['include_tags'] = include_tags
     if signal_location:
         payload['signal_location'] = signal_location
+    if demographic:
+        payload['demographic'] = demographic
     envelope, _cached, _requests = provider.run_workflow_cached('rank', payload)
     if envelope.get('status') == 'needs_input':
         raise QlooHarnessError('Qloo needs a clearer signal set for this ranking.')
@@ -130,9 +121,12 @@ def rank_entities(options: list[str], signals: Optional[list[str]] = None,
             'popularity': row.get('popularity'),
             'position': index + 1,
         })
+    trace = provider._trace_event('rank-anchors', 'rank', envelope, len(ranked)).model_dump()
     return {
         'ranked': ranked,
-        'trace': provider._trace_event('rank-anchors', 'rank', envelope, len(ranked)).model_dump(),
+        # The converted signal, taken from the request Qloo actually sent.
+        'signalsUsed': (trace.get('request') or {}).get('query') or {},
+        'trace': trace,
     }
 
 

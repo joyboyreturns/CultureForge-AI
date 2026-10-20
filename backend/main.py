@@ -212,6 +212,7 @@ def rank_anchors(request: dict) -> dict:
             include_tags=include_tags or None,
             option_type=str(request.get('optionType') or 'place'),
             signal_location=request.get('signalLocation') or None,
+            demographic=request.get('demographic') or None,
             limit=int(request.get('limit') or 6),
         )
     except QlooHarnessError as exc:

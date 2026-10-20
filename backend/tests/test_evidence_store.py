@@ -67,3 +67,43 @@ def test_transport_requests_counts_the_real_http_calls():
     envelope = {'provenance': {'requests': [{'path': '/v2/insights'}, {'path': '/v2/tags'}]}}
     assert transport_request_count(envelope) == 2
     assert transport_request_count({'provenance': {}}) == 1
+
+
+def test_evidence_that_was_already_held_costs_nothing(store):
+    """A cached brief must report zero upstream requests, not the key's lifetime total."""
+    from backend.evidence_store import cached_call
+
+    key = canonical_key('recommend', {'x': 'cached'})
+    calls = []
+
+    def upstream() -> dict:
+        calls.append(1)
+        return {'status': 'ok', 'results': []}
+
+    envelope, was_cached, requests = cached_call(key, upstream)
+    assert requests == 1
+    assert was_cached is False
+
+    envelope, was_cached, requests = cached_call(key, upstream)
+    assert requests == 0, 'the second call spent nothing upstream'
+    assert was_cached is True
+    assert len(calls) == 1, 'no second upstream call'
+
+    # The key's lifetime total is still tracked, for the quota guard.
+    assert store.transport_requests(key) == 1
+
+
+def test_the_provider_reports_zero_for_a_cached_workflow(monkeypatch, store):
+    """A run that reuses held evidence must not claim to have spent a request."""
+    from backend.providers import QlooHarnessProvider
+
+    provider = QlooHarnessProvider()
+    payload = {'query': 'a cached brief', 'limit': 3}
+    key = canonical_key('find_tags', payload)
+    store.put(key, {'status': 'ok', 'results': []}, transport_requests=1)
+
+    envelope, was_cached, requests = provider.run_workflow_cached('find_tags', payload)
+
+    assert was_cached is True
+    assert requests == 0
+    assert envelope['status'] == 'ok'

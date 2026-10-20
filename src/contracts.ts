@@ -43,7 +43,7 @@ export interface TraceEvent {
 }
 
 /** How fresh the evidence is. The UI labels this honestly. */
-export interface Delivery { kind: 'fresh' | 'cache' | 'snapshot' | 'mock'; acquiredAt?: string | null; servedAt?: string | null; expiresAt?: string | null }
+export interface Delivery { kind: 'fresh' | 'cache' | 'snapshot' | 'mock'; acquiredAt?: string | null; servedAt?: string | null; expiresAt?: string | null; /** Upstream requests this result actually cost. */ transportRequests?: number | null }
 
 export interface Concept {
   id: string

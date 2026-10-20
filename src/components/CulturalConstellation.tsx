@@ -53,6 +53,9 @@ export function CulturalConstellation({
   onInspect: (evidenceId: string) => void
 }) {
   const [hovered, setHovered] = useState<string | null>(null)
+  // The heat overlay draws Qloo's popularity as the size of each node, so the
+  // map shows where the cultural weight actually is.
+  const [heat, setHeat] = useState(false)
 
   const { nodes, edges } = useMemo(() => {    const seeds = evidence.filter((item) => item.kind === 'tag')
     const venues = evidence.filter((item) => item.kind === 'entity')
@@ -150,6 +153,12 @@ export function CulturalConstellation({
         {nodes.map((node) => {
           const isDecision = node.kind === 'decision'
           const isSelected = node.id === selected?.id
+          const popularity = heat
+            ? evidence.find((item) => item.id === node.id)?.popularity
+            : undefined
+          const radius = popularity != null
+            ? node.radius * (1.4 + popularity * 1.9)
+            : node.radius
           return (
             <g
               key={node.id}
@@ -172,8 +181,8 @@ export function CulturalConstellation({
               {node.kind === 'seed' && node.id === '__audience__' && (
                 <circle cx={node.x} cy={node.y} r={26} className="constellation-hub" />
               )}
-              <circle cx={node.x} cy={node.y} r={node.radius} className="constellation-dot" />
-              <text x={node.x} y={node.y + (node.radius || 10) + 13} className="constellation-label">
+              <circle cx={node.x} cy={node.y} r={radius} className="constellation-dot" />
+              <text x={node.x} y={node.y + radius + 13} className="constellation-label">
                 {node.label.length > 26 ? `${node.label.slice(0, 25)}…` : node.label}
               </text>
             </g>
@@ -181,10 +190,20 @@ export function CulturalConstellation({
         })}
       </svg>
 
-      <ul className="constellation-legend">
-        <li><i className="is-qloo" /> Returned by Qloo</li>
-        <li><i className="is-ours" /> CultureForge’s reading of it</li>
-      </ul>
+      <div className="constellation-controls">
+        <button
+          type="button"
+          className={`heat-toggle${heat ? ' is-on' : ''}`}
+          aria-pressed={heat}
+          onClick={() => setHeat((current) => !current)}
+        >
+          {heat ? 'Popularity heat on' : 'Show popularity heat'}
+        </button>
+        <ul className="constellation-legend">
+          <li><i className="is-qloo" /> Returned by Qloo</li>
+          <li><i className="is-ours" /> CultureForge’s reading of it</li>
+        </ul>
+      </div>
 
       {/* The same information, reachable without a pointer. */}
       <details className="constellation-list">

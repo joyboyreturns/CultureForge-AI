@@ -79,6 +79,9 @@ class Delivery(BaseModel):
     acquiredAt: Optional[str] = None
     servedAt: Optional[str] = None
     expiresAt: Optional[str] = None
+    # How many upstream requests this result actually cost. Evidence that was
+    # already held cost nothing, and the number says so.
+    transportRequests: Optional[int] = None
 
 class Concept(BaseModel):
     id: str
