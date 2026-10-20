@@ -39,20 +39,83 @@ class QlooHarnessProvider(CultureProvider):
 
     The CLI owns credential storage (`qloo setup --qloo`) or reads QLOO_API_KEY from
     the server environment. Credentials never enter the frontend or command arguments.
+
+    Hackathon keys only work against https://hackathon.api.qloo.com, which is set in
+    the CLI's own config (`qloo config set base-url ...`) rather than here.
+
+    Two guards protect the key:
+    - `scripts/qloo_exec.mjs` raises the per-request timeout. The stock `qloo exec`
+      client caps each attempt at 20s while /v2/insights needs ~25s, so every live
+      request would otherwise time out, retry, and burn three calls for nothing.
+    - A local call budget caps how many workflows this provider may issue per hour
+      and per day, so a runaway demo cannot exhaust the hackathon quota.
     """
     CACHE_TTL_SECONDS = 24 * 60 * 60
     CACHE_MAX_ENTRIES = 128
+    DEFAULT_MAX_CALLS_PER_HOUR = 20
+    DEFAULT_MAX_CALLS_PER_DAY = 100
+    BUDGET_LOG_PATH = Path.home() / '.cache' / 'cultureforge' / 'qloo_calls.json'
 
-    def __init__(self, command: str = 'qloo', timeout_seconds: int = 45):
+    def __init__(self, command: str = 'qloo', timeout_seconds: int = 90):
         self.command = command
         self.timeout_seconds = timeout_seconds
         self._cache: dict[str, tuple[float, GenerateResponse]] = {}
         self._lock = threading.Lock()
 
-    def _run_workflow(self, operation: str, payload: dict) -> dict:
+    def _resolve_command(self) -> list[str]:
+        """Resolve the argv prefix used to run a Qloo workflow.
+
+        Prefers the bundled wrapper because it can set a request timeout the CLI
+        cannot. Falls back to the `qloo` binary. QLOO_CLI overrides both.
+        """
+        override = os.getenv('QLOO_CLI', '').strip()
+        if override:
+            return [shutil.which(override) or override]
+        wrapper = Path(__file__).resolve().parent.parent / 'scripts' / 'qloo_exec.mjs'
+        if wrapper.is_file():
+            node = shutil.which('node')
+            if node:
+                return [node, str(wrapper)]
         executable = shutil.which(self.command)
         if not executable:
-            raise QlooHarnessError('Qloo provider is selected but the qloo CLI is not installed. Install @qloo/qloo-harness and complete qloo setup.')
+            raise QlooHarnessError('Qloo provider is selected but neither scripts/qloo_exec.mjs nor the qloo CLI is available. Install @qloo/qloo-harness and complete qloo setup.')
+        return [executable]
+
+    def _consume_call_budget(self) -> None:
+        """Count this call against the local quota guard before it is made."""
+        hour_limit = int(os.getenv('QLOO_MAX_CALLS_PER_HOUR', self.DEFAULT_MAX_CALLS_PER_HOUR))
+        day_limit = int(os.getenv('QLOO_MAX_CALLS_PER_DAY', self.DEFAULT_MAX_CALLS_PER_DAY))
+        now = time.time()
+        with self._lock:
+            calls = self._read_call_log()
+            calls = [stamp for stamp in calls if now - stamp < 86400]
+            calls_in_hour = sum(1 for stamp in calls if now - stamp < 3600)
+            if calls_in_hour >= hour_limit or len(calls) >= day_limit:
+                raise QlooHarnessError(
+                    'Qloo call budget reached for this period. Live signals are paused to protect the '
+                    'hackathon API quota. Raise QLOO_MAX_CALLS_PER_HOUR or QLOO_MAX_CALLS_PER_DAY to allow more.'
+                )
+            calls.append(now)
+            self._write_call_log(calls)
+
+    def _read_call_log(self) -> list[float]:
+        try:
+            data = json.loads(self.BUDGET_LOG_PATH.read_text(encoding='utf-8'))
+            return [float(stamp) for stamp in data.get('calls', []) if isinstance(stamp, (int, float))]
+        except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
+            return []
+
+    def _write_call_log(self, calls: list[float]) -> None:
+        try:
+            self.BUDGET_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            self.BUDGET_LOG_PATH.write_text(json.dumps({'calls': calls}), encoding='utf-8')
+            os.chmod(self.BUDGET_LOG_PATH, 0o600)
+        except OSError:
+            pass
+
+    def _run_workflow(self, operation: str, payload: dict) -> dict:
+        command = self._resolve_command()
+        self._consume_call_budget()
         # The CLI accepts a request file; using a mode-0600 temporary file avoids putting
         # audience text in shell arguments and avoids leaking it to process listings.
         try:
@@ -61,7 +124,7 @@ class QlooHarnessProvider(CultureProvider):
                 request_path = request_file.name
             os.chmod(request_path, 0o600)
             completed = subprocess.run(
-                [executable, 'exec', operation, '--input-file', request_path],
+                [*command, 'exec', operation, '--input-file', request_path],
                 capture_output=True, text=True, timeout=self.timeout_seconds,
                 check=False, env=os.environ.copy(),
             )
@@ -74,6 +137,18 @@ class QlooHarnessProvider(CultureProvider):
                 Path(request_path).unlink(missing_ok=True)
         if completed.returncode != 0:
             # Do not return stderr to clients; it may include sensitive runtime context.
+            # The structured error code on stdout is safe and tells us whether this was
+            # a quota/rate-limit problem, an auth problem, or a malformed request.
+            code = ''
+            try:
+                failure = json.loads(completed.stdout)
+                code = str(failure.get('error', {}).get('code', '')) if isinstance(failure, dict) else ''
+            except (json.JSONDecodeError, AttributeError):
+                code = ''
+            if code == 'QLOO_RATE_LIMITED':
+                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.')
+            if code == 'QLOO_AUTH':
+                raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.')
             raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.')
         try:
             result = json.loads(completed.stdout)

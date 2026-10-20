@@ -31,8 +31,17 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 - The vault is an **export**, not a graph input. `.graphifyignore` excludes `/CultureForge AI/` from the scan — do not remove it. Re-ingesting the vault feeds the graph its own output and inflates every query.
 - Keep `scripts/vault_query.py`'s index fresh automatically; it rebuilds on vault mtime change.
 
-## Delegation protocol
+## Qloo live data — spend quota carefully
 
+- The key lives in the Qloo CLI's private store (`~/.qloo/config`, mode 0600) and in the gitignored `.env`. **Never** commit it, print it, or put it in a tracked file.
+- Hackathon keys work only against `https://hackathon.api.qloo.com` (set via `qloo config set base-url ...`). The wrong host returns 401.
+- Rate and monthly limits are unpublished and reset monthly. Assume the quota is finite.
+- `scripts/check_api.py` is read-only by default. Use `--live` to spend a request; never run it in a loop.
+- The backend enforces a local budget (`QLOO_MAX_CALLS_PER_HOUR`, `QLOO_MAX_CALLS_PER_DAY`) checked *before* each request. Don't raise the limits to work around a failure.
+- Prefer the mock provider for anything that does not need live signals — it makes zero API calls.
+- `scripts/qloo_exec.mjs` exists because the stock `qloo exec` client caps requests at 20s while `/v2/insights` needs ~25s, which turned every live request into three failed attempts. Keep using it rather than the raw `qloo` binary.
+
+## Delegation protocol
 - Do **not** spawn a subagent without explicit user permission, every time. No self-authorized escalation.
 - When a task is difficult, ambiguous, or beyond this model's capability, stop and report back: state what was attempted, what is blocked, and why a higher-intelligence model would help.
 - End that report with a direct request for permission to delegate, naming the agent role and the specific scope of work.

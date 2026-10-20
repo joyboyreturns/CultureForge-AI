@@ -47,13 +47,40 @@ qloo setup --qloo
 qloo --version
 ```
 
-Run the backend in Qloo mode:
+### Hackathon keys need the hackathon base URL
+
+A hackathon API key works **only** against `https://hackathon.api.qloo.com`. The same key returns `401` against `api.qloo.com` or `staging.api.qloo.com`. This is the most common cause of 401s, so set it explicitly:
+
+```bash
+qloo config set base-url https://hackathon.api.qloo.com
+qloo config set api-key YOUR_QLOO_API_KEY
+```
+
+`qloo config set base-url` also marks the endpoint as trusted, which the CLI requires before it will send credentials to a non-production host. Both settings live in `~/.qloo/config` (mode 0600). Check the result with `qloo doctor --network`.
+
+### Check your setup without spending quota
+
+```bash
+python3 scripts/check_api.py            # read-only: credentials, base URL, quota headroom
+python3 scripts/check_api.py --live     # opt in to a single test request
+```
+
+### Quota guard
+
+Hackathon keys carry rate and monthly limits that Qloo does not publish. Two guards keep this project from exhausting them:
+
+- **Request timeout.** The stock `qloo exec` client caps each HTTP attempt at 20s, but `/v2/insights` needs roughly 25s against the hackathon environment. Every live request would time out, retry three times, and burn three calls for no result. `scripts/qloo_exec.mjs` reuses the harness's own client with an explicit timeout (`QLOO_REQUEST_TIMEOUT_MS`, default 60000) and no blind retries. It is a drop-in replacement for the `qloo` binary and the backend prefers it automatically.
+- **Call budget.** `QLOO_MAX_CALLS_PER_HOUR` (default 20) and `QLOO_MAX_CALLS_PER_DAY` (default 100) bound how many Qloo workflows the backend may issue. The budget is checked *before* each request, so an exhausted budget pauses live signals instead of spending the quota. Usage is tracked in `~/.cache/cultureforge/qloo_calls.json`.
+
+### Running with live data
 
 ```bash
 CULTUREFORGE_PROVIDER=qloo uvicorn backend.main:app --reload --port 8000
 ```
 
 The harness can also read `QLOO_API_KEY` from the backend process environment. Do not expose this variable through `VITE_*` variables. With no key and the default `auto` provider mode, the backend uses mock data. If a configured Qloo request fails, the API returns an error; it does not silently relabel the response as live or substitute mock data.
+
+Responses are cached in memory for 24 hours per business type, audience, and location, so repeated requests for the same project do not re-spend quota. Qloo's API terms limit how long returned data may be retained — the in-memory cache is deliberately not written to disk.
 
 ## Prototype journey
 
