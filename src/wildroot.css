@@ -536,6 +536,18 @@
 .constellation-node.is-faded { opacity: 0.34; }
 .constellation-legend li { font: 500 10px 'DM Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
 
+/* --- The concept cards arrive one after another, but they stay askew. ------
+   The rise keeps the card's own tilt in both keyframes, and the fill mode
+   releases the card back to its own styles when it lands, so the hover
+   transform is not locked out by a finished animation. */
+@keyframes cardRise {
+  from { opacity: 0; transform: rotate(var(--tilt, 0deg)) translateY(24px) scale(0.985); filter: blur(5px); }
+  to { opacity: 1; transform: rotate(var(--tilt, 0deg)); filter: blur(0); }
+}
+
+.concept-grid > .concept-card {
+  animation: cardRise 0.78s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
 /* --- Small surfaces: heat, anchors, comparison ------------------------------ */
 .heat-tile, .anchor-choice, .anchor-list li, .anchor-signals,
 .audience-comparison, .taste-seed, .provenance-recomposed, .provenance-use {
