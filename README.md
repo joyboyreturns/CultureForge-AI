@@ -133,6 +133,20 @@ All contract checks passed.
 
 It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
 
+## Cinematic layer
+
+The front page is treated like a title sequence rather than a document.
+
+- **Grade stack** — a colour wash, a vignette, and animated film grain sit over the video, so the frame reads as graded footage instead of a raw background.
+- **Depth** — the video runs a slow Ken Burns push-in and drifts against the scroll, so the page has a foreground, a midground, and a background.
+- **Masked reveal** — the headline lines rise out of a mask with a light sweeping across them once they settle.
+- **View transitions** — moving between Home, Product, Case Studies, and Contact cross-fades and blurs rather than cutting.
+- **Pointer light** — a soft glow follows the cursor on the call to action, which is also gently magnetic, and a spotlight tracks the hovered nav link.
+- **Curtain** — "Open studio" wipes the front page away behind a branded curtain and hands over to the studio; "Landing" wipes back.
+- **Studio atmosphere** — the workspace carries its own slow aurora and a fine grain, concept cards rise in one after another, and the selected card's photo carries a slow sheen.
+
+Every effect respects `prefers-reduced-motion: reduce`: the grain, aurora, Ken Burns, headline sweep, curtain wipe, and card reveals all stand down and the content is shown immediately.
+
 ## API
 
 The FastAPI backend exposes two endpoints:

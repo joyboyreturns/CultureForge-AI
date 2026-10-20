@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 387 nodes · 615 edges · 25 communities (19 shown, 6 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 31 edges (avg confidence: 0.88)
+- 392 nodes · 623 edges · 25 communities (19 shown, 6 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 33 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2df0a490`
+- Built from commit: `8050096e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -67,7 +67,7 @@
 ## Communities (25 total, 6 thin omitted)
 
 ### Community 0 - "Backend Provider Models"
-Cohesion: 0.07
+Cohesion: 0.08
 Nodes (22): generate(), health(), health_alias(), clamp(), fingerprint(), generate_mock(), investment(), normalize() (+14 more)
 
 ### Community 1 - "Frontend Types and State"
@@ -95,7 +95,7 @@ Cohesion: 0.32
 Nodes (11): CultureForge Concept Studio Desktop Mockup, CultureForge Concept Studio Mobile Mockup, Audience Lens Scenario Exploration, Cultural Signals and Experience Blueprint Panel, Family Market Day Makers Market, Flexible Timing Cultural Signal, Hand-Me-Down House Repair and Resale Shop, Little & Local Concept Store (+3 more)
 
 ### Community 7 - "Vault Retrieval Tool"
-Cohesion: 0.14
+Cohesion: 0.13
 Nodes (15): load_qloo_config(), main(), mask(), read_budget_log(), _build_index(), _code_excerpt(), find_notes(), load_index() (+7 more)
 
 ### Community 8 - "TypeScript Node Build Settings"
@@ -131,8 +131,8 @@ Cohesion: 0.31
 Nodes (9): BUSINESS_TYPES, checkObject(), checkResponse(), CONTRACT, fail(), failures, main(), notes (+1 more)
 
 ### Community 45 - "Front Page Script Interactions"
-Cohesion: 0.15
-Nodes (13): easeOutCubic(), init(), initBackgroundVideo(), attemptPlay(), unlock(), initFramerMotionEnhancements(), initLandingNavigation(), initMobileMenu() (+5 more)
+Cohesion: 0.12
+Nodes (17): easeOutCubic(), init(), initBackgroundVideo(), attemptPlay(), unlock(), initCinematic(), initFramerMotionEnhancements(), initLandingNavigation() (+9 more)
 
 ### Community 90 - "Agent Workflow Documentation"
 Cohesion: 0.29
@@ -144,20 +144,20 @@ Nodes (15): typescript, argv, client, distDir, executor, harnessDir, MAX_ATTEMPT
 
 ## Knowledge Gaps
 - **25 isolated node(s):** `autoprefixer`, `motion`, `postcss`, `tailwindcss`, `@types/react` (+20 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 180 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 181 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `typescript` connect `Qloo Execution Wrapper` to `Build Tooling and Dependencies`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `QlooHarnessProvider` (e.g. with `CulturalSignal` and `GenerateResponse`) actually correct?**
   _`QlooHarnessProvider` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `autoprefixer`, `motion`, `postcss` to the rest of the system?**
   _25 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Backend Provider Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.07373271889400922 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0750925436277102 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `Frontend Types and State` to `Build Tooling and Dependencies`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `GenerateResponse` (e.g. with `generate()` and `CultureProvider`) actually correct?**

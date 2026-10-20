@@ -176,26 +176,51 @@
   // 3. Navigation Active State Synchronization
   // ---------------------------------------------------------------------------
   function initLandingNavigation() {
-    const links = document.querySelectorAll('.nav-link, .mobile-link, .logo-btn[data-nav], .followup-link[data-nav]');
+    const links = document.querySelectorAll('.nav-link, .mobile-link, .logo-btn[data-nav], .followup-link[data-nav], .scroll-cue[data-nav]');
     const views = document.querySelectorAll('[data-landing-view]');
     const followup = document.querySelector('[data-home-followup]');
     const validViews = new Set(Array.from(views, (view) => view.getAttribute('data-landing-view')));
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let transitionToken = 0;
 
-    function showView(name, updateHistory = true) {
+    function showView(name, updateHistory = true, animate = true) {
       const target = validViews.has(name) ? name : 'home';
-      views.forEach((view) => { view.hidden = view.getAttribute('data-landing-view') !== target; });
-      if (followup) followup.hidden = target !== 'home';
-      links.forEach((link) => {
-        const active = link.getAttribute('data-nav') === target;
-        link.classList.toggle('active', active);
-        if (link.classList.contains('nav-link') || link.classList.contains('mobile-link')) {
-          if (active) link.setAttribute('aria-current', 'page');
-          else link.removeAttribute('aria-current');
+      const current = Array.from(views).find((view) => !view.hidden);
+      const next = Array.from(views).find((view) => view.getAttribute('data-landing-view') === target);
+      const token = ++transitionToken;
+
+      function commit() {
+        // A newer navigation superseded this transition.
+        if (token !== transitionToken) return;
+        views.forEach((view) => {
+          view.hidden = true;
+          view.classList.remove('view-enter', 'view-exit');
+        });
+        if (next) {
+          next.hidden = false;
+          if (animate) next.classList.add('view-enter');
         }
-      });
-      document.querySelector('.page')?.setAttribute('data-active-view', target);
-      if (updateHistory) history.pushState(null, '', `#${target}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (followup) followup.hidden = target !== 'home';
+        links.forEach((link) => {
+          const active = link.getAttribute('data-nav') === target;
+          link.classList.toggle('active', active);
+          if (link.classList.contains('nav-link') || link.classList.contains('mobile-link')) {
+            if (active) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+          }
+        });
+        document.querySelector('.page')?.setAttribute('data-active-view', target);
+        if (updateHistory) history.pushState(null, '', `#${target}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Cross-fade: the outgoing view blurs out before the incoming one rises in.
+      if (animate && current && current !== next && !reducedMotion) {
+        current.classList.add('view-exit');
+        window.setTimeout(commit, 280);
+      } else {
+        commit();
+      }
     }
 
     links.forEach((link) => link.addEventListener('click', (event) => {
@@ -205,7 +230,7 @@
       showView(target);
     }));
     window.addEventListener('popstate', () => showView(location.hash.slice(1), false));
-    showView(location.hash.slice(1), false);
+    showView(location.hash.slice(1), false, false);
   }
 
   // The redesigned marketing entry remains the first screen; open the existing
@@ -214,43 +239,65 @@
     const root = document.getElementById('root');
     const landing = document.querySelector('.page');
     const background = document.querySelector('.bg');
+    const curtain = document.querySelector('.curtain');
     if (!root || !landing) return;
     let studioLoaded = false;
+    let transitionTimer = null;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const WIPE_MS = reducedMotion ? 0 : 660;
+
+    // Run `swap` while the curtain fully covers the screen, then lift it.
+    function withCurtain(swap) {
+      if (!curtain) { swap(); return; }
+      if (transitionTimer) window.clearTimeout(transitionTimer);
+      curtain.classList.add('is-covering');
+      transitionTimer = window.setTimeout(function () {
+        swap();
+        // Let the studio settle before the curtain lifts.
+        window.setTimeout(function () {
+          curtain.classList.remove('is-covering');
+        }, reducedMotion ? 0 : 180);
+      }, WIPE_MS);
+    }
 
     function openStudio(event) {
       event?.preventDefault();
       history.replaceState(null, '', '#workspace/create');
-      document.body.classList.add('studio-mode');
       document.body.classList.remove('menu-open');
-      landing.hidden = true;
-      if (background) background.hidden = true;
-      root.hidden = false;
-      root.style.display = 'block';
-      if (!studioLoaded) {
-        studioLoaded = true;
-        import('/src/main.tsx').catch((error) => {
-          studioLoaded = false;
-          root.innerHTML = '<p class="studio-load-error">The exploration studio could not load. Refresh the page and try again.</p>';
-          console.error('CultureForge studio failed to load:', error);
-        });
-      } else window.dispatchEvent(new Event('cultureforge:open-create'));
-      window.scrollTo(0, 0);
+      withCurtain(function () {
+        document.body.classList.add('studio-mode');
+        landing.hidden = true;
+        if (background) background.hidden = true;
+        root.hidden = false;
+        root.style.display = 'block';
+        if (!studioLoaded) {
+          studioLoaded = true;
+          import('/src/main.tsx').catch((error) => {
+            studioLoaded = false;
+            root.innerHTML = '<p class="studio-load-error">The exploration studio could not load. Refresh the page and try again.</p>';
+            console.error('CultureForge studio failed to load:', error);
+          });
+        } else window.dispatchEvent(new Event('cultureforge:open-create'));
+        window.scrollTo(0, 0);
+      });
     }
 
     function showLanding() {
       history.replaceState(null, '', window.location.pathname + window.location.search);
-      root.hidden = true;
-      root.style.display = 'none';
-      landing.hidden = false;
-      if (background) background.hidden = false;
-      document.body.classList.remove('studio-mode');
-      document.querySelectorAll('.stat-value[data-target]').forEach((element) => {
-        const target = Number(element.getAttribute('data-target') || '0');
-        const decimals = Number(element.getAttribute('data-decimals') || '0');
-        const suffix = element.getAttribute('data-suffix') || '';
-        element.textContent = target.toFixed(decimals) + suffix;
+      withCurtain(function () {
+        root.hidden = true;
+        root.style.display = 'none';
+        landing.hidden = false;
+        if (background) background.hidden = false;
+        document.body.classList.remove('studio-mode');
+        document.querySelectorAll('.stat-value[data-target]').forEach((element) => {
+          const target = Number(element.getAttribute('data-target') || '0');
+          const decimals = Number(element.getAttribute('data-decimals') || '0');
+          const suffix = element.getAttribute('data-suffix') || '';
+          element.textContent = target.toFixed(decimals) + suffix;
+        });
+        window.scrollTo(0, 0);
       });
-      window.scrollTo(0, 0);
     }
 
     document.querySelectorAll('[data-open-studio]').forEach((link) => {
@@ -333,7 +380,98 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 5. Framer Motion / Motion Spring & Micro-Interactions
+  // 5. Cinematic Layer
+  // ---------------------------------------------------------------------------
+  function initCinematic() {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const video = document.querySelector('.bg-video');
+    const progress = document.querySelector('.scroll-progress > i');
+    const navPill = document.querySelector('.nav-pill');
+    const navGlow = document.querySelector('.nav-glow');
+    const followup = document.querySelector('[data-home-followup]');
+
+    // Scroll progress and video parallax share one rAF-throttled listener.
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        const y = window.scrollY || 0;
+        const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        if (progress) {
+          // A view that barely scrolls would peg the bar at 100% straight
+          // away, so hide it when there is not enough distance to matter.
+          progress.parentElement.style.opacity = max < 140 ? '0' : '1';
+          progress.style.width = Math.min(100, (y / max) * 100).toFixed(2) + '%';
+        }
+        if (video && !reducedMotion) {
+          const shift = Math.max(-42, Math.min(42, y * 0.11));
+          video.style.setProperty('--parallax', shift.toFixed(1) + 'px');
+        }
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+
+    // The follow-up section rises into view as it arrives.
+    if (followup && !reducedMotion && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('reveal');
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.2 });
+      observer.observe(followup);
+    }
+
+    // A soft spotlight follows the hovered nav link.
+    if (navPill && navGlow) {
+      const navLinks = navPill.querySelectorAll('.nav-link');
+      function moveGlow(link) {
+        const pillRect = navPill.getBoundingClientRect();
+        const rect = link.getBoundingClientRect();
+        navGlow.style.setProperty('--glow-w', rect.width + 'px');
+        navGlow.style.setProperty('--glow-x', (rect.left - pillRect.left) + 'px');
+      }
+      navLinks.forEach(function (link) {
+        link.addEventListener('mouseenter', function () { moveGlow(link); });
+        link.addEventListener('focus', function () { moveGlow(link); });
+      });
+      navPill.addEventListener('mouseleave', function () {
+        navGlow.style.setProperty('--glow-w', '0px');
+      });
+    }
+
+    // Pointer light and a gentle magnetic pull on the call to action.
+    const ctas = document.querySelectorAll('.cta-btn');
+    if (!reducedMotion && window.matchMedia('(pointer: fine)').matches) {
+      ctas.forEach(function (cta) {
+        cta.addEventListener('pointermove', function (event) {
+          const rect = cta.getBoundingClientRect();
+          // A hidden view reports a zero-sized rect; dividing by it would
+          // produce NaN and break the transform.
+          if (!rect.width || !rect.height) return;
+          const x = (event.clientX - rect.left) / rect.width;
+          const y = (event.clientY - rect.top) / rect.height;
+          cta.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+          cta.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+          cta.style.transform =
+            'translate(' + ((x - 0.5) * 8).toFixed(2) + 'px,' + (((y - 0.5) * 5) - 2).toFixed(2) + 'px) scale(1.015)';
+        });
+        cta.addEventListener('pointerleave', function () {
+          cta.style.transform = '';
+          cta.style.setProperty('--mx', '50%');
+          cta.style.setProperty('--my', '50%');
+        });
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 6. Framer Motion / Motion Spring & Micro-Interactions
   // ---------------------------------------------------------------------------
   function initFramerMotionEnhancements() {
     if (!window.Motion || typeof window.Motion.animate !== 'function') return;
@@ -389,6 +527,7 @@
     initPrototypeJourney();
     initFramerMotionEnhancements();
     initBackgroundVideo();
+    initCinematic();
 
     // In case Motion script was slightly delayed
     if (!window.Motion) {

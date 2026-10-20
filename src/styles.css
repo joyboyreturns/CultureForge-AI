@@ -38,3 +38,113 @@
 .controls-heading h3{font-size:17px}.scenario-controls .field>span{font-size:11px}.scenario-controls textarea{font-size:12px}.scenario-presets button{font-size:9px}.scenario-controls>.small-cap{font-size:8px}.weight-sliders label>span{font-size:11px}.weight-sliders label b{font-size:12px}.weight-sliders label>small{font-size:9px}.sample-model-note p{font-size:9px}.scenario-audience-cards .small-cap{font-size:8px}.scenario-audience-cards h3{font-size:17px}.scenario-audience-cards>div>span:last-child{font-size:10px}.scenario-audience-cards>div{min-height:155px;padding:20px}.chart-heading h3{font-size:21px}.chart-heading p{font-size:11px}.chart-legend{font-size:9px}.chart-row-label strong{font-size:13px}.chart-row-label>span{font-size:9px}.chart-row-label>b{font-size:12px}.chart-row-label>b small{font-size:9px}.paired-bars>div{height:13px}.paired-bars span{font-size:9px;top:0}.scenario-chart-rows{gap:28px}.chart-axis{font-size:8px}.scenario-insight .small-cap{font-size:8px}.scenario-insight h3{font-size:18px}.scenario-insight p{font-size:11px}.scenario-apply .text-link{font-size:11px}.scenario-apply .button{font-size:12px}.scenario-pill{font-size:8px}.page-footer{font-size:10px}
 }
 @media(min-width:701px) and (max-width:1150px){.topbar-left{font-size:11px}.page-heading p,.results-title-row>div>p{font-size:11px}.concept-description{font-size:10px;min-height:81px}.concept-card-foot button{font-size:8px}.field>span{font-size:10px}.field input,.field select,.field textarea{font-size:12px}.form-section-title p{font-size:10px}.form-section-title h3{font-size:14px}.goal-chip{font-size:10px}.discovery-card>p{font-size:10px}.weight-sliders label>span{font-size:10px}.source-panel p{font-size:11px}.evidence-row p{font-size:10px}.scenario-insight p{font-size:10px}}
+
+/* ==========================================================================
+   CINEMATIC LAYER — the concept studio
+   ========================================================================== */
+
+/* A slow atmospheric wash and a fine grain behind the workspace, so the
+   studio reads as a room rather than a flat panel. */
+.studio-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.studio-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(85% 55% at 80% 2%, rgba(199, 163, 255, 0.10), transparent 62%),
+    radial-gradient(70% 60% at 6% 98%, rgba(255, 176, 131, 0.075), transparent 64%);
+  animation: studioAurora 24s ease-in-out infinite alternate;
+}
+
+.studio-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.032;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: studioGrain 0.9s steps(6) infinite;
+}
+
+@keyframes studioAurora {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 4% 2%, -3% -2%; }
+}
+
+@keyframes studioGrain {
+  0% { background-position: 0 0; }
+  25% { background-position: -20px 12px; }
+  50% { background-position: 16px -18px; }
+  75% { background-position: -14px -10px; }
+  100% { background-position: 0 0; }
+}
+
+/* The concept cards arrive one after another. */
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(24px) scale(0.985); filter: blur(5px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+.concept-grid > .concept-card {
+  animation: cardRise 0.78s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.concept-grid > .concept-card:nth-child(1) { animation-delay: 0.04s; }
+.concept-grid > .concept-card:nth-child(2) { animation-delay: 0.13s; }
+.concept-grid > .concept-card:nth-child(3) { animation-delay: 0.22s; }
+
+/* A slow highlight travels across the selected concept's photo. */
+.concept-card.is-selected .concept-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.14) 50%, transparent 62%);
+  background-size: 240% 100%;
+  animation: photoSheen 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes photoSheen {
+  0% { background-position: 150% 0; }
+  55%, 100% { background-position: -60% 0; }
+}
+
+/* Lift and glow on hover. */
+.concept-card {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.55s ease, border-color 0.55s ease;
+}
+
+.concept-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.42);
+}
+
+.concept-photo {
+  overflow: hidden;
+}
+
+.concept-photo img {
+  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.concept-card:hover .concept-photo img {
+  transform: scale(1.045);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-shell::before,
+  .studio-shell::after { animation: none !important; }
+  .concept-grid > .concept-card { animation: none !important; opacity: 1; transform: none; filter: none; }
+  .concept-card.is-selected .concept-photo::after { animation: none !important; }
+  .concept-card:hover { transform: none; }
+  .concept-card:hover .concept-photo img { transform: none; }
+}
