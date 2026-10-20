@@ -71,6 +71,36 @@ The interface includes persistent dark and light themes, a guided demo, a saved-
 
 The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
+## Knowledge graph and Obsidian vault
+
+This repo ships a **graphify** knowledge graph over the code at `graphify-out/graph.json` and an **Obsidian vault** of per-node notes at `CultureForge AI/`. Both are scoped retrieval surfaces for AI coding assistants — a graph query returns a small subgraph, and a vault note returns one node's frontmatter (`source_file`, `location`, `community`) plus its connections.
+
+`graph.json` is committed, so a fresh clone has a working graph with no build step. The vault's generated notes are not committed; regenerate them with:
+
+```bash
+uv tool install graphifyy --with mcp
+graphify update .                                    # re-extract code (AST only, no API cost)
+graphify export obsidian --dir "CultureForge AI"      # refresh the vault
+```
+
+The Obsidian vault is an **export** of the graph, not an input to it. `.graphifyignore` excludes it from the scan — do not remove that exclusion, or the graph will ingest its own output and inflate every query.
+
+### OpenCode
+
+`opencode.json` registers the `cultureforge-graph` MCP server, exposing `query_graph`, `get_node`, `get_neighbors`, `get_community`, `shortest_path`, `god_nodes`, and `graph_stats`. It starts through `scripts/graphify_mcp.sh`, which resolves the graphify interpreter for the current machine instead of hardcoding a path.
+
+### Retrieval helpers
+
+```bash
+python3 scripts/vault_query.py "QlooHarnessProvider" --code   # one node + its source excerpt
+python3 scripts/vault_query.py --search "cultural signal"      # search note contents
+python3 scripts/vault_query.py --source "backend/providers.py" # notes from one source file
+python3 scripts/vault_query.py --list --community "Backend Provider Models"
+python3 scripts/vault_query.py --stats
+```
+
+`AGENTS.md` documents the full retrieval ladder and the delegation protocol.
+
 ## Check mock generation
 
 Run `npm run test:mock` after installing frontend dependencies and the Python requirements. It checks 120 backend/frontend parity cases across five business types, eight audience briefs, and three budget bands, along with category-specific concepts, mock provenance, and pilot-budget limits. Both runtimes use `shared/mockCatalog.json`; the backend generator is in `backend/mock_generator.py` and the offline generator is in `src/mockData.ts`.
