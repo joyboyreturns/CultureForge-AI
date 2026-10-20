@@ -627,6 +627,33 @@
   .studio-return { font-size: 10px; }
 }
 
+/* --- The clarification, and the way out of it -------------------------------- */
+.clarification {
+  border-radius: 0;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--sun);
+  background: var(--surface-raised);
+  padding: 16px 18px;
+}
+.clarification strong { display: block; font: 500 17px/1.4 var(--font-sans); color: var(--text); margin-bottom: 6px; }
+.clarification p { margin: 0; font: 400 13px/1.6 var(--font-sans); color: var(--muted); }
+/* The suggestion is a location Qloo already returned places for, so it can be
+   taken without spending another request. */
+.clarification-suggestion {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1.5px solid var(--card-edge);
+  background: var(--sun);
+  color: #241704;
+  font: 500 12px 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  box-shadow: 4px 4px 0 var(--card-shadow);
+}
+.clarification-suggestion:hover { background: #f4c358; transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--card-shadow); }
+
 /* --- The taste seeds, as a printed confirmation sheet ----------------------- */
 .taste-seeds {
   border-radius: 0;

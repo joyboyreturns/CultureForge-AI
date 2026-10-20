@@ -273,6 +273,23 @@ async function main() {
       : typeof event.durationMs === 'number')),
     scenarioTrace.filter((event) => event.workflow).map((e) => `${e.workflow} ${e.durationMs}ms${/reused/i.test(e.detail ?? '') ? ' (reused)' : ''}`).join(', '));
 
+  // A location Qloo cannot resolve must not be a dead end. The app has to say
+  // which location failed, and offer a way out that it can vouch for.
+  const stranded = await api('/api/projects/compare', {
+    method: 'POST',
+    body: { project: { ...BRIEF, location: 'Greenpoint, Brooklyn' }, audience: ALTERNATIVE_AUDIENCE },
+  });
+  const strandedDetail = String(stranded.body?.detail ?? '');
+  check('a location Qloo cannot resolve is reported, not guessed at',
+    stranded.status !== 200 && /returned no places for/i.test(strandedDetail),
+    strandedDetail || `HTTP ${stranded.status}`);
+  check('the message names the location that failed',
+    /Greenpoint, Brooklyn/.test(strandedDetail),
+    strandedDetail.slice(0, 140));
+  check('the message offers a location Qloo already returned places for',
+    /returned places for these same signals earlier/i.test(strandedDetail),
+    strandedDetail.slice(0, 200));
+
   console.log('\n----------------------------------------------------------');
   if (failures === 0) {
     console.log(`The whole journey works. ${checks} checks passed.`);

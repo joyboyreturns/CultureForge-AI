@@ -115,7 +115,7 @@ export interface ResearchRun {
   audience: string
   events: TraceEvent[]
   result: GenerateResponse | null
-  clarification: { reason: string; question: string; field: string } | null
+  clarification: { reason: string; question: string; field: string; suggestion?: string | null } | null
   error: string | null
   transportRequests: number
   workflowCalls: number

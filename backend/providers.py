@@ -21,7 +21,7 @@ except ImportError:
     pass
 
 from .concept_composer import compose
-from .evidence_store import cached_call, canonical_key, get_store
+from .evidence_store import cached_call, canonical_key, get_store, known_location
 
 # Bumped whenever the composer changes what a concept means, so a stored
 # snapshot is never mistaken for a current result.
@@ -356,7 +356,15 @@ class QlooHarnessProvider(CultureProvider):
                 detail += f' Raw affinity returned by Qloo: {affinity:g}.'
             signals.append(CulturalSignal(label=label, detail=detail, affinity=affinity, category='Qloo recommendation', provenance_id=entity_id if isinstance(entity_id, str) else None))
         if not signals:
-            raise QlooHarnessError('Qloo returned no usable recommendation results for this project.')
+            suggestion = self._known_location(matched_tags, project.location)
+            if suggestion:
+                raise QlooHarnessError(
+                    f"Qloo returned no places for '{project.location}' for this audience. "
+                    f"'{suggestion}' returned places for these same signals earlier."
+                )
+            raise QlooHarnessError(
+                f"Qloo returned no places for '{project.location}' for this audience."
+            )
 
         # ---- Evidence, trace and composition -----------------------------
         # Qloo supplies the audience lens (the tags) and the local evidence
@@ -490,6 +498,15 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(oldest_key, None)
             self._cache[cache_key] = (time.monotonic(), response)
         return response
+
+    @staticmethod
+    def _known_location(tags: list[str], failed: str) -> Optional[str]:
+        """A location this store already holds places for, for these signals.
+
+        Offered only when Qloo itself returned places for it before, so the
+        suggestion is evidence rather than a guess.
+        """
+        return known_location(tags, failed)
 
     @staticmethod
     def _cached_tag_rows(query: str) -> list[dict]:

@@ -166,6 +166,7 @@ audience text
 - **The business reading** is CultureForge's, and is labelled as such. `backend/concept_composer.py` holds the rules; every proposal records the evidence it came from, and the UI shows them under "Why this direction?".
 - **No invented scores.** An evidence-composed concept has no audience-fit percentage, because Qloo's affinity does not measure business fit. The UI says so rather than showing a number that means nothing.
 - **Abstention beats padding.** If the evidence does not support three distinct directions, the app returns fewer and says why, rather than filling the gap with catalog concepts.
+- **A dead end is not a dead end.** Some places Qloo simply cannot resolve — "Greenpoint, Brooklyn" comes back empty. The app says which location failed, and, if it already holds places for the same signals somewhere else, offers that location as a one-click way forward. The suggestion is only ever a location Qloo actually returned places for, so it is evidence rather than a guess, and taking it spends no request.
 
 The scenario lab re-researches for real. Changing the audience calls `POST /api/projects/compare`, which runs the same two Qloo workflows against the new audience and returns fresh evidence and freshly composed directions — not a locally computed score shift.
 
@@ -223,8 +224,10 @@ $ npm run test:walkthrough
 [ok]   the exploration can be shared -> snap-a575cbe437dc
 [ok]   a repeated brief spends no upstream request -> 0 upstream requests, delivery cache
 [ok]   changing the audience re-researches -> The Neighbourhood Table | The Slow Hour | The Third Place
+[ok]   a location Qloo cannot resolve is reported, not guessed at -> Qloo returned no places for 'Greenpoint, Brooklyn'…
+[ok]   the message offers a location Qloo already returned places for -> 'Brooklyn, New York' returned places for these same signals earlier.
 ----------------------------------------------------------
-The whole journey works. 35 checks passed.
+The whole journey works. 41 checks passed.
 ----------------------------------------------------------
 ```
 

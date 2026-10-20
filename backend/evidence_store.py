@@ -151,6 +151,37 @@ class EvidenceStore:
         with self._lock:
             return len(self._snapshots)
 
+    def known_locations(self, tags: Optional[list[str]] = None) -> list[str]:
+        """The locations this store already holds places for.
+
+        A brief can ask for a place Qloo does not resolve — "Greenpoint,
+        Brooklyn" comes back empty. The store usually already holds a city
+        that worked for the same signals, and offering it is free, because
+        the evidence is already held and nothing new is asked of the API.
+        """
+        found: list[str] = []
+        with self._lock:
+            entries = list(self._cache.values())
+        for entry in entries:
+            envelope = entry.get('envelope')
+            if not isinstance(envelope, dict):
+                continue
+            if envelope.get('operation') != 'recommend':
+                continue
+            if not envelope.get('results'):
+                continue
+            intent = envelope.get('query_intent') if isinstance(envelope.get('query_intent'), dict) else {}
+            signals = intent.get('signals') if isinstance(intent.get('signals'), dict) else {}
+            location = signals.get('location')
+            if not isinstance(location, str) or not location.strip():
+                continue
+            held = signals.get('tags')
+            if tags and isinstance(held, list) and held and not set(tags) & set(held):
+                continue
+            if location not in found:
+                found.append(location)
+        return found
+
     # ---------------------------------------------------------------- stats
     def stats(self) -> dict:
         with self._lock:
@@ -172,6 +203,20 @@ def get_store() -> EvidenceStore:
         if _store is None:
             _store = EvidenceStore()
         return _store
+
+
+def known_location(tags: Optional[list[str]] = None, failed: Optional[str] = None) -> Optional[str]:
+    """A location this store already holds places for, for these signals.
+
+    Offered only when Qloo itself returned places for it before, so the
+    suggestion is evidence rather than a guess — and it costs nothing to take,
+    because the evidence is already held.
+    """
+    for location in get_store().known_locations(tags):
+        if failed and location.strip().lower() == failed.strip().lower():
+            continue
+        return location
+    return None
 
 
 def transport_request_count(envelope: dict) -> int:

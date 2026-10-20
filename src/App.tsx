@@ -55,7 +55,7 @@ export default function App() {
   // already chose — and the ones they dropped — are still what they chose.
   const [seedSelection, setSeedSelection] = useState<string[] | null>(null)
   const [seedBusy, setSeedBusy] = useState(false)
-  const [clarification, setClarification] = useState<{ reason: string; question: string; field: string } | null>(null)
+  const [clarification, setClarification] = useState<{ reason: string; question: string; field: string; suggestion?: string | null } | null>(null)
   const [shareUrl, setShareUrl] = useState('')
   const runId = useRef(0)
   useEffect(() => {
@@ -237,7 +237,7 @@ export default function App() {
               onChange={setSeedSelection}
               onConfirm={confirmSeeds} onCancel={() => setSeedCandidates(null)}/>
           : <Create form={form} setForm={setForm} submit={() => beginResearch()} error={providerError} back={() => navigate('home')}/>)}
-        {screen === 'create' && clarification && <div className="clarification" role="alert"><strong>{clarification.question}</strong><p>{clarification.reason}</p></div>}
+        {screen === 'create' && clarification && <div className="clarification" role="alert"><strong>{clarification.question}</strong><p>{clarification.reason}</p>{clarification.suggestion && <button className="clarification-suggestion" onClick={()=>{ setForm({...form, location: clarification.suggestion as string}); setClarification(null); beginResearch({...form, location: clarification.suggestion as string}) }}>Use {clarification.suggestion} instead</button>}</div>}
         {screen === 'progress' && (researchRunId
           ? <Progress project={form} runId={researchRunId} onComplete={onRunComplete} onClarify={onRunClarify}/>
           : <Progress project={form}/>)}

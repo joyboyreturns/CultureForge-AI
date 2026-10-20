@@ -22,6 +22,7 @@ import time
 import uuid
 from typing import Optional
 
+from .evidence_store import known_location
 from .models import ProjectRequest, TraceEvent
 from .providers import QlooHarnessError, QlooHarnessProvider, mark_reused
 
@@ -206,15 +207,22 @@ def _execute(run: ResearchRun, allowance: int) -> None:
                 'reason': 'Qloo needs a clearer location for this audience.',
                 'question': 'Which neighbourhood or city should we look in?',
                 'field': 'location',
+                'suggestion': None,
             }
             return
 
         if not provider.rows(rec_envelope):
             run.status = STATUS_CLARIFY
+            # A location Qloo cannot resolve is a dead end unless the founder
+            # is told what to change. If this store already holds places for
+            # these same signals somewhere else, that location is offered —
+            # it is evidence, not a guess, and it costs nothing to take.
+            suggestion = known_location(tags, run.project.location)
             run.clarification = {
-                'reason': 'Qloo returned no local evidence for this audience and location.',
+                'reason': f"Qloo returned no places for '{run.project.location}' for this audience.",
                 'question': 'Try a nearby city, or describe the audience differently.',
                 'field': 'location',
+                'suggestion': suggestion,
             }
             return
 

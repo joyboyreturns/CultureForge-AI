@@ -192,3 +192,34 @@ def test_a_fresh_step_keeps_the_duration_of_the_call_that_made_it():
 
     assert event.durationMs == 23299
     assert event.correlationId == 'abc'
+
+
+def test_the_store_knows_where_it_already_has_places(store):
+    """A location that returned places before is evidence, and can be offered."""
+    from backend.evidence_store import known_location
+
+    envelope = {
+        'operation': 'recommend', 'status': 'ok',
+        'results': [{'entity_id': 'a', 'name': 'Union Square Park'}],
+        'query_intent': {'signals': {'location': 'Brooklyn, New York', 'tags': ['urn:tag:x:qloo:y']}},
+    }
+    store.put(canonical_key('recommend', {'signal_location': 'Brooklyn, New York'}), envelope)
+
+    assert store.known_locations() == ['Brooklyn, New York']
+    assert known_location(['urn:tag:x:qloo:y']) == 'Brooklyn, New York'
+    # The location that just failed is never offered back as the way out.
+    assert known_location(['urn:tag:x:qloo:y'], 'Brooklyn, New York') is None
+    # A location with no places behind it is not evidence of anything.
+    assert known_location(['urn:tag:other:qloo:z']) is None
+
+
+def test_a_location_with_no_places_is_not_offered(store):
+    from backend.evidence_store import known_location
+
+    envelope = {
+        'operation': 'recommend', 'status': 'ok', 'results': [],
+        'query_intent': {'signals': {'location': 'Greenpoint, Brooklyn', 'tags': ['urn:tag:x:qloo:y']}},
+    }
+    store.put(canonical_key('recommend', {'signal_location': 'Greenpoint, Brooklyn'}), envelope)
+
+    assert known_location(['urn:tag:x:qloo:y']) is None

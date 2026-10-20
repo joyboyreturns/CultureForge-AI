@@ -65,6 +65,35 @@ def test_no_local_evidence_becomes_a_clarification(monkeypatch):
     research._execute(run, allowance=3)
     assert run.status == research.STATUS_CLARIFY
     assert run.clarification['field'] == 'location'
+    assert 'Brooklyn, New York' in run.clarification['reason'], 'the message names the location that failed'
+    assert run.clarification['suggestion'] is None, 'nothing is suggested when nothing is known'
+
+
+def test_a_known_location_is_offered_as_the_way_out(monkeypatch, store):
+    """A location Qloo cannot resolve must not be a dead end.
+
+    When the store already holds places for the same signals somewhere else,
+    that location is offered. It is evidence, not a guess, and taking it
+    spends no request, because the evidence is already held.
+    """
+    from backend.evidence_store import canonical_key
+
+    tag_envelope = {'status': 'ok', 'results': [{'id': 'urn:tag:x:qloo:y'}]}
+    provider = _install(monkeypatch, StubProvider(tag_envelope, {'status': 'ok', 'results': []}))
+
+    store.put(canonical_key('recommend', {'signal_tags': ['urn:tag:x:qloo:y'], 'signal_location': 'Brooklyn, New York'}), {
+        'operation': 'recommend', 'status': 'ok',
+        'results': [{'entity_id': 'a', 'name': 'Somewhere'}],
+        'query_intent': {'signals': {'location': 'Brooklyn, New York', 'tags': ['urn:tag:x:qloo:y']}},
+    })
+
+    # The founder asked for a neighbourhood Qloo cannot resolve.
+    run = research.ResearchRun(PROJECT.model_copy(update={'location': 'Greenpoint, Brooklyn'}))
+    research._execute(run, allowance=3)
+
+    assert run.status == research.STATUS_CLARIFY
+    assert 'Greenpoint, Brooklyn' in run.clarification['reason']
+    assert run.clarification['suggestion'] == 'Brooklyn, New York'
 
 
 def test_the_run_stops_at_its_allowance(monkeypatch):
