@@ -120,15 +120,15 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1792499523.7786512,
-    "seen": 1792499532.344883,
-    "ast_hash": "131d55eec7ae450379390309ec0eac28",
+    "mtime": 1792500566.666123,
+    "seen": 1792500573.322927,
+    "ast_hash": "aada27ca9ab3ffbe5486777830b0b086",
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1792395832.564227,
-    "seen": 1792497285.077835,
-    "ast_hash": "612beac72cdf3567920ba8c2a988bf4e",
+    "mtime": 1792500383.8622172,
+    "seen": 1792500472.613581,
+    "ast_hash": "7681915e59c0cf05d4c2bfefae021613",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -173,16 +173,10 @@
     "ast_hash": "ff8e2a85abe1aaacd5e45a91017f0675",
     "semantic_hash": ""
   },
-  "main.js": {
-    "mtime": 1792395714.5228703,
-    "seen": 1792497285.0764632,
-    "ast_hash": "b94d015312dedb36b519e499fa579c9a",
-    "semantic_hash": ""
-  },
   "AGENTS.md": {
-    "mtime": 1792498318.6360497,
-    "seen": 1792499532.344882,
-    "ast_hash": "0e0dd07238ce332b28a6f8cae1b4cc9f",
+    "mtime": 1792499577.5321949,
+    "seen": 1792500472.613579,
+    "ast_hash": "42474c6d85c0d226b6e3ccacbaf3c5ab",
     "semantic_hash": ""
   },
   "opencode.json": {
@@ -207,6 +201,30 @@
     "mtime": 1792498261.42886,
     "seen": 1792499532.344866,
     "ast_hash": "75a9f1a1effaf0093e3e7c65ad64702f",
+    "semantic_hash": ""
+  },
+  "prototype/index.html": {
+    "mtime": 1792500530.161669,
+    "seen": 1792500573.3229299,
+    "ast_hash": "d80c66140205748950fd77374b7d8bfc",
+    "semantic_hash": ""
+  },
+  "prototype/main.js": {
+    "mtime": 1792395714.5228703,
+    "seen": 1792500573.322905,
+    "ast_hash": "b94d015312dedb36b519e499fa579c9a",
+    "semantic_hash": ""
+  },
+  "prototype/assets/logo.webp": {
+    "mtime": 1792394152.1111748,
+    "seen": 1792500573.322939,
+    "ast_hash": "fac8f2871676e05514e66c86b3b1edf8",
+    "semantic_hash": ""
+  },
+  "prototype/assets/cultureforge-background.mp4": {
+    "mtime": 1792395745.1828494,
+    "seen": 1792500573.3229399,
+    "ast_hash": "bcb92b4728186eb5800832ef4124c7bc",
     "semantic_hash": ""
   }
 }

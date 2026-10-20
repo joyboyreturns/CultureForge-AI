@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 339 nodes · 529 edges · 23 communities (18 shown, 5 thin omitted)
+- 340 nodes · 530 edges · 22 communities (17 shown, 5 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 28 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e6cc39a6`
+- Built from commit: `e7f6e201`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -27,11 +27,10 @@
 - Desktop Dashboard Mockup Content
 - Mobile Mockup Content
 - Audience and Ritual Matches
-- Package Dependencies
 - App Shell and Metadata
 - TypeScript Project References
 - Graphify MCP Wrapper
-- Prototype Script Interactions
+- main.js
 - Agent Workflow Documentation
 - Qloo Execution Wrapper
 
@@ -62,7 +61,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (23 total, 5 thin omitted)
+## Communities (22 total, 5 thin omitted)
 
 ### Community 0 - "Backend Provider Models"
 Cohesion: 0.08
@@ -73,8 +72,8 @@ Cohesion: 0.08
 Nodes (40): generateConcepts(), App(), applyScenario(), create(), navigate(), save(), audiencePresets, BarIcon() (+32 more)
 
 ### Community 2 - "Build Tooling and Dependencies"
-Cohesion: 0.07
-Nodes (26): dependencies, lucide-react, motion, react, react-dom, name, private, scripts (+18 more)
+Cohesion: 0.05
+Nodes (35): dependencies, lucide-react, motion, react, react-dom, devDependencies, autoprefixer, postcss (+27 more)
 
 ### Community 3 - "TypeScript App Compiler Settings"
 Cohesion: 0.11
@@ -93,7 +92,7 @@ Cohesion: 0.32
 Nodes (11): CultureForge Concept Studio Desktop Mockup, CultureForge Concept Studio Mobile Mockup, Audience Lens Scenario Exploration, Cultural Signals and Experience Blueprint Panel, Family Market Day Makers Market, Flexible Timing Cultural Signal, Hand-Me-Down House Repair and Resale Shop, Little & Local Concept Store (+3 more)
 
 ### Community 7 - "Vault Retrieval Tool"
-Cohesion: 0.14
+Cohesion: 0.12
 Nodes (15): load_qloo_config(), main(), mask(), read_budget_log(), _build_index(), _code_excerpt(), find_notes(), load_index() (+7 more)
 
 ### Community 8 - "TypeScript Node Build Settings"
@@ -116,21 +115,17 @@ Nodes (8): CultureForge Concept Studio Mobile Mockup, Three Cultural Connections
 Cohesion: 1.00
 Nodes (3): Café Rituals, Shared Audience, Vinyl Culture
 
-### Community 13 - "Package Dependencies"
-Cohesion: 0.22
-Nodes (9): devDependencies, autoprefixer, postcss, tailwindcss, @types/react, @types/react-dom, typescript, vite (+1 more)
-
 ### Community 14 - "App Shell and Metadata"
 Cohesion: 0.67
 Nodes (3): CultureForge Page Metadata, React Application Root, Stored Theme Preference
 
-### Community 45 - "Prototype Script Interactions"
+### Community 45 - "main.js"
 Cohesion: 0.18
 Nodes (10): easeOutCubic(), init(), initFramerMotionEnhancements(), initLandingNavigation(), initMobileMenu(), initPrototypeJourney(), openStudio(), initStatsObserver() (+2 more)
 
 ### Community 90 - "Agent Workflow Documentation"
-Cohesion: 0.33
-Nodes (5): Delegation protocol, Maintenance, Project knowledge workflow, Retrieval ladder, Tools
+Cohesion: 0.29
+Nodes (6): Delegation protocol, Maintenance, Project knowledge workflow, Qloo live data — spend quota carefully, Retrieval ladder, Tools
 
 ### Community 147 - "Qloo Execution Wrapper"
 Cohesion: 0.08
@@ -138,7 +133,7 @@ Nodes (15): typescript, argv, client, distDir, executor, harnessDir, MAX_ATTEMPT
 
 ## Knowledge Gaps
 - **25 isolated node(s):** `autoprefixer`, `motion`, `postcss`, `tailwindcss`, `@types/react` (+20 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 159 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 160 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -151,7 +146,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `autoprefixer`, `motion`, `postcss` to the rest of the system?**
   _25 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Backend Provider Models` be split into smaller, more focused modules?**
-  _Cohesion score 0.08065458796025717 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08458646616541353 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `Build Tooling and Dependencies` to `Frontend Types and State`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `GenerateResponse` (e.g. with `generate()` and `CultureProvider`) actually correct?**

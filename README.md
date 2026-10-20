@@ -37,6 +37,15 @@ npm run dev
 
 Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAPI. If the API is unavailable, the frontend uses labeled sample data.
 
+## Entry points
+
+| Route | What it is |
+|---|---|
+| `/` | The React application — concept studio, agent workspace, scenario lab. This is the Vite entry point, so it is what `npm run dev` serves and what `npm run build` produces. |
+| `/prototype/` | The standalone vanilla-JS marketing landing page (`prototype/index.html`, `prototype/main.js`, `prototype/styles.css`, plus `prototype/assets/` and `prototype/fonts/`). Static, no API calls. |
+
+`index.html` at the repository root must stay the React entry (`<div id="root">` plus `/src/main.tsx`). Vite builds from it, so replacing it with another page silently drops the whole React app from both `npm run dev` and `npm run build`.
+
 ## Optional live Qloo signals
 
 Install the official harness (Node.js 22.19+ and `@qloo/qloo-harness` 0.1.26+), then configure its private credential store:
@@ -96,7 +105,7 @@ Mock-mode signals and all concept-fit scores, narratives, and scenario deltas ar
 
 The interface includes persistent dark and light themes, a guided demo, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab includes audience presets and adjustable preference sliders; its scores are an explicitly illustrative model. Theme and saved concepts persist across reloads, while exploration data stays in memory for the prototype.
 
-The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
+The landing page provides separate Product, Case Studies, and Contact views. Its background video is bundled locally at `prototype/assets/cultureforge-background.mp4` so playback does not depend on the original remote URL.
 
 ## Knowledge graph and Obsidian vault
 
