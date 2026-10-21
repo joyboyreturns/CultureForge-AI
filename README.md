@@ -1,112 +1,138 @@
 # CultureForge AI
 
-**Turn cultural evidence into business ideas a founder can challenge.**
+**Business ideas that answer to their cultural evidence.**
 
-CultureForge is an agentic concept studio for local founders. It uses Qloo's cultural intelligence to connect an audience and place to real venues, then proposes business directions whose evidence, assumptions, and weak points are visible. A direction can be supported, contested, or left unproven. The product does not pretend cultural affinity is proof of demand.
+CultureForge helps independent founders decide which local experience to prototype. It connects an audience and location to real Qloo cultural signals and reference places, composes business hypotheses, then lets the founder challenge an anchor or remove evidence and rebuild the answer.
 
-> **Hackathon submission links:** Live demo: _add the public deployment URL_. Source: [CultureForge AI on GitHub](https://github.com/joyboyreturns/CultureForge-AI). Add an open-source `LICENSE` before submission; no license is currently declared in this repository.
+**Submission status:** local review build; public demo pending deployment. [Source repository](https://github.com/joyboyreturns/CultureForge-AI) · [MIT license](LICENSE) · [Judge walkthrough](docs/JUDGE_WALKTHROUGH.md) · [Deployment](docs/DEPLOYMENT.md) · [Devpost draft and checklist](docs/SUBMISSION.md) · [Final review results](docs/FINAL_REVIEW.md)
 
-## Why this is useful
+> A verdict assesses **anchor fit within the retrieved sample**. It does not measure demand, revenue, profitability, rent or willingness to pay.
 
-Local founders often have an idea and a target audience but little evidence for choosing a concept, neighborhood, or experience. CultureForge gives them a fast way to explore cultural fit using Qloo's real data. Its intended users are independent founders, local business teams, and cultural strategists evaluating an early concept.
+## Try the central interaction
 
-The central idea is to make the agent test its own proposal. It gathers evidence, composes directions, exposes the basis for each one, and runs a challenge that may change the ranking or return a contested or unproven result. Users can remove a venue and rebuild from the remaining evidence, or hold a direction to another returned place to see how the assumption changes.
+New here? Open **Guided tour** in the studio header, or visit `/studio/?tour=1`. The six-step tour works with an empty workspace, can be resumed, and starts no upstream request.
 
-## What judges can try
+![A guided route through the actual studio](artifacts/guided-tour.png)
 
-1. Open the studio and enter a business idea, audience, location, and budget.
-2. Review the resolved audience signals and the Qloo venues behind the three proposed directions. Open a venue's provenance to inspect the workflow, request, response excerpt, and timing.
-3. Follow the agent trace: which question it asked, which named workflow it used, what evidence came back, and what remains unknown.
-4. Put a direction on trial. Inspect its claim, falsifier, policy version, and scoped verdict. Try changing the anchor or removing a venue and recomposing; the evidence dependency should visibly change.
-5. Open **Investigate** to ask a direction a follow-up question, or use the scenario lab to compare audiences with Qloo.
+1. Open `/studio/` and choose **Run the example brief**, or describe your business, audience and location. The guided route lets you confirm Qloo audience signals.
+2. Inspect the proposed directions. Each decision names the evidence and rule that produced it. Open provenance to see the workflow, allowlisted request, returned excerpt and timing.
+3. Choose **Test the evidence**. The result can be supported, contested or unproven. Read the claim, falsifier, scope and policy. A partial answer remains unproven.
+4. Change the anchor. The concept stays fixed while the verdict is tested against another returned place; the original reference and changed assumption stay visible.
+5. Choose **Trace evidence dependence** and remove a venue. Descriptions, photos, citations and anchors are recomposed from what remains. A direction can disappear.
+6. Export the brief or share a frozen exploration with its recorded verdict. The share link opens directly in the studio.
+7. Open **Decision notebook** to define a field experiment, proceed/stop criteria and your current decision. Save locally or download a decision record with its citations. Founder observations start blank, remain separately labelled, and do not change a Qloo verdict. Recomposition starts a separate notebook when the proposal or evidence changes.
 
-The exact output depends on live Qloo data. If Qloo cannot resolve the brief, the service reports the limitation and offers a way forward; it never substitutes mock evidence. Cached results are identified as cached and cost no new Qloo request.
+The short [judge walkthrough](docs/JUDGE_WALKTHROUGH.md) includes failure paths. Output depends on Qloo evidence; three usable directions or a changed verdict are not guaranteed. A failed lookup never becomes mock evidence.
 
-## Why the agent is central
+![A verified evidence-removal test using held Qloo evidence](artifacts/final-evidence-review.png)
 
-The agent is the product's decision loop, not a chat layer placed over a dashboard:
+![A founder-defined experiment with separately labelled Qloo references](artifacts/decision-notebook.png)
 
-```text
-founder brief
-  → resolve cultural signals and gather Qloo evidence
-  → choose the unanswered question for a direction
-  → call a named, typed Qloo workflow
-  → inspect the returned evidence and limits
-  → compose or challenge a direction
-  → show the trace, citations, and next useful action
+## Why this needs Qloo
+
+Without Qloo, CultureForge has no cultural signals, source venues or basis for its comparisons. Qloo retrieves the observations. CultureForge proposes interpretations and exposes their dependencies. Removing a Qloo source can change what the product is able to say.
+
+Business consultation and cultural venture ideation appeared in earlier Qloo submissions. Our focus is the next step: **make the idea falsifiable**. The [competitive review](docs/COMPETITIVE_REVIEW.md) examines GeoTaste, Alloy, Resonance AI, Zesty and TAVA, with links and an explicit distinction between published claims and verified CultureForge behavior. It does not claim a measured advantage over those projects.
+
+The [judge assessment](docs/JUDGE_ASSESSMENT.md) states the remaining weaknesses and includes a founder-validation protocol for the final sprint.
+
+## The agent and architecture
+
+```mermaid
+flowchart LR
+  B[Founder brief] --> Q[Qloo workflow retrieval]
+  Q --> E[Durable evidence store]
+  E --> C[Deterministic concept composition]
+  C --> A[Bounded model controller when enabled]
+  A --> R[Evidence and trace in studio]
+  C --> R
+  R --> T[Challenge anchor assumptions]
+  T --> V[Supported / contested / unproven]
+  R --> D[Remove a source]
+  D --> C
 ```
 
-The workflow tools are bounded and typed. The agent cannot turn missing data into a fact, invent a score, or quietly pass a malformed request. Qloo selects the evidence; deterministic rules decide which evidence supports a concept and the challenge verdict. Optional Frontier AI through **Vercel AI Gateway** helps phrase direction names and analyze the evidence already on screen. It does not select or fabricate Qloo facts. All model requests go through Vercel; the key is server-side, and unavailable model output leaves the rule-based result intact.
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS and Lucide; responsive light/dark studio and a cinematic introduction.
+- **HTTP contracts:** FastAPI and Pydantic; typed requests and a consistent readable error envelope.
+- **Qloo:** official [Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) harness, with workflow-specific request builders and a timeout-aware wrapper that disables blind transport retries.
+- **Research:** an observable state machine. Optional model control makes one schema-checked plan, at most one allowlisted evidence test, and reflection. Investigations use named, typed workflows.
+- **Optional models:** Vercel AI Gateway exclusively. A model may name directions, select existing evidence or interpret cited observations. Deterministic rules retain factual claims, citations and verdicts. Unavailable or invalid model output leaves the rule-based result intact and reports its state.
+- **Persistence:** durable evidence files and SQLite workspaces, saved explorations, share links and usage. The production package uses one process and a persistent volume.
 
-## What makes the evidence trustworthy
+Exact workflow contracts are exposed at `/api/qloo/workflows`; API documentation is at `/docs`.
 
-- Every direction cites the places and signals used to build it.
-- The challenge states its scope: anchor fit within the retrieved sample, not market demand, competition, rent, or willingness to pay.
-- The verdict can disagree with the composer. A partial check is `unproven`, and a changed anchor is identified without implying the concept was recomposed.
-- Removing a place rebuilds the answer from the remaining evidence, including its description, photograph, citations, and anchor.
-- Qloo's returned numbers are shown as returned. CultureForge does not create audience-fit percentages or treat absence from a bounded comparison as proof of exclusivity.
-- Errors, empty results, exhausted budgets, and missing photographs have explicit states and next steps.
-- Server evidence is cached for 24 hours and the browser holds the composed answer for 12 hours. Reusing a held answer spends no upstream request.
+## Trust and cost
 
-## Tech
+Every displayed Qloo measurement is returned by Qloo. CultureForge does not invent fit percentages. Citation counts measure attachment, not correctness. The demographic profile used by the ranking workflow is proposed by CultureForge from the brief; it is not Qloo-inferred, and is not the audience's complete cultural profile.
 
-- **Frontend:** React, TypeScript, Vite, Tailwind CSS
-- **API:** FastAPI with typed Pydantic contracts
-- **Cultural data:** Official Qloo Hackathon Kit harness (`find_tags`, `recommend`, and named follow-up workflows)
-- **Agent and decision logic:** typed investigation loop, evidence store, concept composer, and challenge policy
-- **Optional model calls:** Vercel AI Gateway only; model identity is configured server-side
-- **Persistence:** SQLite platform layer plus a durable local evidence cache
+The server caches successful evidence for 24 hours. The browser holds composed live answers for 12 hours. Both are labelled, and a reused answer reports zero new upstream requests. Failures are not cached as successful evidence. Opening the landing page does not run a lookup; the example is explicit.
+
+Local provider caps default to **20 Qloo calls/hour and 100/day**, with optional naming/selection capped at **20/hour and 50/day**. Evidence analysis has its own capped allowance. Do not raise limits to work around errors. A basic brief typically needs two Qloo workflows; a three-direction challenge can add one ranking and three comparisons. Optional investigation/model-selected tests can add calls. Held evidence is reused.
 
 ## Run locally
 
-Requires Node.js 22.19+ for the Qloo harness and Python 3.10+.
+Requires Node.js **22.19+** and Python **3.10+**. The tested deployment target is Python 3.12.
 
 ```bash
-npm install
-python -m venv .venv
+npm ci
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env
-```
-
-Install and configure the official Qloo harness with a hackathon key:
-
-```bash
-npm install --global @qloo/qloo-harness
+npm install --global @qloo/qloo-harness@0.1.26
 qloo setup --qloo
 qloo config set base-url https://hackathon.api.qloo.com
-qloo doctor --network
 ```
 
-The Qloo credential belongs in the harness's private configuration (or a server-only environment variable), never in Vite variables or source control. `.env.example` documents optional Frontier AI settings for Vercel AI Gateway. Keep the gateway key private and set `AI_GATEWAY_ENABLED=true` only when you want the optional naming/analysis features.
+Configure your private hackathon key through `qloo setup --qloo` or server-only `QLOO_API_KEY`. Replace the template value in `.env`; never put credentials in `VITE_*` variables or tracked files. Hackathon keys require the hackathon endpoint. Optional Vercel settings are documented in `.env.example`; model use is an explicit opt-in.
 
-Start the API and frontend in separate terminals:
+Start these in separate terminals:
 
 ```bash
+source .venv/bin/activate
 uvicorn backend.main:app --reload --port 8000
+```
+
+```bash
 npm run dev
 ```
 
-Open the Vite URL printed by the frontend. The studio is at `/studio/`. Check Qloo configuration without making a request with `python3 scripts/check_api.py`; add `--live` only when you intend to spend one Qloo request. Check Vercel configuration without a model request using `python3 scripts/llm_check.py`; add `--live` to make exactly one model request.
+Open the Vite URL, then `/studio/`. If port 8000 is unavailable, set `CULTUREFORGE_API_TARGET=http://127.0.0.1:8011` when starting Vite and run the API on 8011.
 
-## Quota and limitations
+`python3 scripts/check_api.py` and `python3 scripts/llm_check.py` check configuration without upstream requests. `--live` deliberately spends a request; do not run live checks repeatedly.
 
-Qloo's hackathon quota is finite and its published limits may change. The backend checks local per-hour and per-day budgets before sending requests, avoids blind retries, and caches successful evidence. Do not raise the caps to work around provider failures. Reuse held evidence during a judge demo.
+## Publish
 
-CultureForge evaluates cultural fit within the evidence Qloo returned. It does not establish market size, customer demand, profitability, legal compliance, or individual preferences. Its concepts are starting points for investigation, not validated business advice.
+The [deployment guide](docs/DEPLOYMENT.md) covers a Docker service that serves both the built UI and API from one origin. Static-only hosting is insufficient. Use one worker, one replica and persistent storage; research runs are currently held in process memory.
 
-## Development checks
+```bash
+docker build -t cultureforge .
+docker run --rm -p 8000:8000 --env-file .env -v cultureforge-data:/data cultureforge
+```
+
+Review before publishing. Record the public HTTPS root URL and owner confirmations in [submission.json](submission.json), and replace the pending demo status above with its link. Keep secrets in the host's private environment panel.
+
+## Verify
 
 ```bash
 npm run build
-python -m pytest backend/tests
-node scripts/verify_contracts.mjs
+python -m pytest backend/tests -q
+npm run test:unit
+npm run check:submission
 ```
 
-## Hackathon submission checklist
+The backend suite isolates storage and uses explicit test fixtures; it spends no live Qloo or model quota. CI runs build, unit/backend tests and packaging checks. A packaging pass does not certify a public deployment.
 
-- [x] Public source repository
-- [ ] Externally hosted, working demo URL
-- [ ] Open-source license in the repository
-- [x] Functional product centered on Qloo cultural data
-- [x] Clear target user, problem, and evidence-led agent workflow
+After publishing:
+
+```bash
+npm run check:release
+```
+
+This checks public routes and provider configuration without upstream requests. Also complete the [manual walkthrough](docs/JUDGE_WALKTHROUGH.md) on the hosted URL. The existing `test:contracts`, `test:endpoints` and `test:walkthrough` scripts exercise a running backend and may spend quota if required evidence is missing; use them deliberately.
+
+## Submission readiness and limits
+
+Prepared for the [2026 Qloo Agentic Hackathon](https://qloo.devpost.com/). The required public demo is still pending. The repository now includes an open-source license, a Devpost text draft, deployment instructions, a competitor review and a manual judge journey. Owner eligibility and asset rights require confirmation. See [the handoff](docs/SUBMISSION.md) for dates and outstanding steps.
+
+The public demo workspace is shared; use non-confidential example briefs. Cultural fit is a research starting point, not a validated business plan. No customer traction, demand validation or competitor performance advantage is claimed. See [third-party notices](THIRD_PARTY_NOTICES.md) for dependency and asset attribution.

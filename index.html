@@ -3,19 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Intelligence Designed To Evolve</title>
+  <title>CultureForge AI — Put your business idea on trial</title>
+  <meta name="description" content="An agentic studio for local founders. Build business directions from Qloo cultural evidence, challenge their assumptions, and rebuild when the evidence changes." />
+  <meta name="theme-color" content="#10110f" />
 
   <!-- Google Fonts: Inter (400, 500, 600) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
-
-  <!-- BubbledotICG-FinePos CDN (Primary Display) -->
-  <link
-    href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos"
     rel="stylesheet"
   />
 
@@ -32,11 +28,11 @@
   <script type="importmap">
     {
       "imports": {
-        "motion": "https://cdn.jsdelivr.net/npm/motion@latest/+esm"
+        "motion": "https://cdn.jsdelivr.net/npm/motion@14.3.0/+esm"
       }
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/motion@14.3.0/dist/motion.js" defer></script>
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
@@ -55,7 +51,7 @@
 
   <!-- Full-viewport cover video background -->
   <div class="bg">
-    <video class="bg-video" autoplay muted loop playsinline preload="auto" poster="assets/cultureforge-poster.jpg">
+    <video class="bg-video" autoplay muted loop playsinline preload="metadata" poster="assets/cultureforge-poster.jpg">
       <source
         src="assets/cultureforge-background.mp4"
         type="video/mp4"
@@ -152,18 +148,19 @@
       <a href="#workspace" class="cta-btn anim-pulse" data-open-studio style="--d: 0.4s">
         <span>Start an exploration</span>
       </a>
+      <a href="/studio/?tour=1" class="landing-tour-link">First visit? Take the guided tour <span aria-hidden="true">↗</span></a>
 
-      <!-- The live pulse: the studio running a real brief, on its own -->
-      <div class="live-pulse" data-live-pulse hidden>
+      <!-- A real brief runs only when requested; page visits spend no Qloo quota. -->
+      <div class="live-pulse" data-live-pulse>
         <div class="live-pulse-head">
-          <span class="live-pulse-label"><span class="live-dot"></span> CULTURAL HYPOTHESIS · LIVE CHECK</span>
+          <span class="live-pulse-label"><span class="live-dot"></span> TRY A CULTURAL HYPOTHESIS</span>
           <span class="live-pulse-brief" data-pulse-brief>Design-conscious Gen Z &amp; young professionals · Brooklyn, New York</span>
         </div>
-        <p class="live-pulse-status" data-pulse-status>Retrieving cultural signals and reference places for this brief…</p>
+        <p class="live-pulse-status" data-pulse-status>See real places become three directions, then test which anchor assumptions hold.</p>
         <ol class="live-pulse-list" data-pulse-list></ol>
-        <p class="live-pulse-note" data-pulse-note></p>
-        <a href="#workspace" class="live-pulse-link" data-open-studio data-pulse-open>Open this brief in the studio <span aria-hidden="true">↗</span></a>
-        <button type="button" class="live-pulse-link" data-pulse-retry hidden>Try the live brief again</button>
+        <p class="live-pulse-note" data-pulse-note>Uses Qloo when requested. Available held evidence is reused.</p>
+        <a href="#workspace" class="live-pulse-link" data-open-studio data-pulse-open hidden>Open this brief in the studio <span aria-hidden="true">↗</span></a>
+        <button type="button" class="live-pulse-link" data-pulse-retry>Run the example and evidence test <span aria-hidden="true">↗</span></button>
       </div>
 
       <!-- Scroll cue -->

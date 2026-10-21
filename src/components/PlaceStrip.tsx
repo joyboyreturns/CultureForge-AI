@@ -29,7 +29,7 @@ export function PlaceStrip({ evidence, onInspect, requestedLocation }: {
     .map((place) => place.presentation?.locationNote ?? '')
     .filter((note, index, all) => note && all.indexOf(note) === index)
 
-  return <section className="place-strip" aria-label="The places Qloo returned, with the photographs it returned for them">
+  return <section data-tour="sources" className="place-strip" aria-label="The places Qloo returned, with the photographs it returned for them">
     <div className="place-strip-head">
       <span className="small-cap"><span className="orange-dot"/> THE PLACES QLOO RETURNED</span>
       <span className="sample-label">QLOO PHOTOGRAPHY &amp; MEASUREMENTS</span>

@@ -91,6 +91,23 @@ def test_a_concept_states_what_the_evidence_does_not_establish(entities):
         assert any('interpretation' in line for line in concept.limitations)
 
 
+def test_missing_prices_do_not_become_an_affordability_claim(entities):
+    from backend.concept_composer import RECIPES
+
+    recipe = next(item for item in RECIPES if item.rule_id == 'everyday-value')
+    assert 'have not been measured' in recipe.offering
+    assert 'most accessible' not in recipe.offering
+    assert all('locally' not in concept.description for concept in _compose(DESIGN_TAGS, entities))
+
+
+def test_a_priced_organisation_cannot_outrank_an_unpriced_place():
+    from backend.concept_composer import FACET_ACCESSIBLE, _facet_rank
+
+    organisation = {'entity_id': 'org', 'description': 'Nonprofit organization managing a park.', 'price_level': 1}
+    place = {'entity_id': 'place', 'description': 'A community meeting room.', 'price_level': None}
+    assert _facet_rank(FACET_ACCESSIBLE, [organisation, place])[0]['entity_id'] == 'place'
+
+
 # ---------------------------------------------------------------------------
 # The rules that decide which evidence unlocks which direction
 # ---------------------------------------------------------------------------

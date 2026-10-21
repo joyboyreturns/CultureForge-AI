@@ -7,6 +7,8 @@ __pycache__
 .env.local
 .DS_Store
 *.tsbuildinfo
+.pytest_cache/
+.data/
 
 # --- Knowledge graph (graphify) -------------------------------------------------
 # The graph itself (graph.json) and its report ARE committed so a fresh clone

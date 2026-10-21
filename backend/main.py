@@ -811,3 +811,9 @@ def recompose_route(request: RecomposeRequest) -> dict:
         exclude_entity_ids=request.excludeEntityIds,
         exclude_tag_ids=request.excludeTagIds,
     )
+
+
+# Register last so frontend files never shadow the typed API routes.
+if os.getenv('CULTUREFORGE_STATIC_DIR'):
+    from .web import mount_frontend
+    mount_frontend(app, os.environ['CULTUREFORGE_STATIC_DIR'])

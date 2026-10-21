@@ -9,6 +9,23 @@ import pytest
 FIXTURES = Path(__file__).resolve().parent.parent / 'fixtures'
 
 
+@pytest.fixture(autouse=True)
+def isolated_runtime(tmp_path, monkeypatch):
+    """Tests must not depend on credentials or modify the owner's saved work."""
+    from backend import evidence_store, platform, providers
+
+    monkeypatch.setenv('CULTUREFORGE_PROVIDER', 'mock')
+    monkeypatch.setattr(platform, 'DEFAULT_DB_PATH', tmp_path / 'platform.db')
+    monkeypatch.setattr(platform, '_platform', None)
+    monkeypatch.setattr(evidence_store, 'STORE_DIR', tmp_path / 'cache')
+    monkeypatch.setattr(evidence_store, '_store', None)
+    monkeypatch.setattr(providers, '_cached_providers', {})
+    monkeypatch.setattr(providers.QlooHarnessProvider, 'BUDGET_LOG_PATH', tmp_path / 'qloo_calls.json')
+    yield
+    if platform._platform is not None:
+        platform._platform._connection.close()
+
+
 @pytest.fixture(scope='session')
 def recommend_places() -> dict:
     """A real captured /v2/insights response, sanitised of nothing but itself."""

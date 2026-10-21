@@ -41,7 +41,7 @@ QLOO_WORKFLOWS = (
     'trends',
 )
 
-COMPOSER_VERSION = '1'
+COMPOSER_VERSION = '2'
 
 # The exact set of query parameters this app sends to Qloo. A provenance
 # panel may only show a parameter that appears here. Anything else is dropped
@@ -270,7 +270,7 @@ class QlooHarnessProvider(CultureProvider):
     CACHE_MAX_ENTRIES = 128
     DEFAULT_MAX_CALLS_PER_HOUR = 20
     DEFAULT_MAX_CALLS_PER_DAY = 100
-    BUDGET_LOG_PATH = Path.home() / '.cache' / 'cultureforge' / 'qloo_calls.json'
+    BUDGET_LOG_PATH = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'qloo_calls.json'
 
     def __init__(self, command: str = 'qloo', timeout_seconds: int = 90):
         self.command = command

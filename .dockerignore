@@ -1,0 +1,16 @@
+.git
+.env*
+!.env.example
+.venv
+node_modules
+dist
+__pycache__
+**/__pycache__
+*.pyc
+*.tsbuildinfo
+graphify-out
+CultureForge AI
+artifacts
+.codex
+.agents
+.DS_Store

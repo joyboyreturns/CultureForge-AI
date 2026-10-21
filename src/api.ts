@@ -49,7 +49,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
  * Only real answers are held. There is no mock fallback anywhere in this
  * module: if the backend cannot answer, the caller is told that.
  */
-const CACHE_STORAGE_KEY = 'cultureforge-live-results'
+const CACHE_STORAGE_KEY = 'cultureforge-live-results-v2'
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000
 const CACHE_MAX_ENTRIES = 12
 
@@ -273,10 +273,10 @@ export async function shareExploration(payload: unknown): Promise<{ snapshotId: 
   return postJson('/api/explorations/share', payload)
 }
 
-export async function fetchSnapshot(snapshotId: string): Promise<GenerateResponse> {
+export async function fetchSnapshot(snapshotId: string): Promise<GenerateResponse & { challenge?: ChallengeResult }> {
   const response = await fetch(`/api/snapshots/${snapshotId}`)
   if (!response.ok) throw new Error('That snapshot is no longer available.')
-  return await response.json() as GenerateResponse
+  return await response.json() as GenerateResponse & { challenge?: ChallengeResult }
 }
 
 /** Qloo's own A/B between two groups of entities. */

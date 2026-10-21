@@ -50,7 +50,7 @@ def mask(value: str) -> str:
 
 
 def read_budget_log() -> list[float]:
-    path = Path.home() / ".cache" / "cultureforge" / "qloo_calls.json"
+    path = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'qloo_calls.json'
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
         return [float(s) for s in data.get("calls", []) if isinstance(s, (int, float))]

@@ -26,7 +26,7 @@ DISPLAY_MODEL = 'Frontier AI'
 DAILY_LIMIT = 10
 TIMEOUT_SECONDS = 60
 MAX_OUTPUT_TOKENS = 8192
-BUDGET_FILE = Path.home() / '.cache' / 'cultureforge' / 'gateway_analysis_calls.json'
+BUDGET_FILE = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_analysis_calls.json'
 _budget_lock = threading.Lock()
 
 

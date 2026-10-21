@@ -11,7 +11,10 @@
     "test:backend": ".venv/bin/python -m pytest backend/tests -q",
     "test:walkthrough": "node scripts/verify_walkthrough.mjs",
     "check:api": "python3 scripts/check_api.py",
-    "test:endpoints": "node scripts/verify_endpoints.mjs"
+    "test:endpoints": "node scripts/verify_endpoints.mjs",
+    "check:submission": "node scripts/verify_submission.mjs",
+    "check:release": "node scripts/verify_submission.mjs --release",
+    "test:unit": "node scripts/test_unit.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -28,5 +31,9 @@
     "tailwindcss": "^3.4.16",
     "typescript": "~5.6.2",
     "vite": "^5.4.11"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.19.0"
   }
 }

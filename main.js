@@ -557,8 +557,10 @@
     };
 
     function fail(message) {
-      pulse.hidden = true;
-      if (message) console.info('CultureForge live pulse:', message);
+      status.textContent = message || 'The example could not be retrieved. Try again or start your own exploration.';
+      note.textContent = 'No substitute evidence is shown. You can edit a brief in the studio or retry when the service is available.';
+      const retry = pulse.querySelector('[data-pulse-retry]');
+      if (retry) { retry.hidden = false; retry.textContent = 'Try the example again'; }
     }
 
     async function post(path, body) {
@@ -567,7 +569,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!response.ok) throw new Error(String(response.status));
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(typeof error.detail === 'string' ? error.detail : 'The service could not answer (' + response.status + ').');
+      }
       return response.json();
     }
 
@@ -575,10 +580,12 @@
       pulse.hidden = false;
       const retryButton = pulse.querySelector('[data-pulse-retry]');
       if (retryButton) retryButton.hidden = true;
+      status.textContent = 'Retrieving cultural signals and reference places for this brief…';
+      note.textContent = 'Held evidence is reused. A fresh lookup can take about a minute.';
       try {
         const answer = await post('/api/projects/generate', brief);
         const directions = (answer.concepts || []).slice(0, 3);
-        if (!directions.length) return fail('no directions');
+        if (!directions.length) return fail('This brief did not support any directions. Try another audience or location in the studio.');
         // Say whether this was fresh or held. Both are real Qloo evidence;
         // only one of them cost a request.
         if (pulseLabel) {
@@ -608,6 +615,8 @@
         // Hand over the answer as soon as it exists. If the test cannot run,
         // the studio still gets the exploration it was performed on.
         window.__cultureforgeHandoff = { answer: answer, challenge: null };
+        const open = pulse.querySelector('[data-pulse-open]');
+        if (open) open.hidden = false;
         let tested = null;
         try {
           tested = await post('/api/projects/challenge', { project: brief });
@@ -674,12 +683,7 @@
       });
     }
 
-    // Give the page a moment to settle before spending a request on it.
-    const timer = window.setTimeout(runPulse, 1400);
-
-    window.addEventListener('cultureforge:show-landing', function () {
-      window.clearTimeout(timer);
-    });
+    // Deliberately no timer: loading a page never spends upstream quota.
   }
 
   // ---------------------------------------------------------------------------

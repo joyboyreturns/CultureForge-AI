@@ -70,9 +70,9 @@ RECIPES: tuple[Recipe, ...] = (
     Recipe(
         rule_id='independent-craft',
         name='Independent Makers Guild',
-        tagline='A rotating table where local makers set the menu.',
-        offering='A shared counter and a changing roster of local makers, each holding one evening, with the Qloo-rated local venues acting as the talent pool and the sampling ground.',
-        ritual='One maker, one evening, one dish the neighbourhood has not tried yet.',
+        tagline='A rotating showcase shaped by independent makers.',
+        offering='A shared space and a changing roster of independent makers. The returned places provide cultural references for the proposed format; their availability as partners or suppliers has not been established.',
+        ritual='One invited maker presents a small collection and explains the process behind it.',
         positioning='For an audience that values independent voices over a settled brand.',
         personality='Open, collaborative, unhurried',
         signals=['Independent discovery', 'Shared routines'],
@@ -86,8 +86,8 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='slow-ritual',
         name='The Slow Hour',
         tagline='Low-light, low-volume, high-attention service.',
-        offering='A deliberately unhurried format, proposed around the references Qloo returned — where the room, the pacing and the menu all stay small. Quietness was not measured.',
-        ritual='One long table, one course, and a rule against rushing anyone.',
+        offering='A deliberately unhurried format, proposed around the references Qloo returned — where the room, the pacing and the programme all stay small. Quietness was not measured.',
+        ritual='One shared session, a small programme, and a rule against rushing anyone.',
         positioning='Proposed positioning: restoration rather than entertainment. Willingness to pay was not tested.',
         personality='Calm, precise, restorative',
         signals=['Intentional rituals', 'Low-stimulation spaces'],
@@ -103,7 +103,7 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='design-led',
         name='The Design Floor',
         tagline='A space that behaves like the thing it sells.',
-        offering='A concept built around design-conscious local venues, where the physical expression carries the brand and the programming follows the space rather than the other way round.',
+        offering='A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed.',
         ritual='A monthly change of the room itself, announced the way a gallery announces a new show.',
         positioning='For an audience that treats taste as the primary signal of quality.',
         personality='Precise, confident, curated',
@@ -126,7 +126,7 @@ RECIPES: tuple[Recipe, ...] = (
         signals=['Shared routines', 'Community & connection'],
         matchers=('community', 'family', 'supporting', 'together', 'local', 'neighbourhood', 'neighborhood', 'foodie', 'food', 'social', 'gathering'),
         type_matchers=('food', 'beverage', 'hospitality'),
-        business_types=('Food & beverage', 'Retail', 'Hospitality'),
+        business_types=('Food & beverage', 'Hospitality'),
         facet=FACET_ACCESSIBLE,
         accent='#e69b73',
         weight=1.0,
@@ -153,7 +153,7 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='everyday-value',
         name='The Everyday Edit',
         tagline='Fewer things, chosen properly, priced honestly.',
-        offering='A tight edit built on the most accessible of the returned venues, trading breadth for a price and a standard the founder can defend in public.',
+        offering='A tightly edited offer with transparent prices, using returned price levels when available and popularity otherwise to select a reference. Affordability, accessibility and willingness to pay have not been measured.',
         ritual='A fixed, published price and no upsell.',
         positioning='For an audience that has stopped paying for things it does not need.',
         personality='Straightforward, sturdy, plain-spoken',
@@ -186,7 +186,7 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='quiet-hub',
         name='The Quiet Hub',
         tagline='A daytime room that behaves like a good desk.',
-        offering='A daytime-first format built on the venues that rate highest locally, with a short service, no music and a hard stop on the evening crowd.',
+        offering='A proposed daytime format referencing highly rated places in the returned sample, with short sessions and low-stimulation programming. The references do not establish local suitability or measured quietness.',
         ritual='A two-hour sitting that ends with the same time every day.',
         positioning='For an audience whose taste is expressed in restraint.',
         personality='Measured, understated, exacting',
@@ -303,7 +303,7 @@ def _facet_rank(facet: str, entities: list[dict]) -> list[dict]:
         priced = [e for e in entities if e.get('price_level') is not None]
         rest = [e for e in entities if e.get('price_level') is None]
         return by_organisation(sorted(
-            priced, key=lambda e: (_number(e.get('price_level')), -_number(e.get('popularity'))))) + by_organisation(sorted(
+            priced, key=lambda e: (_number(e.get('price_level')), -_number(e.get('popularity')))) + sorted(
             rest, key=lambda e: _number(e.get('popularity')), reverse=True))
     # There is no tag comparison at this point, so there is no measured notion
     # of distinctiveness to rank by. The length of a marketing description is
@@ -413,7 +413,7 @@ def compose(
         # The narrative cites the real returned venue, and its real attributes.
         descriptor_bits = []
         if primary_rating is not None:
-            descriptor_bits.append(f'rated {primary_rating:g} locally')
+            descriptor_bits.append(f'rated {primary_rating:g} by Qloo')
         if primary_popularity is not None:
             descriptor_bits.append(f'popularity {primary_popularity:.3f}')
         descriptor = ' and '.join(descriptor_bits)
@@ -458,7 +458,7 @@ def compose(
         ]
 
         limitations = [
-            'Qloo supplied the audience tags and the local entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.',
+            'Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.',
         ]
         skipped = [e.get('name') for e in ranked if _is_organisation(e) and e.get('name')]
         if skipped:
@@ -470,7 +470,7 @@ def compose(
             )
         if not any(_number(e.get('affinity')) != _number(chosen[0].get('affinity')) for e in chosen):
             limitations.append(
-                'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues. Popularity and local rating were used instead.'
+                'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues. Returned popularity and rating were used instead.'
             )
 
         concepts.append(
