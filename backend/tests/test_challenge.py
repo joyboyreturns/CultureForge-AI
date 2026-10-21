@@ -107,7 +107,13 @@ def test_the_verdicts_can_be_different_for_different_directions(monkeypatch):
     assert result['order'] == ['live-2', 'live-1']
 
 
-def test_a_direction_with_only_type_tags_is_contested(monkeypatch):
+def test_a_direction_with_only_type_tags_is_unproven(monkeypatch):
+    """A type is not a cultural signal, and its absence is not evidence against.
+
+    The anchor differs from the other retrieved places only by its type. That
+    is neither a cultural signal nor a contradiction, so the verdict is
+    unproven — not a confident negative.
+    """
     places = [('id-1', 'Union Square Park'), ('id-2', 'The Bell House'), ('id-3', 'Whitney Museum')]
     evidence = _evidence(places)
     concepts = [_concept('live-1', 'The River Bench', ['ev-entity-0'])]
@@ -124,8 +130,8 @@ def test_a_direction_with_only_type_tags_is_contested(monkeypatch):
 
     result = challenge.challenge_directions(response.project, response)
     entry = result['directions'][0]
-    assert entry['verdict'] == challenge.CONTESTED
-    assert 'same kind of place' in entry['reason']
+    assert entry['verdict'] == challenge.UNPROVEN
+    assert 'unproven' in entry['reason']
 
 
 def test_too_few_places_is_unproven(monkeypatch):

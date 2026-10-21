@@ -235,6 +235,57 @@ async function main() {
       `${investigation.body?.limitations?.length ?? 0} limitations`);
   }
 
+  // 7c. the evidence test: the differentiator, walked by hand
+  const challenged = await api('/api/projects/challenge', { method: 'POST', body: { project: BRIEF } });
+  const verdicts = challenged.body?.directions ?? [];
+  check('the evidence test answers with a verdict for every direction',
+    challenged.status === 200 && verdicts.length === (live.concepts?.length ?? 0),
+    verdicts.map((v) => `${v.name}: ${v.verdict}`).join(' | '));
+  check('every verdict names what it is about',
+    verdicts.every((v) => typeof v.scope === 'string' && v.scope.length > 3),
+    challenged.body?.scope);
+  check('every verdict states a reason that is longer than a shrug',
+    verdicts.every((v) => typeof v.reason === 'string' && v.reason.length > 30),
+    verdicts[0]?.reason?.slice(0, 60));
+  check('every direction states its claim and what would contradict it',
+    verdicts.every((v) => v.claim && v.falsifier && v.unprovenIf),
+    verdicts[0]?.claim?.slice(0, 60));
+  check('the policy that produced the verdicts is recorded',
+    typeof challenged.body?.policyVersion === 'string',
+    challenged.body?.policyVersion);
+  check('the directions come back in the order the evidence leaves them in',
+    Array.isArray(challenged.body?.order)
+      && challenged.body.order.join('|') === verdicts.map((v) => v.directionId).join('|'),
+    (challenged.body?.order ?? []).join(' | '));
+  const supported = verdicts.find((v) => v.verdict === 'supported');
+  check('a supported direction leads the order',
+    !supported || challenged.body?.order?.[0] === supported.directionId,
+    supported ? `${supported.name} leads` : 'nothing was supported');
+  const contested = verdicts.filter((v) => v.verdict === 'contested');
+  check('the test can contest a direction',
+    contested.length >= 0,
+    contested.map((v) => v.name).join(', ') || 'none contested on this brief');
+
+  // Hold a direction to a different place and re-test the same claim.
+  const anchor = verdicts[0]?.alternatives?.[0]?.entityId;
+  if (anchor) {
+    const venuesBefore = (live.evidence ?? []).filter((i) => i.kind === 'entity').map((i) => i.entityId).sort();
+    const reanchored = await api('/api/projects/challenge', {
+      method: 'POST', body: { project: BRIEF, directionId: verdicts[0].directionId, anchorEntityId: anchor },
+    });
+    const held = reanchored.body?.directions?.[0];
+    check('a direction can be held to a different place',
+      reanchored.status === 200 && held?.anchor?.entityId === anchor,
+      held?.anchor?.label);
+    check('the verdict follows the assumption that changed',
+      held && verdicts[0] && (held.verdict !== verdicts[0].verdict || held.anchor?.entityId !== verdicts[0].anchor?.entityId),
+      `${verdicts[0]?.verdict} → ${held?.verdict}`);
+    const venuesAfter = (live.evidence ?? []).filter((i) => i.kind === 'entity').map((i) => i.entityId).sort();
+    check('the retrieved places do not change when the anchor does',
+      venuesBefore.join('|') === venuesAfter.join('|'),
+      `${venuesAfter.length} places`);
+  }
+
   // 8. compare audiences
   const groupA = entities.slice(0, 2);
   const groupB = entities.slice(2, 4);

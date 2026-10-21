@@ -59,7 +59,7 @@ export function CulturalHeat({
   return (
     <section className="cultural-heat">
       <span className="small-cap"><span className="orange-dot" /> CULTURAL HEAT</span>
-      <h3>How hot is each piece of this evidence?</h3>
+      <h3>How popular is each piece of this evidence?</h3>
       <p className="heat-note">
         Qloo’s popularity metric for everything retrieved for this brief. It measures how widely
         a place or a signal is known, not how well it fits your brief. Denser means hotter.

@@ -85,7 +85,7 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='slow-ritual',
         name='The Slow Hour',
         tagline='Low-light, low-volume, high-attention service.',
-        offering='A deliberately unhurried format built around the most highly rated quiet venues in the brief, where the room, the pacing and the menu all stay small.',
+        offering='A deliberately unhurried format, proposed around the references Qloo returned — where the room, the pacing and the menu all stay small. Quietness was not measured.',
         ritual='One long table, one course, and a rule against rushing anyone.',
         positioning='For an audience that buys restoration rather than entertainment.',
         personality='Calm, precise, restorative',
@@ -335,7 +335,7 @@ def compose(
             continue
 
         primary_desc = _first_sentence(primary.get('description'))
-        primary_label = primary.get('name') or 'the strongest local match'
+        primary_label = primary.get('name') or 'the reference selected for this direction'
         primary_rating = primary.get('business_rating')
         primary_popularity = primary.get('popularity')
 
@@ -347,12 +347,16 @@ def compose(
             descriptor_bits.append(f'popularity {primary_popularity:.3f}')
         descriptor = ' and '.join(descriptor_bits)
 
+        # The reference was returned for the location query. Qloo returning it
+        # does not establish that it is the strongest match, or that it sits
+        # inside the location, so the wording says only what is true.
         description = (
             f'{recipe.offering} '
-            f'The strongest local match in {location} is {primary_label}'
+            f'The reference selected for this direction is {primary_label}'
             + (f' ({descriptor})' if descriptor else '')
             + (f', described by Qloo as "{primary_desc}"' if primary_desc else '')
-            + '.'
+            + f'. It was returned by Qloo for a {location} query; the location it belongs to '
+              'was not verified.'
         )
 
         decisions = [

@@ -96,8 +96,9 @@ ATTEMPT_TIMEOUT_SECONDS = 14
 
 #: How long the whole naming may take before the rule engine's wording is
 #: used. A brief that waits half a minute for a title is a brief nobody
-#: waits for twice.
-NAMING_BUDGET_SECONDS = 22
+#: waits for twice — and the naming must never be the reason an answer is
+#: slow, so this is a hard cap on the whole naming, not on one attempt.
+NAMING_BUDGET_SECONDS = 14
 
 #: Enough room for the answer itself.
 DEFAULT_MAX_TOKENS = 2000
@@ -436,13 +437,13 @@ def status() -> dict:
 
 SYSTEM_PROMPT = (
     'You name business directions for a founder. You are given the audience signals and the '
-    'local venues that a cultural database returned for this brief. You write the name, the '
-    'one-line tagline, and one sentence of reasoning.\n'
+    'local venues that a cultural database returned for this brief. You write the name and the '
+    'one-line tagline.\n'
     'Rules: write only about the venues and signals you are given, by their exact names. '
     'Do not state any number, measurement, rating, popularity or score — you are not given '
     'any, and inventing one is wrong. Do not cite sources. Do not add a fourth direction. '
     'Write a NEW name and a NEW tagline — do not repeat the wording you are shown. Keep the '
-    'rationale under thirty words, and the whole answer under a hundred words. '
+    'whole answer under a hundred words. '
     'Answer with JSON only, no prose before or after.'
 )
 
@@ -472,12 +473,10 @@ def _build_user_prompt(brief: dict, directions: list[dict]) -> str:
                 lines.append(f"      described by the database as: {venue['description']}")
         lines.append('')
     lines.append('Answer with this JSON shape, one entry per direction, in order:')
-    lines.append('{"directions": [{"index": 0, "name": "...", "tagline": "...", "rationale": "..."}]}')
+    lines.append('{"directions": [{"index": 0, "name": "...", "tagline": "..."}]}')
     lines.append('')
     lines.append('Write a new name, specific to these places and this audience — not the name '
-                 'above, and not a generic template title. The tagline is one short line, and '
-                 'the rationale is one or two sentences, under thirty words, saying why this '
-                 'direction fits this audience here.')
+                 'above, and not a generic template title. The tagline is one short line.')
     return '\n'.join(lines)
 
 
@@ -719,24 +718,17 @@ def validate_directions(answer: dict, evidence: list[dict]) -> tuple[dict[int, d
             continue
         name = _clean_text(entry.get('name'), limit=70, min_length=2, min_words=1)
         tagline = _clean_text(entry.get('tagline'), limit=160, min_length=4, min_words=2)
-        rationale = _clean_text(entry.get('rationale'), limit=420, min_length=20, min_words=5)
-        for field, text in (('name', name), ('tagline', tagline), ('rationale', rationale)):
+        for field, text in (('name', name), ('tagline', tagline)):
             if text and not _numbers_are_allowed(text, allowed):
                 dropped.append(f'direction {index}: the {field} contained a number Qloo did not return')
                 if field == 'name':
                     name = None
-                elif field == 'tagline':
-                    tagline = None
                 else:
-                    rationale = None
-        if not name and not tagline and not rationale:
+                    tagline = None
+        if not name and not tagline:
             dropped.append(f'direction {index}: nothing in it was usable')
             continue
-        usable[index] = {
-            'name': name,
-            'tagline': tagline,
-            'rationale': rationale,
-        }
+        usable[index] = {'name': name, 'tagline': tagline}
     return usable, dropped
 
 

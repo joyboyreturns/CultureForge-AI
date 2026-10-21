@@ -10,13 +10,16 @@ import type { ChallengeResult, ChallengedDirection, Verdict } from '../api'
  * not already have.
  *
  * The vocabulary is deliberately narrow. The verdict says whether the
- * *audience–anchor fit* holds, and it says so on the screen: it does not
- * measure demand, competition, rent, or whether the business is any good.
+ * *audience–anchor fit* holds, and it says so next to the badge: it does not
+ * measure demand, profitability, footfall, or commercial viability, and it
+ * says nothing about the business as a business. It is a consistency check
+ * against the same retrieved evidence, not an independent validation of it.
  *
  * Every direction states its claim, what would contradict it, and what would
  * leave it unproven, before the verdict is read. And the anchor can be
  * changed: the same direction, held to a different place, is a different
- * claim, and the answer follows.
+ * claim, and the answer follows. A verdict that changes when its assumption
+ * changes is showing its sensitivity, not proving itself right.
  */
 
 const VERDICT_WORDS: Record<Verdict, string> = {
@@ -31,17 +34,31 @@ const VERDICT_NOTES: Record<Verdict, string> = {
   unproven: 'There was not enough retrieved evidence to say either way.',
 }
 
+const BOUNDARY = 'Local cultural fit only — not demand, profitability, footfall, or commercial viability.'
+
+/** What a direction looked like before the anchor was changed. */
+export interface VerdictStep {
+  anchor: string | null
+  verdict: Verdict
+  rank: number
+  at: string
+}
+
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
   return <span className={`verdict-badge is-${verdict}`} title={VERDICT_NOTES[verdict]}>
     <span className="verdict-dot" />{VERDICT_WORDS[verdict]}
   </span>
 }
 
-export function ChallengePanel({ challenge, onReanchor, onClose }: {
+export function ChallengePanel({ challenge, onReanchor, onClose, history, savedAt }: {
   challenge: ChallengeResult
   /** Hold a direction to a different anchor and re-run the check. */
   onReanchor?: (directionId: string, anchorEntityId: string) => void
   onClose: () => void
+  /** What each direction looked like before its anchor was changed. */
+  history?: Record<string, VerdictStep[]>
+  /** Set when this is a saved result rather than a fresh test. */
+  savedAt?: string | null
 }) {
   const [open, setOpen] = useState<string | null>(challenge.directions[0]?.directionId ?? null)
   const contested = challenge.directions.filter((entry) => entry.verdict === 'contested')
@@ -55,6 +72,7 @@ export function ChallengePanel({ challenge, onReanchor, onClose }: {
           <p className="challenge-what">{challenge.whatThisIs}</p>
           <p className="challenge-policy">
             Policy <code>{challenge.policyVersion}</code> · scope: {challenge.scope}
+            {savedAt ? <> · saved result from {savedAt}</> : null}
           </p>
         </div>
         <button className="icon-button" onClick={onClose} aria-label="Close the evidence test">
@@ -82,6 +100,32 @@ export function ChallengePanel({ challenge, onReanchor, onClose }: {
               <VerdictBadge verdict={entry.verdict} />
             </button>
             <p className="challenge-reason">{entry.reason}</p>
+            <p className="challenge-boundary">{BOUNDARY}</p>
+
+            {(history?.[entry.directionId]?.length ?? 0) > 0 && (
+              <p className="challenge-history">
+                {(history?.[entry.directionId] ?? []).map((step) =>
+                  `${step.anchor} — ${step.verdict} (${step.rank}${step.rank === 1 ? 'st' : step.rank === 2 ? 'nd' : 'rd'})`).join('  →  ')}
+                {'  →  '}
+                <strong>{entry.anchor?.label} — {entry.verdict} ({index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'})</strong>
+              </p>
+            )}
+
+            {entry.alternatives.length > 0 && (
+              <div className="challenge-alternatives">
+                <span>TEST AGAINST ANOTHER PLACE</span>
+                <div>
+                  {entry.alternatives.map((alternative) => (
+                    <button key={alternative.entityId ?? ''} onClick={() =>
+                      onReanchor?.(entry.directionId, alternative.entityId ?? '')}
+                      title="Re-run the same claim against this place">
+                      {alternative.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {open === entry.directionId && (
               <div className="challenge-detail">
                 <div className="challenge-claim">
@@ -101,20 +145,6 @@ export function ChallengePanel({ challenge, onReanchor, onClose }: {
                     </div>
                   </div>
                 ))}
-                {entry.alternatives.length > 0 && (
-                  <div className="challenge-alternatives">
-                    <span>HOLD IT TO A DIFFERENT PLACE</span>
-                    <div>
-                      {entry.alternatives.map((alternative) => (
-                        <button key={alternative.entityId ?? ''} onClick={() =>
-                          onReanchor?.(entry.directionId, alternative.entityId ?? '')}
-                          title="Re-run the same claim against this place">
-                          {alternative.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <p className="challenge-coverage">
                   {entry.coverage.note}
                   {entry.coverage.howSignalsWereCounted ? ' ' + entry.coverage.howSignalsWereCounted : ''}

@@ -92,10 +92,11 @@ export function AnchorTournament({
   return (
     <section className="anchor-tournament">
       <span className="small-cap"><span className="orange-dot" /> THE ANCHOR TOURNAMENT</span>
-      <h3>Which of these places should the business be built around?</h3>
+      <h3>Which of these places ranks highest for that profile?</h3>
       <p className="anchor-note">
-        Qloo returned {options.length} real places for this brief. Qloo’s own <code>rank</code>
-        workflow compares them for one demographic near {location}. One call, one answer.
+        Qloo returned {options.length} places for this brief. Its own <code>rank</code> workflow
+        orders them for one demographic profile near {location} — an ordering under those inputs,
+        not a decision about which one you should build around.
       </p>
 
       <div className="anchor-choices" role="radiogroup" aria-label="Audience demographic">

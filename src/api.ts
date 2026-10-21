@@ -349,6 +349,8 @@ export interface ChallengedDirection {
   claim: string
   falsifier: string
   unprovenIf: string
+  /** The order the directions arrived in, before the test. */
+  arrivalOrder?: string[]
   /** The place the claim is held to. */
   anchor: { entityId: string | null; label: string | null } | null
   /** The other places it could have been held to. */

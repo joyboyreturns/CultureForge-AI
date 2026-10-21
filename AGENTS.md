@@ -71,12 +71,21 @@ willingness to pay. A tag counts as a cultural signal by its Qloo family, and
 an unknown family counts as plain, so the rule can say no.
 
 A sixth: **a verdict is a verdict about something.** The scope is stated on
-the screen — *audience–anchor fit*, not "the business" — and every direction
-carries its claim, its falsifier and its unproven condition, plus the policy
-version that produced it. A direction can be held to a different anchor and
-re-tested, so the reader can see the answer depend on the assumption rather
-than take it on trust. Keep the scope narrow: a check that does not say what
-it is about reads as a check that says more than it does.
+the screen — *anchor fit within the retrieved sample*, not "the business" — and
+every direction carries its claim, its falsifier and its unproven condition,
+plus the policy version that produced it. A direction can be held to a
+different anchor and re-tested, so the reader can see the answer depend on
+the assumption rather than take it on trust. Keep the scope narrow: a check
+that does not say what it is about reads as a check that says more than it
+does.
+
+And say what the check *did*, not what it sounds like it did. The ranking
+request sends a demographic profile and a location, not the audience's own
+cultural tags, so the reason must not say "for this audience's cultural
+signals". A comparison is against the places that were returned, not against a
+neighbourhood. One passing check and one missing check is not a verdict — it
+is half an answer, and it is `unproven`. When the policy's logic or wording
+changes, the policy version changes with it.
 
 A seventh: **never strand the reader.** Every state that can fail must offer a
 way out. An audience that resolves to nothing, a run that cannot finish, a

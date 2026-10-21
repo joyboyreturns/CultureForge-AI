@@ -53,11 +53,11 @@ VERDICT_ORDER = {SUPPORTED: 0, UNPROVEN: 1, CONTESTED: 2}
 #: around, and whether that place brings a cultural signal the neighbourhood
 #: does not already have. It does not say the business is good, and it is
 #: labelled so that nobody can read more into it than it says.
-VERDICT_SCOPE = 'Audience–anchor fit'
+VERDICT_SCOPE = 'Anchor fit within the retrieved sample'
 
 #: The version of the decision policy. A verdict that cannot be traced to the
 #: policy that produced it is not a verdict, it is an opinion.
-POLICY_VERSION = 'anchor-fit-1'
+POLICY_VERSION = 'anchor-fit-2'
 
 #: Below this many retrieved venues, a check is reported as inconclusive
 #: rather than as a verdict. Two places are not a market.
@@ -211,7 +211,7 @@ def _compare_with_neighbourhood(provider: QlooHarnessProvider, anchor: Evidence,
 
 def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
                    concept, venues: list[Evidence], tags: list[str],
-                   ranking: dict[str, dict],
+                   ranking: dict[str, dict], demographic: str,
                    anchor_override: Optional[str] = None) -> dict:
     """One direction, and the checks run against it.
 
@@ -242,13 +242,14 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         'scope': VERDICT_SCOPE,
         'reason': '',
         'claim': (
-            f'The place this direction is built around — {primary.label} — is one this audience '
-            'is drawn to, and it carries a cultural signal the rest of the neighbourhood does not.'
+            f'Within the places Qloo returned, {primary.label} ranks high for the demographic '
+            'Qloo infers from the brief, and carries a cultural signal the other retrieved '
+            'comparison places do not.'
             if primary else 'This direction names no place, so it makes no claim to check.'
         ),
         'falsifier': (
-            f'Qloo ranks {primary.label} last of the places it returned for this audience, or it '
-            'carries only the signals every place here carries.'
+            f'Qloo ranks {primary.label} last among the places it returned for that demographic, '
+            'or no distinctive cultural tag is identified for it under this policy.'
             if primary else 'There is nothing to falsify.'
         ),
         'unprovenIf': (
@@ -283,47 +284,53 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         result['coverage']['note'] = 'Too few places were retrieved to test this.'
         return result
 
-    # ---- check 1: does the audience pull toward this place? ---------------
+    # ---- check 1: where does this place sit for the inferred profile? ------
+    # The ranking request carries a demographic profile and a location, not
+    # the audience's own cultural tags. The wording says so.
     rank_entry = ranking.get(primary.entityId) if primary else None
+    profile = f'the “{demographic}” demographic Qloo inferred from the brief, near {project.location}'
     if rank_entry:
         position, total = rank_entry['position'], rank_entry['total']
         affinity = rank_entry['affinity']
         if position == 1:
             result['checks'].append({
-                'name': 'Does the audience pull toward this place?',
+                'name': 'Where does this place sit for that profile?',
                 'result': 'pass',
                 'detail': (
-                    f'Qloo ranks {primary.label} first of {total} places for this audience’s '
-                    'cultural signals.'
+                    f'Qloo ranks {primary.label} first of the {total} places it returned for '
+                    f'{profile}. This ranking does not use the audience signals you selected.'
                 ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total},
+                'metric': {'affinity': affinity, 'position': position, 'of': total,
+                           'demographic': demographic},
             })
         elif position == total and total > 1:
             result['checks'].append({
-                'name': 'Does the audience pull toward this place?',
+                'name': 'Where does this place sit for that profile?',
                 'result': 'fail',
                 'detail': (
-                    f'Qloo ranks {primary.label} last of {total} places for this audience’s '
-                    'cultural signals. The audience pulls somewhere else.'
+                    f'Qloo ranks {primary.label} last of the {total} places it returned for '
+                    f'{profile}. It ranks last within this retrieved set.'
                 ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total},
+                'metric': {'affinity': affinity, 'position': position, 'of': total,
+                           'demographic': demographic},
             })
         else:
             result['checks'].append({
-                'name': 'Does the audience pull toward this place?',
+                'name': 'Where does this place sit for that profile?',
                 'result': 'mixed',
                 'detail': (
-                    f'Qloo ranks {primary.label} {position} of {total} for this audience’s '
-                    'cultural signals.'
+                    f'Qloo ranks {primary.label} {position} of the {total} places it returned for '
+                    f'{profile}. This ranking does not use the audience signals you selected.'
                 ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total},
+                'metric': {'affinity': affinity, 'position': position, 'of': total,
+                           'demographic': demographic},
             })
     else:
         result['checks'].append({
-            'name': 'Does the audience pull toward this place?',
+            'name': 'Where does this place sit for that profile?',
             'result': 'mixed',
-            'detail': 'Qloo returned no ranking for these places against this audience’s signals.',
-            'metric': {},
+            'detail': f'Qloo returned no ranking for these places for {profile}.',
+            'metric': {'demographic': demographic},
         })
 
     # ---- check 2: is there room, or a fight? -----------------------------
@@ -331,39 +338,45 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     if comparison:
         result['coverage']['venuesCompared'] = comparison['compared']
         signals, types, shared = comparison['ownSignals'], comparison['ownTypes'], comparison['shared']
+        others = 'the other retrieved comparison places'
         if signals:
             labels = ', '.join(str(entry.get('tag')) for entry in signals[:3])
             result['checks'].append({
-                'name': 'Is there room, or a fight?',
+                'name': 'What characterises this anchor?',
                 'result': 'pass',
                 'detail': (
                     f'{primary.label} carries {len(signals)} cultural signal'
-                    f'{"" if len(signals) == 1 else "s"} the other places here do not: {labels}. '
-                    'That is the opening.'
+                    f'{"" if len(signals) == 1 else "s"} {others} do not: {labels}. '
+                    'These are potential inputs to a concept, not evidence of an unmet need.'
                 ),
                 'metric': {'signals': len(signals), 'shared': len(shared)},
             })
         elif types:
+            # The anchor differs from the others only by its type. That is not
+            # evidence against it, and it is not a cultural signal either.
             result['checks'].append({
-                'name': 'Is there room, or a fight?',
-                'result': 'fail',
+                'name': 'What characterises this anchor?',
+                'result': 'mixed',
                 'detail': (
-                    f'{primary.label} carries only what the neighbourhood already has: '
-                    f'{", ".join(str(label) for label in types[:3])}. It is the same kind of place, '
-                    'for the same audience.'
+                    f'{primary.label} differs from {others} only by its type '
+                    f'({", ".join(str(label) for label in types[:3])}). No distinctive cultural '
+                    'tag was identified for it under this policy, so distinctiveness is unproven.'
                 ),
                 'metric': {'signals': 0, 'shared': len(shared)},
             })
         else:
             result['checks'].append({
-                'name': 'Is there room, or a fight?',
+                'name': 'What characterises this anchor?',
                 'result': 'mixed',
-                'detail': 'Qloo returned no cultural comparison for these places.',
-                'metric': {'signals': 0, 'shared': 0},
+                'detail': (
+                    f'Qloo returned no qualifying cultural tag for {primary.label} in this '
+                    'comparison, so distinctiveness is unproven.'
+                ),
+                'metric': {'signals': 0, 'shared': len(shared)},
             })
     else:
         result['checks'].append({
-            'name': 'Is there room, or a fight?',
+            'name': 'What characterises this anchor?',
             'result': 'mixed',
             'detail': 'There was no second group of places to compare these with.',
             'metric': {},
@@ -372,12 +385,18 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     # ---- the verdict ------------------------------------------------------
     failures = [check for check in result['checks'] if check['result'] == 'fail']
     passes = [check for check in result['checks'] if check['result'] == 'pass']
+    mixed = [check for check in result['checks'] if check['result'] == 'mixed']
     if failures:
         result['verdict'] = CONTESTED
         result['reason'] = failures[0]['detail']
-    elif passes:
+    elif len(passes) == len(result['checks']) and result['checks']:
+        # Both checks have to hold. One passing check and one missing is not
+        # a verdict, it is half an answer.
         result['verdict'] = SUPPORTED
         result['reason'] = passes[0]['detail']
+    elif mixed:
+        result['verdict'] = UNPROVEN
+        result['reason'] = mixed[0]['detail']
     else:
         result['verdict'] = UNPROVEN
         result['reason'] = 'The retrieved evidence did not settle this direction either way.'
@@ -388,8 +407,10 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         'willingness to pay.'
     )
     result['coverage']['howSignalsWereCounted'] = (
-        f'A tag counts as a cultural signal when it is not a {SIGNAL_WORDS.split(",")[0]} '
-        f'type tag: Qloo’s “genre” and “category” tags say what a place is, and every place has one.'
+        'This policy counts a Qloo tag as a cultural signal when its family is not one of '
+        + ', '.join(PLAIN_FAMILIES)
+        + ' — the families that say what a place is and how it runs. A family the policy does '
+        'not know does not count.'
     )
     return result
 
@@ -410,20 +431,25 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
             'The audience did not resolve into cultural signals, so there is nothing to test against.',
             code='NO_EVIDENCE')
 
-    ranking = _rank_venues(provider, project, venues, guess_demographic(project.audience))
+    demographic = guess_demographic(project.audience)
+    ranking = _rank_venues(provider, project, venues, demographic)
     results = []
     for concept in response.concepts:
         if direction_id and concept.id != direction_id:
             continue
         results.append(_challenge_one(provider, project, concept, venues, tags, ranking,
-                                       anchor_entity_id))
+                                       demographic, anchor_entity_id))
     if not results:
         raise QlooHarnessError('That direction is not part of this exploration.', code='INVALID_REQUEST')
 
     ordered = sorted(results, key=lambda entry: (VERDICT_ORDER.get(entry['verdict'], 1), entry['name']))
     return {
-        'directions': results,
+        # The directions are returned in the order the evidence leaves them in,
+        # so every surface that renders them shows the same order. `order` is
+        # kept as the explicit list for callers that need the ids.
+        'directions': ordered,
         'order': [entry['directionId'] for entry in ordered],
+        'arrivalOrder': [entry['directionId'] for entry in results],
         'summary': (
             f'Tested {len(results)} direction{"" if len(results) == 1 else "s"} against '
             f'{len(venues)} places and {len(tags)} cultural signals Qloo returned.'
@@ -431,14 +457,16 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
         'scope': VERDICT_SCOPE,
         'policyVersion': POLICY_VERSION,
         'profile': {
-            'demographic': guess_demographic(project.audience),
+            'demographic': demographic,
             'location': project.location,
             'signals': tags,
         },
         'whatThisIs': (
             'Local cultural fit, measured. These checks ask whether the audience pulls toward the '
             'place an idea is built on, and whether that place brings a cultural signal the '
-            'neighbourhood does not already have. They do not measure demand, competition, rent, '
-            'or willingness to pay, and they say nothing about the business as a business.'
+            'neighbourhood does not already have. They are a consistency check against the same '
+            'retrieved evidence, not an independent validation of it. They do not measure demand, '
+            'profitability, footfall, commercial viability, competition, rent, or willingness to '
+            'pay, and they say nothing about the business as a business.'
         ),
     }

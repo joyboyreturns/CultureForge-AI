@@ -31,16 +31,13 @@ def test_a_number_qloo_returned_is_allowed():
 def test_a_number_the_model_invented_is_dropped():
     """The rule the codebase holds to: no number Qloo did not return."""
     answer = {'directions': [{'index': 0, 'name': 'The 9000 Square Foot Room',
-                              'tagline': 'A good line',
-                              'rationale': 'It draws 12000 people a year, which the API did not say.'}]}
+                              'tagline': 'A good line'}]}
     usable, dropped = llm.validate_directions(answer, EVIDENCE)
     # The name carries the invented number, so it goes.
     assert usable[0]['name'] is None
-    # The rationale carries one too, so it goes.
-    assert usable[0]['rationale'] is None
     # The tagline does not, so it stays.
     assert usable[0]['tagline'] == 'A good line'
-    assert len(dropped) == 2
+    assert len(dropped) == 1
 
 
 def test_a_direction_with_nothing_usable_is_not_returned():
@@ -346,8 +343,7 @@ def test_the_model_names_the_directions(monkeypatch, store, recommend_places):
     def fake_name(brief, directions, evidence):
         seen.append({'brief': brief, 'directions': directions, 'evidence': evidence})
         return {0: {'name': 'The Whitney Reading Room',
-                    'tagline': 'A room that behaves like the art behind it.',
-                    'rationale': 'The audience already spends its weekends near a gallery.'}}, \
+                    'tagline': 'A room that behaves like the art behind it.'}}, \
                {'used': True, 'attempted': True, 'model': 'openrouter/free', 'reason': None, 'dropped': []}
 
     monkeypatch.setattr(llm, 'name_directions', fake_name)
@@ -364,7 +360,8 @@ def test_the_model_names_the_directions(monkeypatch, store, recommend_places):
     assert response.concepts, 'the evidence still composes directions'
     assert response.concepts[0].name == 'The Whitney Reading Room'
     assert response.concepts[0].tagline == 'A room that behaves like the art behind it.'
-    assert 'already spends its weekends' in (response.concepts[0].audienceRationale or '')
+    # The rationale is grounded in the evidence, not written by the model.
+    assert 'Unlocked by' in (response.concepts[0].audienceRationale or '')
     # The evidence is untouched: the rules still chose it.
     assert response.concepts[0].evidenceIds
     assert response.evidence
@@ -388,8 +385,7 @@ def test_the_names_are_held_so_a_repeat_costs_nothing(monkeypatch, store, recomm
 
     def fake_name(brief, directions, evidence):
         calls.append(1)
-        return {0: {'name': 'The Whitney Reading Room', 'tagline': 'A room.',
-                    'rationale': 'Because the audience already spends its weekends near a gallery.'}}, \
+        return {0: {'name': 'The Whitney Reading Room', 'tagline': 'A room.'}}, \
                {'used': True, 'attempted': True, 'model': 'openrouter/free', 'reason': None, 'dropped': []}
 
     monkeypatch.setattr(llm, 'name_directions', fake_name)

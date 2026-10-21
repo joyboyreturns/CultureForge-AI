@@ -818,11 +818,16 @@ class QlooHarnessProvider(CultureProvider):
     @staticmethod
     def _naming_trace(composed, named: dict, naming: dict) -> TraceEvent:
         """The step that says how the directions were named, and by what."""
+        duration = naming.get('durationMs')
         if naming.get('used'):
             model = naming.get('model') or 'a free model'
             detail = f'Named by {model}.'
             if naming.get('cached'):
-                detail = f'Names held from an earlier run (named by {model}).'
+                detail = (f'Names held from an earlier run (named by {model}). '
+                          f'Original naming took {duration / 1000:.1f}s; this run spent no time waiting.')
+                # A held name did not wait, so it must not be shown as though
+                # it did.
+                duration = 0
             if naming.get('dropped'):
                 detail += ' ' + '; '.join(naming['dropped'][:2]) + '.'
         elif naming.get('attempted'):
@@ -835,7 +840,7 @@ class QlooHarnessProvider(CultureProvider):
             id='ev-name-directions', step='name-the-directions',
             status='ok' if naming.get('used') else 'skipped',
             resultCount=len(named),
-            durationMs=naming.get('durationMs'),
+            durationMs=duration,
             detail=detail,
             evidenceIds=[],
             acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -950,14 +955,14 @@ class QlooHarnessProvider(CultureProvider):
             description=composed.description,
             audienceFit=None, culturalRelevance=None, feasibility=None,
             budget=project.budget,
-            investment='Derived from live Qloo evidence',
+            investment='CultureForge planning assumption — not estimated by Qloo',
             signals=list(composed.signals),
             accent=composed.accent,
             image=composed.image or '',
             direction=str(index + 1).zfill(2),
             imageAlt=composed.image_alt,
             personality=composed.personality,
-            audienceRationale=composed.naming or composed.positioning,
+            audienceRationale=f'{composed.rationale} {composed.positioning}'.strip(),
             implementationNote=composed.ritual,
             moments=[
                 ExperienceMoment(title='Why this direction', description=composed.offering),

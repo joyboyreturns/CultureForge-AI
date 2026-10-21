@@ -303,6 +303,20 @@
     document.querySelectorAll('[data-open-studio]').forEach((link) => {
       link.addEventListener('click', openStudio);
     });
+
+    // The live pulse's own link: it opens the exploration that was just
+    // performed on this page, with the test that was run on it — not an empty
+    // form the judge has to fill in again.
+    const pulseLink = document.querySelector('[data-pulse-open]');
+    if (pulseLink) {
+      pulseLink.addEventListener('click', function (event) {
+        event.preventDefault();
+        openStudio(event);
+        window.dispatchEvent(new CustomEvent('cultureforge:handoff', {
+          detail: window.__cultureforgeHandoff || null,
+        }));
+      });
+    }
     window.addEventListener('cultureforge:show-landing', showLanding);
     if (window.location.hash.startsWith('#workspace')) openStudio();
   }
@@ -589,19 +603,47 @@
           return;
         }
         const verdicts = tested.directions || [];
-        const rows = list.querySelectorAll('li');
-        verdicts.forEach(function (verdict, index) {
-          if (!rows[index]) return;
-          const badge = document.createElement('span');
-          badge.className = 'pulse-verdict is-' + verdict.verdict;
-          badge.textContent = verdict.verdict;
-          rows[index].appendChild(badge);
+        // Join by id, never by position: the directions come back in the order
+        // the evidence leaves them in, and the rows were written in the order
+        // they arrived.
+        const byId = {};
+        verdicts.forEach(function (verdict) { byId[verdict.directionId] = verdict; });
+        const conceptsById = {};
+        directions.forEach(function (concept) { conceptsById[concept.id] = concept; });
+        // Show the list in the order the evidence leaves the directions in —
+        // the same order the studio shows — and say so only if it moved.
+        const order = tested.order && tested.order.length
+          ? tested.order
+          : directions.map(function (concept) { return concept.id; });
+        list.innerHTML = order.map(function (id, index) {
+          const concept = conceptsById[id];
+          if (!concept) return '';
+          const verdict = byId[id];
+          const badge = verdict
+            ? '<span class="pulse-verdict is-' + verdict.verdict + '">anchor fit: ' + verdict.verdict + '</span>'
+            : '';
+          return '<li><span class="pulse-rank">' + String(index + 1).padStart(2, '0') +
+            '</span><span class="pulse-name"></span><span class="pulse-tagline"></span>' + badge + '</li>';
+        }).join('');
+        const reorderedNames = list.querySelectorAll('.pulse-name');
+        const reorderedTaglines = list.querySelectorAll('.pulse-tagline');
+        order.forEach(function (id, index) {
+          const concept = conceptsById[id];
+          if (!concept || !reorderedNames[index]) return;
+          reorderedNames[index].textContent = concept.name;
+          reorderedTaglines[index].textContent = concept.tagline || '';
         });
         const contested = verdicts.filter(function (verdict) { return verdict.verdict === 'contested'; });
+        // Only claim the order changed if it did.
+        const moved = order.length > 1 && order.some(function (id, index) { return id !== directions[index]?.id; });
         note.textContent = contested.length
-          ? 'The evidence contested ' + contested.length + ' of them, and the order changed.'
+          ? 'The evidence contested ' + contested.length + ' anchor assumption' +
+            (contested.length === 1 ? '' : 's') + (moved ? ', and the order changed.' : '.')
           : 'Tested against the places Qloo returned.';
         status.textContent = tested.summary || '';
+        // Hand the studio the answer and the test that was run on it, so the
+        // link below opens what was just shown.
+        window.__cultureforgeHandoff = { answer: answer, challenge: tested };
       } catch (error) {
         fail(String(error && error.message ? error.message : error));
       }
