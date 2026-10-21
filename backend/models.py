@@ -136,6 +136,8 @@ class GenerateResponse(BaseModel):
     evidence: list[Evidence] = Field(default_factory=list)
     trace: list[TraceEvent] = Field(default_factory=list)
     delivery: Optional[Delivery] = None
+    # Present when the bounded Frontier AI controller ran during research.
+    agent: Optional['AgentReport'] = None
     # Which composer produced these directions, so an old snapshot is never
     # mistaken for a current one.
     composerVersion: Optional[str] = None
@@ -299,6 +301,42 @@ class EvidenceAnalysisResult(EvidenceAnalysisOutput):
     # Deterministic ratios disclose how much of the rule composer rationale has citations.
     coverage: dict[str, dict[str, object]] = Field(default_factory=dict)
     confidence: dict[str, Literal['Supported', 'Contested', 'Unresolved']] = Field(default_factory=dict)
+
+
+class AgentAction(BaseModel):
+    """One bounded choice from the research controller's tool registry."""
+    model_config = ConfigDict(extra='forbid')
+    operation: Literal['remove_anchor', 'finish']
+    directionId: Optional[str] = Field(default=None, max_length=120)
+    evidenceId: Optional[str] = Field(default=None, max_length=180)
+    question: str = Field(default='', max_length=240)
+    reason: str = Field(min_length=4, max_length=400)
+
+
+class AgentObservation(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    operation: Literal['remove_anchor', 'finish']
+    status: Literal['ok', 'unavailable', 'rejected']
+    question: str = Field(default='', max_length=240)
+    detail: str = Field(max_length=800)
+    evidenceIds: list[str] = Field(default_factory=list, max_length=12)
+    cached: bool = True
+    upstreamRequests: int = Field(default=0, ge=0, le=1)
+    result: dict[str, object] = Field(default_factory=dict)
+
+
+class AgentReport(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    mode: Literal['frontier_ai', 'rules']
+    status: Literal['complete', 'limited', 'skipped']
+    plan: Optional[AgentAction] = None
+    observation: Optional[AgentObservation] = None
+    reflection: Optional[dict[str, object]] = None
+    modelCalls: int = Field(default=0, ge=0, le=2)
+    stoppingReason: str = Field(max_length=400)
+
+
+GenerateResponse.model_rebuild()
 
 
 # ---------------------------------------------------------------------------

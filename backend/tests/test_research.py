@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from backend import research
-from backend.models import ProjectRequest
+from backend.models import (AgentReport, Concept, Delivery, Evidence, GenerateResponse,
+                            ProjectRequest, TraceEvent)
 from backend.providers import QlooHarnessError
 
 PROJECT = ProjectRequest(
@@ -31,7 +32,7 @@ class StubProvider:
         envelope = self.tag_envelope if operation == 'find_tags' else self.rec_envelope
         return envelope, False, 1
 
-    def generate(self, project):
+    def generate(self, project, **_kwargs):
         if self.generate_result is None:
             raise QlooHarnessError('stub')
         return self.generate_result
@@ -132,3 +133,42 @@ def test_the_run_records_real_trace_events(monkeypatch):
     first = run.events[0]
     assert first['durationMs'] == 1234
     assert first['correlationId'] == 'exec-abc'
+
+
+def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
+    tag_envelope = {'status': 'ok', 'operation': 'find_tags',
+                    'results': [{'id': 'urn:tag:x:qloo:y'}]}
+    rec_envelope = {'status': 'ok', 'operation': 'recommend',
+                    'results': [{'entity_id': 'urn:place:north', 'name': 'North Room'}]}
+    concept = Concept(
+        id='direction-a', name='Neighbourhood table', tagline='A place to gather',
+        description='Build the direction around a returned place.', budget='TBD',
+        investment='Not estimated', signals=['local arts'], accent='#fff', image='',
+        evidenceIds=['ev-place-a'], decisions=[{
+            'id': 'decision-a', 'field': 'anchor', 'proposal': 'Use this place',
+            'evidenceIds': ['ev-place-a'], 'ruleId': 'anchor-culture',
+        }])
+    generated = GenerateResponse(
+        projectId='cf-run', project=PROJECT, concepts=[concept], signals=[],
+        dataMode='live', conceptMode='evidence_composed', notice='Evidence-backed result.',
+        evidence=[Evidence(id='ev-place-a', kind='entity', label='North Room', entityId='urn:place:north')],
+        trace=[], delivery=Delivery(kind='fresh', transportRequests=2))
+    provider = StubProvider(tag_envelope, rec_envelope, generated)
+    _install(monkeypatch, provider)
+
+    def execute_agent(answer, actual_tags, actual_places, remaining_allowance, deadline, on_event):
+        assert answer is generated
+        assert actual_tags is tag_envelope and actual_places is rec_envelope
+        assert remaining_allowance == 1
+        event = TraceEvent(id='agent-test', step='agent-plan', status='ok', detail='Selected a bounded test.')
+        on_event(event)
+        return AgentReport(mode='frontier_ai', status='complete', stoppingReason='One action completed.', modelCalls=2)
+
+    monkeypatch.setattr(research, 'run_agent', execute_agent)
+    run = research.ResearchRun(PROJECT)
+    research._execute(run, allowance=3)
+
+    assert run.status == research.STATUS_COMPLETE
+    assert run.result['agent']['mode'] == 'frontier_ai'
+    assert 'agent-plan' in [event['step'] for event in run.result['trace']]
+    assert 'agent-plan' in [event['step'] for event in run.events]

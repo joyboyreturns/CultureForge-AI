@@ -112,4 +112,36 @@ export interface GenerateResponse {
   delivery?: Delivery | null
   /** Which composer produced these directions. */
   composerVersion?: string | null
+  agent?: AgentReport | null
+}
+
+export interface AgentReport {
+  mode: 'frontier_ai' | 'rules'
+  status: 'complete' | 'limited' | 'skipped'
+  plan?: {
+    operation: 'remove_anchor' | 'finish'
+    directionId?: string | null
+    evidenceId?: string | null
+    question: string
+    reason: string
+  } | null
+  observation?: {
+    operation: 'remove_anchor' | 'finish'
+    status: 'ok' | 'unavailable' | 'rejected'
+    question: string
+    detail: string
+    evidenceIds: string[]
+    cached: boolean
+    upstreamRequests: number
+    result: Record<string, unknown>
+  } | null
+  reflection?: {
+    recommendedDirectionId?: string | null
+    recommendationRationale?: string
+    whatWouldChangeTheConclusion?: string
+    model?: string
+    cached?: boolean
+  } | null
+  modelCalls: number
+  stoppingReason: string
 }

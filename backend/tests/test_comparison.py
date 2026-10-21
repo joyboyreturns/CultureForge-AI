@@ -283,3 +283,31 @@ def test_removing_a_venue_rebuilds_the_directions_without_it(monkeypatch):
     assert 'Whitney' not in ' '.join(concept['description'] for concept in result['concepts'])
     assert 'Whitney' not in ' '.join(
         evidence.get('label') or '' for evidence in result['evidence'])
+
+
+def test_agent_recomposition_uses_exact_run_envelopes_without_cache_lookup(monkeypatch):
+    from backend.models import ProjectRequest
+
+    tag_envelope = {'status': 'ok', 'results': [
+        {'id': 'urn:tag:interests:qloo:founder_selected', 'name': 'Founder selected'}]}
+    places = [
+        {'entity_id': 'id-one', 'name': 'North Room', 'properties': {'description': 'Community art room.'}},
+        {'entity_id': 'id-two', 'name': 'South Hall', 'properties': {'description': 'Local performance hall.'}},
+    ]
+    recommend_envelope = {'status': 'ok', 'results': places}
+    provider = RecomposeProvider(tag_envelope['results'], places)
+    monkeypatch.setattr(comparison, 'QlooHarnessProvider', lambda *a, **k: provider)
+
+    class EmptyStore:
+        def get(self, _key):
+            return None
+
+    project = ProjectRequest(businessType='Hospitality', audience='Founder-selected community',
+                             location='Brooklyn', budget='TBD', objectives=[])
+    result = comparison.recompose(
+        project, evidence_store=EmptyStore(), exclude_entity_ids=['id-one'],
+        tag_envelope=tag_envelope, recommend_envelope=recommend_envelope)
+
+    assert provider.seen[0]['tag_result']['results'][0]['id'] == 'urn:tag:interests:qloo:founder_selected'
+    assert [row['entity_id'] for row in provider.seen[0]['recommendations']['results']] == ['id-two']
+    assert all('North Room' not in c['description'] for c in result['concepts'])

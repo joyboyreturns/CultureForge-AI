@@ -23,6 +23,7 @@ import uuid
 from typing import Optional
 
 from .evidence_store import known_location
+from .agent import run_agent
 from .models import ProjectRequest, TraceEvent
 from .providers import QlooHarnessError, QlooHarnessProvider, mark_reused
 
@@ -312,6 +313,21 @@ def _execute(run: ResearchRun, allowance: int) -> None:
                 'field': 'audience',
             }
             return
+
+        # The bounded AI controller becomes part of the research run itself:
+        # it may select one evidence test, execute that test against these
+        # exact envelopes, and reflect. A disabled or unavailable model keeps
+        # the deterministic composition intact.
+        def record_agent_event(event: TraceEvent) -> None:
+            run.add_event(event)
+            response.trace.append(event)
+
+        response.agent = run_agent(
+            response, tag_envelope, rec_envelope,
+            remaining_allowance=max(0, allowance - run.workflow_calls),
+            deadline=started + DEFAULT_RUN_TIMEOUT_SECONDS,
+            on_event=record_agent_event,
+        )
 
         run.result = response.model_dump()
         run.status = STATUS_COMPLETE

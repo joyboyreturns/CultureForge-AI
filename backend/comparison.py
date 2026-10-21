@@ -164,7 +164,9 @@ def _without(envelope: dict, drop: set[str], provider: QlooHarnessProvider) -> d
 
 
 def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[str]] = None,
-               exclude_tag_ids: Optional[list[str]] = None) -> dict:
+               exclude_tag_ids: Optional[list[str]] = None,
+               tag_envelope: Optional[dict] = None,
+               recommend_envelope: Optional[dict] = None) -> dict:
     """Rebuild the directions without the given evidence, using no new call.
 
     This is the check that the answer really depends on the data: remove one
@@ -181,7 +183,7 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     query = f'{project.businessType} {project.audience}'.strip()
     tag_key = canonical_key('find_tags', {'query': query, 'limit': 3})
     store = evidence_store or get_store()
-    tag_envelope = store.get(tag_key)
+    tag_envelope = tag_envelope or store.get(tag_key)
     if tag_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
     tags = [tag for row in provider.rows(tag_envelope) if (tag := provider.tag_id(row))][:3]
@@ -192,7 +194,7 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
         'target_type': 'place', 'signal_tags': tags,
         'signal_location': project.location, 'limit': 5,
     })
-    rec_envelope = store.get(rec_key)
+    rec_envelope = recommend_envelope or store.get(rec_key)
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
 
