@@ -16,11 +16,11 @@
 /* --- Tokens --------------------------------------------------------------- */
 :root {
   /* Deep blocks */
-  --beet: #4b1f2d;
-  --beet-deep: #34141f;
-  --leaf: #47642f;
-  --clay: #e2622f;
-  --sun: #eab33c;
+  --beet: #244637;
+  --beet-deep: #182e25;
+  --leaf: #8da875;
+  --clay: #bbd094;
+  --sun: #e3ca8c;
   --paper: #f6efe1;
   --ink: #141009;
 
@@ -32,49 +32,49 @@
 }
 
 :root[data-theme='light'] {
-  --bg: #f2ebdb;
-  --sidebar: #eae1cd;
-  --surface: #fdf8ec;
-  --surface-raised: #f3ecdb;
-  --surface-hover: #e9e0cb;
-  --text: #1c1710;
-  --muted: #6a6250;
-  --subtle: #8a8170;
-  --line: #d9cfb6;
-  --accent: #c2501c;
-  --accent-solid: #d2622b;
-  --accent-text: #fdf6e8;
-  --accent-wash: #d2622b12;
-  --sage: #47642f;
-  --sage-wash: #47642f12;
+  --bg: #f3f2e9;
+  --sidebar: #e8ebdf;
+  --surface: #fbfbf5;
+  --surface-raised: #f0f2e8;
+  --surface-hover: #e6eadf;
+  --text: #18221b;
+  --muted: #59675c;
+  --subtle: #7b877e;
+  --line: #d4dbd1;
+  --accent: #617b4f;
+  --accent-solid: #536c43;
+  --accent-text: #fffdf5;
+  --accent-wash: #617b4f14;
+  --sage: #536c43;
+  --sage-wash: #536c4312;
   --shadow: 0 18px 60px #4a3f1a14;
   --photo-overlay: #14141255;
   --chart-old: #b5bcaa;
 
-  --beet: #8a2b41;
-  --beet-deep: #5e1a2b;
-  --leaf: #3f5c2a;
-  --clay: #d2622b;
+  --beet: #315342;
+  --beet-deep: #203a2e;
+  --leaf: #466749;
+  --clay: #536c43;
   --card-edge: #1c160c;
   --card-shadow: #1c160c;
 }
 
 :root:not([data-theme='light']) {
-  --bg: #17120d;
-  --sidebar: #1b1610;
-  --surface: #201a13;
-  --surface-raised: #282117;
-  --surface-hover: #312819;
-  --text: #f6efe1;
-  --muted: #a9a08d;
-  --subtle: #7d7360;
-  --line: #37301f;
-  --accent: #f0844f;
-  --accent-solid: #e2622f;
-  --accent-text: #1a120a;
-  --accent-wash: #e2622f16;
-  --sage: #a8bd84;
-  --sage-wash: #a8bd8414;
+  --bg: #0f1512;
+  --sidebar: #131b17;
+  --surface: #18221c;
+  --surface-raised: #1e2a22;
+  --surface-hover: #26342a;
+  --text: #f3f2e9;
+  --muted: #b5c0b4;
+  --subtle: #839285;
+  --line: #334239;
+  --accent: #c4d69c;
+  --accent-solid: #a8c46e;
+  --accent-text: #151b13;
+  --accent-wash: #c4d69c16;
+  --sage: #b8cb93;
+  --sage-wash: #b8cb9314;
   --shadow: 0 18px 60px #0005;
   --chart-old: #6c7059;
 }

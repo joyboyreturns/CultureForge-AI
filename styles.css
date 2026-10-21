@@ -1265,22 +1265,25 @@ body.studio-mode #root {
 .live-pulse {
   max-width: 640px;
   margin: 26px auto 0;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-left: 3px solid #ef7148;
-  background: rgba(14, 14, 12, 0.55);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(221, 229, 202, 0.22);
+  border-left: 2px solid #a8c46e;
+  background: rgba(13, 20, 17, 0.76);
+  backdrop-filter: blur(14px);
   padding: 18px 20px 16px;
   text-align: left;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.22);
+  animation: pulseReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+@keyframes pulseReveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
 /* The label and the brief are stacked, never side by side: the label is a
    wide monospace strip, and two of them in one flex line overlap. */
 .live-pulse-head { display: block; }
-.live-pulse-label { display: inline-flex; align-items: center; gap: 8px; width: fit-content; font: 9px 'DM Mono', monospace; letter-spacing: 0.16em; color: #ef7148; white-space: nowrap; }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #ef7148; box-shadow: 0 0 0 0 rgba(239, 113, 72, 0.6); animation: live-pulse-dot 2s infinite; }
+.live-pulse-label { display: inline-flex; align-items: center; gap: 8px; width: fit-content; font: 9px 'DM Mono', monospace; letter-spacing: 0.16em; color: #c5d69c; white-space: nowrap; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #a8c46e; box-shadow: 0 0 0 0 rgba(168, 196, 110, 0.55); animation: live-pulse-dot 2s infinite; }
 @keyframes live-pulse-dot {
-  0% { box-shadow: 0 0 0 0 rgba(239, 113, 72, 0.5); }
-  70% { box-shadow: 0 0 0 9px rgba(239, 113, 72, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 113, 72, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(168, 196, 110, 0.45); }
+  70% { box-shadow: 0 0 0 9px rgba(168, 196, 110, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(168, 196, 110, 0); }
 }
 .live-pulse-brief { display: block; font: 9px 'DM Mono', monospace; letter-spacing: 0.08em; color: rgba(247, 241, 230, 0.5); margin-top: 7px; line-height: 1.7; }
 .live-pulse-status { font-size: 12px; line-height: 1.8; color: rgba(247, 241, 230, 0.78); margin: 14px 0 0; }
@@ -1291,10 +1294,10 @@ body.studio-mode #root {
 .pulse-tagline { flex: 1 1 160px; min-width: 0; font-size: 11px; color: rgba(247, 241, 230, 0.55); }
 .pulse-verdict { font: 8px 'DM Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 7px; border: 1px solid rgba(255, 255, 255, 0.2); }
 .pulse-verdict.is-supported { color: #a8c46e; border-color: rgba(168, 196, 110, 0.5); }
-.pulse-verdict.is-contested { color: #ef7148; border-color: rgba(239, 113, 72, 0.5); }
+.pulse-verdict.is-contested { color: #e0a18b; border-color: rgba(224, 161, 139, 0.48); }
 .pulse-verdict.is-unproven { color: rgba(247, 241, 230, 0.5); }
 .live-pulse-note { font-size: 11px; line-height: 1.8; color: rgba(247, 241, 230, 0.6); margin: 12px 0 0; }
-.live-pulse-link { display: inline-block; margin-top: 12px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #ef7148; text-decoration: none; }
+.live-pulse-link { display: inline-block; margin-top: 12px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #dce6c7; text-decoration: none; }
 .live-pulse-link:hover { text-decoration: underline; }
 
 @media (max-width: 720px) {

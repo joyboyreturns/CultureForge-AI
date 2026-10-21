@@ -585,8 +585,8 @@
           var delivery = answer.delivery || {};
           pulseLabel.innerHTML = '<span class="live-dot"></span> ' +
             (delivery.kind === 'fresh'
-              ? 'FRESH QLOO EVIDENCE'
-              : 'CACHED QLOO EVIDENCE');
+              ? 'LIVE EVIDENCE · NEW QLOO LOOKUP'
+              : 'HELD EVIDENCE · NO NEW QLOO CALL');
         }
         status.textContent = 'Qloo returned ' + (answer.evidence || []).filter(function (item) {
           return item.kind === 'entity';
