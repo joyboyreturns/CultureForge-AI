@@ -37,6 +37,15 @@ npm run dev
 
 Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAPI. If the API is unavailable, the studio says so and asks for a retry — it never falls back to sample data.
 
+To serve the built site instead:
+
+```bash
+npm run build
+npm run preview
+```
+
+The preview server proxies `/api` the same way the dev server does, so the built site reaches the backend exactly as the dev server does.
+
 ## Entry points
 
 | Route | What it is |
