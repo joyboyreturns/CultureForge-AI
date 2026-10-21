@@ -10,6 +10,8 @@ import type { ResearchRun } from '../api'
  * the Qloo harness reported. If the agent needs to ask the founder something,
  * the question appears here.
  */
+const SLOW_RUN_MS = 30_000
+
 export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress }: {
   runId: string
   onComplete: (result: NonNullable<ResearchRun['result']>) => void
@@ -20,7 +22,15 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
 }) {
   const [run, setRun] = useState<ResearchRun | null>(null)
   const [error, setError] = useState('')
+  const [slow, setSlow] = useState(false)
   const settled = useRef(false)
+
+  // Fresh evidence and the model analysis can take a minute or more; say so
+  // once a run has been going for longer than half a minute.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), SLOW_RUN_MS)
+    return () => window.clearTimeout(timer)
+  }, [runId])
 
   useEffect(() => {
     let cancelled = false
@@ -88,6 +98,12 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
           </div>
         </div>
       ))}
+
+      {slow && !error && run?.status === 'running' && (
+        <div className="agent-trace-waiting" role="status">
+          <span className="orange-dot" /> Still processing. The answer is being cooked: new evidence and the AI analysis can take a minute or two.
+        </div>
+      )}
 
       {error && (
         <div className="agent-trace-error" role="alert">

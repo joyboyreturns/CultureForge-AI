@@ -290,8 +290,8 @@ class EvidenceAnalysisOutput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     directions: list[EvidenceAnalysisDirection]
     recommendedDirectionId: Optional[str] = None
-    recommendationRationale: str = Field(min_length=4, max_length=500)
-    whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=320)
+    recommendationRationale: str = Field(min_length=4, max_length=800)
+    whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=500)
 
 
 class EvidenceAnalysisResult(EvidenceAnalysisOutput):

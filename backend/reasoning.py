@@ -21,7 +21,7 @@ from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
                      EvidenceAnalysisResult)
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
-PROMPT_VERSION = 'qloo-evidence-analysis-4'
+PROMPT_VERSION = 'qloo-evidence-analysis-5'
 DISPLAY_MODEL = 'Frontier AI'
 DAILY_LIMIT = 10
 TIMEOUT_SECONDS = 60
@@ -162,7 +162,9 @@ def _call(request: EvidenceAnalysisRequest, agent_context: Optional[dict] = None
         'entities, metrics, demand, market size, venue facts, or citations. Cite evidence by '
         'its internal evidence id. State assumptions plainly. Choose a recommendation only when '
         'the supplied evidence supports a comparative preference; otherwise use null. '
-        'The nextStep is a suggestion only; you cannot call tools. Confidence labels are computed by the application.',
+        'The nextStep is a suggestion only; you cannot call tools. Confidence labels are computed by the application. '
+        'Keep recommendationRationale under 450 characters and whatWouldChangeTheConclusion under 300 characters; '
+        'be brief, because longer text is rejected.',
         payload, EvidenceAnalysisOutput)
 
 
