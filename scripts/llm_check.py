@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Check the free model, without spending more than one request.
+"""Check Frontier AI through Vercel AI Gateway, without repeated requests.
 
 The naming layer is optional: without a key, the rule engine names the
 directions and everything still works. This script tells you which state you
-are in, and — with --live — makes exactly one call so you can see that the
-free tier answers.
+are in, and — with --live — makes exactly one call so you can see that the configured model responds.
 
     python3 scripts/llm_check.py            # read-only: what is configured
     python3 scripts/llm_check.py --live     # one request, one answer
 
-Read-only by default, because the free tier is 50 requests a day.
+Read-only by default. A live run sends one request to the configured Vercel model.
 """
 from __future__ import annotations
 
@@ -54,21 +53,21 @@ def main() -> int:
     live = '--live' in sys.argv
     state = llm.status()
     print('=' * 64)
-    print(' CultureForge — the free naming layer')
+    print(' CultureForge — Frontier AI via Vercel AI Gateway')
     print('=' * 64)
     print(f"configured : {state['configured']}")
     print(f"model      : {state['model'] or '(none — the rule engine names the directions)'}")
-    print(f"free only  : {state['freeOnly']}")
+    print(f"provider   : {state['provider'] or '(not configured)'}")
     budget = state['budget']
     print(f"allowance  : {budget['callsToday']}/{budget['dayLimit']} today, "
           f"{budget['callsLastHour']}/{budget['hourLimit']} this hour")
 
     if not state['configured']:
         print()
-        print('No OPENROUTER_API_KEY. That is not an error: the directions keep the names')
-        print('the rule engine gives them, and everything else works the same.')
-        print('To use the free tier: create a key at https://openrouter.ai/keys, put it in')
-        print('.env as OPENROUTER_API_KEY, and run this script again.')
+        print('Frontier AI is disabled or missing its Vercel credentials. Directions keep the names')
+        print('the rule engine gives them, and all other product features still work.')
+        print('Set AI_GATEWAY_ENABLED=true and configure the server-only Vercel key and model in')
+        print('.env, then run this script again.')
         return 0
 
     if not live:
@@ -77,7 +76,7 @@ def main() -> int:
         return 0
 
     print()
-    print('Asking the free model for one naming…')
+    print('Asking Frontier AI for one naming…')
     evidence = [
         {'label': 'Whitney Museum of American Art', 'kind': 'entity',
          'description': 'A museum of American art in New York City.',

@@ -736,7 +736,7 @@ class QlooHarnessProvider(CultureProvider):
             # wait is legible rather than a stall.
             if on_step is not None:
                 on_step('name-the-directions',
-                        'Naming the directions with a free model. The rules already have a name '
+                        'Naming the directions with Frontier AI. The rules already have a name '
                         'for each one, so a model that cannot be reached changes nothing.')
             named, naming = self._name_directions(project, composed, evidence, matched_tags)
         else:
@@ -919,7 +919,7 @@ class QlooHarnessProvider(CultureProvider):
         """The step that says how the directions were named, and by what."""
         duration = naming.get('durationMs')
         if naming.get('used'):
-            model = naming.get('model') or 'a free model'
+            model = naming.get('model') or 'Frontier AI'
             detail = f'Named by {model}.'
             if naming.get('cached'):
                 detail = (f'Names held from an earlier run (named by {model}). '
@@ -946,7 +946,7 @@ class QlooHarnessProvider(CultureProvider):
         )
 
     def _name_directions(self, project, composed, evidence, matched_tags) -> tuple[dict, dict]:
-        """Let a free model name the directions, and keep the rules in charge.
+        """Let Frontier AI name the directions, and keep the rules in charge.
 
         The model is given the audience signals and the venues each direction
         is built from — and no numbers at all, so it cannot state one. Its
@@ -957,7 +957,7 @@ class QlooHarnessProvider(CultureProvider):
 
         report = {'used': False, 'attempted': False, 'model': None, 'reason': None, 'dropped': []}
         if not llm.is_configured():
-            report['reason'] = 'No OpenRouter key is configured, so the rule engine named these directions.'
+            report['reason'] = 'Frontier AI is not enabled or configured, so the rule engine named these directions.'
             return {}, report
         if not composed:
             return {}, report
@@ -1042,7 +1042,7 @@ class QlooHarnessProvider(CultureProvider):
             # A request was made whenever the model was reached, whether or
             # not its answer could be used. The count says so.
             'provenance': {
-                'endpoint': 'openrouter/free',
+                'endpoint': 'vercel-ai-gateway',
                 'requests': [{}] * int(report.get('requests') or (1 if report.get('attempted') else 0)),
             },
         }

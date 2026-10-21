@@ -357,7 +357,7 @@ export interface PresentationSelection {
 }
 
 /**
- * Ask the free model to choose which of Qloo's own sentences to lead with.
+ * Ask Frontier AI to choose which of Qloo's own sentences to lead with.
  *
  * It may only return ids, so it cannot write a fact. If it cannot be
  * reached, or answers with something that does not pass the validation, the

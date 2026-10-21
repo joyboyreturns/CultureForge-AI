@@ -35,7 +35,7 @@ class AnalysisUnavailable(RuntimeError):
 
 
 def configured() -> bool:
-    return (os.getenv('AI_GATEWAY_ANALYSIS_ENABLED', '').lower() == 'true'
+    return (os.getenv('AI_GATEWAY_ENABLED', '').lower() == 'true'
             and bool(os.getenv('AI_GATEWAY_API_KEY', '').strip())
             and bool(os.getenv('AI_GATEWAY_MODEL', '').strip()))
 

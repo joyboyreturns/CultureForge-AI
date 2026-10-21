@@ -84,7 +84,7 @@ def test_analysis_caches_only_valid_answer_and_reports_deterministic_coverage(an
 def test_analysis_is_opt_in(analysis_request, monkeypatch):
     monkeypatch.delenv('AI_GATEWAY_API_KEY', raising=False)
     monkeypatch.delenv('AI_GATEWAY_MODEL', raising=False)
-    monkeypatch.setenv('AI_GATEWAY_ANALYSIS_ENABLED', 'false')
+    monkeypatch.setenv('AI_GATEWAY_ENABLED', 'false')
     with pytest.raises(reasoning.AnalysisUnavailable, match='not enabled'):
         reasoning.analyze(analysis_request)
 
@@ -107,7 +107,7 @@ def test_analysis_budget_ledger_corruption_fails_closed(tmp_path, monkeypatch):
 
 def test_unavailable_gateway_is_reported_and_never_cached(analysis_request, tmp_path, monkeypatch, store):
     monkeypatch.setattr(reasoning, 'BUDGET_FILE', tmp_path / 'calls.json')
-    monkeypatch.setenv('AI_GATEWAY_ANALYSIS_ENABLED', 'true')
+    monkeypatch.setenv('AI_GATEWAY_ENABLED', 'true')
     monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-placeholder')
     monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')
     monkeypatch.setattr(reasoning.urllib.request, 'urlopen',

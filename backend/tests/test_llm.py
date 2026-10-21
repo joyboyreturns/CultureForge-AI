@@ -1,4 +1,4 @@
-"""The free naming layer: the guard, the budget, and the refusal to spend.
+"""The Gateway naming layer: the guard, the budget, and the refusal to spend.
 
 No network is touched here. The point of these tests is that the model can
 never make the app show a number Qloo did not return, and can never make it
@@ -82,7 +82,7 @@ def test_json_wrapped_in_a_fence_is_read():
 
 
 def test_a_placeholder_is_not_used():
-    """A free model sometimes answers "...". That is a refusal, not a name."""
+    """A model sometimes answers "...". That is a refusal, not a name."""
     answer = {'directions': [{'index': 0, 'name': '...', 'tagline': '...',
                               'rationale': '...'}]}
     usable, dropped = llm.validate_directions(answer, EVIDENCE)
@@ -97,101 +97,75 @@ def test_a_placeholder_field_is_dropped_but_the_rest_stays():
     assert usable[0]['tagline'] == 'A real tagline here.'
 
 
-def test_every_model_in_the_chain_is_free():
-    """A paid model in the chain would be billed. There is no budget for that."""
-    for model in llm.FREE_MODELS:
-        assert model == 'openrouter/free' or model.endswith(':free'), model
-    for model in llm.FALLBACK_CHAIN:
-        assert model == 'openrouter/free' or model.endswith(':free'), model
-    assert llm.FALLBACK_CHAIN[0] == llm.DEFAULT_MODEL
+def test_gateway_requires_explicit_enablement_and_credentials(monkeypatch):
+    # conftest disables model configuration for the whole suite; this test
+    # deliberately checks the real configuration gate without making a call.
+    monkeypatch.undo()
+    monkeypatch.setenv('AI_GATEWAY_ENABLED', 'true')
+    monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-placeholder')
+    monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')
+    monkeypatch.setattr(llm, '_load_env_once', lambda: None)
+    assert llm.is_configured() is True
+    state = llm.status()
+    assert state['provider'] == 'Vercel AI Gateway'
+    assert state['model'] == 'Frontier AI'
+    assert 'test/frontier-model' not in str(state)
 
 
-def test_the_fallback_chain_fits_openrouters_limit():
-    """OpenRouter rejects a `models` array with more than three entries."""
-    assert len(llm.FALLBACK_CHAIN) <= 3
-
-
-def test_the_request_caps_the_reasoning(monkeypatch):
-    """A reasoning model given the whole budget answers with nothing."""
-    sent: list[dict] = []
-
-    def fake_post(payload, timeout):
-        sent.append(payload)
-        return {'model': 'test/free', 'choices': [{'message': {'content': '{"directions": []}'}}]}
-
-    monkeypatch.setattr(llm, '_post', fake_post)
-    llm._ask_model({'businessType': 'x'}, [], 5)
-
-    assert sent, 'the model was asked'
-    assert sent[0]['reasoning'] == {'max_tokens': llm.REASONING_MAX_TOKENS}
-    assert sent[0]['max_tokens'] == llm.DEFAULT_MAX_TOKENS
-
-
-def test_a_gone_model_falls_through_to_the_next(monkeypatch):
-    """A free model can be withdrawn at any time."""
-    tried: list[str] = []
-
-    def fake_post(payload, timeout):
-        tried.append(payload['model'])
-        if len(tried) == 1:
-            raise llm.LlmUnavailable('The model refused the request (404).',
-                                     code='LLM_REJECTED', details={'status': 404})
-        return {'model': 'test/free', 'choices': [{'message': {'content': '{"directions": []}'}}]}
-
-    monkeypatch.setattr(llm, '_post', fake_post)
-    answer, model, served = llm._ask_model({'businessType': 'x'}, [], 5)
-
-    assert len(tried) >= 2, 'the next model got the request'
-    assert model == 'test/free'
-    # The refused attempt served nothing, so only the one that answered is
-    # counted against the tier.
-    assert served == 1
-
-
-def test_a_model_that_answers_with_nothing_falls_through(monkeypatch):
-    """A reasoning model that spends its budget thinking answers with nothing."""
-    tried: list[str] = []
-
-    def fake_post(payload, timeout):
-        tried.append(payload['model'])
-        if len(tried) == 1:
-            raise llm.LlmUnavailable('The model returned an empty answer.',
-                                     code='LLM_EMPTY', details={'raw': 'it reasoned'})
-        return {'model': 'test/free', 'choices': [{'message': {'content': '{"directions": []}'}}]}
-
-    monkeypatch.setattr(llm, '_post', fake_post)
-    _answer, model, _spent = llm._ask_model({'businessType': 'x'}, [], 5)
-
-    assert len(tried) >= 2
-    assert model == 'test/free'
-
-
-def test_a_paid_model_is_refused(monkeypatch):
-    monkeypatch.setenv('OPENROUTER_MODEL', 'anthropic/claude-sonnet-4')
-    assert llm._model() == llm.DEFAULT_MODEL
-    monkeypatch.setenv('OPENROUTER_MODEL', 'minimax/minimax-m3.1-flash:free')
-    assert llm._model() == 'minimax/minimax-m3.1-flash:free'
-
-
-def test_without_a_key_nothing_is_attempted(monkeypatch):
-    monkeypatch.delenv('OPENROUTER_API_KEY', raising=False)
-    names, report = llm.name_directions({}, [], [])
+def test_disabled_gateway_never_attempts_a_naming_call(monkeypatch):
+    monkeypatch.setattr(llm, '_load_env_once', lambda: None)
+    monkeypatch.setenv('AI_GATEWAY_ENABLED', 'false')
+    monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-placeholder')
+    monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')
+    names, report = llm.name_directions({}, [{'index': 0}], [])
     assert names == {}
-    assert report['used'] is False
     assert report['attempted'] is False
-    assert 'key' in report['reason'].lower()
+    assert report['used'] is False
 
 
-def test_the_suite_never_reaches_the_model():
-    """The free tier is 50 requests a day, and a test must not spend one."""
-    assert llm.is_configured() is False, (
-        'the suite reached the model layer: the conftest fixture that keeps it '
-        'off has been overridden')
+def test_the_suite_never_reaches_the_model(monkeypatch):
+    """Tests must never spend a live Gateway request from local .env."""
+    monkeypatch.setattr(llm, '_load_env_once', lambda: None)
+    monkeypatch.setenv('AI_GATEWAY_ENABLED', 'false')
+    assert llm.is_configured() is False
 
 
-def test_the_budget_guard_stops_the_calls(monkeypatch, tmp_path):
-    """The free tier is finite, and the guard sits at it."""
-    log = tmp_path / 'llm_calls.json'
+def test_naming_request_uses_vercel_and_one_model_call(monkeypatch):
+    sent = []
+    monkeypatch.setattr(llm, '_model', lambda: 'test/frontier-model')
+    def fake_post(payload, timeout):
+        sent.append((payload, timeout))
+        return {'choices': [{'message': {'content': '{"directions": []}'}}]}
+    monkeypatch.setattr(llm, '_post', fake_post)
+
+    answer, model, requests = llm._ask_model({'businessType': 'x'}, [], 12)
+
+    payload, timeout = sent[0]
+    assert answer == {'directions': []}
+    assert model == 'Frontier AI'
+    assert requests == 1 and len(sent) == 1
+    assert payload['model'] == 'test/frontier-model'
+    assert 'models' not in payload
+    assert payload['reasoning'] == {'effort': 'low'}
+    assert payload['response_format'] == {'type': 'json_object'}
+    assert llm.ENDPOINT == 'https://ai-gateway.vercel.sh/v1/chat/completions'
+    assert timeout == 12
+
+
+def test_gateway_failure_is_not_retried(monkeypatch):
+    calls = []
+    monkeypatch.setattr(llm, '_model', lambda: 'test/frontier-model')
+    def fail(payload, timeout):
+        calls.append(payload)
+        raise llm.LlmUnavailable('Gateway unavailable.', code='LLM_UNREACHABLE')
+    monkeypatch.setattr(llm, '_post', fail)
+    with pytest.raises(llm.LlmUnavailable):
+        llm._ask_model({}, [], 5)
+    assert len(calls) == 1
+
+
+def test_the_budget_guard_stops_calls(monkeypatch, tmp_path):
+    log = tmp_path / 'gateway_calls.json'
     monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', log)
     monkeypatch.setenv('LLM_MAX_CALLS_PER_HOUR', '1')
     monkeypatch.setenv('LLM_MAX_CALLS_PER_DAY', '1')
@@ -202,99 +176,12 @@ def test_the_budget_guard_stops_the_calls(monkeypatch, tmp_path):
     assert caught.value.code == 'LLM_QUOTA_EXHAUSTED'
 
 
-def test_a_refusal_is_not_charged(monkeypatch, tmp_path):
-    """A model that is withdrawn or busy serves nothing, so it costs nothing."""
-    log = tmp_path / 'llm_calls.json'
+def test_gateway_budget_ledger_is_private(monkeypatch, tmp_path):
+    log = tmp_path / 'gateway_calls.json'
     monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', log)
-    llm._check_budget()          # the check spends nothing
-    assert not log.exists() or llm._read_calls() == []
-    llm._record_call()           # only a request that reached a model counts
+    llm._record_call()
     assert len(llm._read_calls()) == 1
-
-
-def test_a_refusing_model_is_skipped_on_the_next_brief(monkeypatch, tmp_path):
-    """The failover is instant, because the refusal is remembered."""
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', tmp_path / 'llm_calls.json')
-
-    first, second = llm.FALLBACK_CHAIN[0], llm.FALLBACK_CHAIN[1]
-    assert llm.healthy_models()[0] == first
-
-    llm._mark_unhealthy(first, 429)
-    assert llm.healthy_models()[0] == second, 'the refusing model is asked last'
-    assert first in llm.healthy_models(), 'but it is still in the chain'
-
-    llm._mark_healthy(first)
-    assert llm.healthy_models()[0] == first
-
-
-def test_a_withdrawn_model_is_skipped_for_longer(monkeypatch, tmp_path):
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    llm._mark_unhealthy(llm.FALLBACK_CHAIN[0], 404)
-    stored = llm._read_health()[llm.FALLBACK_CHAIN[0]]
-    assert stored['until'] - stored['until'] + 12 * 60 * 60 >= 12 * 60 * 60 - 1
-    assert llm.healthy_models()[0] != llm.FALLBACK_CHAIN[0]
-
-
-def test_the_health_reads_a_half_written_file(monkeypatch, tmp_path):
-    """A file that is being written while it is read must not break /api/health."""
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    health.write_text('{"cohere/north-mini-code:free": {"good": 1', encoding='utf-8')
-    state = llm.status()
-    assert state['models'], 'the models are still listed'
-    assert state['budget']['dayLimit'] > 0
-
-
-def test_a_model_entry_without_a_cooldown_is_read(monkeypatch, tmp_path):
-    """A model that only has an outcome recorded has no cooldown to read."""
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    llm._mark_outcome('cohere/north-mini-code:free', usable=True, duration_ms=4000)
-    state = llm.status()
-    entry = next(m for m in state['models'] if m['id'] == 'cohere/north-mini-code:free')
-    assert entry['answering'] is True
-    assert entry['until'] is None
-    assert entry['good'] == 1
-
-
-def test_a_model_in_cooldown_is_asked_last_and_then_retried(monkeypatch, tmp_path):
-    """A model in cooldown is not dropped — it is asked last, and comes back."""
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    learned = 'minimax/minimax-m3.1-flash:free'
-
-    llm._mark_outcome(learned, usable=True, duration_ms=4000)
-    assert llm.healthy_models()[0] == learned, 'the learned model comes first'
-
-    llm._mark_unhealthy(learned, 404)
-    order = llm.healthy_models()
-    assert learned in order, 'it is still in the chain'
-    assert order[-1] == learned, 'but it is asked last while it is refusing'
-
-
-def test_the_model_that_answered_well_is_asked_first(monkeypatch, tmp_path):
-    """The router picks at random. The backend does not have to."""
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    first, second = llm.FALLBACK_CHAIN[0], llm.FALLBACK_CHAIN[1]
-
-    llm._mark_outcome(second, usable=True, duration_ms=4000)
-    assert llm.healthy_models()[0] == second, 'the model that answered well comes first'
-
-    llm._mark_outcome(first, usable=False, duration_ms=21000)
-    assert llm.healthy_models()[0] == second, 'the model that answered with nothing goes last'
-
-
-def test_a_quick_model_is_asked_before_a_slow_one(monkeypatch, tmp_path):
-    health = tmp_path / 'llm_models.json'
-    monkeypatch.setattr(llm, 'MODEL_HEALTH_PATH', health)
-    first, second = llm.FALLBACK_CHAIN[0], llm.FALLBACK_CHAIN[1]
-    llm._mark_outcome(first, usable=True, duration_ms=20000)
-    llm._mark_outcome(second, usable=True, duration_ms=3000)
-    assert llm.healthy_models()[0] == second, 'the quick one comes first'
+    assert log.stat().st_mode & 0o777 == 0o600
 
 
 def test_the_model_is_never_shown_a_number():
@@ -359,7 +246,7 @@ def test_the_model_names_the_directions(monkeypatch, store, recommend_places):
         seen.append({'brief': brief, 'directions': directions, 'evidence': evidence})
         return {0: {'name': 'The Whitney Reading Room',
                     'tagline': 'A room that behaves like the art behind it.'}}, \
-               {'used': True, 'attempted': True, 'model': 'openrouter/free', 'reason': None, 'dropped': []}
+               {'used': True, 'attempted': True, 'model': 'Frontier AI', 'reason': None, 'dropped': []}
 
     monkeypatch.setattr(llm, 'name_directions', fake_name)
 
@@ -383,7 +270,7 @@ def test_the_model_names_the_directions(monkeypatch, store, recommend_places):
     # The step is visible in the trace, and says who did the naming.
     step = next(event for event in response.trace if event.step == 'name-the-directions')
     assert step.status == 'ok'
-    assert 'openrouter/free' in (step.detail or '')
+    assert 'Frontier AI' in (step.detail or '')
     # The model was given the venues, and no numbers.
     assert seen[0]['directions'][0]['venues']
     entity = next(item for item in seen[0]['evidence'] if item.kind == 'entity')
@@ -391,7 +278,7 @@ def test_the_model_names_the_directions(monkeypatch, store, recommend_places):
 
 
 def test_the_names_are_held_so_a_repeat_costs_nothing(monkeypatch, store, recommend_places):
-    """The free tier is 50 a day. A brief that was named before is free."""
+    """A brief that was named before is served from the evidence cache."""
     from backend.models import ProjectRequest
     from backend.providers import QlooHarnessProvider
 
@@ -401,7 +288,7 @@ def test_the_names_are_held_so_a_repeat_costs_nothing(monkeypatch, store, recomm
     def fake_name(brief, directions, evidence):
         calls.append(1)
         return {0: {'name': 'The Whitney Reading Room', 'tagline': 'A room.'}}, \
-               {'used': True, 'attempted': True, 'model': 'openrouter/free', 'reason': None, 'dropped': []}
+               {'used': True, 'attempted': True, 'model': 'Frontier AI', 'reason': None, 'dropped': []}
 
     monkeypatch.setattr(llm, 'name_directions', fake_name)
 

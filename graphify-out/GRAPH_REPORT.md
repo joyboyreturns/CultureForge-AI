@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1298 nodes · 2898 edges · 66 communities (56 shown, 10 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 231 edges (avg confidence: 0.9)
+- 1253 nodes · 2821 edges · 65 communities (54 shown, 11 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 229 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e1954288`
+- Built from commit: `84220d16`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -21,13 +21,13 @@
 - Front Page Marketing Copy
 - Architecture and Dependency Docs
 - Personalised Mockups
-- json
+- fix_mp4_faststart.py
 - TypeScript Node Build Settings
 - OpenCode Configuration
 - Audience and Concept Copy
 - Studio Concept Mockups
 - Cafe Ritual Mockup Detail
-- Qloo Provider and Workflow Adapters
+- vault_query.py
 - Front Page Metadata
 - TypeScript Project References
 - Evidence Test Client
@@ -41,41 +41,40 @@
 - Walkthrough Verification Tool
 - Investigation.tsx
 - QlooHarnessError
-- mock_generator.py
-- .run_workflow_cached
+- pathlib
+- main.py
 - Platform Layer
-- TraceEvent
+- QlooHarnessError
 - typing
 - EvidenceDependenceMap.tsx
 - Cultural Constellation Graph
-- Free Model Transport
+- llm.py
 - Endpoint Verification Tool
 - Evidence Presentation
-- Free Naming Layer
+- _ask_model
 - get_platform
-- Naming Guard and Budget
+- Evidence
 - main.py
-- Workflow Budgets and Direction Naming
+- name_directions
 - Front Page Script Interactions
 - Free Naming Layer Tests
 - Shared Contracts and Heat Map
-- Free Naming Layer
-- models.py
-- test_agent.py
+- check_api.py
+- providers.py
+- run_agent
 - test_api.py
-- GenerateResponse
+- test_comparison.py
 - investigation.py
 - QlooHarnessProvider
 - backend/__init__.py
 - Evidence Test Module
-- Project knowledge workflow
-- rank_entities
-- qloo_entity_tags
+- TraceEvent
+- StubProvider
+- ResearchRegistry
 - reasoning.py
-- qloo_where_popular
-- compare_audiences
+- test_frontier_ai_request_includes_the_pydantic_output_schema
+- llm_check.py
 - error_response
-- share_exploration
 - Verification and Execution Scripts
 
 ## God Nodes (most connected - your core abstractions)
@@ -91,25 +90,25 @@
 10. `canonical_key()` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `The shape of the codebase` --references--> `MockCultureProvider`  [INFERRED]
-  AGENTS.md → backend/providers.py
 - `The shape of the codebase` --references--> `get_provider()`  [INFERRED]
   AGENTS.md → backend/providers.py
-- `fake()` --indirect_call--> `recommend_places()`  [INFERRED]
-  backend/tests/test_evidence_store.py → backend/tests/conftest.py
+- `The shape of the codebase` --references--> `MockCultureProvider`  [INFERRED]
+  AGENTS.md → backend/providers.py
 - `main()` --calls--> `name_directions()`  [EXTRACTED]
   scripts/llm_check.py → backend/llm.py
 - `CultureForge Concept Studio Desktop Mockup` --semantically_similar_to--> `CultureForge Concept Studio Mobile Mockup`  [INFERRED] [semantically similar]
   artifacts/cultureforge-personalized.png → artifacts/cultureforge-readable-mobile.png
+- `start_run()` --uses--> `CompareRequest`  [INFERRED]
+  backend/main.py → backend/models.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (66 total, 10 thin omitted)
+## Communities (65 total, 11 thin omitted)
 
 ### Community 0 - "test_a_failure_is_not_held"
-Cohesion: 0.14
-Nodes (8): test_a_repeated_brief_reports_that_it_spent_nothing(), fake(), _stub_qloo(), test_a_failure_is_not_held(), test_the_model_names_the_directions(), fake_name(), test_the_names_are_held_so_a_repeat_costs_nothing(), test_without_a_model_the_rules_still_name_the_directions()
+Cohesion: 0.22
+Nodes (5): _stub_qloo(), test_a_failure_is_not_held(), test_the_model_names_the_directions(), fake_name(), test_the_names_are_held_so_a_repeat_costs_nothing()
 
 ### Community 1 - "Studio Application Shell"
 Cohesion: 0.07
@@ -135,9 +134,9 @@ Nodes (12): Vite API Proxy, CultureProvider Abstraction, FastAPI Backend, Shared
 Cohesion: 0.32
 Nodes (11): CultureForge Concept Studio Desktop Mockup, CultureForge Concept Studio Mobile Mockup, Audience Lens Scenario Exploration, Cultural Signals and Experience Blueprint Panel, Family Market Day Makers Market, Flexible Timing Cultural Signal, Hand-Me-Down House Repair and Resale Shop, Little & Local Concept Store (+3 more)
 
-### Community 7 - "json"
-Cohesion: 0.08
-Nodes (26): load_qloo_config(), main(), mask(), read_budget_log(), analyze(), _boxes(), _child(), _find() (+18 more)
+### Community 7 - "fix_mp4_faststart.py"
+Cohesion: 0.21
+Nodes (11): analyze(), _boxes(), _child(), _find(), is_faststart(), main(), _patch_co64(), _patch_stco() (+3 more)
 
 ### Community 8 - "TypeScript Node Build Settings"
 Cohesion: 0.20
@@ -159,9 +158,9 @@ Nodes (8): CultureForge Concept Studio Mobile Mockup, Three Cultural Connections
 Cohesion: 1.00
 Nodes (3): Café Rituals, Shared Audience, Vinyl Culture
 
-### Community 13 - "Qloo Provider and Workflow Adapters"
-Cohesion: 0.22
-Nodes (8): The shape of the codebase, ProjectRequest, create_provider(), CultureProvider, current_provider(), get_provider(), _is_qloo_configured(), MockCultureProvider
+### Community 13 - "vault_query.py"
+Cohesion: 0.24
+Nodes (11): _build_index(), _code_excerpt(), find_notes(), load_index(), main(), _norm(), _parse_frontmatter(), render_list() (+3 more)
 
 ### Community 14 - "Front Page Metadata"
 Cohesion: 0.67
@@ -172,12 +171,12 @@ Cohesion: 0.21
 Nodes (10): ChallengedDirection, ChallengeResult, Verdict, ConceptModal(), ChallengePanel(), VERDICT_NOTES, VERDICT_WORDS, VerdictBadge() (+2 more)
 
 ### Community 20 - "test_evidence_store.py"
-Cohesion: 0.11
-Nodes (10): cached_call(), known_location(), transport_request_count(), test_a_location_with_no_places_is_not_offered(), test_canonical_key_is_stable_and_order_independent(), test_concurrent_callers_collapse_into_one(), test_entries_expire(), test_evidence_that_was_already_held_costs_nothing() (+2 more)
+Cohesion: 0.10
+Nodes (13): cached_call(), canonical_key(), known_location(), transport_request_count(), start_research(), test_a_location_with_no_places_is_not_offered(), test_canonical_key_is_stable_and_order_independent(), test_concurrent_callers_collapse_into_one() (+5 more)
 
 ### Community 21 - "post"
-Cohesion: 0.11
-Nodes (9): challenge_directions_route(), compare(), compare_audiences(), evidence_presentation_route(), investigate_route(), rank_anchors(), recompose_route(), resolve_taste() (+1 more)
+Cohesion: 0.09
+Nodes (12): analyze_evidence_route(), challenge_directions_route(), compare(), compare_audiences(), evidence_presentation_route(), investigate_route(), rank_anchors(), recompose_route() (+4 more)
 
 ### Community 22 - "Evidence Concept Composer"
 Cohesion: 0.09
@@ -200,28 +199,24 @@ Cohesion: 0.25
 Nodes (9): investigate(), listFacets(), GeoLayer, GeoMap(), GeoPoint, project(), Investigation(), openFacets() (+1 more)
 
 ### Community 28 - "QlooHarnessError"
+Cohesion: 0.18
+Nodes (13): challenge_probe(), _primary_anchor(), challenge_probe_route(), ChallengeProbeRequest, ChallengeRevision, FakeProvider, _request(), test_cached_probe_reports_zero_new_requests() (+5 more)
+
+### Community 29 - "pathlib"
+Cohesion: 0.18
+Nodes (6): entities(), no_model_calls(), recommend_places(), store(), fake(), fake()
+
+### Community 30 - "main.py"
 Cohesion: 0.13
-Nodes (16): challenge_probe(), _primary_anchor(), challenge_probe_route(), ChallengeProbeRequest, ChallengeRevision, Evidence, QlooHarnessError, FakeProvider (+8 more)
-
-### Community 29 - "mock_generator.py"
-Cohesion: 0.20
-Nodes (11): clamp(), fingerprint(), generate_mock(), investment(), normalize(), round_positive(), Concept, CulturalSignal (+3 more)
-
-### Community 30 - ".run_workflow_cached"
-Cohesion: 0.12
-Nodes (8): qloo_audience_demographics(), qloo_describe(), qloo_trends(), _workflow_response(), audience_demographics_payload(), describe_payload(), trends_payload(), test_the_provider_reports_zero_for_a_cached_workflow()
+Nodes (10): qloo_audience_demographics(), qloo_describe(), qloo_where_popular(), render_markdown(), _workflow_response(), EntityRequest, WherePopularRequest, audience_demographics_payload() (+2 more)
 
 ### Community 31 - "Platform Layer"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (14): hash_key(), Platform, platform(), test_a_key_cannot_be_issued_for_a_workspace_that_does_not_exist(), test_a_key_is_issued_and_never_stored_in_the_clear(), test_a_new_version_is_added_when_an_exploration_is_saved_again(), test_a_revoked_key_stops_working(), test_a_shared_snapshot_is_reachable_and_revocable() (+6 more)
 
-### Community 32 - "TraceEvent"
-Cohesion: 0.05
-Nodes (31): AgentReport, TraceEvent, mark_reused(), safe_query(), _event(), _execute(), announce(), ResearchRegistry (+23 more)
-
-### Community 33 - "typing"
-Cohesion: 0.20
-Nodes (3): meter_requests(), begin(), total()
+### Community 32 - "QlooHarnessError"
+Cohesion: 0.12
+Nodes (15): QlooHarnessError, _execute(), ResearchRun, _save_exploration(), _install(), StubProvider, test_a_known_location_is_offered_as_the_way_out(), test_a_provider_failure_is_reported_not_crashed() (+7 more)
 
 ### Community 34 - "EvidenceDependenceMap.tsx"
 Cohesion: 0.15
@@ -231,9 +226,9 @@ Nodes (16): lucide-react, CacheEntry, ResearchRun, Progress(), AgentTrace(), Cel
 Cohesion: 0.19
 Nodes (12): CulturalConstellation(), Edge, LABEL_RING, LABEL_WIDTH, labelSpot(), Node, NODE_RADIUS, NodeKind (+4 more)
 
-### Community 36 - "Free Model Transport"
-Cohesion: 0.11
-Nodes (10): _api_key(), _asserts_an_unverified_locality(), _clean_text(), is_configured(), _load_env_once(), _numbers_are_allowed(), _post(), _source_names() (+2 more)
+### Community 36 - "llm.py"
+Cohesion: 0.19
+Nodes (11): _api_key(), _asserts_an_unverified_locality(), budget_state(), _clean_text(), is_configured(), _load_env_once(), _model(), status() (+3 more)
 
 ### Community 37 - "Endpoint Verification Tool"
 Cohesion: 0.36
@@ -243,25 +238,25 @@ Nodes (8): api(), BRIEF, check(), fail(), main(), ok(), readableDetail(), seen
 Cohesion: 0.14
 Nodes (9): excerpt(), group_tags(), is_organisation(), present_evidence(), present_place(), presentation_key(), split_sentences(), tag_bucket() (+1 more)
 
-### Community 40 - "Free Naming Layer"
+### Community 40 - "_ask_model"
 Cohesion: 0.14
-Nodes (10): _ask_model(), _build_user_prompt(), LlmUnavailable, test_a_gone_model_falls_through_to_the_next(), fake_post(), test_a_model_that_answers_with_nothing_falls_through(), fake_post(), test_the_model_is_never_shown_a_number() (+2 more)
+Nodes (11): _ask_model(), _build_user_prompt(), LlmUnavailable, _parse_json(), _post(), test_an_answer_that_is_not_json_is_not_used(), test_gateway_failure_is_not_retried(), fail() (+3 more)
 
 ### Community 41 - "get_platform"
-Cohesion: 0.17
-Nodes (12): create_workspace(), export_exploration(), generate(), issue_key(), list_explorations(), list_keys(), read_exploration(), _require_operator() (+4 more)
+Cohesion: 0.14
+Nodes (14): create_workspace(), export_exploration(), generate(), issue_key(), list_explorations(), list_keys(), meter_requests(), read_exploration() (+6 more)
 
-### Community 42 - "Naming Guard and Budget"
-Cohesion: 0.15
-Nodes (11): healthy_models(), _mark_healthy(), _mark_outcome(), _mark_unhealthy(), _read_health(), _write_health(), test_a_model_in_cooldown_is_asked_last_and_then_retried(), test_a_quick_model_is_asked_before_a_slow_one() (+3 more)
+### Community 42 - "Evidence"
+Cohesion: 0.24
+Nodes (5): _challenge_one(), _compare_with_other_places(), _tag_family(), _venues(), Evidence
 
 ### Community 43 - "main.py"
-Cohesion: 0.12
-Nodes (10): health(), health_alias(), list_facets(), qloo_workflows(), read_snapshot(), recent_runs(), render_markdown(), run_status() (+2 more)
+Cohesion: 0.13
+Nodes (9): health(), health_alias(), list_facets(), qloo_workflows(), read_snapshot(), recent_runs(), run_status(), usage() (+1 more)
 
-### Community 44 - "Workflow Budgets and Direction Naming"
-Cohesion: 0.17
-Nodes (8): _check_budget(), name_directions(), _read_calls(), _record_call(), _write_calls(), test_a_refusal_is_not_charged(), test_the_budget_guard_stops_the_calls(), test_without_a_key_nothing_is_attempted()
+### Community 44 - "name_directions"
+Cohesion: 0.20
+Nodes (10): _check_budget(), name_directions(), _read_calls(), _record_call(), select_source_items(), _timeout(), _write_calls(), test_disabled_gateway_never_attempts_a_naming_call() (+2 more)
 
 ### Community 45 - "Front Page Script Interactions"
 Cohesion: 0.11
@@ -269,59 +264,55 @@ Nodes (21): easeOutCubic(), init(), initBackgroundVideo(), attemptPlay(), unlock
 
 ### Community 46 - "Free Naming Layer Tests"
 Cohesion: 0.11
-Nodes (14): _parse_json(), validate_directions(), test_a_citation_is_dropped(), test_a_claim_about_a_locality_qloo_did_not_establish_is_dropped(), test_a_direction_with_nothing_usable_is_not_returned(), test_a_name_that_is_a_qloo_name_may_keep_its_digits(), test_a_number_qloo_returned_somewhere_else_is_still_dropped(), test_a_number_the_model_invented_is_dropped() (+6 more)
+Nodes (12): _numbers_are_allowed(), _source_names(), validate_directions(), test_a_citation_is_dropped(), test_a_claim_about_a_locality_qloo_did_not_establish_is_dropped(), test_a_direction_with_nothing_usable_is_not_returned(), test_a_name_that_is_a_qloo_name_may_keep_its_digits(), test_a_number_qloo_returned_somewhere_else_is_still_dropped() (+4 more)
 
 ### Community 47 - "Shared Contracts and Heat Map"
 Cohesion: 0.13
 Nodes (22): react, AnchorRanking, AudienceComparison, AudienceComparisonResult, Investigation, ReplacementProbeResult, AnchorTournament(), Choice (+14 more)
 
-### Community 48 - "Free Naming Layer"
-Cohesion: 0.17
-Nodes (7): budget_state(), _model(), status(), test_a_model_entry_without_a_cooldown_is_read(), test_a_paid_model_is_refused(), test_the_health_reads_a_half_written_file(), main()
+### Community 48 - "check_api.py"
+Cohesion: 0.29
+Nodes (4): load_qloo_config(), main(), mask(), read_budget_log()
 
-### Community 49 - "models.py"
-Cohesion: 0.10
-Nodes (13): AgentObservation, ChallengeRequest, CompareAudiencesRequest, EntityListRequest, EntityRequest, ErrorResponse, EvidencePresentationRequest, EvidenceVerdictInput (+5 more)
+### Community 49 - "providers.py"
+Cohesion: 0.07
+Nodes (30): _revision_response(), clamp(), fingerprint(), generate_mock(), investment(), normalize(), round_positive(), ChallengeRequest (+22 more)
 
-### Community 50 - "test_agent.py"
-Cohesion: 0.21
-Nodes (6): AgentAction, reflection(), test_agent_disabled_preserves_rules_result_without_model_call(), test_agent_executes_one_valid_removal_from_this_runs_exact_evidence(), test_agent_rejects_fabricated_tool_ids_without_execution(), test_frontier_ai_request_includes_the_pydantic_output_schema()
+### Community 50 - "run_agent"
+Cohesion: 0.16
+Nodes (14): _event(), _payload(), _recipe(), run_agent(), _validate_action(), AgentAction, AgentObservation, AgentReport (+6 more)
 
 ### Community 51 - "test_api.py"
-Cohesion: 0.09
-Nodes (10): _challenge_probe_body(), client(), test_a_key_cannot_be_revoked_from_another_workspace(), test_a_malformed_workflow_body_is_a_readable_422(), test_a_valid_request_answers_with_the_contract(), test_challenge_probe_route_refuses_sample_provider(), test_challenge_probe_route_rejects_malformed_or_unknown_fields(), test_challenge_probe_route_returns_probe_result_without_live_call() (+2 more)
+Cohesion: 0.06
+Nodes (20): Caching, and what it costs, Delegation protocol, Maintenance, Project knowledge workflow, Qloo live data — spend quota carefully, Retrieval ladder, The shape of the codebase, The Vercel model layer (+12 more)
 
-### Community 52 - "GenerateResponse"
-Cohesion: 0.18
-Nodes (7): _revision_response(), Delivery, GenerateResponse, ProvenanceMetadata, response(), RecomposeProvider, test_agent_recomposition_uses_exact_run_envelopes_without_cache_lookup()
+### Community 52 - "test_comparison.py"
+Cohesion: 0.09
+Nodes (13): compare_audiences(), own(), rows(), Delivery, safe_query(), RecomposeProvider, test_a_comparison_needs_both_sides(), test_agent_recomposition_uses_exact_run_envelopes_without_cache_lookup() (+5 more)
 
 ### Community 53 - "investigation.py"
-Cohesion: 0.23
+Cohesion: 0.26
 Nodes (7): _bounds(), _call_for(), _demographics(), _geography_points(), investigate(), _now(), _workflow_for()
 
+### Community 54 - "QlooHarnessProvider"
+Cohesion: 0.06
+Nodes (14): _rank_venues(), rank_entities(), recompose(), _without(), get_store(), qloo_entity_tags(), qloo_trends(), count() (+6 more)
+
 ### Community 55 - "backend/__init__.py"
-Cohesion: 0.21
-Nodes (5): select_source_items(), _timeout(), _records(), select(), validate()
+Cohesion: 0.32
+Nodes (3): _records(), select(), validate()
 
 ### Community 56 - "Evidence Test Module"
-Cohesion: 0.08
-Nodes (24): challenge_directions(), _challenge_one(), _compare_with_other_places(), guess_demographic(), _is_cultural_signal(), _tag_family(), _venues(), _concept() (+16 more)
+Cohesion: 0.11
+Nodes (20): challenge_directions(), guess_demographic(), _is_cultural_signal(), _concept(), _evidence(), FakeProvider, _response(), test_a_direction_can_be_held_to_a_different_place() (+12 more)
 
-### Community 57 - "Project knowledge workflow"
+### Community 57 - "TraceEvent"
 Cohesion: 0.22
-Nodes (8): Caching, and what it costs, Delegation protocol, Maintenance, Project knowledge workflow, Qloo live data — spend quota carefully, Retrieval ladder, The free naming layer, Tools
-
-### Community 58 - "rank_entities"
-Cohesion: 0.25
-Nodes (3): _rank_venues(), rank_entities(), _without()
+Nodes (7): TraceEvent, mark_reused(), announce(), test_the_rank_workflow_reports_the_signal_qloo_actually_sent(), _trace_event(), test_a_reused_step_does_not_claim_the_original_calls_duration(), execute_agent()
 
 ### Community 60 - "reasoning.py"
-Cohesion: 0.06
-Nodes (42): _event(), _payload(), _recipe(), run_agent(), _validate_action(), recompose(), canonical_key(), get_store() (+34 more)
-
-### Community 62 - "compare_audiences"
-Cohesion: 0.29
-Nodes (4): compare_audiences(), own(), rows(), test_a_fresh_step_keeps_the_duration_of_the_call_that_made_it()
+Cohesion: 0.16
+Nodes (25): EvidenceAnalysisDirection, EvidenceAnalysisOutput, EvidenceAnalysisRequest, EvidenceAnalysisResult, AnalysisUnavailable, analyze(), _cache_key(), _call() (+17 more)
 
 ### Community 63 - "error_response"
 Cohesion: 0.22
@@ -333,23 +324,23 @@ Nodes (21): argv, client, distDir, executor, harnessDir, MAX_ATTEMPTS, resolutio
 
 ## Knowledge Gaps
 - **26 isolated node(s):** `autoprefixer`, `motion`, `postcss`, `tailwindcss`, `@types/react` (+21 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 526 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 499 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `QlooHarnessProvider` connect `QlooHarnessProvider` to `test_a_failure_is_not_held`, `Qloo Provider and Workflow Adapters`, `test_evidence_store.py`, `post`, `QlooHarnessError`, `mock_generator.py`, `.run_workflow_cached`, `TraceEvent`, `main.py`, `Workflow Budgets and Direction Naming`, `Free Naming Layer Tests`, `test_api.py`, `GenerateResponse`, `investigation.py`, `Evidence Test Module`, `rank_entities`, `qloo_entity_tags`, `reasoning.py`, `qloo_where_popular`, `compare_audiences`?**
-  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `QlooHarnessProvider` connect `QlooHarnessProvider` to `QlooHarnessError`, `test_a_failure_is_not_held`, `Evidence`, `name_directions`, `Free Naming Layer Tests`, `providers.py`, `test_api.py`, `test_comparison.py`, `investigation.py`, `post`, `test_evidence_store.py`, `Evidence Test Module`, `TraceEvent`, `QlooHarnessError`, `main.py`?**
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `QlooHarnessProvider` (e.g. with `_challenge_one()` and `_compare_with_other_places()`) actually correct?**
   _`QlooHarnessProvider` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `autoprefixer`, `motion`, `postcss` to the rest of the system?**
   _26 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `test_a_failure_is_not_held` be split into smaller, more focused modules?**
-  _Cohesion score 0.1437908496732026 - nodes in this community are weakly interconnected._
-- **Why does `Platform` connect `Platform Layer` to `get_platform`, `reasoning.py`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
-- **Are the 2 inferred relationships involving `App()` (e.g. with `startNewExploration()` and `takeHandoff()`) actually correct?**
-  _`App()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Studio Application Shell` be split into smaller, more focused modules?**
   _Cohesion score 0.07317073170731707 - nodes in this community are weakly interconnected._
+- **Why does `Platform` connect `Platform Layer` to `get_platform`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `App()` (e.g. with `startNewExploration()` and `takeHandoff()`) actually correct?**
+  _`App()` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **Should `Build Tooling and Dependencies` be split into smaller, more focused modules?**
+  _Cohesion score 0.05263157894736842 - nodes in this community are weakly interconnected._

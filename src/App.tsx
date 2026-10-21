@@ -162,7 +162,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    // Let the free model choose from the returned evidence what to show
+    // Let Frontier AI choose from the returned evidence what to show
     // first. It may only return ids, so it cannot write a fact, and the
     // answer is not waited for: the rules are already on screen.
     const places = (result?.evidence ?? []).filter((item) => item.kind === 'entity')

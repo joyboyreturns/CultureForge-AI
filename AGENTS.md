@@ -112,44 +112,15 @@ does not belong to the directions on screen — each has a stated state and a
 way forward. A judge who cannot get out of a screen will not try the next
 thing.
 
-## The free naming layer
+## The Vercel model layer
 
-`backend/llm.py` lets a free model name the directions. Three rules, and the
-tests pin all three:
+`backend/llm.py` is the only transport for optional wording and evidence analysis. All model traffic goes through Vercel AI Gateway using the server-only `AI_GATEWAY_API_KEY` and `AI_GATEWAY_MODEL`; `AI_GATEWAY_ENABLED=true` is the explicit opt-in. Never add another provider, provider fallback, or client-side key.
 
-1. **The model writes words, never facts.** It is given the audience signals
-   and the venues a direction is built from, and *no numbers at all* — so it
-   cannot quote one. The rules keep the tags, the venues, the facet and the
-   evidence. A number in the model's answer that Qloo did not return is
-   dropped, and the rule engine's wording is used instead.
-2. **Free only, and it stays free.** The fallback chain is free-only, because
-   OpenRouter bills a paid model that appears in a `models` array. A paid
-   `OPENROUTER_MODEL` is refused. The free tier is 50 requests a day, so the
-   model is a cache: one call per brief, held in the evidence store, and a
-   local guard (20/hour, 50/day) sits at the tier's own limit.
-3. **Never on the critical path.** No key, no allowance, or a late answer and
-   the rule engine's wording is used. The trace says which happened.
-4. **Cap the thinking.** Most free models are reasoning models, and one given
-   the whole token budget answers with nothing. The request caps
-   `reasoning.max_tokens` and leaves the room the answer needs. A model that
-   is gone (404), busy (429) or answers with nothing falls through to the
-   next in the chain — and a field that says nothing (`...`) is dropped.
-5. **Do not leave the routing to chance.** `openrouter/free` picks a free
-   model at random, and some of them take twenty seconds to think. So a
-   refusal is remembered (15 minutes for a rate limit, the day for a
-   withdrawn model), the model the router actually chose is asked directly
-   next time, and the models that answered well and quickly come first. The
-   switch is a local file read, so it is instant; an attempt may only have
-   what is left of the budget, so the whole naming is capped at eighteen
-   seconds however many models it tries.
-
-A failure is never held: an empty naming is discarded from the evidence
-store, so the next run tries again instead of being told for a day that the
-brief has no name.
-
-If you add to it: give it a payload builder, hold the answer in the evidence
-store like everything else, and keep the rule engine's wording available as
-the fallback.
+- The model writes bounded direction names/taglines or selects existing evidence strings; deterministic rules retain all factual claims, Qloo evidence, verdicts, and citations. Reject unsupported numbers and malformed output.
+- Naming makes one bounded request and never retries or switches providers. Missing credentials, budget exhaustion, timeout, or invalid output leaves the rule-based wording intact and reports the state in the trace.
+- The local naming allowance is `LLM_MAX_CALLS_PER_HOUR` / `LLM_MAX_CALLS_PER_DAY` (defaults 20/50). Do not raise these limits to work around a failure.
+- Evidence analysis uses the same Vercel gateway, with its own bounded daily allowance. Keep its reasoning and response budgets capped and never put provider credentials in browser code.
+- Cache successful model-derived results with the evidence they depend on. Do not cache failures or empty output as a successful answer.
 
 ## Caching, and what it costs
 
@@ -177,9 +148,8 @@ be held and the next run will pay for it again.
 - Prefer the held evidence over a new call — that is what the store and the
   browser cache are for. The mock provider is the test fixture, not a way to
   avoid the quota.
-- The free model has its own budget (`LLM_MAX_CALLS_PER_HOUR`,
-  `LLM_MAX_CALLS_PER_DAY`) and its own free-only chain. Don't raise those
-  either, and never put a paid model in the chain.
+- Frontier AI via Vercel has a separate local budget (`LLM_MAX_CALLS_PER_HOUR`,
+  `LLM_MAX_CALLS_PER_DAY`). Do not raise those limits to work around a failure.
 - `scripts/qloo_exec.mjs` exists because the stock `qloo exec` client caps requests at 20s while `/v2/insights` needs ~25s, which turned every live request into three failed attempts. Keep using it rather than the raw `qloo` binary.
 
 ## Delegation protocol

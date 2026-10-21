@@ -780,7 +780,7 @@ def analyze_evidence_route(request: EvidenceAnalysisRequest) -> dict:
 
 
 @app.post('/api/evidence/presentation', tags=['evidence'],
-          summary='Let a free model choose which of Qloo\'s own words to lead with')
+          summary='Let Frontier AI select which of Qloo\'s own words to lead with')
 def evidence_presentation_route(request: EvidencePresentationRequest) -> dict:
     """Choose from the returned evidence what to show first.
 

@@ -52,7 +52,7 @@ def store(tmp_path, monkeypatch):
 def no_model_calls(monkeypatch):
     """The suite never calls a model.
 
-    The free tier is 50 requests a day, and a test that reached the network
+    The local model allowance is bounded, and a test that reached the network
     would spend part of it every time the suite ran. The naming layer is off
     for every test; the ones that care about it switch it back on themselves.
     """
