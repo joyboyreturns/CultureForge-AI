@@ -58,6 +58,7 @@ SAFE_QUERY_KEYS = {
     'signal.demographics.gender', 'signal.demographics.age',
     'filter.tags', 'operator.filter.tags',
     'filter.exclude.tags', 'operator.filter.exclude.tags',
+    'filter.exclude.entities',
     'filter.results.entities',
     # compare_audiences
     'a.signal.interests.entities', 'b.signal.interests.entities',
@@ -357,19 +358,30 @@ class QlooHarnessProvider(CultureProvider):
             # The structured error code on stdout is safe and tells us whether this was
             # a quota/rate-limit problem, an auth problem, or a malformed request.
             code = ''
+            status = None
+            retryable = False
             try:
                 failure = json.loads(completed.stdout)
-                code = str(failure.get('error', {}).get('code', '')) if isinstance(failure, dict) else ''
+                error = failure.get('error', {}) if isinstance(failure, dict) else {}
+                code = str(error.get('code', '')) if isinstance(error, dict) else ''
+                status = error.get('status') if isinstance(error, dict) else None
+                retryable = bool(error.get('retryable')) if isinstance(error, dict) else False
             except (json.JSONDecodeError, AttributeError):
                 code = ''
-            if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED'):
+            if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED') or status == 429:
                 raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.', code='RATE_LIMITED', retryable=True)
-            if code == 'QLOO_AUTH':
+            if code == 'QLOO_AUTH' or status == 401:
                 raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.', code='UPSTREAM_UNAUTHENTICATED')
+            if status == 400:
+                raise QlooHarnessError('Qloo rejected the probe parameters. The direction and existing evidence are unchanged.', code='INVALID_UPSTREAM_REQUEST')
             if code == 'TOOL_INPUT':
                 raise QlooHarnessError('Qloo rejected the shape of the request. The arguments did not match the workflow contract.', code='INVALID_UPSTREAM_REQUEST')
+            if code == 'FILTER_IGNORED':
+                raise QlooHarnessError('Qloo returned the excluded place. The replacement probe did not hold, so no conclusion was drawn.', code='UPSTREAM_REJECTED', details={'upstreamCode': code})
+            if code in ('QLOO_DNS_ERROR', 'QLOO_NETWORK_ERROR', 'QLOO_CONNECTION_ERROR', 'QLOO_TIMEOUT'):
+                raise QlooHarnessError('Qloo could not be reached for this probe. The existing direction and evidence are unchanged.', code='PROVIDER_UNAVAILABLE', retryable=True)
             if code:
-                raise QlooHarnessError(f'Qloo rejected the request ({code}).', code='UPSTREAM_REJECTED', details={'upstreamCode': code})
+                raise QlooHarnessError(f'Qloo rejected the request ({code}).', code='UPSTREAM_REJECTED', retryable=retryable, details={'upstreamCode': code})
             raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.', code='UPSTREAM_REJECTED')
         try:
             result = json.loads(completed.stdout)
@@ -377,6 +389,23 @@ class QlooHarnessProvider(CultureProvider):
             raise QlooHarnessError('Qloo CLI returned an unreadable response.', code='UPSTREAM_MALFORMED') from exc
         if not isinstance(result, dict):
             raise QlooHarnessError('Qloo CLI returned an unexpected response shape.', code='UPSTREAM_MALFORMED')
+        if operation == 'insights_probe':
+            excluded = payload.get('filter.exclude.entities')
+            excluded_ids = {entity_id.casefold() for entity_id in excluded.split(',')} if isinstance(excluded, str) else set()
+            rows = result.get('results', {})
+            rows = rows.get('entities', []) if isinstance(rows, dict) else rows
+            if isinstance(rows, list):
+                returned_ids = {
+                    str(row.get('entity_id') or row.get('id') or '').casefold()
+                    for row in rows if isinstance(row, dict)
+                }
+                if excluded_ids & returned_ids:
+                    # Do not let a response that contradicts its exclusion
+                    # filter enter the durable cache as a valid probe.
+                    raise QlooHarnessError(
+                        'Qloo returned the place this probe asked it to exclude. The filter did not hold, so no conclusion was drawn.',
+                        code='FILTER_IGNORED',
+                    )
         return result
 
     def run_workflow_cached(self, operation: str, payload: dict) -> tuple[dict, bool, int]:
@@ -398,6 +427,24 @@ class QlooHarnessProvider(CultureProvider):
         envelope, was_cached, requests = cached_call(key, lambda: self._run_workflow(operation, payload))
         # Count it against the request being served, so the usage record can
         # tell an API request from the upstream calls it caused.
+        metering.count(requests)
+        return envelope, was_cached, requests
+
+    def run_insights_probe_cached(self, payload: dict) -> tuple[dict, bool, int]:
+        """Run one server-built raw Insights request through the durable cache.
+
+        The Qloo harness workflow schema does not currently expose entity
+        exclusions. This narrow path accepts only a payload built by the
+        challenge-probe policy and uses the same timeout-aware wrapper,
+        per-call budget, single-flight cache, and transport metering.
+        """
+        key = canonical_key('insights_probe', payload)
+        store = get_store()
+        cached = store.get(key)
+        if cached is not None:
+            return cached, True, 0
+        envelope, was_cached, requests = cached_call(
+            key, lambda: self._run_workflow('insights_probe', payload))
         metering.count(requests)
         return envelope, was_cached, requests
 

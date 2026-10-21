@@ -13,11 +13,12 @@ from uuid import uuid4
 from .comparison import compare_audiences as compare_audiences_native
 from .comparison import rank_entities, recompose
 from .challenge import challenge_directions
+from .challenge_probe import challenge_probe
 from .evidence_store import get_store
 from .llm import status as llm_status
 from .presentation import presentation_key
 from .selector import select as select_evidence
-from .models import (CompareAudiencesRequest, CompareRequest, ChallengeRequest,
+from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequest, ChallengeRequest,
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidencePresentationRequest, GenerateResponse,
                      InvestigationRequest, ProjectRequest, ProvenanceMetadata,
@@ -749,6 +750,21 @@ def challenge_directions_route(request: ChallengeRequest) -> dict:
         response = provider.generate(request.project)
     return challenge_directions(request.project, response, request.directionId or None,
                                 request.anchorEntityId or None)
+
+
+@app.post('/api/projects/challenge-probe', tags=['evidence'],
+          summary='Exclude one cited place and retrieve bounded replacements')
+def challenge_probe_route(request: ChallengeProbeRequest) -> dict:
+    """Run one cached Insights exclusion probe against the on-screen direction.
+
+    This is reported separately from the anchor-fit verdict. The probe does
+    not revise the direction automatically, and an empty bounded result is
+    unresolved rather than negative evidence.
+    """
+    provider = get_provider()
+    if not isinstance(provider, QlooHarnessProvider):
+        raise HTTPException(status_code=409, detail='A replacement probe needs the Qloo provider.')
+    return challenge_probe(request, provider)
 
 
 @app.post('/api/evidence/presentation', tags=['evidence'],

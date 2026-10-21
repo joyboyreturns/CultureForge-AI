@@ -170,7 +170,7 @@ async function main() {
     'signal.location.query', 'take', 'feature.explainability', 'signal.interests.tags',
     'operator.signal.interests.tags', 'signal.interests.entities', 'signal.demographics.gender',
     'signal.demographics.age', 'filter.tags', 'operator.filter.tags', 'filter.exclude.tags',
-    'operator.filter.exclude.tags', 'filter.results.entities', 'a.signal.interests.entities',
+    'operator.filter.exclude.tags', 'filter.exclude.entities', 'filter.results.entities', 'a.signal.interests.entities',
     'b.signal.interests.entities',
   ]);
   const unexpected = withRequest.flatMap((event) =>

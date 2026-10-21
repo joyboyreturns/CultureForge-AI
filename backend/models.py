@@ -229,6 +229,7 @@ class ChallengeRevision(BaseModel):
     re-composed the brief, or the founder confirmed different audience seeds,
     the stored evidence is the evidence — and the test is about that.
     """
+    model_config = ConfigDict(extra='forbid')
     evidence: list[Evidence] = Field(default_factory=list, max_length=50)
     concepts: list[Concept] = Field(default_factory=list, max_length=10)
     resolvedTags: list[str] = Field(default_factory=list, max_length=10)
@@ -245,6 +246,14 @@ class ChallengeRequest(BaseModel):
     #: The exploration as it stands. When it is sent, the test is about this
     #: evidence and not a fresh generation from the brief.
     revision: Optional[ChallengeRevision] = None
+
+
+class ChallengeProbeRequest(BaseModel):
+    """Run one bounded Qloo replacement probe against a direction on screen."""
+    model_config = ConfigDict(extra='forbid')
+    project: ProjectRequest
+    directionId: str = Field(min_length=1, max_length=120)
+    revision: ChallengeRevision
 
 
 # ---------------------------------------------------------------------------

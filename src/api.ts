@@ -437,6 +437,23 @@ export interface ChallengeResult {
   arrivalOrder?: string[]
 }
 
+export interface ReplacementProbeResult {
+  policyVersion: string
+  directionId: string
+  outcome: 'unresolved'
+  hypothesis: string
+  falsifier: string
+  anchor: { entityId: string; label: string }
+  sources: { entityId: string | null; label: string }[]
+  replacements: Evidence[]
+  observation: string
+  scope: string
+  query: Record<string, unknown>
+  cached: boolean
+  transportRequests: number
+  limitations: string
+}
+
 /**
  * Test the directions against the local evidence.
  *
@@ -450,6 +467,16 @@ export async function challengeDirections(
 ): Promise<ChallengeResult> {
   return postJson<ChallengeResult>('/api/projects/challenge', {
     project, directionId, anchorEntityId, revision,
+  })
+}
+
+/** Exclude the selected direction's primary cited place in one cached Qloo Insights query. */
+export async function challengeReplacementProbe(
+  project: ProjectRequest, directionId: string,
+  revision: { evidence: Evidence[]; concepts: Concept[]; resolvedTags: string[] }
+): Promise<ReplacementProbeResult> {
+  return postJson<ReplacementProbeResult>('/api/projects/challenge-probe', {
+    project, directionId, revision,
   })
 }
 

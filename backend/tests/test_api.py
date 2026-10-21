@@ -63,6 +63,61 @@ def test_the_compare_endpoint_refuses_without_a_live_provider(client, monkeypatc
     assert 'Qloo' in response.json()['detail']
 
 
+def _challenge_probe_body():
+    return {
+        'project': {'businessType': 'Food & beverage', 'audience': 'Gen Z',
+                    'location': 'Brooklyn, New York', 'budget': '$25k', 'objectives': []},
+        'directionId': 'direction-a',
+        'revision': {
+            'evidence': [
+                {'id': 'place-a', 'kind': 'entity', 'label': 'Anchor Place',
+                 'entityId': 'entity-a', 'entityType': 'place'},
+                {'id': 'tag-a', 'kind': 'tag', 'label': 'Food design',
+                 'tagId': 'urn:tag:interests:qloo:food_design'},
+            ],
+            'concepts': [{
+                'id': 'direction-a', 'name': 'Direction A', 'tagline': 'A tagline',
+                'description': 'A direction', 'budget': 'small', 'investment': 'pilot',
+                'signals': ['food design'], 'accent': 'green', 'image': '',
+                'evidenceIds': ['place-a'],
+            }],
+            'resolvedTags': ['urn:tag:interests:qloo:food_design'],
+        },
+    }
+
+
+def test_challenge_probe_route_returns_probe_result_without_live_call(client, monkeypatch):
+    from backend.providers import QlooHarnessProvider
+
+    expected = {'outcome': 'unresolved', 'transportRequests': 1, 'replacements': []}
+    monkeypatch.setattr(main, 'get_provider', lambda: QlooHarnessProvider())
+    monkeypatch.setattr(main, 'challenge_probe', lambda request, provider: expected)
+
+    response = client.post('/api/projects/challenge-probe', json=_challenge_probe_body())
+
+    assert response.status_code == 200
+    assert response.json() == expected
+
+
+def test_challenge_probe_route_rejects_malformed_or_unknown_fields(client):
+    malformed = _challenge_probe_body()
+    malformed['revision']['resolvedTags'] = 'not-a-list'
+    assert client.post('/api/projects/challenge-probe', json=malformed).status_code == 422
+
+    unknown = _challenge_probe_body()
+    unknown['qlooQuery'] = {'filter.exclude.entities': 'entity-a'}
+    assert client.post('/api/projects/challenge-probe', json=unknown).status_code == 422
+
+
+def test_challenge_probe_route_refuses_sample_provider(client, monkeypatch):
+    from backend.providers import MockCultureProvider
+
+    monkeypatch.setattr(main, 'get_provider', lambda: MockCultureProvider())
+    response = client.post('/api/projects/challenge-probe', json=_challenge_probe_body())
+    assert response.status_code == 409
+    assert 'Qloo' in response.json()['detail']
+
+
 def test_snapshots_round_trip_over_http(client):
     payload = {'projectId': 'cf-test', 'concepts': [], 'note': 'shared'}
     created = client.post('/api/explorations/share', json=payload)

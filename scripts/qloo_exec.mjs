@@ -25,7 +25,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -133,4 +133,60 @@ const executor = createDirectQlooWorkflowExecutor(client, undefined, resolutionP
 const argv = process.argv.slice(2);
 if (argv[0] === "exec") argv.shift();
 
-process.exitCode = await runQlooExec(argv, { createExecutor: () => executor });
+// A deliberately narrow raw Insights path for the typed evidence challenge.
+// The public harness `recommend` schema currently rejects entity exclusions,
+// although Qloo's Insights endpoint supports `filter.exclude.entities`.
+// Backend code constructs and validates the payload; this wrapper enforces
+// the same fixed key set before sending it and makes exactly one attempt.
+if (argv[0] === "insights_probe") {
+  const inputIndex = argv.indexOf("--input-file");
+  if (inputIndex < 0 || !argv[inputIndex + 1]) {
+    process.stdout.write(JSON.stringify({ error: { code: "TOOL_INPUT" } }));
+    process.exitCode = 2;
+  } else {
+    try {
+      const query = JSON.parse(readFileSync(argv[inputIndex + 1], "utf8"));
+      const allowed = new Set([
+        "filter.type", "signal.interests.tags", "operator.signal.interests.tags",
+        "signal.location.query", "filter.exclude.entities", "take",
+        "feature.explainability",
+      ]);
+      if (!query || typeof query !== "object" || Array.isArray(query) ||
+          Object.keys(query).some((key) => !allowed.has(key)) ||
+          query["filter.type"] !== "urn:entity:place" ||
+          typeof query["signal.interests.tags"] !== "string" ||
+          !query["signal.interests.tags"].length ||
+          typeof query["signal.location.query"] !== "string" ||
+          typeof query["filter.exclude.entities"] !== "string") {
+        process.stdout.write(JSON.stringify({ error: { code: "TOOL_INPUT" } }));
+        process.exitCode = 2;
+      } else {
+        const probeClient = new QlooClient({
+          apiKey: resolved.apiKey,
+          ...resolved.baseUrl ? { baseUrl: resolved.baseUrl } : {},
+          allowCustomBaseUrl: resolved.baseUrlTrusted,
+          timeoutMs: TIMEOUT_MS,
+          maxAttempts: 1,
+        });
+        const response = await probeClient.insights(query);
+        const resultEntities = Array.isArray(response?.results?.entities)
+          ? response.results.entities : [];
+        process.stdout.write(JSON.stringify({
+          status: "ok", results: { entities: resultEntities },
+          query: response?.query ?? {},
+          provenance: { requests: ["GET /v2/insights"] },
+        }) + "\n");
+      }
+    } catch (error) {
+      process.stdout.write(JSON.stringify({ error: {
+        code: error?.code ?? "QLOO_REJECTED",
+        status: Number.isInteger(error?.status) ? error.status : undefined,
+        retryable: Boolean(error?.retryable),
+        message: error?.message ?? "Qloo rejected the Insights request.",
+      }}) + "\n");
+      process.exitCode = 1;
+    }
+  }
+} else {
+  process.exitCode = await runQlooExec(argv, { createExecutor: () => executor });
+}

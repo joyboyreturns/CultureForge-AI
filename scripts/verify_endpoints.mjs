@@ -192,6 +192,14 @@ async function main() {
     check('POST /api/projects/compare/audiences -> an empty body is 422',
       result.status === 422, `${result.status}`);
   }
+  {
+    const result = await api('/api/projects/challenge-probe', {
+      method: 'POST', body: { project: BRIEF, directionId: 'direction-a', revision: { resolvedTags: 'not-a-list' } },
+    });
+    check('POST /api/projects/challenge-probe -> malformed probe evidence is 422 before any Qloo call',
+      result.status === 422 && readableDetail(result), `${result.status} ${String(result.body?.detail).slice(0, 90)}`);
+    seen.add('POST /api/projects/challenge-probe');
+  }
 
   // ------------------------------------------------------------------- rank
   if (entities.length >= 2) {
