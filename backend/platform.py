@@ -195,8 +195,17 @@ class Platform:
             'revokedAt': row['revoked_at'], 'lastUsedAt': row['last_used_at'],
         } for row in rows]
 
-    def revoke_key(self, key_id: str) -> bool:
-        row = self._one('SELECT id FROM api_keys WHERE id = ?', (key_id,))
+    def revoke_key(self, key_id: str, workspace_id: Optional[str] = None) -> bool:
+        """Revoke a key.
+
+        When a workspace is given, the key must belong to it. A caller that
+        names one workspace must not be able to revoke another's key.
+        """
+        if workspace_id:
+            row = self._one('SELECT id FROM api_keys WHERE id = ? AND workspace_id = ?',
+                            (key_id, workspace_id))
+        else:
+            row = self._one('SELECT id FROM api_keys WHERE id = ?', (key_id,))
         if not row:
             return False
         self._execute('UPDATE api_keys SET revoked_at = ? WHERE id = ?', (time.time(), key_id))

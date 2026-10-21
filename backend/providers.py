@@ -484,7 +484,10 @@ class QlooHarnessProvider(CultureProvider):
                 self._cache.pop(cache_key, None)
 
         query = f'{project.businessType} {project.audience}'.strip()
-        reused = tag_result is not None and recommendations is not None
+        # Each workflow's reuse is tracked on its own. A shared flag marked a
+        # freshly fetched workflow as reused because a later one was held.
+        tags_reused = tag_result is not None
+        places_reused = recommendations is not None
         if tag_result is None and seed_tag_ids:
             # The founder confirmed these seeds, so the audience is not
             # resolved again and no find_tags call is spent. The cached
@@ -512,7 +515,7 @@ class QlooHarnessProvider(CultureProvider):
                     'execution': {'duration_ms': 0},
                     'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
                 }
-            reused = True
+            tags_reused = True
         spent = 0
         # Whether any part of this answer had to be fetched live. The delivery
         # label follows this, not whether one part happened to be cached.
@@ -521,7 +524,7 @@ class QlooHarnessProvider(CultureProvider):
             tag_result, was_cached, requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
             spent += requests
             live = live or not was_cached
-            reused = was_cached
+            tags_reused = was_cached
         if tag_result.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer cultural seed. Refine the audience description and try again.', code='NEEDS_INPUT')
         matched_tags = [tag for row in self.rows(tag_result) if (tag := self.tag_id(row))][:3]
@@ -535,7 +538,7 @@ class QlooHarnessProvider(CultureProvider):
             })
             spent += requests
             live = live or not was_cached
-            reused = reused or was_cached
+            places_reused = was_cached
         if recommendations.get('status') == 'needs_input':
             raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.', code='NEEDS_INPUT')
         rows = self.rows(recommendations)
@@ -576,7 +579,7 @@ class QlooHarnessProvider(CultureProvider):
         entity_evidence_ids: dict[str, str] = {}
 
         tag_trace = self._trace_event('resolve-audience-tags', 'find_tags', tag_result, len(matched_tags))
-        if reused:
+        if tags_reused:
             mark_reused(tag_trace)
         trace.append(tag_trace)
 
@@ -601,7 +604,7 @@ class QlooHarnessProvider(CultureProvider):
             ))
 
         entity_trace = self._trace_event('retrieve-local-evidence', 'recommend', recommendations, len(rows))
-        if reused:
+        if places_reused:
             mark_reused(entity_trace)
         trace.append(entity_trace)
 
@@ -699,10 +702,12 @@ class QlooHarnessProvider(CultureProvider):
             concepts = [self._composed_concept(project, c, index, trace) for index, c in enumerate(composed)]
             concept_mode = 'evidence_composed'
             notice = (
-                'Qloo supplied the audience tags and the local venues below. The three business '
-                'directions are CultureForge’s interpretation of that evidence, and each one names '
-                'the returned venue it was built from. Fit scores are omitted because affinity '
-                'does not measure business fit.'
+                'Qloo supplied the audience tags and the local venues below. The '
+                f'{len(concepts)} business direction'
+                f'{"s" if len(concepts) != 1 else ""} '
+                'are CultureForge’s interpretation of that evidence, and each one names the '
+                'returned venue it was built from. Fit scores are omitted because affinity does '
+                'not measure business fit.'
             )
         else:
             # Abstain rather than pad the answer with catalog concepts.
@@ -941,6 +946,9 @@ class QlooHarnessProvider(CultureProvider):
         # The key is the content the model is shown, so the same brief finds
         # the same held names.
         key = canonical_key('llm_name', {
+            # The prompt is part of the answer: names held under an older
+            # prompt are not the names this prompt would produce.
+            'promptVersion': llm.PROMPT_VERSION,
             'brief': brief,
             'directions': [{'index': d['index'], 'name': d['currentName'],
                             'venues': [v['name'] for v in d['venues']]} for d in directions],

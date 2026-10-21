@@ -478,3 +478,19 @@ def test_without_a_model_the_rules_still_name_the_directions(monkeypatch, store,
     step = next(event for event in response.trace if event.step == 'name-the-directions')
     assert step.status == 'skipped'
     assert 'rule engine' in (step.detail or '')
+
+
+def test_a_claim_about_a_locality_qloo_did_not_establish_is_dropped():
+    """Qloo returned a city. It did not return a neighbourhood.
+
+    A tagline that says a place is "in the neighbourhood" is making a claim
+    the evidence does not carry, so it goes — the same way an invented
+    number goes.
+    """
+    answer = {'directions': [{'index': 0, 'name': 'The Reading Room',
+                              'tagline': 'Meet the neighbourhood where the gallery comes alive.'}]}
+    usable, dropped = llm.validate_directions(answer, EVIDENCE)
+    assert usable[0]['name'] == 'The Reading Room'
+    assert usable[0]['tagline'] is None
+    assert len(dropped) == 1
+    assert 'locality' in dropped[0]

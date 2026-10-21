@@ -62,16 +62,31 @@ export function AnchorTournament({
   const guess = guessDemographic(audience)
   const [choice, setChoice] = useState(() => CHOICES.find((entry) => entry.demographic === guess)?.demographic ?? 'millennials')
   const [ranking, setRanking] = useState<AnchorRanking | null>(null)
+  // What the ranking on screen was made for. When the controls change, the
+  // ranking is no longer the ranking of what is now selected, so it is
+  // dropped rather than presented under new settings.
+  const [rankedFor, setRankedFor] = useState<{ choice: string; location: string; options: string } | null>(null)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
+
+  const optionsKey = options.join('|')
 
   async function run() {
     if (!options.length) return
     setWorking(true); setError('')
+    const asked = { choice, location, options: optionsKey }
     try {
       const { rankAnchors } = await import('../api')
       const result = await rankAnchors(options, location, choice)
-      setRanking(result)
+      // A ranking that comes back after the controls moved is not the
+      // ranking of the current settings.
+      setRanking((current) => {
+        const stillCurrent = choice === asked.choice
+          && location === asked.location
+          && optionsKey === asked.options
+        return stillCurrent ? result : current
+      })
+      setRankedFor(asked)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The ranking could not be completed.')
     }
@@ -107,7 +122,7 @@ export function AnchorTournament({
             role="radio"
             aria-checked={entry.demographic === choice}
             className={`anchor-choice${entry.demographic === choice ? ' is-on' : ''}`}
-            onClick={() => { setChoice(entry.demographic); setRanking(null) }}
+            onClick={() => { setChoice(entry.demographic); setRanking(null); setRankedFor(null) }}
           >
             <b>{entry.label}</b>
             <i>{entry.note}</i>
@@ -121,7 +136,7 @@ export function AnchorTournament({
 
       {error && <p className="anchor-error" role="alert">{error}</p>}
 
-      {ranking && (
+      {ranking && rankedFor && rankedFor.choice === choice && rankedFor.location === location && (
         <div className="anchor-result">
           <ol className="anchor-list">
             {ranking.ranked.map((row) => (

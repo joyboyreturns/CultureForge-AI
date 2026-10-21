@@ -571,9 +571,10 @@
       return response.json();
     }
 
-    // Give the page a moment to settle before spending a request on it.
-    const timer = window.setTimeout(async function () {
+    async function runPulse() {
       pulse.hidden = false;
+      const retryButton = pulse.querySelector('[data-pulse-retry]');
+      if (retryButton) retryButton.hidden = true;
       try {
         const answer = await post('/api/projects/generate', brief);
         const directions = (answer.concepts || []).slice(0, 3);
@@ -604,6 +605,9 @@
         status.textContent = 'Now putting them on trial against the local evidence…';
         // The directions are already on screen. If the test cannot run, they
         // stay, and the note says why — the page never empties itself.
+        // Hand over the answer as soon as it exists. If the test cannot run,
+        // the studio still gets the exploration it was performed on.
+        window.__cultureforgeHandoff = { answer: answer, challenge: null };
         let tested = null;
         try {
           tested = await post('/api/projects/challenge', { project: brief });
@@ -653,11 +657,25 @@
         status.textContent = tested.summary || '';
         // Hand the studio the answer and the test that was run on it, so the
         // link below opens what was just shown.
+        // The hand-over now carries the test that was run on it, so the link
+        // below opens what was just shown.
         window.__cultureforgeHandoff = { answer: answer, challenge: tested };
       } catch (error) {
         fail(String(error && error.message ? error.message : error));
       }
-    }, 1400);
+    }
+
+    // A failure offers a way to try again, so the reader is never stranded.
+    const retryButton = pulse.querySelector('[data-pulse-retry]');
+    if (retryButton) {
+      retryButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        runPulse();
+      });
+    }
+
+    // Give the page a moment to settle before spending a request on it.
+    const timer = window.setTimeout(runPulse, 1400);
 
     window.addEventListener('cultureforge:show-landing', function () {
       window.clearTimeout(timer);

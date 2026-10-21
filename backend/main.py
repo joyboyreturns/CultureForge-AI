@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import json
+import os
+import secrets
 import time
 from typing import Optional
 from uuid import uuid4
@@ -16,9 +18,11 @@ from .llm import status as llm_status
 from .presentation import presentation_key
 from .selector import select as select_evidence
 from .models import (CompareAudiencesRequest, CompareRequest, ChallengeRequest,
-                     ErrorBody, ErrorResponse, EvidencePresentationRequest,
-                     GenerateResponse, ProjectRequest, ProvenanceMetadata,
-                     RankRequest, RecomposeRequest, ShareRequest)
+                     EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
+                     EvidencePresentationRequest, GenerateResponse,
+                     InvestigationRequest, ProjectRequest, ProvenanceMetadata,
+                     RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
+                     WherePopularRequest)
 from .platform import get_platform
 from . import metering
 from .investigation import FACET_QUESTIONS, FACETS, _bounds, _demographics, _geography_points, _workflow_for, investigate
@@ -278,11 +282,35 @@ async def meter_requests(request: Request, call_next):
     return response
 
 
+def _require_operator(request: Request) -> None:
+    """Whether the caller may provision and revoke.
+
+    These routes are for the operator, not for a founder. There is no account
+    system behind them, so they are closed by default: an operator token is
+    required when one is configured, and otherwise only a request from this
+    machine is allowed. A key presented by a partner is not an operator
+    credential — authentication is not authorisation.
+    """
+    token = os.getenv('CULTUREFORGE_OPERATOR_TOKEN', '').strip()
+    if token:
+        presented = request.headers.get('x-operator-token', '').strip()
+        if not secrets.compare_digest(presented, token):
+            raise HTTPException(status_code=401, detail='This route needs the operator token.')
+        return
+    host = request.client.host if request.client else ''
+    if host not in ('127.0.0.1', '::1', 'localhost'):
+        raise HTTPException(
+            status_code=403,
+            detail='This route is for the operator and is only open on this machine. '
+                   'Set CULTUREFORGE_OPERATOR_TOKEN to open it elsewhere.')
+
+
 @app.post('/api/workspaces', status_code=201, tags=['platform'],
           summary='Provision a workspace for a partner')
-def create_workspace(payload: dict) -> dict:
+def create_workspace(request: Request, payload: dict) -> dict:
     """Provision a workspace. The operator does this; there is no self-service
     signup, because there is no billing behind it yet."""
+    _require_operator(request)
     name = str(payload.get('name') or '').strip()
     if not name:
         raise HTTPException(status_code=422, detail='A workspace needs a name.')
@@ -291,8 +319,9 @@ def create_workspace(payload: dict) -> dict:
 
 @app.post('/api/workspaces/{workspace_id}/keys', status_code=201, tags=['platform'],
           summary='Issue an API key for a workspace')
-def issue_key(workspace_id: str, payload: dict) -> dict:
+def issue_key(request: Request, workspace_id: str, payload: dict) -> dict:
     """Issue an API key. The key is shown once, here, and never again."""
+    _require_operator(request)
     try:
         return get_platform().issue_key(
             workspace_id,
@@ -304,14 +333,17 @@ def issue_key(workspace_id: str, payload: dict) -> dict:
 
 @app.get('/api/workspaces/{workspace_id}/keys', tags=['platform'],
          summary='The keys issued for a workspace')
-def list_keys(workspace_id: str) -> dict:
+def list_keys(request: Request, workspace_id: str) -> dict:
+    _require_operator(request)
     return {'keys': get_platform().keys(workspace_id)}
 
 
 @app.delete('/api/workspaces/{workspace_id}/keys/{key_id}', status_code=204, tags=['platform'],
             summary='Revoke an API key')
-def revoke_key(workspace_id: str, key_id: str) -> Response:
-    if not get_platform().revoke_key(key_id):
+def revoke_key(request: Request, workspace_id: str, key_id: str) -> Response:
+    _require_operator(request)
+    # The key has to belong to the workspace the caller named.
+    if not get_platform().revoke_key(key_id, workspace_id):
         raise HTTPException(status_code=404, detail='That key does not exist.')
     return Response(status_code=204)
 
@@ -399,27 +431,21 @@ def render_markdown(payload: dict) -> str:
 
 @app.post('/api/projects/investigate', tags=['evidence'],
           summary='Investigate one direction: what does it still not know?')
-def investigate_route(request: dict) -> dict:
+def investigate_route(request: InvestigationRequest) -> dict:
     """Open the questions a direction has not answered yet, and answer them.
 
     The founder picks the direction and the questions. Each question is one
     named Qloo workflow, the answer records which workflow produced it, and
     every call is cached so a second look costs nothing.
     """
-    try:
-        project = ProjectRequest.model_validate(request.get('project') or {})
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail=f'The brief could not be read: {exc}') from exc
-    facets = [str(f) for f in (request.get('facets') or [])]
-    entity_ids = [str(e) for e in (request.get('entityIds') or []) if e]
     return investigate(
-        project,
-        direction_id=str(request.get('directionId') or '') or None,
-        entity_ids=entity_ids,
-        within=str(request.get('within') or request.get('project', {}).get('location') or 'United States'),
-        facets=facets,
-        seed_tag_ids=[str(t) for t in (request.get('seedTagIds') or [])] or None,
-        reference=str(request.get('reference') or '') or None,
+        request.project,
+        direction_id=request.directionId or None,
+        entity_ids=[entity for entity in request.entityIds if entity],
+        within=request.within or request.project.location or 'United States',
+        facets=list(request.facets),
+        seed_tag_ids=list(request.seedTagIds) or None,
+        reference=request.reference or None,
     )
 
 
@@ -457,46 +483,37 @@ def qloo_workflows() -> dict:
 
 
 @app.post('/api/qloo/describe', tags=['evidence'], summary='Resolve one entity and describe it')
-def qloo_describe(request: dict) -> dict:
+def qloo_describe(request: EntityRequest) -> dict:
     """Qloo's `describe` workflow: one named entity, and the metadata Qloo holds."""
-    entity = str(request.get('entity') or '').strip()
-    if not entity:
-        raise HTTPException(status_code=422, detail='Name the entity to describe.')
     provider = QlooHarnessProvider()
     envelope, cached, requests = provider.run_workflow_cached(
-        'describe', describe_payload(entity, request.get('entityType')))
+        'describe', describe_payload(request.entity, request.entityType))
     return _workflow_response('describe', envelope, cached, requests)
 
 
 @app.post('/api/qloo/entity-tags', tags=['evidence'], summary='The concepts that characterise entities')
-def qloo_entity_tags(request: dict) -> dict:
+def qloo_entity_tags(request: EntityListRequest) -> dict:
     """Qloo's `entity_tags` workflow."""
-    entities = [str(e) for e in (request.get('entities') or []) if e]
+    entities = [entity for entity in request.entities if entity]
     if not entities:
         raise HTTPException(status_code=422, detail='Name at least one entity.')
     provider = QlooHarnessProvider()
     envelope, cached, requests = provider.run_workflow_cached(
-        'entity_tags', entity_tags_payload(entities, request.get('entityType'), int(request.get('limit') or 10)))
+        'entity_tags', entity_tags_payload(entities, request.entityType, request.limit))
     return _workflow_response('entity_tags', envelope, cached, requests)
 
 
 @app.post('/api/qloo/where-popular', tags=['evidence'],
           summary='Where an entity has strong affinity, as geographic cells')
-def qloo_where_popular(request: dict) -> dict:
+def qloo_where_popular(request: WherePopularRequest) -> dict:
     """Qloo's `where_popular` workflow.
 
     The answer is a set of geographic cells for interest mapping. They are not
     the coordinates of venues.
     """
-    entity = str(request.get('entity') or '').strip()
-    within = str(request.get('within') or '').strip()
-    if not entity:
-        raise HTTPException(status_code=422, detail='Name the entity to map.')
-    if not within:
-        raise HTTPException(status_code=422, detail='Name the area to map it within.')
     provider = QlooHarnessProvider()
     envelope, cached, requests = provider.run_workflow_cached(
-        'where_popular', where_popular_payload(entity, within, request.get('entityType'), int(request.get('limit') or 20)))
+        'where_popular', where_popular_payload(request.entity, request.within, request.entityType, request.limit))
     response = _workflow_response('where_popular', envelope, cached, requests)
     points = _geography_points(envelope)
     response['points'] = points
@@ -508,14 +525,11 @@ def qloo_where_popular(request: dict) -> dict:
 
 @app.post('/api/qloo/audience-demographics', tags=['evidence'],
           summary='The demographic index for one entity')
-def qloo_audience_demographics(request: dict) -> dict:
+def qloo_audience_demographics(request: EntityRequest) -> dict:
     """Qloo's `audience_demographics` workflow."""
-    entity = str(request.get('entity') or '').strip()
-    if not entity:
-        raise HTTPException(status_code=422, detail='Name the entity to profile.')
     provider = QlooHarnessProvider()
     envelope, cached, requests = provider.run_workflow_cached(
-        'audience_demographics', audience_demographics_payload(entity, request.get('entityType'), int(request.get('limit') or 5)))
+        'audience_demographics', audience_demographics_payload(request.entity, request.entityType, request.limit))
     response = _workflow_response('audience_demographics', envelope, cached, requests)
     response['demographics'] = _demographics(envelope)
     return response
@@ -523,16 +537,15 @@ def qloo_audience_demographics(request: dict) -> dict:
 
 @app.post('/api/qloo/trends', tags=['evidence'],
           summary='Popularity over time for one to five entities')
-def qloo_trends(request: dict) -> dict:
+def qloo_trends(request: TrendsRequest) -> dict:
     """Qloo's `trends` workflow."""
-    entities = [str(e) for e in (request.get('entities') or []) if e]
+    entities = [entity for entity in request.entities if entity]
     if not entities:
         raise HTTPException(status_code=422, detail='Name at least one entity.')
     provider = QlooHarnessProvider()
     envelope, cached, requests = provider.run_workflow_cached('trends', trends_payload(
-        entities, str(request.get('entityType') or 'place'),
-        str(request.get('startDate') or ''), str(request.get('endDate') or ''),
-        int(request.get('limit') or 10)))
+        entities, request.entityType or 'place',
+        request.startDate, request.endDate, request.limit))
     return _workflow_response('trends', envelope, cached, requests)
 
 

@@ -1,5 +1,6 @@
+import datetime
 from typing import Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 BusinessType = Literal['Food & beverage', 'Retail', 'Hospitality', 'Wellness', 'Entertainment']
 
@@ -161,6 +162,64 @@ class EvidencePresentationRequest(BaseModel):
     returned, so nothing here can introduce a fact.
     """
     evidence: list[Evidence] = Field(default_factory=list, max_length=50)
+
+
+#: The Qloo entity types this API knows how to ask about.
+ENTITY_TYPES = ('place', 'movie', 'tv_show', 'podcast', 'person', 'book',
+                'music', 'game', 'brand', 'other')
+
+
+class EntityRequest(BaseModel):
+    """One named Qloo entity."""
+    entity: str = Field(min_length=1, max_length=240)
+    entityType: Optional[str] = Field(default=None, max_length=40)
+    limit: int = Field(default=10, ge=1, le=50)
+
+
+class EntityListRequest(BaseModel):
+    """One to five named Qloo entities."""
+    entities: list[str] = Field(min_length=1, max_length=5)
+    entityType: Optional[str] = Field(default=None, max_length=40)
+    limit: int = Field(default=10, ge=1, le=50)
+
+
+class WherePopularRequest(EntityRequest):
+    """One entity, and the area to map it within."""
+    within: str = Field(min_length=1, max_length=160)
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class TrendsRequest(EntityListRequest):
+    """Popularity over time, over a bounded date range.
+
+    The dates are Qloo's own format, and a malformed one is rejected here
+    rather than becoming a confusing upstream error later.
+    """
+    startDate: str = Field(default='', max_length=20)
+    endDate: str = Field(default='', max_length=20)
+    limit: int = Field(default=10, ge=1, le=50)
+
+    @field_validator('startDate', 'endDate')
+    @classmethod
+    def _a_real_date(cls, value: str) -> str:
+        if not value:
+            return value
+        try:
+            datetime.date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError('Dates must be written as YYYY-MM-DD.') from exc
+        return value
+
+
+class InvestigationRequest(BaseModel):
+    """Open the questions a direction has not answered yet."""
+    project: ProjectRequest
+    directionId: str = Field(default='', max_length=120)
+    entityIds: list[str] = Field(default_factory=list, max_length=25)
+    reference: str = Field(default='', max_length=120)
+    within: str = Field(default='', max_length=160)
+    facets: list[str] = Field(default_factory=list, max_length=10)
+    seedTagIds: list[str] = Field(default_factory=list, max_length=10)
 
 
 class ChallengeRevision(BaseModel):

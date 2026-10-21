@@ -60,6 +60,10 @@ ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 #: model's wording, never a wrong number.
 DEFAULT_MODEL = 'cohere/north-mini-code:free'
 
+#: The version of the naming prompt. It is part of the cache key, so a
+#: change to the rules invalidates the names held under the old ones.
+PROMPT_VERSION = 'naming-2'
+
 #: The free models this project knows about. Free models are pulled from time
 #: to time — several of these already answer 404 — which is why there is
 #: more than one and why the router is in the chain.
@@ -694,6 +698,20 @@ def _clean_text(value, *, limit: int, min_length: int = 2, min_words: int = 1) -
     return text
 
 
+#: The words that assert where a place is, in a way this app cannot
+#: support. Qloo returned a city and a region; it did not return a
+#: neighbourhood, a borough or a district, and a tagline that says so is
+#: making a claim the evidence does not carry.
+_LOCALITY_WORDS = ('neighbourhood', 'neighborhood', 'borough', 'district',
+                   'uptown', 'downtown')
+
+
+def _asserts_an_unverified_locality(text: str) -> bool:
+    """Whether the text claims a locality the evidence does not establish."""
+    lowered = text.lower()
+    return any(word in lowered for word in _LOCALITY_WORDS)
+
+
 def _numbers_are_allowed(text: str, source_names: set[str]) -> bool:
     """Whether a piece of model-written text may carry a number.
 
@@ -736,6 +754,16 @@ def validate_directions(answer: dict, evidence: list[dict]) -> tuple[dict[int, d
             if text and not _numbers_are_allowed(text, source_names):
                 dropped.append(
                     f'direction {index}: the {field} carried a number Qloo did not return for it')
+                if field == 'name':
+                    name = None
+                else:
+                    tagline = None
+                continue
+            if text and _asserts_an_unverified_locality(text):
+                # A place is not known to be in a neighbourhood, a borough or
+                # a district, because the response carried a city.
+                dropped.append(
+                    f'direction {index}: the {field} claimed a locality Qloo did not establish')
                 if field == 'name':
                     name = None
                 else:

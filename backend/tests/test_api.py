@@ -82,3 +82,61 @@ def test_a_missing_snapshot_is_a_404(client):
 
 def test_an_unknown_research_run_is_a_404(client):
     assert client.get('/api/research/runs/run-nope').status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# The operator routes
+#
+# There is no account system behind them, so they are closed to anyone who
+# is not the operator. A partner's key is not an operator credential:
+# authentication is not authorisation.
+# ---------------------------------------------------------------------------
+
+def test_the_operator_routes_are_closed_to_a_remote_caller(client):
+    for method, path, body in (
+        ('post', '/api/workspaces', {'name': 'Someone Else'}),
+        ('post', '/api/workspaces/ws-nope/keys', {}),
+        ('get', '/api/workspaces/ws-nope/keys', None),
+        ('delete', '/api/workspaces/ws-nope/keys/key-nope', None),
+    ):
+        response = getattr(client, method)(path, json=body) if body is not None \
+            else getattr(client, method)(path)
+        assert response.status_code in (401, 403), f'{method} {path} -> {response.status_code}'
+
+
+def test_the_operator_routes_open_with_the_operator_token(client, monkeypatch):
+    monkeypatch.setenv('CULTUREFORGE_OPERATOR_TOKEN', 'operator-secret')
+    response = client.post('/api/workspaces', json={'name': 'A Partner'},
+                            headers={'x-operator-token': 'operator-secret'})
+    assert response.status_code == 201
+    # And a wrong token is refused.
+    refused = client.post('/api/workspaces', json={'name': 'A Partner'},
+                           headers={'x-operator-token': 'wrong'})
+    assert refused.status_code == 401
+
+
+def test_a_key_cannot_be_revoked_from_another_workspace(client, monkeypatch):
+    """The workspace in the path has to be the one that owns the key."""
+    monkeypatch.setenv('CULTUREFORGE_OPERATOR_TOKEN', 'operator-secret')
+    headers = {'x-operator-token': 'operator-secret'}
+    workspace = client.post('/api/workspaces', json={'name': 'Mine'}, headers=headers).json()
+    other = client.post('/api/workspaces', json={'name': 'Theirs'}, headers=headers).json()
+    issued = client.post(f"/api/workspaces/{workspace['id']}/keys", json={}, headers=headers).json()
+
+    refused = client.delete(f"/api/workspaces/{other['id']}/keys/{issued['id']}", headers=headers)
+    assert refused.status_code == 404
+    # And the right workspace can.
+    allowed = client.delete(f"/api/workspaces/{workspace['id']}/keys/{issued['id']}", headers=headers)
+    assert allowed.status_code == 204
+
+
+def test_a_malformed_workflow_body_is_a_readable_422(client):
+    """A string where a list was meant must not reach the provider."""
+    for path, body in (
+        ('/api/qloo/entity-tags', {'entities': 'a-string-not-a-list'}),
+        ('/api/qloo/trends', {'entities': ['a'], 'startDate': 'not-a-date'}),
+        ('/api/qloo/describe', {'entity': 'x', 'limit': 'not-a-number'}),
+    ):
+        response = client.post(path, json=body)
+        assert response.status_code == 422, f'{path} -> {response.status_code}'
+        assert response.json()['detail']
