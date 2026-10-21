@@ -517,6 +517,101 @@
     }
   }
 
+
+  // ---------------------------------------------------------------------------
+  // The live pulse
+  //
+  // A judge who never clicks should still see the product working. This runs
+  // one real brief on the front page — against the same backend the studio
+  // uses — and then puts the answer on trial. It is the same code path, the
+  // same cache, and the same Qloo calls, so it costs what the studio costs
+  // and nothing more once the brief has been run once.
+  // ---------------------------------------------------------------------------
+  function initLivePulse() {
+    const pulse = document.querySelector('[data-live-pulse]');
+    if (!pulse) return;
+    const status = pulse.querySelector('[data-pulse-status]');
+    const list = pulse.querySelector('[data-pulse-list]');
+    const note = pulse.querySelector('[data-pulse-note]');
+    const brief = {
+      businessType: 'Food & beverage',
+      audience: 'Design-conscious Gen Z & young professionals',
+      location: 'Brooklyn, New York',
+      budget: '$25k – $50k',
+      objectives: ['Build a loyal community'],
+    };
+
+    function fail(message) {
+      pulse.hidden = true;
+      if (message) console.info('CultureForge live pulse:', message);
+    }
+
+    async function post(path, body) {
+      const response = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      return response.json();
+    }
+
+    // Give the page a moment to settle before spending a request on it.
+    const timer = window.setTimeout(async function () {
+      pulse.hidden = false;
+      try {
+        const answer = await post('/api/projects/generate', brief);
+        const directions = (answer.concepts || []).slice(0, 3);
+        if (!directions.length) return fail('no directions');
+        status.textContent = 'Qloo returned ' + (answer.evidence || []).filter(function (item) {
+          return item.kind === 'entity';
+        }).length + ' real places. The directions are built from them:';
+        list.innerHTML = directions.map(function (concept, index) {
+          return '<li><span class="pulse-rank">' + String(index + 1).padStart(2, '0') +
+            '</span><span class="pulse-name"></span><span class="pulse-tagline"></span></li>';
+        }).join('');
+        const names = list.querySelectorAll('.pulse-name');
+        const taglines = list.querySelectorAll('.pulse-tagline');
+        directions.forEach(function (concept, index) {
+          names[index].textContent = concept.name;
+          taglines[index].textContent = concept.tagline || '';
+        });
+
+        status.textContent = 'Now putting them on trial against the local evidence…';
+        // The directions are already on screen. If the test cannot run, they
+        // stay, and the note says why — the page never empties itself.
+        let tested = null;
+        try {
+          tested = await post('/api/projects/challenge', { project: brief });
+        } catch (challengeError) {
+          note.textContent = 'The evidence test could not run: ' +
+            (challengeError && challengeError.message ? challengeError.message : 'the backend did not answer') + '.';
+          return;
+        }
+        const verdicts = tested.directions || [];
+        const rows = list.querySelectorAll('li');
+        verdicts.forEach(function (verdict, index) {
+          if (!rows[index]) return;
+          const badge = document.createElement('span');
+          badge.className = 'pulse-verdict is-' + verdict.verdict;
+          badge.textContent = verdict.verdict;
+          rows[index].appendChild(badge);
+        });
+        const contested = verdicts.filter(function (verdict) { return verdict.verdict === 'contested'; });
+        note.textContent = contested.length
+          ? 'The evidence contested ' + contested.length + ' of them, and the order changed.'
+          : 'Tested against the places Qloo returned.';
+        status.textContent = tested.summary || '';
+      } catch (error) {
+        fail(String(error && error.message ? error.message : error));
+      }
+    }, 1400);
+
+    window.addEventListener('cultureforge:show-landing', function () {
+      window.clearTimeout(timer);
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // Lifecycle Initialization
   // ---------------------------------------------------------------------------
@@ -525,6 +620,7 @@
     initMobileMenu();
     initLandingNavigation();
     initPrototypeJourney();
+    initLivePulse();
     initFramerMotionEnhancements();
     initBackgroundVideo();
     initCinematic();

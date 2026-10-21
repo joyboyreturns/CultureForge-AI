@@ -46,3 +46,16 @@ def store(tmp_path, monkeypatch):
     monkeypatch.setattr(evidence_store, 'SNAPSHOT_FILE', tmp_path / 'snapshots.json')
     monkeypatch.setattr(evidence_store, '_store', None)
     return evidence_store.get_store()
+
+
+@pytest.fixture(autouse=True)
+def no_model_calls(monkeypatch):
+    """The suite never calls a model.
+
+    The free tier is 50 requests a day, and a test that reached the network
+    would spend part of it every time the suite ran. The naming layer is off
+    for every test; the ones that care about it switch it back on themselves.
+    """
+    from backend import llm
+
+    monkeypatch.setattr(llm, 'is_configured', lambda: False)

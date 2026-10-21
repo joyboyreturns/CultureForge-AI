@@ -40,11 +40,13 @@ STATUS_FAILED = 'failed'
 class ResearchRun:
     """One research run, and the trace it produced."""
 
-    def __init__(self, project: ProjectRequest, audience: Optional[str] = None):
+    def __init__(self, project: ProjectRequest, audience: Optional[str] = None,
+                 workspace_id: Optional[str] = None):
         self.id = f'run-{uuid.uuid4().hex[:12]}'
         self.created_at = time.time()
         self.project = project
         self.audience = audience or project.audience
+        self.workspace_id = workspace_id
         self.status = STATUS_RUNNING
         self.events: list[dict] = []
         self.result: Optional[dict] = None
@@ -125,14 +127,36 @@ def _event(run: ResearchRun, step: str, envelope: dict, *, status: str = 'ok',
 
 def start_research(project: ProjectRequest, audience: Optional[str] = None,
                    seed_tag_ids: Optional[list[str]] = None,
-                   allowance: int = DEFAULT_RUN_ALLOWANCE) -> ResearchRun:
+                   allowance: int = DEFAULT_RUN_ALLOWANCE,
+                   workspace_id: Optional[str] = None) -> ResearchRun:
     """Start a run in the background and return it immediately."""
-    run = ResearchRun(project, audience)
+    run = ResearchRun(project, audience, workspace_id)
     run.seed_tag_ids = list(seed_tag_ids or [])
     registry.add(run)
     thread = threading.Thread(target=_execute, args=(run, allowance), daemon=True)
     thread.start()
     return run
+
+
+def _save_exploration(run: ResearchRun, response) -> None:
+    """Keep the run's answer in the workspace, the way the direct route does.
+
+    A run that is answered is an exploration, and it belongs to whoever asked
+    for it. Saving must never break the run, so every failure here is
+    swallowed: the answer still reaches the founder.
+    """
+    if not run.workspace_id:
+        return
+    try:
+        from .platform import get_platform
+        get_platform().save_exploration(
+            run.workspace_id, response.model_dump(),
+            title=f"{run.project.businessType} for {run.project.audience}",
+            brief=run.project.model_dump(),
+            project_id=response.projectId,
+            delivery=response.delivery.model_dump() if response.delivery else None)
+    except Exception:  # noqa: BLE001 - saving must never break an answer
+        pass
 
 
 def _execute(run: ResearchRun, allowance: int) -> None:
@@ -252,6 +276,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
         run.result = response.model_dump()
         run.status = STATUS_COMPLETE
+        _save_exploration(run, response)
 
     except QlooHarnessError as exc:
         run.status = STATUS_FAILED

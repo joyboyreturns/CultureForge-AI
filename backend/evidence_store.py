@@ -111,6 +111,17 @@ class EvidenceStore:
             entry = self._cache.get(key) or {}
             return int(entry.get('transportRequests', 0))
 
+    def discard(self, key: str) -> None:
+        """Drop an entry.
+
+        A failure must not be held. If the model could not be reached, the
+        next run should try again rather than be told for a day that the
+        answer is the empty one.
+        """
+        with self._lock:
+            if self._cache.pop(key, None) is not None:
+                self._persist_cache()
+
     # ------------------------------------------------------- single flight
     def acquire(self, key: str) -> bool:
         """Claim the right to make the upstream call. False if someone else has it."""

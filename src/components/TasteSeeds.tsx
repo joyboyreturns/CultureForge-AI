@@ -29,11 +29,21 @@ export function TasteSeeds({
   return (
     <div className="taste-seeds">
       <span className="small-cap"><span className="orange-dot" /> THE AUDIENCE QLOO RESOLVED</span>
-      <h3>These are the cultural signals we will query.</h3>
+      <h3>{candidates.length ? 'These are the cultural signals we will query.' : 'Your audience did not resolve into signals.'}</h3>
       <p className="taste-seeds-note">
-        “{audience}” resolved to {candidates.length} Qloo {candidates.length === 1 ? 'signal' : 'signals'}.
-        Drop anything that is not really your audience.
+        {candidates.length
+          ? `“${audience}” resolved to ${candidates.length} Qloo ${candidates.length === 1 ? 'signal' : 'signals'}. Drop anything that is not really your audience.`
+          : `Qloo did not match “${audience}” to a cultural signal. Describe the audience by what they do or care about — or let the agent resolve it from the brief and the neighbourhood.`}
       </p>
+
+      {candidates.length === 0 && (
+        <div className="taste-seed-empty">
+          <p>
+            The research agent can still run: it resolves the audience from the brief and the
+            places Qloo returns for the location, and says what it found.
+          </p>
+        </div>
+      )}
 
       <ul className="taste-seed-list">
         {candidates.map((candidate) => {
@@ -62,9 +72,13 @@ export function TasteSeeds({
         <button
           className="button button-primary"
           onClick={() => onConfirm(selected)}
-          disabled={busy || selected.length === 0}
+          disabled={busy || (candidates.length > 0 && selected.length === 0)}
         >
-          {busy ? 'Researching…' : `Research with ${selected.length} ${selected.length === 1 ? 'signal' : 'signals'}`}
+          {busy
+            ? 'Researching…'
+            : candidates.length === 0
+              ? 'Let the agent resolve it'
+              : `Research with ${selected.length} ${selected.length === 1 ? 'signal' : 'signals'}`}
         </button>
       </div>
     </div>

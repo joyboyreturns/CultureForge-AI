@@ -9,9 +9,9 @@
  *
  * It checks:
  *   1. GET  /api/health          -> the provider mode shape
- *   2. POST /api/projects/generate -> a live or mock response against the contract
- *   3. the frontend's own mockGenerate() -> the fallback payload against the
- *      same contract, so the fallback path cannot drift either
+ *   2. POST /api/projects/generate -> a live response against the contract
+ *   3. the frontend's API module -> it has no mock fallback, so what the
+ *      studio shows is what Qloo returned
  *   4. the error shapes the UI depends on (422 validation, 502 provider)
  *
  * Usage:
@@ -21,6 +21,13 @@
 
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:8000';
 const DEV_URL = process.env.DEV_URL || 'http://localhost:5173';
+
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const PROJECT_ROOT = new URL('..', import.meta.url);
+const SRC_API = fileURLToPath(new URL('src/api.ts', PROJECT_ROOT));
+const SRC_APP = fileURLToPath(new URL('src/App.tsx', PROJECT_ROOT));
 
 const BUSINESS_TYPES = ['Food & beverage', 'Retail', 'Hospitality', 'Wellness', 'Entertainment'];
 
@@ -112,6 +119,7 @@ const CONTRACT = {
     servedAt: { type: 'string', nullable: true },
     expiresAt: { type: 'string', nullable: true },
     transportRequests: { type: 'number', nullable: true },
+    cachedIn: { type: 'string', oneOf: ['browser', 'server'], nullable: true },
   },
   ProvenanceMetadata: {
     source: { type: 'string', oneOf: ['Qloo API', 'Mock'], required: true },
@@ -286,11 +294,14 @@ async function main() {
     const response = await fetch(`${BASE_URL}/api/health`);
     health = await response.json();
     if (response.status !== 200) fail('GET /api/health', `expected 200, got ${response.status}`);
-    if (health.status !== 'ok') fail('GET /api/health', `status is "${health.status}"`);
-    if (!['live', 'mock'].includes(health.dataMode)) {
-      fail('GET /api/health', `dataMode is "${health.dataMode}", expected live or mock`);
+    if (health.status !== 'ok') fail('GET /api/health', `status is "${health.status}": ${health.reason ?? ''}`);
+    if (health.dataMode !== 'live') {
+      fail('GET /api/health', `dataMode is "${health.dataMode}", expected live`);
     }
-    console.log(`[ok]   GET /api/health -> ${health.dataMode}`);
+    if (health.providerReady === false) {
+      fail('GET /api/health', `the backend cannot answer with live evidence: ${health.reason ?? 'no reason given'}`);
+    }
+    console.log(`[ok]   GET /api/health -> ${health.dataMode}, ${health.workflows?.length ?? 0} workflows`);
   } catch (error) {
     fail('GET /api/health', `not reachable at ${BASE_URL} (${error.message})`);
   }
@@ -325,26 +336,21 @@ async function main() {
     fail('POST /api/projects/generate', error.message);
   }
 
-  // 4. the frontend's own mock payload
+  // 4. the frontend has no mock fallback
   try {
-    // Node cannot import over http, so pull the Vite-transformed modules and
-    // inline the JSON catalog as a data: URL.
-    const catalogSource = await (await fetch(`${DEV_URL}/shared/mockCatalog.json?import`)).text();
-    const catalogUrl =
-      'data:text/javascript;base64,' + Buffer.from(catalogSource, 'utf8').toString('base64');
-    const mockSource = await (await fetch(`${DEV_URL}/src/mockData.ts`)).text();
-    const patched = mockSource.replace(
-      /(["'])(\/shared\/mockCatalog\.json\?import)\1/,
-      (_match, quote) => `${quote}${catalogUrl}${quote}`
-    );
-    const module = await import(
-      'data:text/javascript;base64,' + Buffer.from(patched, 'utf8').toString('base64')
-    );
-    const mock = module.mockGenerate(SAMPLE);
-    checkResponse('frontend mockGenerate', mock);
-    console.log(`[ok]   frontend mockGenerate -> ${mock.dataMode}, ${mock.concepts?.length} concepts`);
+    const api = readFileSync(SRC_API, 'utf8');
+    const app = readFileSync(SRC_APP, 'utf8');
+    if (/mockGenerate|mockData/.test(api) || /mockGenerate|mockData/.test(app)) {
+      fail('frontend mock fallback', 'the studio still reaches for a mock generator');
+    } else if (!/export async function generateConcepts/.test(api)) {
+      fail('frontend mock fallback', 'src/api.ts no longer exports generateConcepts');
+    } else if (!/export function heldResult/.test(api)) {
+      fail('frontend mock fallback', 'src/api.ts no longer holds real answers for the browser');
+    } else {
+      console.log('[ok]   the frontend has no mock fallback -> real data, or a stated error');
+    }
   } catch (error) {
-    fail('frontend mockGenerate', `${error.message} (is the dev server on ${DEV_URL}?)`);
+    fail('frontend mock fallback', error.message);
   }
 
   // 5. the error shape the UI depends on

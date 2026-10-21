@@ -85,7 +85,16 @@ export function Investigation({
       <button className="icon-button" onClick={onClose} aria-label="Close the investigation">✕</button>
     </header>
 
-    {!facets.length && !report && (
+    {!facets.length && !report && !entityIds.length && (
+      <div className="investigation-intro">
+        <p>
+          This direction does not rest on a place Qloo returned, so there is nothing to
+          investigate yet. Run the research again, or close this and pick another direction.
+        </p>
+      </div>
+    )}
+
+    {!facets.length && !report && entityIds.length > 0 && (
       <div className="investigation-intro">
         <p>
           This direction rests on the venues Qloo returned. Three things about it

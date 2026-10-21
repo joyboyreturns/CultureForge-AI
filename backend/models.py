@@ -74,14 +74,21 @@ class TraceEvent(BaseModel):
     resultExcerpt: Optional[list[str]] = None
 
 class Delivery(BaseModel):
-    """How fresh the evidence is. The UI must label this honestly."""
-    kind: Literal['fresh', 'cache', 'snapshot', 'mock'] = 'mock'
+    """How fresh the evidence is. The UI must label this honestly.
+
+    `mock` stays in the union so a snapshot taken before the live-only
+    switch still loads; nothing produces it any more.
+    """
+    kind: Literal['fresh', 'cache', 'snapshot', 'mock'] = 'fresh'
     acquiredAt: Optional[str] = None
     servedAt: Optional[str] = None
     expiresAt: Optional[str] = None
     # How many upstream requests this result actually cost. Evidence that was
     # already held cost nothing, and the number says so.
     transportRequests: Optional[int] = None
+    # Where the answer was held: this server's evidence store, or the
+    # browser. The studio says so rather than guessing.
+    cachedIn: Optional[Literal['browser', 'server']] = None
 
 class Concept(BaseModel):
     id: str
@@ -142,6 +149,16 @@ class RecomposeRequest(BaseModel):
     project: ProjectRequest
     excludeEntityIds: list[str] = Field(default_factory=list)
     excludeTagIds: list[str] = Field(default_factory=list)
+
+
+class ChallengeRequest(BaseModel):
+    """Test a direction against the local evidence."""
+    project: ProjectRequest
+    #: Which direction to test. Empty tests every direction in the answer.
+    directionId: str = ''
+    #: Hold the claim to a different anchor: the same direction, built around
+    #: a different place. The verdict then answers for that one.
+    anchorEntityId: str = ''
 
 
 # ---------------------------------------------------------------------------

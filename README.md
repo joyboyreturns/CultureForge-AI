@@ -1,14 +1,14 @@
 # CultureForge AI
 
-An interactive prototype for turning a founder’s audience and business idea into cultural signals and concept directions. Mock mode works without Qloo access. When configured, the FastAPI backend can use the official Qloo Hackathon Kit CLI for live aggregate cultural signals.
+An interactive prototype for turning a founder’s audience and business idea into cultural signals and concept directions. The studio answers with live Qloo evidence: the FastAPI backend drives the official Qloo Hackathon Kit CLI, and there is no mock data anywhere in the product.
 
 ## Stack
 
 - React, TypeScript, Vite, Tailwind CSS
 - FastAPI with Pydantic request/response contracts
-- `CultureProvider` abstraction with `MockCultureProvider` and optional `QlooHarnessProvider`
+- `CultureProvider` abstraction with `QlooHarnessProvider` (the product) and `MockCultureProvider` (the test fixture only)
 
-The Qloo adapter uses the public `qloo exec find_tags` and `qloo exec recommend` workflows; it does not invent endpoints or query fields. The adapter makes at most two Qloo calls per uncached generation and caches results in memory for 24 hours. Mock concepts are generated from a shared catalog for food and beverage, retail, hospitality, wellness, and entertainment. Explicit audience keywords select a family, creative, mindful, value, professional, discovery, or general mock lens. That lens changes concept names, offerings, delivery choices, cultural hypotheses, and experience blueprints. Unmatched audiences use the supplied brief without inferred preferences. Location, objectives, and budget inform the pilot notes and illustrative pilot cost bands. Qloo signals, when live, are shown separately from these mock concepts. Scenario comparisons remain illustrative.
+The Qloo adapter uses the public `qloo exec find_tags` and `qloo exec recommend` workflows; it does not invent endpoints or query fields. The adapter makes at most two Qloo calls per uncached generation and caches results in memory for 24 hours. The studio has no mock path: if the backend cannot reach Qloo, it says so and the founder is told what to fix, rather than being shown a rule-based fiction that looks like data. The mock provider survives only as the offline fixture the test suite runs against (`CULTUREFORGE_PROVIDER=mock`), so the HTTP contract can be checked without spending quota.
 
 Keep credentials in the backend environment or Qloo CLI's private configuration. Never put a Qloo key in Vite client variables, source control, or command arguments.
 
@@ -35,7 +35,7 @@ Start the frontend in a second terminal:
 npm run dev
 ```
 
-Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAPI. If the API is unavailable, the frontend uses labeled sample data.
+Open the local Vite URL printed by the dev server. Vite proxies `/api` to FastAPI. If the API is unavailable, the studio says so and asks for a retry — it never falls back to sample data.
 
 ## Entry points
 
@@ -81,7 +81,7 @@ python3 scripts/check_api.py --live     # opt in to a single test request
 Hackathon keys carry rate and monthly limits that Qloo does not publish. Two guards keep this project from exhausting them:
 
 - **Request timeout.** The stock `qloo exec` client caps each HTTP attempt at 20s, but `/v2/insights` needs roughly 25s against the hackathon environment. Every live request would time out, retry three times, and burn three calls for no result. `scripts/qloo_exec.mjs` reuses the harness's own client with an explicit timeout (`QLOO_REQUEST_TIMEOUT_MS`, default 60000) and no blind retries. It is a drop-in replacement for the `qloo` binary and the backend prefers it automatically.
-- **Call budget.** `QLOO_MAX_CALLS_PER_HOUR` (default 20) and `QLOO_MAX_CALLS_PER_DAY` (default 100) bound how many Qloo workflows the backend may issue. The budget is checked *before* each request, so an exhausted budget pauses live signals instead of spending the quota. Usage is tracked in `~/.cache/cultureforge/qloo_calls.json`.
+- **Call budget.** `QLOO_MAX_CALLS_PER_HOUR` (default 30) and `QLOO_MAX_CALLS_PER_DAY` (default 150) bound how many Qloo workflows the backend may issue. A brief costs two calls, so that is fifteen briefs an hour and seventy-five a day for everyone at once. The budget is checked *before* each request, so an exhausted budget pauses live signals instead of spending the quota. Usage is tracked in `~/.cache/cultureforge/qloo_calls.json`.
 
 ### Running with live data
 
@@ -89,9 +89,9 @@ Hackathon keys carry rate and monthly limits that Qloo does not publish. Two gua
 CULTUREFORGE_PROVIDER=qloo uvicorn backend.main:app --reload --port 8000
 ```
 
-The harness can also read `QLOO_API_KEY` from the backend process environment. Do not expose this variable through `VITE_*` variables. With no key and the default `auto` provider mode, the backend uses mock data. If a configured Qloo request fails, the API returns an error; it does not silently relabel the response as live or substitute mock data.
+The harness can also read `QLOO_API_KEY` from the backend process environment. Do not expose this variable through `VITE_*` variables. With no key, the default `auto` provider mode refuses to answer rather than substituting mock data: the request comes back as a 503 with the reason, and `GET /api/health` reports `providerReady: false` and says what is missing. If a configured Qloo request fails, the API returns an error; it does not silently relabel the response as live or substitute mock data.
 
-Responses are cached in memory for 24 hours per business type, audience, and location, so repeated requests for the same project do not re-spend quota. Qloo's API terms limit how long returned data may be retained — the in-memory cache is deliberately not written to disk.
+Responses are cached in memory for 24 hours per business type, audience, and location, so repeated requests for the same project do not re-spend quota. The evidence store also writes the envelopes to disk under `~/.cache/cultureforge`, so a restart does not lose what the demo already paid for, and the studio holds the composed answer in the browser for 12 hours on top of that — a reload paints the same exploration instantly, labelled as held rather than fetched.
 
 ## Prototype journey
 
@@ -105,11 +105,11 @@ Responses are cached in memory for 24 hours per business type, audience, and loc
 8. **Change the lens.** Compare the two audiences with Qloo's own A/B, or rank the returned places against a demographic to pick the anchor.
 9. **Investigate a direction.** Open the questions that direction has not answered — where does it concentrate, do the venues share a cultural signature, who is indexed against it — and see the tools the agent used, what it found, and what it could not establish.
 
-Mock-mode signals and all concept-fit scores, narratives, and scenario deltas are illustrative demo content, not validated business advice. In live mode, only the separate cultural signal list comes from Qloo. Qloo outputs describe aggregate affinities, not individual preferences or guaranteed behavior. See the [Qloo Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) API access and safe-use guidance before using live data.
+Concept narratives, pilot-budget bands and implementation notes are CultureForge's reading of Qloo evidence, not validated business advice. Qloo outputs describe aggregate affinities, not individual preferences or guaranteed behavior. See the [Qloo Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) API access and safe-use guidance before using live data.
 
 ## Studio interface
 
-The interface includes persistent dark and light themes, a guided demo, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab includes audience presets and adjustable preference sliders; its scores are an explicitly illustrative model. Theme and saved concepts persist across reloads, while exploration data stays in memory for the prototype.
+The interface includes persistent dark and light themes, a live example brief, a saved-concept collection (stored locally in the browser), concept blueprint dialogs, a concept comparison matrix, evidence tabs, and a Markdown brief export. The scenario lab holds no local score model: it asks Qloo to research the new audience and to run its own A/B between the two groups of venues, and the chart that used to shift fit scores locally is gone because it was not a measurement. Theme and saved concepts persist across reloads, as does the last real answer, which the browser holds for twelve hours.
 
 The studio's own decision loop is **Investigate**: pick a direction, open the
 questions it has not answered, and let the agent answer them with named Qloo
@@ -170,23 +170,102 @@ audience text
 - **The audience lens** is the set of Qloo tags `find_tags` resolves for the founder's audience description. A brief about "mindful professionals" resolves to `mindful_dining` and `mindful_nutrition`; a brief about "design-conscious Gen Z" resolves to `gen_z_foodies` and `modern_restaurant_design`. These tags select which business direction the composer builds.
 - **The local evidence** is the set of venues `recommend` returns for the location, each with its real name, description, popularity, affinity, local rating, price level, geocode and image. Every concept cites the venue it was built from.
 - **The business reading** is CultureForge's, and is labelled as such. `backend/concept_composer.py` holds the rules; every proposal records the evidence it came from, and the UI shows them under "Why this direction?".
+- **The verdict is not CultureForge's opinion.** `backend/challenge.py` puts each direction on trial against the local evidence with two more Qloo workflows, and a direction can come out contested. The order the directions are shown in afterwards is the order the evidence leaves them in, not the order they arrived in.
 - **No invented scores.** An evidence-composed concept has no audience-fit percentage, because Qloo's affinity does not measure business fit. The UI says so rather than showing a number that means nothing.
 - **Abstention beats padding.** If the evidence does not support three distinct directions, the app returns fewer and says why, rather than filling the gap with catalog concepts.
 - **A dead end is not a dead end.** Some places Qloo simply cannot resolve — "Greenpoint, Brooklyn" comes back empty. The app says which location failed, and, if it already holds places for the same signals somewhere else, offers that location as a one-click way forward. The suggestion is only ever a location Qloo actually returned places for, so it is evidence rather than a guess, and taking it spends no request.
 
 The scenario lab re-researches for real. Changing the audience calls `POST /api/projects/compare`, which runs the same two Qloo workflows against the new audience and returns fresh evidence and freshly composed directions — not a locally computed score shift.
 
+### Naming the directions with a free model
+
+The composer is a rule engine. A direction inherits the recipe's name, so every brief that unlocks the same recipe gets the same title — "The Design Floor" twice, for two different cities. That is the one place where the answer reads as though it was written before the venue was known.
+
+An optional layer fixes it. A free model writes the **name**, the **tagline**, and **one sentence of why this audience fits this place**. It is given the audience signals and the venues the direction is built from — and **no numbers at all**, so it cannot quote one. Anything else it writes is discarded: a number that Qloo did not return, a citation, a field that is too long or too short. The rules keep every decision: which tags, which venues, which facet, which evidence each decision cites.
+
+It is free, and it stays free:
+
+- The key comes from [openrouter.ai/keys](https://openrouter.ai/keys) and needs no credit. `OPENROUTER_MODEL=cohere/north-mini-code:free` is the model that answers this prompt; `openrouter/free` (the Free Models Router) is in the fallback chain.
+- **The model is refused if it is not a free one.** A paid model in the fallback chain is billed by OpenRouter, so `backend/llm.py` keeps the chain free-only and refuses anything else.
+- The free tier allows 50 requests a day — 1000 once $10 of credits is on the account. So the model is a **cache, not a service**: one call per brief, held in the same evidence store as the Qloo envelopes, and a repeated brief costs nothing. The local guard sits at the tier's own limit (20 an hour, 50 a day), so a judge can work through the whole allowance and no further.
+- Without a key, or when the tier is spent, or when the model is late, the rule engine's wording is used and the trace says which happened: `name-the-directions → skipped`.
+
+### The evidence test — the part that can come back with a no
+
+Every tool that reads an API answers with what the API holds. This one asks the harder question, and it is built so the answer can be **no**.
+
+The composer produces three directions. `POST /api/projects/challenge` puts them on trial against the local evidence, with two checks:
+
+1. **Does the audience pull toward this place?** (`rank`) Qloo ranks the neighbourhood's real venues for this audience's cultural signals. A direction built around the place that ranks *last* is a direction the audience does not pull toward.
+2. **Is there room, or a fight?** (`compare_audiences`) The place the direction is built on is compared with the rest of the neighbourhood. Qloo's tag URNs carry their family, and the family is what makes this readable: a `genre` or `category` tag says what the place **is** — every place has one — while `cuisine`, `ambience`, `good_for`, `inclusivity` or `activities` says what culture **happens** there. An anchor that carries only the first kind brings nothing the neighbourhood does not already have: it is the same crowd in a different room.
+
+The verdict is deliberately narrow, and the reason for it is the evidence that decided it:
+
+| Verdict | What it means |
+|---|---|
+| `Anchor fit supported` | It passes the checks that could be run, within the evidence that was retrieved. |
+| `Anchor fit contested` | The evidence contradicts a specific premise, and the premise is named. |
+| `Unproven` | There was not enough retrieved evidence to say either way. |
+
+**The scope is stated, because it is narrow.** The verdict says whether the *audience–anchor fit* holds — whether the audience pulls toward the place the direction is built around, and whether that place brings a cultural signal the neighbourhood does not already have. It does **not** say the business is good, and the panel says so in as many words. A high-scoring place is not a high-scoring business, and a judge who reads the scope line knows it.
+
+**The decision policy is inspectable.** Every direction states its claim, what would contradict it, and what would leave it unproven — *before* the verdict is read — and the panel shows the policy version that produced it (`anchor-fit-1`). A verdict that cannot be traced to the policy that made it is an opinion, not a verdict.
+
+**The judge holds the claim to a different place.** Each direction lists the other places it could have been built around. Click one and the same claim is re-tested against it: *"This wins under these assumptions; change this assumption and it loses."* On the example brief, "The Artful Pour" is contested on the Whitney Museum — and **supported** the moment it is held to The Bell House, at which point it takes first place. The dependence is exposed rather than hidden behind a score.
+
+**The order changes.** A direction the evidence supports leads; one it argues with is last. On the brief the studio ships with, the direction that arrived first is contested — *"Qloo ranks Whitney Museum of American Art last of 5 places for this audience's cultural signals. The audience pulls somewhere else."* — and a different one leads.
+
+Every verdict states the limits: *these checks speak to local cultural fit only — not demand, competition, rent, or willingness to pay.* The studio also discloses what it judged on: how many places Qloo returned, how many the direction cites, and the profile that was ranked against.
+
+### The front page performs it
+
+A judge who never clicks still sees the product working. The landing page runs one real brief on its own — the same backend, the same cache, the same Qloo calls — and then puts the answer on trial, and says plainly when the evidence contested it.
+
+### What the free tier is actually like
+
+The free pool is smaller and noisier than the model list suggests, and the code is shaped around what was measured rather than what is documented:
+
+- **Most of the free models are withdrawn or busy.** Of the models OpenRouter lists as free, several now answer `404` (taken down) and one answers `429` (rate limited). A withdrawn model in the chain is not a failure — the request falls through to the next one.
+- **Most of them are reasoning models**, and a reasoning model given the whole token budget spends all of it thinking and answers with nothing at all. The request caps the thinking (`reasoning.max_tokens`) and leaves the room the answer needs. Without that cap, the same model returns an empty answer and the direction keeps the rule engine's name.
+- **Quality varies wildly.** One free model answers a direction's name with `...`. The guard drops any field that says nothing, so a weak model costs the founder the model's wording, never a wrong number.
+- **Every request is one brief, not one interaction**, and the answer is held. A demo that runs the same brief twice spends one request between them.
+
+### How the switching works
+
+`openrouter/free` is a lottery: it picks a free model at random each time, and some of them take twenty seconds to think. So the backend does not leave the routing to chance:
+
+- **A refusal is remembered.** A model that is rate limited is skipped for fifteen minutes, a withdrawn one for the rest of the day. The next brief does not pay for finding that out again.
+- **The model the router picked is remembered and asked directly.** The answer names the model that gave it, so the next brief asks that model — no lottery, and the same few seconds every time.
+- **A model that answers well and quickly is asked first.** How each model answered — usable or not, fast or slow — is kept in `~/.cache/cultureforge/llm_models.json`, and the order follows it.
+- **The switch itself is instant.** Reading the local file takes no time; the wait is the model's own, and one attempt is capped at fourteen seconds, with the whole naming capped at twenty-two. A brief that has waited long enough gets the rule engine's wording rather than a slower title.
+- **Only what was served is charged.** A model that is withdrawn or busy serves no inference, so it does not count against the allowance.
+
+`GET /api/health` reports the whole thing: which models are answering, which are refusing, and how much of the daily allowance is left.
+
+```bash
+python3 scripts/llm_check.py          # read-only: what is configured
+python3 scripts/llm_check.py --live   # one request, one answer
+```
+
+The step is visible in the studio's own trace, next to the Qloo calls it sat between.
+
 ### The honest boundary
 
 | Label | Meaning |
 |---|---|
 | `Fresh Qloo evidence` | Retrieved from the Qloo API for this request. |
-| `Cached Qloo evidence` | Retrieved earlier and reused. The acquisition time is shown. |
-| `Offline sample · no Qloo requests` | The mock catalog, used when the backend is unavailable. |
+| `Cached Qloo evidence` | Retrieved earlier and reused from the server's evidence store. The acquisition time is shown. |
+| `Held in this browser` | The same real answer, held locally by the studio so a reload is instant. Still zero upstream requests. |
+| `Named by <model>` | The direction's name and tagline were written by the free model, from the venues the direction is built from. The evidence and every number are still Qloo's. |
+| `Supported` / `Contested` / `Unproven` | What the evidence test found. The reason is the evidence that decided it. |
+
+Nothing in the studio is a dead end: if the audience resolves to nothing, the agent can resolve it itself; if a run fails, there is a way back to the brief; if a place has no photograph, the card says so instead of showing a broken image; and if the demo has spent the quota, the answer says so and keeps serving the evidence it already holds.
+
+The results screen also states what the demo has cost: *this workspace has served N API requests and spent M upstream Qloo calls.*
 
 `How this was researched` shows the real tool calls with their real durations, result counts, endpoints and correlation IDs.
 
-Each result also reports how many upstream requests it actually cost. Evidence that was already held costs nothing, and the count says `0 upstream requests` rather than pretending the API was asked. The durable store keeps the evidence across restarts, so a repeated brief is instant and free, and a live demo never spends the same quota twice.
+Each result also reports how many upstream requests it actually cost. Evidence that was already held costs nothing, and the count says `0 upstream requests` rather than pretending the API was asked. The durable store keeps the evidence across restarts, so a repeated brief is instant and free, and a live demo never spends the same quota twice. The studio holds the composed answer in the browser for twelve hours on top of that, so a reload paints the same exploration without a round trip, and the label says the answer was held rather than fetched.
 
 ## Investigating a direction
 
@@ -257,15 +336,15 @@ otherwise would be a bigger lie than leaving it out.
 
 ```
 $ npm run test:contracts
-[ok]   GET /api/health -> live
+[ok]   GET /api/health -> live, 9 workflows
 [ok]   GET /health alias -> 200
 [ok]   POST /api/projects/generate -> live, 3 concepts, 5 signals
-[ok]   frontend mockGenerate -> mock, 3 concepts
+[ok]   the frontend has no mock fallback -> real data, or a stated error
 [ok]   422 detail is readable -> "businessType: Input should be 'Food & beverage', ..."
 All contract checks passed.
 ```
 
-It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
+It fails if the backend renames, drops, or retypes a field the UI renders, if the studio ever reaches for a mock generator again, or if an error stops returning a readable `detail` string. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
 
 ## Testing every endpoint by hand
 
@@ -463,10 +542,10 @@ python3 scripts/vault_query.py --stats
 
 `AGENTS.md` documents the full retrieval ladder and the delegation protocol.
 
-It fails if the backend renames, drops, or retypes a field the UI renders, if the mock fallback drifts from the same contract, if an error stops returning a readable `detail` string, or if a concept cites evidence that does not exist. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
+It fails if the backend renames, drops, or retypes a field the UI renders, if the studio ever reaches for a mock generator again, if an error stops returning a readable `detail` string, or if a concept cites evidence that does not exist. It needs the backend on port 8000 and the dev server on port 5173; `BASE_URL` and `DEV_URL` override them.
 
-## Check mock generation
+## The offline fixture
 
-Run `npm run test:mock` after installing frontend dependencies and the Python requirements. It checks 120 backend/frontend parity cases across five business types, eight audience briefs, and three budget bands, along with category-specific concepts, mock provenance, and pilot-budget limits. Both runtimes use `shared/mockCatalog.json`; the backend generator is in `backend/mock_generator.py` and the offline generator is in `src/mockData.ts`.
+`backend/mock_generator.py` is the only mock left, and it is not reachable from the product. It is what the pytest suite runs against, so the HTTP contract — the typed requests, the error envelope, the status codes — can be checked without touching the Qloo quota. `backend/tests/test_api.py` swaps it in explicitly; the rest of the suite uses the captured fixtures in `backend/fixtures/`. The studio cannot reach it: `get_provider()` returns it only when `CULTUREFORGE_PROVIDER=mock` is set by name.
 
 Typography now uses 14–16px body and control text with larger card headings. Longer concept descriptions flow naturally, medium-width cards use a wider image/text layout, and mobile scenarios stack audience summaries vertically.

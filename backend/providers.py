@@ -78,7 +78,12 @@ class CultureProvider(ABC):
         """Return concepts and provenance-aware cultural signals."""
 
 class MockCultureProvider(CultureProvider):
-    """Clearly illustrative prototype content. No Qloo calls are made."""
+    """The offline fixture. No Qloo calls are made.
+
+    It exists so the test suite can check the HTTP contract without spending
+    quota. The product never reaches it: `get_provider()` returns it only when
+    `CULTUREFORGE_PROVIDER=mock` is set by name.
+    """
     def generate(self, project: ProjectRequest) -> GenerateResponse:
         from .mock_generator import generate_mock
         return generate_mock(project)
@@ -443,6 +448,8 @@ class QlooHarnessProvider(CultureProvider):
                     # Replaying a held answer spends no upstream request, so the
                     # number says zero rather than leaving the cost unknown.
                     transportRequests=0,
+                    # The answer was held here, in the server's evidence store.
+                    cachedIn='server',
                 )
                 return cached[1].model_copy(update={
                     'projectId': f'cf-{uuid4().hex[:10]}',
@@ -632,6 +639,23 @@ class QlooHarnessProvider(CultureProvider):
             evidenceIds=[eid for c in composed for eid in c.evidence_ids],
         ))
 
+        # Name the directions.
+        #
+        # The rules above chose the tags, the venues and the evidence; this
+        # only writes the words. A brief that was named before is served
+        # from the evidence store and spends no model request at all.
+        named, naming = self._name_directions(project, composed, evidence, matched_tags)
+        if composed:
+            for index, concept in enumerate(composed):
+                wording = named.get(index) or named.get(str(index)) or {}
+                if wording.get('name'):
+                    concept.name = wording['name']
+                if wording.get('tagline'):
+                    concept.tagline = wording['tagline']
+                if wording.get('rationale'):
+                    concept.naming = wording['rationale']
+        trace.append(self._naming_trace(composed, named, naming))
+
         if composed:
             concepts = [self._composed_concept(project, c, index, trace) for index, c in enumerate(composed)]
             concept_mode = 'evidence_composed'
@@ -658,13 +682,22 @@ class QlooHarnessProvider(CultureProvider):
             evidence=evidence, trace=trace,
             composerVersion=COMPOSER_VERSION,
             delivery=Delivery(kind='fresh' if live else 'cache', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(), transportRequests=spent,
-                              expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()),
+                              expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+                              cachedIn=None if live else 'server'),
         )
         with self._lock:
-            if len(self._cache) >= self.CACHE_MAX_ENTRIES:
-                oldest_key = min(self._cache, key=lambda key: self._cache[key][0])
-                self._cache.pop(oldest_key, None)
-            self._cache[cache_key] = (time.monotonic(), response)
+            # A failed naming is not held. The Qloo evidence is still in the
+            # evidence store, so the next run costs no Qloo request and can
+            # try the model again — rather than being told for a day that
+            # this brief has no name.
+            held = not (naming.get('attempted') and not naming.get('used'))
+            if held:
+                if len(self._cache) >= self.CACHE_MAX_ENTRIES:
+                    oldest_key = min(self._cache, key=lambda key: self._cache[key][0])
+                    self._cache.pop(oldest_key, None)
+                self._cache[cache_key] = (time.monotonic(), response)
+            else:
+                self._cache.pop(cache_key, None)
         return response
 
     # ------------------------------------------------------------------
@@ -783,6 +816,131 @@ class QlooHarnessProvider(CultureProvider):
         )
 
     @staticmethod
+    def _naming_trace(composed, named: dict, naming: dict) -> TraceEvent:
+        """The step that says how the directions were named, and by what."""
+        if naming.get('used'):
+            model = naming.get('model') or 'a free model'
+            detail = f'Named by {model}.'
+            if naming.get('cached'):
+                detail = f'Names held from an earlier run (named by {model}).'
+            if naming.get('dropped'):
+                detail += ' ' + '; '.join(naming['dropped'][:2]) + '.'
+        elif naming.get('attempted'):
+            detail = f'The model could not be used ({naming.get("reason")}), so the rule engine named these directions.'
+            if naming.get('raw'):
+                detail += f' It answered: {naming["raw"][:160]}'
+        else:
+            detail = naming.get('reason') or 'The rule engine named these directions.'
+        return TraceEvent(
+            id='ev-name-directions', step='name-the-directions',
+            status='ok' if naming.get('used') else 'skipped',
+            resultCount=len(named),
+            durationMs=naming.get('durationMs'),
+            detail=detail,
+            evidenceIds=[],
+            acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        )
+
+    def _name_directions(self, project, composed, evidence, matched_tags) -> tuple[dict, dict]:
+        """Let a free model name the directions, and keep the rules in charge.
+
+        The model is given the audience signals and the venues each direction
+        is built from — and no numbers at all, so it cannot state one. Its
+        answer is held in the evidence store like everything else, so a
+        repeated brief spends no model request.
+        """
+        from . import llm
+
+        report = {'used': False, 'attempted': False, 'model': None, 'reason': None, 'dropped': []}
+        if not llm.is_configured():
+            report['reason'] = 'No OpenRouter key is configured, so the rule engine named these directions.'
+            return {}, report
+        if not composed:
+            return {}, report
+
+        directions = []
+        for index, concept in enumerate(composed):
+            venues = []
+            for position, evidence_id in enumerate(concept.evidence_ids):
+                row = next((item for item in evidence if item.id == evidence_id), None)
+                if row is None or row.kind != 'entity':
+                    continue
+                venues.append({
+                    'name': row.label,
+                    'role': 'primary' if position == 0 else 'support',
+                    # Short: a long prompt is what pushes a reasoning model
+                    # past its budget.
+                    'description': (row.description or '')[:220],
+                })
+            if not venues:
+                continue
+            directions.append({
+                'index': index,
+                'currentName': concept.name,
+                'currentTagline': concept.tagline,
+                'currentPositioning': concept.positioning,
+                'venues': venues,
+            })
+        if not directions:
+            report['reason'] = 'No direction had a venue to name it after.'
+            return {}, report
+
+        brief = {
+            'businessType': project.businessType,
+            'audience': project.audience,
+            'location': project.location,
+            'budget': project.budget,
+            # Qloo can return two tags with the same name; the model does not
+            # need to be told twice.
+            'signals': list(dict.fromkeys(self._tag_label(tag) for tag in matched_tags)),
+        }
+        # The key is the content the model is shown, so the same brief finds
+        # the same held names.
+        key = canonical_key('llm_name', {
+            'brief': brief,
+            'directions': [{'index': d['index'], 'name': d['currentName'],
+                            'venues': [v['name'] for v in d['venues']]} for d in directions],
+        })
+        held = get_store().get(key)
+        if held is not None:
+            names = held.get('names') or {}
+            if names:
+                return names, {**(held.get('report') or {}), 'cached': True}
+            # A held failure must not be served as an answer. Drop it and ask
+            # again, rather than telling the founder for a day that this brief
+            # has no name.
+            get_store().discard(key)
+
+        envelope, _cached, requests = cached_call(
+            key, lambda: self._ask_model(brief, directions, evidence))
+        metering.count(requests)
+        names = envelope.get('names') or {}
+        if not names:
+            # A failure must not be held. The next run should try again
+            # rather than be told for a day that the answer is the empty one.
+            get_store().discard(key)
+        return names, envelope.get('report') or {}
+
+    def _ask_model(self, brief: dict, directions: list[dict], evidence: list[dict]) -> dict:
+        """One call to the model, and the envelope that is held afterwards."""
+        from . import llm
+
+        started = time.monotonic()
+        names, report = llm.name_directions(brief, directions, evidence)
+        report.setdefault('durationMs', int((time.monotonic() - started) * 1000))
+        report.setdefault('attempted', llm.is_configured())
+        return {
+            'names': {str(index): wording for index, wording in names.items()},
+            'report': report,
+            # A request was made whenever the model was reached, whether or
+            # not its answer could be used. The count says so.
+            'provenance': {
+                'endpoint': 'openrouter/free',
+                'requests': [{}] * int(report.get('requests') or (1 if report.get('attempted') else 0)),
+            },
+        }
+
+    @staticmethod
     def _composed_concept(project, composed, index: int, trace: list[TraceEvent]) -> Concept:
         """Turn a composed direction into a Concept card."""
         return Concept(
@@ -799,7 +957,7 @@ class QlooHarnessProvider(CultureProvider):
             direction=str(index + 1).zfill(2),
             imageAlt=composed.image_alt,
             personality=composed.personality,
-            audienceRationale=composed.positioning,
+            audienceRationale=composed.naming or composed.positioning,
             implementationNote=composed.ritual,
             moments=[
                 ExperienceMoment(title='Why this direction', description=composed.offering),
@@ -825,6 +983,14 @@ def _is_qloo_configured() -> bool:
 _cached_providers: dict[str, CultureProvider] = {}
 
 def get_provider() -> CultureProvider:
+    """The provider this server answers with.
+
+    `auto` means Qloo, and only Qloo. When no key is configured there is
+    nothing real to answer with, so the request fails with a stated reason
+    rather than answering with a rule-based fiction that looks like data.
+    Mock data is available only when it is asked for by name
+    (`CULTUREFORGE_PROVIDER=mock`), which the test suite does.
+    """
     try:
         from dotenv import load_dotenv
         load_dotenv()
@@ -836,10 +1002,20 @@ def get_provider() -> CultureProvider:
         raise RuntimeError('CULTUREFORGE_PROVIDER must be auto, mock, or qloo.')
     if selected == 'mock':
         provider_type = 'mock'
-    elif selected == 'qloo' or _is_qloo_configured():
+    elif selected == 'qloo':
+        if not _is_qloo_configured():
+            raise QlooHarnessError(
+                'CULTUREFORGE_PROVIDER=qloo, but no Qloo API key is configured. Set QLOO_API_KEY, '
+                'or run `qloo config set api-key YOUR_KEY`.',
+                code='PROVIDER_UNAVAILABLE', retryable=True)
         provider_type = 'qloo'
     else:
-        provider_type = 'mock'
+        if not _is_qloo_configured():
+            raise QlooHarnessError(
+                'No Qloo API key is configured, so there is no live evidence to answer with. '
+                'Set QLOO_API_KEY in .env, or run `qloo config set api-key YOUR_KEY`.',
+                code='PROVIDER_UNAVAILABLE', retryable=True)
+        provider_type = 'qloo'
 
     if provider_type not in _cached_providers:
         if provider_type == 'qloo':
@@ -851,4 +1027,13 @@ def get_provider() -> CultureProvider:
 def create_provider() -> CultureProvider:
     return get_provider()
 
-provider: CultureProvider = create_provider()
+
+def current_provider() -> CultureProvider:
+    """The provider, resolved on demand.
+
+    Resolved lazily rather than at import, so the server can still start and
+    answer /api/health when no Qloo key is configured. The routes ask for it
+    per request, and a missing key becomes a stated 503 rather than a server
+    that will not start.
+    """
+    return get_provider()

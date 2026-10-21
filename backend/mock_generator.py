@@ -1,4 +1,10 @@
-"""Deterministic mock generation. Keep rules aligned with src/mockData.ts."""
+"""Deterministic mock generation — the offline fixture, not the product.
+
+This is the provider the test suite runs against, so the HTTP contract can be
+checked without spending Qloo quota. It is not reachable from the product:
+the studio asks for the live provider, and the backend refuses to answer with
+this unless `CULTUREFORGE_PROVIDER=mock` is set by name.
+"""
 import json
 import re
 from pathlib import Path

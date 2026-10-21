@@ -212,6 +212,10 @@ class ComposedConcept:
     decisions: list[dict] = field(default_factory=list)
     limitations: list[str] = field(default_factory=list)
     rationale: str = ''
+    #: One sentence about why this direction fits this audience, written by
+    #: the language model. Empty when the model was not used, in which case
+    #: the recipe's own positioning is shown instead.
+    naming: str = ''
 
 
 def _tag_name(tag_id: str) -> str:

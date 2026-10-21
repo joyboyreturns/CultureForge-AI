@@ -480,14 +480,107 @@
 .sample-label { font-size: 9px !important; border-radius: 0; }
 
 /* --- The evidence band under the brief -------------------------------------- */
-.mock-brief-summary {
+.evidence-summary {
   border-radius: 0;
   border: 1px solid var(--line);
   border-left: 4px solid var(--leaf);
   background: var(--surface-raised);
   padding: 16px 18px;
 }
-.mock-brief-summary strong { font-weight: 700; letter-spacing: -0.01em; }
+.evidence-summary strong { font-weight: 700; letter-spacing: -0.01em; }
+
+/* --- The scenario lab: what Qloo will do ----------------------------------- */
+.scenario-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.scenario-steps li { display: flex; gap: 10px; align-items: start; }
+.scenario-steps li > span {
+  font: 9px 'DM Mono', monospace;
+  color: var(--accent);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.scenario-steps p { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 0; }
+.scenario-steps strong { color: var(--text); font-weight: 700; }
+
+/* --- The evidence test ---------------------------------------------------- */
+.verdict-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 9px 'DM Mono', monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.verdict-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.verdict-badge.is-supported { color: #6f8a3f; border-color: #6f8a3f55; background: #6f8a3f12; }
+.verdict-badge.is-contested { color: #c25a3c; border-color: #c25a3c55; background: #c25a3c12; }
+.verdict-badge.is-unproven { color: var(--subtle); }
+
+.challenge-panel {
+  border: 1px solid var(--card-edge, var(--line));
+  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  padding: 22px 24px;
+  margin: 20px 0;
+  box-shadow: 7px 7px 0 var(--card-shadow);
+}
+.challenge-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+.challenge-head h3 { font: 500 19px/1.35 Manrope; letter-spacing: -0.4px; margin: 10px 0 8px; }
+.challenge-what { font-size: 11px; line-height: 1.85; color: var(--muted); max-width: 720px; }
+.challenge-reversal {
+  border: 1px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 13px 16px;
+  margin: 16px 0 6px;
+}
+.challenge-reversal strong { font-size: 12px; color: var(--accent); }
+.challenge-reversal p { font-size: 11px; line-height: 1.8; color: var(--muted); margin: 5px 0 0; }
+.challenge-list { list-style: none; margin: 14px 0 0; padding: 0; }
+.challenge-item { border-top: 1px solid var(--line); padding: 14px 0; }
+.challenge-item:last-child { border-bottom: 1px solid var(--line); }
+.challenge-item-head {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  color: inherit; font: inherit;
+}
+.challenge-rank { font: 9px 'DM Mono', monospace; color: var(--subtle); }
+.challenge-name { flex: 1; font: 500 15px Manrope; letter-spacing: -0.2px; }
+.challenge-reason { font-size: 11px; line-height: 1.85; color: var(--muted); margin: 8px 0 0 30px; }
+.challenge-detail { margin: 14px 0 4px 30px; }
+.challenge-check { display: flex; gap: 12px; align-items: start; padding: 10px 0; }
+.challenge-check-result {
+  font: 8px 'DM Mono', monospace; letter-spacing: 0.1em;
+  padding: 4px 7px; border: 1px solid var(--line); border-radius: 3px; flex-shrink: 0;
+}
+.challenge-check.is-pass .challenge-check-result { color: #6f8a3f; border-color: #6f8a3f55; }
+.challenge-check.is-fail .challenge-check-result { color: #c25a3c; border-color: #c25a3c55; }
+.challenge-check.is-mixed .challenge-check-result { color: var(--subtle); }
+.challenge-check strong { font-size: 11px; }
+.challenge-check p { font-size: 11px; line-height: 1.85; color: var(--muted); margin: 4px 0 0; }
+.challenge-coverage { font-size: 10px; line-height: 1.8; color: var(--subtle); margin: 12px 0 0; max-width: 720px; }
+
+/* --- The claim, and the lever that holds it to a different place -------- */
+.challenge-policy { font: 9px 'DM Mono', monospace; letter-spacing: 0.08em; color: var(--subtle); margin: 10px 0 0; }
+.challenge-policy code { color: var(--accent); }
+.challenge-claim { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; margin: 4px 0 16px; }
+.challenge-claim > span { display: block; font: 8px 'DM Mono', monospace; letter-spacing: 0.14em; color: var(--subtle); margin: 10px 0 4px; }
+.challenge-claim > span:first-child { margin-top: 0; }
+.challenge-claim p { font-size: 11px; line-height: 1.85; color: var(--text); margin: 0; }
+.challenge-alternatives { margin: 16px 0 4px; }
+.challenge-alternatives > span { font: 8px 'DM Mono', monospace; letter-spacing: 0.14em; color: var(--subline, var(--subtle)); display: block; margin-bottom: 8px; }
+.challenge-alternatives > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.challenge-alternatives button { font: 10px 'DM Sans', sans-serif; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; background: none; padding: 5px 9px; cursor: pointer; }
+.challenge-alternatives button:hover { color: var(--accent); border-color: var(--accent); }
 
 /* --- The insight panel ----------------------------------------------------- */
 .insight-main { border-radius: 0; border: 1px solid var(--card-edge); box-shadow: 9px 9px 0 var(--card-shadow); }
@@ -829,4 +922,38 @@
     animation: none !important;
   }
   .concept-grid > .concept-card { opacity: 1; filter: none; }
+}
+
+/* --- A direction with no photograph ---------------------------------------- */
+.concept-photo.has-no-image {
+  background: linear-gradient(150deg, var(--surface-raised), var(--sage-wash, rgba(138, 148, 115, 0.12)));
+}
+.concept-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 500 44px/1 Manrope;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+  opacity: 0.5;
+}
+.modal-cover.has-no-image { background: linear-gradient(150deg, #1c1c18, #232720); }
+
+/* --- A run that could not finish ------------------------------------------ */
+.agent-trace-error { display: flex; flex-direction: column; gap: 8px; align-items: start; }
+.agent-trace-error strong { font-size: 12px; }
+.agent-trace-error span { font-size: 11px; line-height: 1.8; color: var(--muted); }
+.agent-trace-error .text-link { font-size: 10px; margin-top: 2px; }
+
+/* --- An audience that resolved to nothing ---------------------------------- */
+.taste-seed-empty { border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--surface-raised); padding: 14px 16px; margin: 16px 0; }
+.taste-seed-empty p { font-size: 11px; line-height: 1.85; color: var(--muted); margin: 0; }
+
+/* --- What the demo has cost the quota ------------------------------------- */
+.usage-line {
+  font: 10px 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+  margin: 10px 0 0;
 }

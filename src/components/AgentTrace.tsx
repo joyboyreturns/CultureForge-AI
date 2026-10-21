@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
 import type { ResearchRun } from '../api'
 
 /**
@@ -9,10 +10,13 @@ import type { ResearchRun } from '../api'
  * the Qloo harness reported. If the agent needs to ask the founder something,
  * the question appears here.
  */
-export function AgentTrace({ runId, onComplete, onClarify }: {
+export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress }: {
   runId: string
   onComplete: (result: NonNullable<ResearchRun['result']>) => void
   onClarify: (clarification: NonNullable<ResearchRun['clarification']>) => void
+  onGiveUp?: () => void
+  /** How many real steps the agent has taken, so the workspace can show them. */
+  onProgress?: (steps: number) => void
 }) {
   const [run, setRun] = useState<ResearchRun | null>(null)
   const [error, setError] = useState('')
@@ -28,6 +32,9 @@ export function AgentTrace({ runId, onComplete, onClarify }: {
         const next = await fetchResearchRun(runId)
         if (cancelled) return
         setRun(next)
+        // The steps the agent has really taken, so the workspace above shows
+        // the same thing the trace does.
+        onProgress?.(next.events?.length ?? 0)
         if (next.status === 'complete' && next.result && !settled.current) {
           settled.current = true
           onComplete(next.result)
@@ -55,7 +62,7 @@ export function AgentTrace({ runId, onComplete, onClarify }: {
       cancelled = true
       if (timer) window.clearTimeout(timer)
     }
-  }, [runId, onComplete, onClarify])
+  }, [runId, onComplete, onClarify, onProgress])
 
   const events = run?.events ?? []
 
@@ -82,7 +89,15 @@ export function AgentTrace({ runId, onComplete, onClarify }: {
         </div>
       ))}
 
-      {error && <div className="agent-trace-error" role="alert">{error}</div>}
+      {error && (
+        <div className="agent-trace-error" role="alert">
+          <strong>The research run could not finish.</strong>
+          <span>{error}</span>
+          {onGiveUp && (
+            <button className="text-link" onClick={onGiveUp}>Back to the brief <ArrowRight size={13}/></button>
+          )}
+        </div>
+      )}
 
       {run && !error && (
         <div className="agent-trace-foot">

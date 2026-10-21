@@ -7,7 +7,6 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:mock": "node scripts/verify-mock.mjs",
     "test:contracts": "node scripts/verify_contracts.mjs",
     "test:backend": ".venv/bin/python -m pytest backend/tests -q",
     "test:walkthrough": "node scripts/verify_walkthrough.mjs",

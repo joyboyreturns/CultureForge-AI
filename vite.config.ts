@@ -9,7 +9,7 @@ export default defineConfig({
       proxy.on('error', (_error, _request, response) => {
         if (response.headersSent) return
         response.writeHead(503, { 'Content-Type': 'application/json' })
-        response.end(JSON.stringify({ detail: 'Backend unavailable; using local mock data.' }))
+        response.end(JSON.stringify({ detail: 'The CultureForge backend could not be reached. Start it on port 8000, then try again.' }))
       })
     },
   } } },

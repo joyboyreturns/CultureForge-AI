@@ -232,6 +232,47 @@ async function main() {
       !(recomposed.body?.evidence ?? []).some((item) => item.entityId === aVenue.entityId),
       `dropped ${recomposed.body?.dropped}`);
     seen.add('POST /api/projects/recompose');
+
+    // The evidence test: the part that can come back with a no.
+    const tested = await api('/api/projects/challenge', { method: 'POST', body: { project: BRIEF } });
+    check('POST /api/projects/challenge -> 200 with a verdict for every direction',
+      tested.status === 200 && tested.body?.directions?.length > 0, `${tested.status}`);
+    const verdicts = (tested.body?.directions ?? []).map((entry) => entry.verdict);
+    check('POST /api/projects/challenge -> every verdict is one of the three',
+      verdicts.every((verdict) => ['supported', 'contested', 'unproven'].includes(verdict)),
+      verdicts.join(', '));
+    check('POST /api/projects/challenge -> every verdict names its reason',
+      (tested.body?.directions ?? []).every((entry) => typeof entry.reason === 'string' && entry.reason.length > 20),
+      `${(tested.body?.directions ?? []).length} directions`);
+    check('POST /api/projects/challenge -> it discloses what it judged on',
+      /venues|places/i.test(tested.body?.directions?.[0]?.coverage?.note ?? ''),
+      tested.body?.directions?.[0]?.coverage?.note?.slice(0, 60) ?? 'no coverage note');
+    check('POST /api/projects/challenge -> the order it leaves them in is an order',
+      Array.isArray(tested.body?.order) && tested.body.order.length === tested.body?.directions?.length,
+      (tested.body?.order ?? []).join(', '));
+    check('POST /api/projects/challenge -> the verdict says what it is about',
+      typeof tested.body?.scope === 'string' && tested.body.scope.length > 3, tested.body?.scope);
+    check('POST /api/projects/challenge -> the policy is recorded',
+      typeof tested.body?.policyVersion === 'string' && tested.body.policyVersion.length > 3,
+      tested.body?.policyVersion);
+    check('POST /api/projects/challenge -> every direction states its claim and its falsifier',
+      (tested.body?.directions ?? []).every((entry) => entry.claim && entry.falsifier && entry.unprovenIf),
+      `${(tested.body?.directions ?? []).length} directions`);
+    check('POST /api/projects/challenge -> every direction can be held to another place',
+      (tested.body?.directions ?? []).every((entry) => (entry.alternatives ?? []).length > 0),
+      `${(tested.body?.directions ?? []).length} directions`);
+
+    // The lever: the same claim, held to a different place, answers differently.
+    const anchor = (tested.body?.directions ?? [])[0]?.alternatives?.[0]?.entityId;
+    if (anchor) {
+      const reanchored = await api('/api/projects/challenge', {
+        method: 'POST', body: { project: BRIEF, anchorEntityId: anchor },
+      });
+      check('POST /api/projects/challenge -> a direction can be held to a different place',
+        reanchored.status === 200 && reanchored.body?.directions?.[0]?.anchor?.entityId === anchor,
+        reanchored.body?.directions?.[0]?.anchor?.label ?? 'no anchor');
+    }
+    seen.add('POST /api/projects/challenge');
   }
 
   // ------------------------------------------------------------------ share

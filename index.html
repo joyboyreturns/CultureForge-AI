@@ -144,14 +144,26 @@
 
       <!-- Subhead -->
       <p class="subhead anim" style="--d: 0.28s">
-        Discover the cultural connections behind your audience, then shape
-        business experiences around what makes them unique.
+        Find business ideas for a neighbourhood — then test the local
+        evidence before you spend.
       </p>
 
       <!-- CTA (White pill, black text, soft white glow, revealPulse) -->
       <a href="#workspace" class="cta-btn anim-pulse" data-open-studio style="--d: 0.4s">
         <span>Start an exploration</span>
       </a>
+
+      <!-- The live pulse: the studio running a real brief, on its own -->
+      <div class="live-pulse" data-live-pulse hidden>
+        <div class="live-pulse-head">
+          <span class="live-pulse-label"><span class="live-dot"></span> LIVE FROM THE QLOO API</span>
+          <span class="live-pulse-brief" data-pulse-brief>Design-conscious Gen Z &amp; young professionals · Brooklyn, New York</span>
+        </div>
+        <p class="live-pulse-status" data-pulse-status>Asking Qloo what this audience actually wants…</p>
+        <ol class="live-pulse-list" data-pulse-list></ol>
+        <p class="live-pulse-note" data-pulse-note></p>
+        <a href="#workspace" class="live-pulse-link" data-open-studio>Open this brief in the studio <span aria-hidden="true">↗</span></a>
+      </div>
 
       <!-- Scroll cue -->
       <button class="scroll-cue" data-nav="product" aria-label="Scroll to see how it works">
@@ -162,38 +174,38 @@
 
     <main class="landing-detail" data-landing-view="product" hidden>
       <div class="detail-kicker">THE CULTUREFORGE WORKFLOW</div>
-      <h1 class="detail-title">From audience signals<br />to <span>a point of view.</span></h1>
-      <p class="detail-lede">CultureForge helps founders turn a business brief into audience-aware experience concepts, with the assumptions clearly in view.</p>
+      <h1 class="detail-title">Find the idea.<br />Then <span>test it.</span></h1>
+      <p class="detail-lede">Every direction is composed from places Qloo actually returned — and then put on trial. The evidence can come back with a no, and the order the directions are shown in changes when it does.</p>
       <div class="product-steps">
-        <article><span>01 / UNDERSTAND</span><h2>Start with people.</h2><p>Describe your audience, location, business category, budget, and what success could look like.</p></article>
-        <article><span>02 / EXPLORE</span><h2>Find three directions.</h2><p>Review distinct concepts, sample cultural hypotheses, experience moments, and illustrative pilot ranges.</p></article>
-        <article><span>03 / REFINE</span><h2>Change the lens.</h2><p>Compare a new audience and see how the sample model reshapes the concept fit.</p></article>
+        <article><span>01 / FIND</span><h2>Three directions, from real places.</h2><p>Your audience resolves into cultural signals, the neighbourhood returns real venues, and each direction names the venue it was built from.</p></article>
+        <article><span>02 / TEST</span><h2>The evidence gets a vote.</h2><p>Qloo ranks the places for this audience’s signals, and compares each one with the rest of the neighbourhood. A direction can come out contested.</p></article>
+        <article><span>03 / DECIDE</span><h2>The order changes.</h2><p>Supported first, contested last — with the reason in plain English, and the limits of the test stated on the screen.</p></article>
       </div>
-      <p class="detail-note">Prototype mode uses clearly labeled mock data. Qloo is not connected unless the backend reports live signals.</p>
+      <p class="detail-note">Live Qloo data. Every number on screen is one the API returned, and the checks say plainly what they do and do not measure.</p>
       <a href="#workspace" class="cta-btn" data-open-studio><span>Open the exploration studio</span></a>
     </main>
 
     <main class="landing-detail" data-landing-view="case-studies" hidden>
-      <div class="detail-kicker">ILLUSTRATIVE CONCEPT STUDIES · MOCK DATA</div>
-      <h1 class="detail-title">A few ways culture<br />can shape <span>an experience.</span></h1>
-      <p class="detail-lede">These are example directions from the prototype catalog, not customer case studies or measured outcomes.</p>
+      <div class="detail-kicker">WHAT THE TEST ACTUALLY ASKS</div>
+      <h1 class="detail-title">Two checks.<br />Both can <span>fail.</span></h1>
+      <p class="detail-lede">A direction is a hypothesis until the local evidence has had a look at it. These are the questions, asked of the places Qloo returned.</p>
       <div class="study-grid">
-        <article><span>FOOD &amp; BEVERAGE</span><h2>Taste discovery</h2><p>A compact tasting format built around rotating menus and small-group discovery.</p><small>Sample direction · Experience concept</small></article>
-        <article><span>RETAIL</span><h2>Independent makers</h2><p>A neighborhood retail experience that gives local makers a changing spotlight.</p><small>Sample direction · Experience concept</small></article>
-        <article><span>WELLNESS</span><h2>Outdoor connection</h2><p>A low-pressure movement series shaped around shared outdoor routines.</p><small>Sample direction · Experience concept</small></article>
+        <article><span>CHECK 01</span><h2>Does the audience pull toward this place?</h2><p>Qloo ranks the neighbourhood’s real venues for this audience’s cultural signals. A direction built on the place that ranks last is a direction the audience does not pull toward.</p><small>One Qloo call for the whole set</small></article>
+        <article><span>CHECK 02</span><h2>Is there room, or a fight?</h2><p>The place is compared with the rest of the neighbourhood. A place that carries only what every place here carries is the same crowd in a different room.</p><small>One Qloo call per direction</small></article>
+        <article><span>THE LIMIT</span><h2>What this does not measure.</h2><p>Demand, competition, rent, footfall and willingness to pay. These checks establish local cultural fit and nothing else, and the screen says so.</p><small>Stated on every verdict</small></article>
       </div>
-      <p class="detail-note">Concept narratives, fit scores, and investment ranges are illustrative. Use them to begin research, not as validated business advice.</p>
+      <p class="detail-note">The verdict is supported, contested, or unproven — by the evidence, with the reason attached.</p>
       <a href="#workspace" class="cta-btn" data-open-studio><span>Create your own exploration</span></a>
     </main>
 
     <main class="landing-detail contact-detail" data-landing-view="contact" hidden>
       <div class="detail-kicker">LET’S START WITH YOUR IDEA</div>
       <h1 class="detail-title">What are you<br /><span>curious about?</span></h1>
-      <p class="detail-lede">Bring a business idea, an audience you want to understand, or a neighborhood you want to serve. The studio will help you shape a first set of directions.</p>
+      <p class="detail-lede">Bring a business idea, an audience you want to understand, or a neighborhood you want to serve. The studio will find the places, and then put the idea on trial.</p>
       <div class="contact-card">
         <div><span>BUILT FOR</span><strong>Founders and experience builders</strong></div>
-        <div><span>IN THIS PROTOTYPE</span><strong>Five business categories · Mock research · Scenario comparison</strong></div>
-        <div><span>DATA NOTE</span><strong>No enquiry form or external contact service is connected.</strong></div>
+        <div><span>IN THE STUDIO</span><strong>Five business categories · Nine Qloo workflows · Evidence-tested directions</strong></div>
+        <div><span>DATA NOTE</span><strong>Every number is one the Qloo API returned. No enquiry form or external contact service is connected.</strong></div>
       </div>
       <a href="#workspace" class="cta-btn" data-open-studio><span>Start an exploration</span></a>
     </main>
@@ -204,21 +216,21 @@
         <span class="stat-glyph">&lt;</span>
         <div class="stat-meta">
           <span class="stat-value" data-target="3" data-suffix="" data-decimals="0">0</span>
-          <span class="stat-label">Concept directions</span>
+          <span class="stat-label">Directions from real places</span>
         </div>
       </div>
       <div class="stat-card anim" style="--d: 0.58s" data-index="1">
         <span class="stat-glyph">%</span>
         <div class="stat-meta">
-          <span class="stat-value" data-target="5" data-suffix="" data-decimals="0">0</span>
-          <span class="stat-label">Business categories</span>
+          <span class="stat-value" data-target="9" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">Qloo workflows, live</span>
         </div>
       </div>
       <div class="stat-card anim" style="--d: 0.66s" data-index="2">
         <span class="stat-glyph">*</span>
         <div class="stat-meta">
-          <span class="stat-value" data-target="1" data-suffix="" data-decimals="0">0</span>
-          <span class="stat-label">Mock provider, Qloo-ready</span>
+          <span class="stat-value" data-target="2" data-suffix="" data-decimals="0">0</span>
+          <span class="stat-label">Checks that can fail an idea</span>
         </div>
       </div>
       <div class="stat-card anim" style="--d: 0.74s" data-index="3">
@@ -233,7 +245,7 @@
     <section class="home-followup" data-home-followup>
       <div class="detail-kicker">CULTURE → COMMERCE</div>
       <h2>Start with a better question.</h2>
-      <p>Who is this for? What do they care about? What might you build around that?</p>
+      <p>Who is this for? What do they want that this place does not have?</p>
       <button class="followup-link" data-nav="product">See how the studio works <span aria-hidden="true">↗</span></button>
     </section>
   </div>

@@ -10,8 +10,10 @@ from uuid import uuid4
 
 from .comparison import compare_audiences as compare_audiences_native
 from .comparison import rank_entities, recompose
+from .challenge import challenge_directions
 from .evidence_store import get_store
-from .models import (CompareAudiencesRequest, CompareRequest, ErrorBody, ErrorResponse,
+from .llm import status as llm_status
+from .models import (CompareAudiencesRequest, CompareRequest, ChallengeRequest, ErrorBody, ErrorResponse,
                      GenerateResponse, ProjectRequest, RankRequest, RecomposeRequest,
                      ShareRequest)
 from .platform import get_platform
@@ -125,14 +127,35 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.get('/api/health', tags=['platform'], summary='Which provider is active, and what it can do')
 def health():
-    current_provider = get_provider()
+    """What this server can answer with right now.
+
+    It never raises. A missing Qloo key is a state the studio has to be able
+    to read and show, so it is reported as `providerReady: false` with the
+    reason, rather than as a failed request.
+    """
+    try:
+        current_provider = get_provider()
+    except QlooHarnessError as exc:
+        return {
+            'status': 'degraded',
+            'dataMode': 'live',
+            'providerReady': False,
+            'reason': str(exc),
+            'version': app.version,
+            'workflows': [],
+            'composerVersion': COMPOSER_VERSION,
+            'llm': llm_status(),
+        }
     live = current_provider.__class__.__name__ == 'QlooHarnessProvider'
     return {
         'status': 'ok',
         'dataMode': 'live' if live else 'mock',
+        'providerReady': live,
+        'reason': None,
         'version': app.version,
         'workflows': list(QLOO_WORKFLOWS) if live else [],
         'composerVersion': COMPOSER_VERSION,
+        'llm': llm_status(),
     }
 
 
@@ -534,13 +557,18 @@ def _workflow_response(operation: str, envelope: dict, cached: bool, requests: i
 # ---------------------------------------------------------------------------
 @app.post('/api/research/runs', status_code=202, tags=['agent'],
           summary='Start a research run and get its id straight away')
-def start_run(request: CompareRequest, response: Response) -> dict:
+def start_run(request: CompareRequest, response: Response, http_request: Request) -> dict:
     """Start a bounded research run and return its id straight away.
 
     202 Accepted: the work continues in the background. Poll
     `GET /api/research/runs/{runId}` for the steps it takes.
+
+    The run is answered into the caller's workspace, so the exploration it
+    produces is saved the same way the direct route saves one.
     """
-    run = start_research(request.project, request.audience, request.seedTagIds)
+    workspace, _prefix = resolve_workspace(http_request)
+    run = start_research(request.project, request.audience, request.seedTagIds,
+                         workspace_id=workspace['id'])
     response.headers['Location'] = f'/api/research/runs/{run.id}'
     return {'runId': run.id, 'status': run.status, 'statusUrl': f'/api/research/runs/{run.id}'}
 
@@ -659,6 +687,23 @@ def rank_anchors(request: RankRequest) -> dict:
         demographic=request.demographic,
         limit=request.limit,
     )
+
+
+@app.post('/api/projects/challenge', tags=['evidence'],
+          summary='Test the directions against the local evidence')
+def challenge_directions_route(request: ChallengeRequest) -> dict:
+    """Test a direction against the local evidence — and let the answer be no.
+
+    The brief is re-composed from evidence that is already held, so this
+    costs no Qloo call of its own until the two checks run. The verdict is
+    about local cultural fit and nothing else, and says so.
+    """
+    provider = get_provider()
+    if not isinstance(provider, QlooHarnessProvider):
+        raise HTTPException(status_code=409, detail='Testing a direction needs the Qloo provider.')
+    response = provider.generate(request.project)
+    return challenge_directions(request.project, response, request.directionId or None,
+                                request.anchorEntityId or None)
 
 
 @app.post('/api/projects/recompose', tags=['brief'],

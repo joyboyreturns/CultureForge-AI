@@ -37,30 +37,147 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return await response.json() as T
 }
 
-/** Provider boundary: replace MockCultureProvider with a documented Qloo adapter when credentials/API access are ready. */
-export async function generateConcepts(project: ProjectRequest): Promise<GenerateResponse> {
-  let response: Response
-  try { response = await fetch('/api/projects/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) }) }
-  catch { return mockGenerate(project) }
-  // Vite uses 503 only when its FastAPI proxy cannot connect; provider errors
-  // (including a configured Qloo failure) remain visible to the user.
-  if (response.status === 503) return mockGenerate(project)
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({})) as { detail?: unknown }
-    throw new Error(detailMessage(body, `API returned ${response.status}`))
-  }
-  return await response.json() as GenerateResponse
+/**
+ * The browser's own cache of real answers.
+ *
+ * The backend already holds every piece of evidence for 24 hours, so a repeat
+ * brief costs nothing upstream. This holds the *composed* answer for twelve
+ * hours as well, so a reload paints the same exploration immediately instead
+ * of waiting on a round trip, and so the label can say plainly that the
+ * answer was held rather than freshly fetched.
+ *
+ * Only real answers are held. There is no mock fallback anywhere in this
+ * module: if the backend cannot answer, the caller is told that.
+ */
+const CACHE_STORAGE_KEY = 'cultureforge-live-results'
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000
+const CACHE_MAX_ENTRIES = 12
+
+interface CacheEntry { storedAt: number; response: GenerateResponse }
+
+/** A stable key for a brief, so the same brief finds the same held answer. */
+function briefKey(project: ProjectRequest): string {
+  return [
+    project.businessType,
+    project.audience.trim(),
+    project.location.trim(),
+    project.budget,
+    [...project.objectives].map((objective) => objective.trim()).sort().join('|'),
+  ].join('::')
 }
 
-/** Report whether the backend is live and which provider it is using. */
-export async function fetchHealth(): Promise<'live' | 'mock' | 'offline'> {
+function readCache(): Record<string, CacheEntry> {
+  try {
+    const raw = localStorage.getItem(CACHE_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) as Record<string, CacheEntry> : {}
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeCache(key: string, entry: CacheEntry) {
+  try {
+    const cache = readCache()
+    cache[key] = entry
+    // Keep the newest few briefs. The rest are one round trip away anyway.
+    const kept = Object.keys(cache)
+      .sort((a, b) => cache[b].storedAt - cache[a].storedAt)
+      .slice(0, CACHE_MAX_ENTRIES)
+    const trimmed: Record<string, CacheEntry> = {}
+    for (const item of kept) trimmed[item] = cache[item]
+    localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(trimmed))
+  } catch { /* Storage can be disabled in private browser sessions. */ }
+}
+
+/** The held answer for this brief, if one is still fresh. */
+export function heldResult(project: ProjectRequest): GenerateResponse | null {
+  const entry = readCache()[briefKey(project)]
+  if (!entry?.response) return null
+  if (Date.now() - entry.storedAt > CACHE_TTL_MS) return null
+  const held = entry.response.delivery
+  return {
+    ...entry.response,
+    delivery: {
+      kind: 'cache',
+      acquiredAt: held?.acquiredAt ?? new Date(entry.storedAt).toISOString(),
+      servedAt: new Date().toISOString(),
+      expiresAt: new Date(entry.storedAt + CACHE_TTL_MS).toISOString(),
+      // Holding it in this browser cost nothing upstream.
+      transportRequests: 0,
+      cachedIn: 'browser',
+    },
+  }
+}
+
+function rememberResult(project: ProjectRequest, response: GenerateResponse) {
+  if (!response || response.dataMode !== 'live') return
+  writeCache(briefKey(project), { storedAt: Date.now(), response })
+}
+
+/**
+ * Hold a real answer that arrived by another route — a research run, say —
+ * so the browser holds it too, not just the backend.
+ */
+export function rememberLiveResult(project: ProjectRequest, response: GenerateResponse) {
+  rememberResult(project, response)
+}
+
+/**
+ * Ask the backend for a real, evidence-backed answer.
+ *
+ * There is no mock fallback here on purpose. A founder who cannot reach the
+ * API has to be told that, rather than shown a plausible fiction that would
+ * look like data.
+ */
+export async function generateConcepts(project: ProjectRequest): Promise<GenerateResponse> {
+  let response: Response
+  try {
+    response = await fetch('/api/projects/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) })
+  } catch {
+    throw new Error('The CultureForge backend could not be reached. It runs on port 8000 — start it, then try again.')
+  }
+  // A provider error, including a rejected Qloo call, stays visible. The
+  // backend's own message says what went wrong.
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(detailMessage(body, `The backend returned ${response.status}.`))
+  }
+  const data = await response.json() as GenerateResponse
+  rememberResult(project, data)
+  return data
+}
+
+/** What the backend is actually doing: live Qloo, not live, or unreachable. */
+export interface BackendStatus {
+  mode: 'live' | 'mock' | 'offline'
+  /** True when the backend can answer with real Qloo evidence right now. */
+  ready: boolean
+  reason: string | null
+  workflows: string[]
+}
+
+export async function fetchHealth(): Promise<BackendStatus> {
   try {
     const response = await fetch('/api/health')
-    if (!response.ok) return 'offline'
-    const body = await response.json() as { dataMode?: 'live' | 'mock' }
-    return body.dataMode === 'live' ? 'live' : 'mock'
+    if (!response.ok) {
+      return { mode: 'offline', ready: false, reason: `The backend answered ${response.status}.`, workflows: [] }
+    }
+    const body = await response.json() as {
+      dataMode?: 'live' | 'mock'
+      providerReady?: boolean
+      reason?: string | null
+      workflows?: string[]
+    }
+    const live = body.dataMode === 'live'
+    return {
+      mode: live ? 'live' : 'mock',
+      ready: live && body.providerReady !== false,
+      reason: body.reason ?? null,
+      workflows: body.workflows ?? [],
+    }
   } catch {
-    return 'offline'
+    return { mode: 'offline', ready: false, reason: 'The backend could not be reached.', workflows: [] }
   }
 }
 
@@ -84,7 +201,22 @@ export interface AudienceComparison {
  * two Qloo workflows against the new audience and returns fresh evidence.
  */
 export async function compareAudience(project: ProjectRequest, audience: string): Promise<AudienceComparison> {
-  return postJson<AudienceComparison>('/api/projects/compare', { project, audience })
+  const comparison = await postJson<AudienceComparison>('/api/projects/compare', { project, audience })
+  // The same brief, seen through a different audience, is still a real answer.
+  // Hold it, so reopening the studio does not spend the call again.
+  rememberResult({ ...project, audience }, {
+    projectId: `cf-${comparison.audience}`,
+    project: { ...project, audience },
+    concepts: comparison.concepts,
+    signals: comparison.signals,
+    evidence: comparison.evidence,
+    trace: comparison.trace,
+    delivery: comparison.delivery,
+    notice: comparison.notice,
+    dataMode: 'live',
+    conceptMode: 'evidence_composed',
+  })
+  return comparison
 }
 
 /** A candidate Qloo audience seed, before the founder confirms it. */
@@ -194,6 +326,70 @@ export async function recompose(
 }
 
 // ---------------------------------------------------------------------------
+// Testing a direction against the local evidence
+// ---------------------------------------------------------------------------
+
+export type Verdict = 'supported' | 'contested' | 'unproven'
+
+export interface ChallengeCheck {
+  name: string
+  result: 'pass' | 'fail' | 'mixed'
+  detail: string
+  metric: Record<string, unknown>
+}
+
+export interface ChallengedDirection {
+  directionId: string
+  name: string
+  verdict: Verdict
+  /** What the verdict is about. It is narrow on purpose. */
+  scope: string
+  reason: string
+  /** The claim this direction makes, and what would contradict it. */
+  claim: string
+  falsifier: string
+  unprovenIf: string
+  /** The place the claim is held to. */
+  anchor: { entityId: string | null; label: string | null } | null
+  /** The other places it could have been held to. */
+  alternatives: { entityId: string | null; label: string | null }[]
+  checks: ChallengeCheck[]
+  coverage: {
+    venuesRetrieved: number
+    venuesCited: number
+    venuesCompared: number
+    tagsUsed: number
+    note: string
+    howSignalsWereCounted?: string
+  }
+}
+
+export interface ChallengeResult {
+  directions: ChallengedDirection[]
+  /** The order the evidence leaves the directions in. */
+  order: string[]
+  summary: string
+  scope: string
+  /** The policy that produced the verdicts, so they can be traced. */
+  policyVersion: string
+  whatThisIs: string
+  profile: { demographic: string; location: string; signals: string[] }
+}
+
+/**
+ * Test the directions against the local evidence.
+ *
+ * The brief is re-composed from evidence that is already held, so this costs
+ * no Qloo call of its own until the checks run. The verdict is about local
+ * cultural fit, and says so.
+ */
+export async function challengeDirections(
+  project: ProjectRequest, directionId = '', anchorEntityId = ''
+): Promise<ChallengeResult> {
+  return postJson<ChallengeResult>('/api/projects/challenge', { project, directionId, anchorEntityId })
+}
+
+// ---------------------------------------------------------------------------
 // Investigating a direction
 // ---------------------------------------------------------------------------
 
@@ -299,5 +495,3 @@ export async function fetchUsage(): Promise<{ requests: number; upstreamCalls: n
   if (!response.ok) throw new Error('The usage could not be read.')
   return await response.json() as { requests: number; upstreamCalls: number; byRoute: Record<string, number> }
 }
-
-import { mockGenerate } from './mockData'
