@@ -143,4 +143,6 @@ def test_frontier_ai_request_includes_the_pydantic_output_schema(monkeypatch, tm
     assert '"operation"' in schema_prompt and 'remove_anchor' in schema_prompt
     assert action.operation == 'finish'
     assert captured['body']['response_format'] == {'type': 'json_object'}
+    assert captured['body']['reasoning'] == {'effort': 'high'}
+    assert captured['body']['max_tokens'] == reasoning.MAX_OUTPUT_TOKENS
     assert captured['timeout'] == reasoning.TIMEOUT_SECONDS

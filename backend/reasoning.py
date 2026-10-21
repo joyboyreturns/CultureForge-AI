@@ -21,11 +21,11 @@ from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
                      EvidenceAnalysisResult)
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
-PROMPT_VERSION = 'qloo-evidence-analysis-1'
+PROMPT_VERSION = 'qloo-evidence-analysis-4'
 DISPLAY_MODEL = 'Frontier AI'
 DAILY_LIMIT = 10
-TIMEOUT_SECONDS = 15
-MAX_OUTPUT_TOKENS = 1400
+TIMEOUT_SECONDS = 60
+MAX_OUTPUT_TOKENS = 8192
 BUDGET_FILE = Path.home() / '.cache' / 'cultureforge' / 'gateway_analysis_calls.json'
 _budget_lock = threading.Lock()
 
@@ -133,6 +133,7 @@ def call_structured(system_prompt: str, payload: dict, output_model):
         ],
         'temperature': 0,
         'max_tokens': MAX_OUTPUT_TOKENS,
+        'reasoning': {'effort': 'high'},
         'response_format': {'type': 'json_object'},
     }
     req = urllib.request.Request(ENDPOINT, data=json.dumps(body).encode('utf-8'), method='POST',
