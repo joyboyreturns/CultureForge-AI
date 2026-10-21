@@ -54,9 +54,9 @@
     "semantic_hash": "2330b334237c3853462849eb15b325ee"
   },
   "src/App.tsx": {
-    "mtime": 1792571204.7710412,
-    "seen": 1792571218.264357,
-    "ast_hash": "cefd102318784936f505e043492ee08a",
+    "mtime": 1792577725.8531263,
+    "seen": 1792577840.561381,
+    "ast_hash": "57f3cb617c0729fc57ca9f434fb38fdd",
     "semantic_hash": ""
   },
   "src/api.ts": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1792567742.0776896,
-    "seen": 1792567963.451995,
-    "ast_hash": "c65fd9654125480fb79e683b28e8bde4",
+    "mtime": 1792576640.2046525,
+    "seen": 1792577840.561418,
+    "ast_hash": "89094e3fb82ab38adebcbb3e657c1b66",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -204,9 +204,9 @@
     "semantic_hash": ""
   },
   "main.js": {
-    "mtime": 1792567778.5797985,
-    "seen": 1792567963.451974,
-    "ast_hash": "50bc48d4b0c1261fdebb4ef9f576dd24",
+    "mtime": 1792577630.1326654,
+    "seen": 1792577840.561358,
+    "ast_hash": "c511e8e0c9ac5508a2702ad34e8de9d9",
     "semantic_hash": ""
   },
   "studio/index.html": {
@@ -435,6 +435,12 @@
     "mtime": 1792567060.081906,
     "seen": 1792567641.806274,
     "ast_hash": "a74f4247828650a47bd5c3799c5cf1a9",
+    "semantic_hash": ""
+  },
+  "src/components/EvidenceDependenceMap.tsx": {
+    "mtime": 1792577658.334977,
+    "seen": 1792577840.561394,
+    "ast_hash": "9d785fdccac6c6aba9583e3e0d3c8f22",
     "semantic_hash": ""
   }
 }

@@ -1166,3 +1166,39 @@
   .hypothesis-step { grid-template-columns:32px minmax(0,1fr); }
   .hypothesis-source { grid-column:2; text-align:left; }
 }
+
+/* Evidence dependence experiment */
+.dependence-backdrop { position:fixed; inset:0; z-index:1200; display:grid; place-items:center; padding:22px; background:rgba(8,15,11,.78); backdrop-filter:blur(9px); }
+.dependence-dialog { width:min(1120px,100%); max-height:min(90dvh,920px); overflow:auto; padding:clamp(20px,3vw,34px); border:1px solid var(--line); border-radius:22px; background:var(--surface); color:var(--text); box-shadow:0 28px 100px rgba(0,0,0,.38); }
+.dependence-header { display:flex; align-items:flex-start; justify-content:space-between; gap:22px; }
+.dependence-header h2 { margin:14px 0 8px; font:600 clamp(26px,4vw,42px)/1.1 'Manrope',sans-serif; letter-spacing:-.055em; }
+.dependence-header p { max-width:670px; margin:0; color:var(--muted); line-height:1.7; }
+.dependence-boundary { display:flex; align-items:flex-start; gap:10px; margin:22px 0 18px; padding:13px 15px; border:1px solid var(--line); border-radius:11px; color:var(--muted); background:var(--surface-raised); font-size:12px; line-height:1.65; }
+.dependence-boundary svg { flex:0 0 auto; color:var(--sage); margin-top:2px; }
+.dependence-actions { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 18px; }
+.dependence-empty,.dependence-progress { padding:16px; border-radius:10px; color:var(--muted); background:var(--surface-raised); font-size:13px; line-height:1.65; }
+.dependence-table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; }
+.dependence-table { width:100%; min-width:720px; border-collapse:collapse; text-align:left; }
+.dependence-table th,.dependence-table td { padding:11px; border-bottom:1px solid var(--line); vertical-align:top; }
+.dependence-table thead th { position:sticky; top:0; z-index:1; color:var(--subtle); background:var(--surface-raised); font:10px 'DM Mono',monospace; letter-spacing:.07em; text-transform:uppercase; }
+.dependence-table tbody th { min-width:180px; color:var(--text); font-size:12px; }
+.dependence-table tbody th small { display:block; margin-top:5px; color:var(--subtle); font:10px 'DM Mono',monospace; }
+.dependence-table tr:last-child > * { border-bottom:0; }
+.dependence-cell { width:100%; min-width:150px; min-height:42px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; color:var(--text); background:var(--surface-raised); text-align:left; font-size:11px; line-height:1.45; cursor:pointer; }
+.dependence-cell:disabled { cursor:default; opacity:.62; }
+.dependence-cell.is-unchanged { border-color:rgba(137,171,121,.42); color:var(--sage); }
+.dependence-cell.is-sources { color:var(--text); }
+.dependence-cell.is-changed,.dependence-cell.is-disappeared { border-color:rgba(206,154,114,.5); color:var(--accent); }
+.dependence-cell.is-selected { outline:2px solid var(--sage); outline-offset:1px; }
+.dependence-error { display:block; max-width:220px; padding-top:5px; color:var(--muted); font-size:10px; line-height:1.5; }
+.dependence-receipt { margin-top:18px; padding:17px; border:1px solid var(--line); border-radius:13px; background:var(--surface-raised); }
+.dependence-receipt-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 18px; color:var(--text); font-size:12px; }
+.dependence-compare { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:start; gap:16px; margin:17px 0; }
+.dependence-compare article { min-width:0; padding:15px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+.dependence-compare article > span { color:var(--subtle); font:9px 'DM Mono',monospace; letter-spacing:.08em; }
+.dependence-compare h3 { margin:10px 0 7px; font:600 18px/1.25 'Manrope',sans-serif; }
+.dependence-compare p { margin:0; color:var(--muted); font-size:12px; line-height:1.65; }
+.dependence-compare small { display:block; margin-top:12px; color:var(--subtle); font-size:10px; }
+.dependence-compare > svg { margin-top:34px; color:var(--sage); }
+.dependence-receipt-note { color:var(--muted); font-size:11px; line-height:1.6; }
+@media(max-width:650px) { .dependence-backdrop { padding:8px; } .dependence-dialog { max-height:94dvh; padding:18px; border-radius:16px; } .dependence-compare { grid-template-columns:1fr; } .dependence-compare > svg { transform:rotate(90deg); margin:0 auto; } }

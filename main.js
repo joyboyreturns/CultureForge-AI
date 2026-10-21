@@ -300,7 +300,7 @@
       });
     }
 
-    document.querySelectorAll('[data-open-studio]').forEach((link) => {
+    document.querySelectorAll('[data-open-studio]:not([data-pulse-open])').forEach((link) => {
       link.addEventListener('click', openStudio);
     });
 
