@@ -426,7 +426,8 @@ class QlooHarnessProvider(CultureProvider):
     def generate(self, project: ProjectRequest, tag_result: Optional[dict] = None,
                  recommendations: Optional[dict] = None,
                  seed_tag_ids: Optional[list[str]] = None,
-                 allow_naming: bool = True) -> GenerateResponse:
+                 allow_naming: bool = True,
+                 on_step=None) -> GenerateResponse:
         """Compose the answer for a brief.
 
         `tag_result` and `recommendations` may be supplied to reuse envelopes
@@ -683,6 +684,13 @@ class QlooHarnessProvider(CultureProvider):
         # only writes the words. A brief that was named before is served
         # from the evidence store and spends no model request at all.
         if allow_naming:
+            # The naming is the slowest part of an answer and the least
+            # important. Whoever is watching is told it is happening, so the
+            # wait is legible rather than a stall.
+            if on_step is not None:
+                on_step('name-the-directions',
+                        'Naming the directions with a free model. The rules already have a name '
+                        'for each one, so a model that cannot be reached changes nothing.')
             named, naming = self._name_directions(project, composed, evidence, matched_tags)
         else:
             named, naming = {}, {'used': False, 'attempted': False, 'model': None,

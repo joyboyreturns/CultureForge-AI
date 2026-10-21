@@ -55,7 +55,7 @@ export interface TraceEvent {
   id: string
   step: string
   workflow?: string | null
-  status: 'ok' | 'needs_input' | 'error' | 'cached' | 'skipped'
+  status: 'ok' | 'needs_input' | 'error' | 'cached' | 'skipped' | 'running'
   durationMs?: number | null
   correlationId?: string | null
   resultCount?: number | null

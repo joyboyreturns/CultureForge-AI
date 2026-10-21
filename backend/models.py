@@ -65,7 +65,7 @@ class TraceEvent(BaseModel):
     id: str
     step: str
     workflow: Optional[str] = None
-    status: Literal['ok', 'needs_input', 'error', 'cached', 'skipped'] = 'ok'
+    status: Literal['ok', 'needs_input', 'error', 'cached', 'skipped', 'running'] = 'ok'
     durationMs: Optional[int] = None
     correlationId: Optional[str] = None
     resultCount: Optional[int] = None

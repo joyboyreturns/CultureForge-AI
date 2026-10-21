@@ -61,6 +61,19 @@ class ResearchRun:
         with self._lock:
             self.events.append(event.model_dump())
 
+    def close_event(self, event_id: str, status: str, detail: Optional[str] = None,
+                    duration_ms: Optional[int] = None) -> None:
+        """Finish a step that was announced while it was still running."""
+        with self._lock:
+            for event in self.events:
+                if event.get('id') == event_id:
+                    event['status'] = status
+                    if detail:
+                        event['detail'] = detail
+                    if duration_ms is not None:
+                        event['durationMs'] = duration_ms
+                    return
+
     def snapshot(self) -> dict:
         with self._lock:
             return {
@@ -252,7 +265,33 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
         # ---- step 3: compose, using the evidence just cached ----
         # generate() reuses the two cached envelopes, so this costs no new call.
-        response = provider.generate(run.project, seed_tag_ids=run.seed_tag_ids or None)
+        announced: list[str] = []
+
+        def announce(step: str, detail: str) -> None:
+            event_id = f'trace-{uuid.uuid4().hex[:8]}'
+            announced.append(event_id)
+            run.add_event(TraceEvent(
+                id=event_id,
+                step=step,
+                status='running',
+                detail=detail,
+                acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            ))
+
+        response = provider.generate(run.project, seed_tag_ids=run.seed_tag_ids or None,
+                                     on_step=announce)
+        # The announced step is now finished, and it is closed with what
+        # actually happened rather than left running for ever.
+        naming_event = next((event for event in response.trace
+                              if event.step == 'name-the-directions'), None)
+        for event_id in announced:
+            run.close_event(
+                event_id,
+                status=(naming_event.status if naming_event else 'skipped'),
+                detail=(naming_event.detail if naming_event
+                        else 'The directions kept the rule engine\u2019s names.'),
+                duration_ms=(naming_event.durationMs if naming_event else None),
+            )
         run.add_event(TraceEvent(
             id=f'trace-{uuid.uuid4().hex[:8]}',
             step='compose-directions',
