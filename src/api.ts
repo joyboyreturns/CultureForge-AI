@@ -470,6 +470,36 @@ export async function challengeDirections(
   })
 }
 
+export interface EvidenceAnalysisDirection {
+  directionId: string
+  hypothesis: string
+  supportingEvidenceIds: string[]
+  challengingEvidenceIds: string[]
+  assumptions: string[]
+  alternativeExplanation: string
+  nextStep: 'compare_audiences' | 'rank_anchors' | 'remove_anchor' | 'investigate_direction' | 'none'
+  nextStepReason: string
+}
+export interface EvidenceAnalysisResult {
+  directions: EvidenceAnalysisDirection[]
+  recommendedDirectionId?: string | null
+  recommendationRationale: string
+  whatWouldChangeTheConclusion: string
+  model: string
+  cached: boolean
+  limitation: string
+  coverage: Record<string, { numerator: number; denominator: number; decisionEvidenceIds: string[]; label: string }>
+  confidence: Record<string, 'Supported' | 'Contested' | 'Unresolved'>
+}
+
+/** Explicitly analyze the exact brief, directions and evidence currently shown. */
+export async function analyzeEvidence(
+  project: ProjectRequest, evidence: Evidence[], concepts: Concept[], challenge?: ChallengeResult | null,
+): Promise<EvidenceAnalysisResult> {
+  const challengeSummary = challenge?.directions.map(({ directionId, verdict, reason }) => ({ directionId, verdict, reason })) ?? null
+  return postJson<EvidenceAnalysisResult>('/api/projects/analyze', { project, evidence, concepts, challenge: challengeSummary })
+}
+
 /** Exclude the selected direction's primary cited place in one cached Qloo Insights query. */
 export async function challengeReplacementProbe(
   project: ProjectRequest, directionId: string,

@@ -50,11 +50,14 @@ const labels: Record<CellState, string> = {
   unknown: 'Identity unavailable',
 }
 
-export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRebuild, onRestoreBaseline }: {
+export type DependenceSummary = Record<string, Record<CellState, number>>
+
+export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRebuild, onRestoreBaseline, onSummary }: {
   baseline: GenerateResponse
   onClose: () => void
   onUseRebuild: (result: Rebuild, venueLabel: string) => void
   onRestoreBaseline: (result: GenerateResponse) => void
+  onSummary?: (summary: DependenceSummary | null) => void
 }) {
   // Keep the reference frozen while the founder previews or applies branches.
   const [baseline] = useState(baselineProp)
@@ -68,18 +71,32 @@ export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRe
     if (running || !venues.length) return
     setRunning(true)
     setRows([])
+    onSummary?.(null)
     setSelected(null)
     setCompleted(0)
+    const completedRows: RemovalRow[] = []
     for (const venue of venues) {
       try {
         const rebuild = await recompose(baseline.project, venue.entityId ? [venue.entityId] : [])
-        setRows((current) => [...current, { venue, state: 'ready', rebuild }])
+        const row = { venue, state: 'ready' as const, rebuild }
+        completedRows.push(row)
+        setRows((current) => [...current, row])
       } catch (error) {
-        setRows((current) => [...current, { venue, state: 'error', error: error instanceof Error ? error.message : 'This removal could not be recomposed.' }])
+        const row = { venue, state: 'error' as const, error: error instanceof Error ? error.message : 'This removal could not be recomposed.' }
+        completedRows.push(row)
+        setRows((current) => [...current, row])
       }
       setCompleted((current) => current + 1)
     }
     setRunning(false)
+    // Failed removals remain unknown; they are never silently counted as unchanged.
+    const summary: DependenceSummary = {}
+    for (const concept of baseline.concepts) {
+      const key = recipeKey(concept) ?? concept.id
+      summary[key] = { unchanged: 0, sources: 0, changed: 0, disappeared: 0, unknown: 0 }
+      for (const row of completedRows) summary[key][row.rebuild ? compareDirection(concept, row.rebuild, baseline.evidence) : 'unknown'] += 1
+    }
+    onSummary?.(summary)
   }
 
   const selectedRow = rows.find((row) => row.venue.entityId === selected?.venueId)

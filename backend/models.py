@@ -29,20 +29,20 @@ class Evidence(BaseModel):
     Everything here is a value Qloo returned. CultureForge never invents an
     entity, a metric, or a location.
     """
-    id: str
+    id: str = Field(max_length=180)
     kind: Literal['entity', 'tag'] = 'entity'
-    label: str
-    entityId: Optional[str] = None
-    entityType: Optional[str] = None
-    tagId: Optional[str] = None
+    label: str = Field(max_length=400)
+    entityId: Optional[str] = Field(default=None, max_length=300)
+    entityType: Optional[str] = Field(default=None, max_length=120)
+    tagId: Optional[str] = Field(default=None, max_length=300)
     affinity: Optional[float] = None
     popularity: Optional[float] = None
     rating: Optional[float] = None
     priceLevel: Optional[int] = None
-    description: Optional[str] = None
-    image: Optional[str] = None
-    location: Optional[str] = None
-    traceId: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=3000)
+    image: Optional[str] = Field(default=None, max_length=2000)
+    location: Optional[str] = Field(default=None, max_length=250)
+    traceId: Optional[str] = Field(default=None, max_length=180)
     #: How this piece of evidence should be presented, derived from it by
     #: rule. It changes nothing about the evidence itself.
     presentation: Optional[dict] = None
@@ -53,11 +53,11 @@ class Decision(BaseModel):
     `origin` is always 'cultureforge_rule': these are CultureForge's business
     interpretations, not Qloo claims.
     """
-    id: str
-    field: str
-    proposal: str
-    evidenceIds: list[str] = Field(default_factory=list)
-    ruleId: str
+    id: str = Field(max_length=180)
+    field: str = Field(max_length=120)
+    proposal: str = Field(max_length=1000)
+    evidenceIds: list[str] = Field(default_factory=list, max_length=30)
+    ruleId: str = Field(max_length=180)
     origin: Literal['cultureforge_rule'] = 'cultureforge_rule'
 
 class TraceEvent(BaseModel):
@@ -95,10 +95,10 @@ class Delivery(BaseModel):
     cachedIn: Optional[Literal['browser', 'server']] = None
 
 class Concept(BaseModel):
-    id: str
-    name: str
-    tagline: str
-    description: str
+    id: str = Field(max_length=180)
+    name: str = Field(max_length=240)
+    tagline: str = Field(max_length=500)
+    description: str = Field(max_length=4000)
     audienceFit: Optional[int] = None
     culturalRelevance: Optional[int] = None
     feasibility: Optional[int] = None
@@ -114,9 +114,9 @@ class Concept(BaseModel):
     implementationNote: Optional[str] = None
     moments: list[ExperienceMoment] = Field(default_factory=list)
     # Evidence-backed concepts (conceptMode='evidence_composed') carry these.
-    evidenceIds: list[str] = Field(default_factory=list)
-    decisions: list[Decision] = Field(default_factory=list)
-    limitations: list[str] = Field(default_factory=list)
+    evidenceIds: list[str] = Field(default_factory=list, max_length=50)
+    decisions: list[Decision] = Field(default_factory=list, max_length=40)
+    limitations: list[str] = Field(default_factory=list, max_length=30)
 
 class ProvenanceMetadata(BaseModel):
     source: Literal['Qloo API', 'Mock']
@@ -254,6 +254,51 @@ class ChallengeProbeRequest(BaseModel):
     project: ProjectRequest
     directionId: str = Field(min_length=1, max_length=120)
     revision: ChallengeRevision
+
+
+class EvidenceVerdictInput(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    directionId: str = Field(min_length=1, max_length=120)
+    verdict: Literal['supported', 'contested', 'unproven']
+    reason: str = Field(default='', max_length=600)
+
+
+class EvidenceAnalysisRequest(BaseModel):
+    """Analyze exactly the exploration currently shown in the studio."""
+    model_config = ConfigDict(extra='forbid')
+    project: ProjectRequest
+    evidence: list[Evidence] = Field(default_factory=list, max_length=50)
+    concepts: list[Concept] = Field(default_factory=list, max_length=10)
+    challenge: Optional[list[EvidenceVerdictInput]] = Field(default=None, max_length=10)
+
+
+class EvidenceAnalysisDirection(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    directionId: str
+    hypothesis: str = Field(min_length=8, max_length=500)
+    supportingEvidenceIds: list[str] = Field(max_length=12)
+    challengingEvidenceIds: list[str] = Field(max_length=12)
+    assumptions: list[str] = Field(max_length=5)
+    alternativeExplanation: str = Field(min_length=4, max_length=320)
+    nextStep: Literal['compare_audiences', 'rank_anchors', 'remove_anchor', 'investigate_direction', 'none']
+    nextStepReason: str = Field(min_length=4, max_length=240)
+
+
+class EvidenceAnalysisOutput(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    directions: list[EvidenceAnalysisDirection]
+    recommendedDirectionId: Optional[str] = None
+    recommendationRationale: str = Field(min_length=4, max_length=500)
+    whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=320)
+
+
+class EvidenceAnalysisResult(EvidenceAnalysisOutput):
+    model: str
+    cached: bool = False
+    limitation: str = 'This is an evidence-grounded cultural hypothesis, not a measure of demand or business success.'
+    # Deterministic ratios disclose how much of the rule composer rationale has citations.
+    coverage: dict[str, dict[str, object]] = Field(default_factory=dict)
+    confidence: dict[str, Literal['Supported', 'Contested', 'Unresolved']] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------

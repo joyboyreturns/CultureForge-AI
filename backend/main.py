@@ -15,11 +15,13 @@ from .comparison import rank_entities, recompose
 from .challenge import challenge_directions
 from .challenge_probe import challenge_probe
 from .evidence_store import get_store
+from .reasoning import AnalysisUnavailable, analyze as analyze_evidence
 from .llm import status as llm_status
 from .presentation import presentation_key
 from .selector import select as select_evidence
 from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequest, ChallengeRequest,
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
+                     EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
                      InvestigationRequest, ProjectRequest, ProvenanceMetadata,
                      RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
@@ -765,6 +767,16 @@ def challenge_probe_route(request: ChallengeProbeRequest) -> dict:
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='A replacement probe needs the Qloo provider.')
     return challenge_probe(request, provider)
+
+
+@app.post('/api/projects/analyze', tags=['evidence'],
+          summary='Compare directions using the Qloo evidence already on screen')
+def analyze_evidence_route(request: EvidenceAnalysisRequest) -> dict:
+    """Run one bounded, explicit model analysis without issuing a Qloo call."""
+    try:
+        return analyze_evidence(request).model_dump()
+    except AnalysisUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post('/api/evidence/presentation', tags=['evidence'],

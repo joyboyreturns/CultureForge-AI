@@ -118,6 +118,26 @@ def test_challenge_probe_route_refuses_sample_provider(client, monkeypatch):
     assert 'Qloo' in response.json()['detail']
 
 
+def test_evidence_analysis_request_is_typed_and_opt_in(client, monkeypatch):
+    malformed = client.post('/api/projects/analyze', json={
+        'project': {'businessType': 'Food & beverage', 'audience': 'Gen Z',
+                    'location': 'Brooklyn', 'budget': '$25k', 'objectives': []},
+        'evidence': 'not-a-list', 'concepts': [],
+    })
+    assert malformed.status_code == 422
+    assert malformed.json()['detail']
+
+    monkeypatch.setattr(main, 'analyze_evidence', lambda _request: (_ for _ in ()).throw(
+        main.AnalysisUnavailable('Evidence analysis is disabled.')))
+    disabled = client.post('/api/projects/analyze', json={
+        'project': {'businessType': 'Food & beverage', 'audience': 'Gen Z',
+                    'location': 'Brooklyn', 'budget': '$25k', 'objectives': []},
+        'evidence': [], 'concepts': [],
+    })
+    assert disabled.status_code == 503
+    assert 'disabled' in disabled.json()['detail']
+
+
 def test_snapshots_round_trip_over_http(client):
     payload = {'projectId': 'cf-test', 'concepts': [], 'note': 'shared'}
     created = client.post('/api/explorations/share', json=payload)

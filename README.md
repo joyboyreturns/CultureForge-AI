@@ -203,6 +203,14 @@ It is free, and it stays free:
 - The free tier allows 50 requests a day — 1000 once $10 of credits is on the account. So the model is a **cache, not a service**: one call per brief, held in the same evidence store as the Qloo envelopes, and a repeated brief costs nothing. The local guard sits at the tier's own limit (20 an hour, 50 a day), so a judge can work through the whole allowance and no further.
 - Without a key, or when the tier is spent, or when the model is late, the rule engine's wording is used and the trace says which happened: `name-the-directions → skipped`.
 
+### Comparing competing directions with bounded model analysis
+
+The results page has an explicit **Analyze this evidence** action. It sends the brief, current directions, their normalized Qloo evidence and any current challenge verdict to one server-side Vercel AI Gateway request. It does not run during generation, and it does not call Qloo. Model output must match a strict Pydantic schema, cover every direction exactly once, use only evidence IDs in the current exploration, and select any next step from a fixed allowlist. Invalid output is discarded and is never cached.
+
+The analysis presents competing hypotheses, evidence IDs that support or challenge each one, assumptions, an alternative explanation, and a suggested next validation operation. Suggestions do not autonomously execute tools. The recommendation can abstain. Direction confidence is taken from the existing Qloo-backed challenge when present; otherwise it is `Unresolved`. A separate numerator/denominator shows how many deterministic composer decisions have evidence attached. That is citation coverage, not proof that a claim is true. The existing challenge and evidence-removal experiment remain the source of contradiction and dependence checks.
+
+Frontier AI analysis is opt-in and disabled by default. To enable it for a judge session, configure the server-only `AI_GATEWAY_API_KEY` and `AI_GATEWAY_MODEL`, then set `AI_GATEWAY_ANALYSIS_ENABLED=true`. The selected Frontier AI model is supplied through the server environment and is never shown in the product. The service caps output at 1,400 tokens, waits at most 15 seconds, makes no retries, and allows at most 10 requests per day by default. A valid answer is held against the exact project, evidence, direction content, challenge result, prompt version and configured model; changing any of those produces a new key. No gateway request was run when this implementation was built. Requests use Vercel AI Gateway's OpenAI-compatible chat completions API.
+
 ### The evidence test — the part that can come back with a no
 
 Every tool that reads an API answers with what the API holds. This one asks the harder question, and it is built so the answer can be **no**.
