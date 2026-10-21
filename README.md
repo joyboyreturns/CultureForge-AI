@@ -254,7 +254,7 @@ The free pool is smaller and noisier than the model list suggests, and the code 
 - **A refusal is remembered.** A model that is rate limited is skipped for fifteen minutes, a withdrawn one for the rest of the day. The next brief does not pay for finding that out again.
 - **The model the router picked is remembered and asked directly.** The answer names the model that gave it, so the next brief asks that model — no lottery, and the same few seconds every time.
 - **A model that answers well and quickly is asked first.** How each model answered — usable or not, fast or slow — is kept in `~/.cache/cultureforge/llm_models.json`, and the order follows it.
-- **The switch itself is instant.** Reading the local file takes no time; the wait is the model's own, and one attempt is capped at fourteen seconds, with the whole naming capped at twenty-two. A brief that has waited long enough gets the rule engine's wording rather than a slower title.
+- **The switch itself is instant.** Reading the local file takes no time; the wait is the model's own, and one attempt may only have what is left of the budget, so the whole naming is capped at eighteen seconds. A brief that has waited long enough gets the rule engine's wording rather than a slower title.
 - **Only what was served is charged.** A model that is withdrawn or busy serves no inference, so it does not count against the allowance.
 
 `GET /api/health` reports the whole thing: which models are answering, which are refusing, and how much of the daily allowance is left.

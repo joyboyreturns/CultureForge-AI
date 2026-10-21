@@ -100,13 +100,13 @@ DEFAULT_TIMEOUT_SECONDS = 25
 #: model that takes twenty seconds to think is not worth waiting for: the
 #: next one answers in five, and the brief should not wait for the slow one
 #: to finish before it finds that out.
-ATTEMPT_TIMEOUT_SECONDS = 14
+ATTEMPT_TIMEOUT_SECONDS = 18
 
 #: How long the whole naming may take before the rule engine's wording is
 #: used. A brief that waits half a minute for a title is a brief nobody
 #: waits for twice — and the naming must never be the reason an answer is
 #: slow, so this is a hard cap on the whole naming, not on one attempt.
-NAMING_BUDGET_SECONDS = 14
+NAMING_BUDGET_SECONDS = 18
 
 #: Enough room for the answer itself.
 DEFAULT_MAX_TOKENS = 2000
@@ -570,6 +570,11 @@ def _ask_model(brief: dict, directions: list[dict], timeout: int,
         if before_request is not None:
             before_request()
         spent += 1
+        # The attempt may only have what is left of the budget. Without this,
+        # two slow models could add up to more than the cap: one attempt
+        # that used most of the budget, and another that started anyway.
+        remaining = NAMING_BUDGET_SECONDS - (time.monotonic() - started)
+        attempt_timeout = max(3, min(ATTEMPT_TIMEOUT_SECONDS, int(remaining)))
         payload = {
             'model': model,
             # The fallback chain is free-only, and OpenRouter takes at most three.
@@ -582,7 +587,7 @@ def _ask_model(brief: dict, directions: list[dict], timeout: int,
             # Keep the thinking short, so there is room left for the answer.
             payload['reasoning'] = {'max_tokens': REASONING_MAX_TOKENS}
         try:
-            body = _post(payload, min(timeout, ATTEMPT_TIMEOUT_SECONDS))
+            body = _post(payload, min(timeout, attempt_timeout))
         except LlmUnavailable as exc:
             # A model that is gone (404), busy (429) or answered with nothing
             # is not a reason to give up: the next attempt gets the request.

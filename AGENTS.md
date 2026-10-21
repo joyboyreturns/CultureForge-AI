@@ -137,8 +137,9 @@ tests pin all three:
    refusal is remembered (15 minutes for a rate limit, the day for a
    withdrawn model), the model the router actually chose is asked directly
    next time, and the models that answered well and quickly come first. The
-   switch is a local file read, so it is instant; one attempt is capped at
-   fourteen seconds and the whole naming at twenty-two.
+   switch is a local file read, so it is instant; an attempt may only have
+   what is left of the budget, so the whole naming is capped at eighteen
+   seconds however many models it tries.
 
 A failure is never held: an empty naming is discarded from the evidence
 store, so the next run tries again instead of being told for a day that the
