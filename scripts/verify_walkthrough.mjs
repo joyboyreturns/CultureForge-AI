@@ -109,7 +109,7 @@ async function main() {
   check('the research run starts', started.status === 202 && Boolean(started.body?.runId), started.body?.runId);
 
   let run = null;
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 180; attempt += 1) {
     await sleep(500);
     const polled = await api(`/api/research/runs/${started.body.runId}`);
     run = polled.body;

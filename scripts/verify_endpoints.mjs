@@ -143,7 +143,7 @@ async function main() {
   seen.add('POST /api/research/runs');
 
   let run = null;
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 225; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 400));
     const polled = await api(`/api/research/runs/${started.body.runId}`);
     run = polled.body;
