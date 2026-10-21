@@ -543,6 +543,7 @@
   // ---------------------------------------------------------------------------
   function initLivePulse() {
     const pulse = document.querySelector('[data-live-pulse]');
+    const pulseLabel = pulse ? pulse.querySelector('.live-pulse-label') : null;
     if (!pulse) return;
     const status = pulse.querySelector('[data-pulse-status]');
     const list = pulse.querySelector('[data-pulse-list]');
@@ -577,6 +578,15 @@
         const answer = await post('/api/projects/generate', brief);
         const directions = (answer.concepts || []).slice(0, 3);
         if (!directions.length) return fail('no directions');
+        // Say whether this was fresh or held. Both are real Qloo evidence;
+        // only one of them cost a request.
+        if (pulseLabel) {
+          var delivery = answer.delivery || {};
+          pulseLabel.innerHTML = '<span class="live-dot"></span> ' +
+            (delivery.kind === 'fresh'
+              ? 'FRESH QLOO EVIDENCE'
+              : 'CACHED QLOO EVIDENCE');
+        }
         status.textContent = 'Qloo returned ' + (answer.evidence || []).filter(function (item) {
           return item.kind === 'entity';
         }).length + ' real places. The directions are built from them:';

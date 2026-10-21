@@ -14,17 +14,22 @@ import type { Concept, Evidence, ProjectRequest, TraceEvent } from '../contracts
  * depended on it.
  */
 export function ProvenanceDrawer({
-  evidence, concepts, trace, evidenceId, project, onClose, onRecomposed,
+  evidence, concepts, trace, evidenceId, project, selection, onClose, onRecomposed,
 }: {
   evidence: Evidence[]
   concepts: Concept[]
   trace: TraceEvent[]
   evidenceId: string | null
   project?: ProjectRequest
+  /** Which of Qloo's own sentences the model chose to lead with, if it did. */
+  selection?: Record<string, { sentences?: string[]; sentenceIds?: string[]; tagIds?: string[] }>
   onClose: () => void
   onRecomposed?: (result: { concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string }) => void
 }) {
   const [removing, setRemoving] = useState(false)
+  // A failure is a failure. It is kept in an error state and never reported
+  // as a successful recomposition that happened to leave nothing behind.
+  const [removalError, setRemovalError] = useState('')
   const [recomposed, setRecomposed] = useState<{ concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string } | null>(null)
   // The drawer keeps its own copy of the evidence it is showing, so a
   // recomposition that removes that evidence does not close the panel under
@@ -39,20 +44,29 @@ export function ProvenanceDrawer({
   if (!item) return null
 
   const event = trace.find((candidate) => candidate.id === item.traceId)
+  const presentation = item.presentation ?? null
+  // The model's choice, when there is one. It can only be a sentence Qloo
+  // wrote, so the server's own text is rendered here.
+  const chosen = selection?.[item.entityId ?? '']
+  const chosenText = chosen?.sentences?.length ? chosen.sentences.join(' ') : ''
   const usedBy = concepts.filter((concept) => concept.evidenceIds.includes(evidenceId))
   const request = event?.request
 
   const removeAndRecompose = async () => {
     if (!project || !onRecomposed || item.kind !== 'entity') return
     setRemoving(true)
+    setRemovalError('')
     try {
       const { recompose } = await import('../api')
       const result = await recompose(project, item.entityId ? [item.entityId] : [])
       setRecomposed(result)
       onRecomposed(result)
     } catch (error) {
+      // A failure is a failure. It is not reported as a successful
+      // recomposition that happened to leave nothing behind, and the
+      // exploration on screen is left as it was.
       setRecomposed(null)
-      onRecomposed?.({ concepts: [], evidence: [], dropped: 0, notice: error instanceof Error ? error.message : 'The recomposition failed.' })
+      setRemovalError(error instanceof Error ? error.message : 'The recomposition failed.')
     }
     setRemoving(false)
   }
@@ -78,6 +92,29 @@ export function ProvenanceDrawer({
           {item.priceLevel != null && <div><span>PRICE LEVEL</span><strong>{item.priceLevel}</strong></div>}
           {item.location && <div><span>LOCATION</span><strong>{item.location}</strong></div>}
         </div>
+
+        {presentation && (
+          <div className="provenance-presentation">
+            <span className="small-cap">HOW IT IS PRESENTED</span>
+            {presentation.identityNote && <p className="provenance-caveat">{presentation.identityNote}</p>}
+            {presentation.locationNote && <p className="provenance-caveat">{presentation.locationNote}</p>}
+            {presentation.notes.map((note, index) => (
+              <p className="provenance-caveat" key={index}>{note}</p>
+            ))}
+            {chosenText && (
+              <p className="provenance-chosen">
+                <b>Chosen from Qloo&rsquo;s own description</b>
+                {chosenText}
+              </p>
+            )}
+            {presentation.excerpt && (
+              <p className="provenance-excerpt-lead">{presentation.excerpt}</p>
+            )}
+            {presentation.hasMore && item.description && (
+              <p className="provenance-original-label">Qloo&rsquo;s full description</p>
+            )}
+          </div>
+        )}
 
         {item.description && <p className="provenance-description">{item.description}</p>}
 
@@ -127,6 +164,7 @@ export function ProvenanceDrawer({
             <button className="button button-secondary" onClick={removeAndRecompose} disabled={removing}>
               {removing ? 'Recomposing…' : 'Remove this and recompose'}
             </button>
+            {removalError && <p className="provenance-removal-error" role="alert">{removalError}</p>}
             {recomposed && (
               <div className="provenance-recomposed">
                 <strong>{recomposed.concepts.length} of {concepts.length} directions survived</strong>

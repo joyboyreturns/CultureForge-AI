@@ -130,12 +130,47 @@ def rank_entities(options: list[str], signals: Optional[list[str]] = None,
     }
 
 
+def _without(envelope: dict, drop: set[str], provider: QlooHarnessProvider) -> dict:
+    """A copy of an envelope with the excluded rows taken out.
+
+    The rows are removed **before** the composer sees them. Filtering the
+    composer's output afterwards would leave the removed venue's description,
+    photograph and decisions in place, and the answer would claim to have
+    been rebuilt when it had only been trimmed.
+    """
+    if not drop:
+        return envelope
+    rows = provider.rows(envelope)
+    kept = []
+    for row in rows:
+        entity_id = row.get('entity_id') or row.get('id')
+        tag = provider.tag_id(row)
+        if isinstance(entity_id, str) and entity_id in drop:
+            continue
+        if tag and tag in drop:
+            continue
+        kept.append(row)
+    if isinstance(envelope.get('results'), dict):
+        copy = dict(envelope)
+        results = dict(envelope['results'])
+        for key in ('entities', 'tags'):
+            if isinstance(results.get(key), list):
+                results[key] = kept
+        copy['results'] = results
+        return copy
+    copy = dict(envelope)
+    copy['results'] = kept
+    return copy
+
+
 def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[str]] = None,
                exclude_tag_ids: Optional[list[str]] = None) -> dict:
     """Rebuild the directions without the given evidence, using no new call.
 
     This is the check that the answer really depends on the data: remove one
-    venue and see which decisions lose their support.
+    venue and see the directions rebuilt without it. The removal happens
+    before the composition, so the venue is gone from the description, the
+    photograph and the decisions — not just from the evidence list.
     """
     exclude_entity_ids = set(exclude_entity_ids or [])
     exclude_tag_ids = set(exclude_tag_ids or [])
@@ -161,9 +196,17 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
 
-    response = provider.generate(project, tag_envelope, rec_envelope)
+    # The exclusions are applied to the held evidence *before* the composer
+    # runs, so the directions are rebuilt from what is left.
+    tag_envelope = _without(tag_envelope, exclude_tag_ids, provider)
+    rec_envelope = _without(rec_envelope, exclude_entity_ids, provider)
 
-    # Drop the excluded entities from the evidence and from every decision.
+    # No model call: this is a zero-upstream operation, and the deterministic
+    # wording is what the rules produce on their own.
+    response = provider.generate(project, tag_envelope, rec_envelope, allow_naming=False)
+
+    # And the evidence and decisions are checked against what is actually
+    # left, so nothing cites a venue that is gone.
     kept_evidence = [
         item for item in response.evidence
         if not (item.kind == 'entity' and item.entityId in exclude_entity_ids)
@@ -186,8 +229,13 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     return {
         'concepts': [concept.model_dump() for concept in concepts],
         'evidence': [item.model_dump() for item in kept_evidence],
-        'dropped': len(response.evidence) - len(kept_evidence),
+        # What was actually taken out, counted from the exclusions rather
+        # than from the difference: the answer was composed from what was
+        # left, so the two are the same length.
+        'dropped': len(exclude_entity_ids) + len(exclude_tag_ids),
         'notice': (
-            'Recomposed from the evidence already retrieved for this brief. Qloo was not called again.'
+            'Rebuilt from the evidence already retrieved for this brief, with the removed '
+            'places taken out before the directions were composed. Qloo was not called again, '
+            'and no model was asked to name anything.'
         ),
     }

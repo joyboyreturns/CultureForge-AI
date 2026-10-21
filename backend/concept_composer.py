@@ -22,6 +22,7 @@ actually supports it, and a concept only ever cites evidence it was given.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -87,10 +88,11 @@ RECIPES: tuple[Recipe, ...] = (
         tagline='Low-light, low-volume, high-attention service.',
         offering='A deliberately unhurried format, proposed around the references Qloo returned — where the room, the pacing and the menu all stay small. Quietness was not measured.',
         ritual='One long table, one course, and a rule against rushing anyone.',
-        positioning='For an audience that buys restoration rather than entertainment.',
+        positioning='Proposed positioning: restoration rather than entertainment. Willingness to pay was not tested.',
         personality='Calm, precise, restorative',
         signals=['Intentional rituals', 'Low-stimulation spaces'],
-        matchers=('mindful', 'mindfulness', 'wellness', 'calm', 'slow', 'rest', 'psychological', 'focus', 'quiet'),
+        matchers=('mindful', 'mindfulness', 'wellness', 'calm', 'slow', 'rest', 'restorative',
+                 'psychological', 'focus', 'quiet'),
         type_matchers=('wellness',),
         business_types=('Food & beverage', 'Wellness', 'Hospitality'),
         facet=FACET_RATING,
@@ -106,7 +108,8 @@ RECIPES: tuple[Recipe, ...] = (
         positioning='For an audience that treats taste as the primary signal of quality.',
         personality='Precise, confident, curated',
         signals=['Design-led spaces', 'Independent discovery'],
-        matchers=('design', 'style', 'aesthetic', 'fashion', 'creative', 'culture', 'curated', 'artisan', 'premium'),
+        matchers=('design', 'designer', 'style', 'aesthetic', 'fashion', 'creative', 'culture',
+                 'curated', 'artisan', 'premium'),
         type_matchers=('retail', 'hospitality'),
         facet=FACET_POPULARITY,
         accent='#e69b73',
@@ -114,9 +117,9 @@ RECIPES: tuple[Recipe, ...] = (
     ),
     Recipe(
         rule_id='community-table',
-        name='The Neighbourhood Table',
+        name='The Shared Table',
         tagline='A long table that changes with who turns up.',
-        offering='A community format anchored on the venues that already draw a crowd locally, with a shared table, a shared bill and a rotating host.',
+        offering='A community format anchored on the reference places returned for this query — local attendance was not measured — with a shared table, a shared bill and a rotating host.',
         ritual='Whoever arrived first sets the first course.',
         positioning='For an audience that wants to belong to somewhere before it wants to buy from it.',
         personality='Generous, informal, local',
@@ -132,12 +135,14 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='live-programme',
         name='The Late Programme',
         tagline='Culture as the headline act, not the decoration.',
-        offering='A programming-led concept built on the most culturally active venues in the brief, where the offer is what happens in the room rather than what is on the table.',
+        offering='A programming-led concept built on the returned reference venues, used to propose a format where the offer is what happens in the room rather than what is on the table.',
         ritual='A different programme every week, chosen by the people who showed up last week.',
         positioning='For an audience that buys access to culture more than it buys objects.',
         personality='Restless, generous, current',
         signals=['Independent discovery', 'Hand-me-down culture'],
-        matchers=('culture', 'cultural', 'music', 'night', 'event', 'discovery', 'explor', 'trend', 'curious', 'vibrant', 'energy'),
+        matchers=('culture', 'cultural', 'music', 'night', 'event', 'discovery', 'explore',
+                 'exploration', 'exploratory', 'trend', 'curious', 'curiosity', 'vibrant',
+                 'energy', 'energetic'),
         type_matchers=('entertainment',),
         business_types=('Entertainment', 'Hospitality'),
         facet=FACET_DISTINCTIVE,
@@ -153,7 +158,8 @@ RECIPES: tuple[Recipe, ...] = (
         positioning='For an audience that has stopped paying for things it does not need.',
         personality='Straightforward, sturdy, plain-spoken',
         signals=['Practical utility', 'Transparent value'],
-        matchers=('value', 'practical', 'afford', 'essential', 'everyday', 'budget', 'simple', 'frugal'),
+        matchers=('value', 'values', 'practical', 'afford', 'affordable', 'affordability',
+                 'essential', 'everyday', 'budget', 'simple', 'frugal'),
         type_matchers=('retail',),
         business_types=('Retail', 'Food & beverage'),
         facet=FACET_ACCESSIBLE,
@@ -164,7 +170,7 @@ RECIPES: tuple[Recipe, ...] = (
         rule_id='experience-led',
         name='The Third Place',
         tagline='A room that people come to be in, not just to buy from.',
-        offering='An experience-first format built on the venues with the strongest local pull, where the offer is the hour spent there rather than the item carried away.',
+        offering='An experience-first format built on the returned venues selected using Qloo popularity, not measured local demand, where the offer is the hour spent there rather than the item carried away.',
         ritual='No fixed closing time, and a seat that is always available for whoever is next.',
         positioning='For an audience that has run out of places to be.',
         personality='Energetic, open, unprogrammed',
@@ -224,6 +230,17 @@ def _tag_name(tag_id: str) -> str:
     return tail.replace('_', ' ').strip()
 
 
+#: A matcher is a whole word or a whole phrase. "rest" is a word; it is not
+#: the first four letters of "restaurant", and a rule that cannot tell the
+#: difference is a rule that fires on the wrong evidence.
+def _whole_words(matcher: str, text: str) -> bool:
+    phrase = matcher.replace('_', ' ').strip()
+    if not phrase:
+        return False
+    pattern = r'\b' + r'\s+'.join(re.escape(word) for word in phrase.split()) + r'\b'
+    return re.search(pattern, text) is not None
+
+
 def _matches(recipe: Recipe, tag_names: list[str], business_type: str) -> tuple[float, list[str]]:
     """How strongly the evidence unlocks this recipe, and which tags did it."""
     if recipe.business_types and business_type not in recipe.business_types:
@@ -232,7 +249,7 @@ def _matches(recipe: Recipe, tag_names: list[str], business_type: str) -> tuple[
     hit_tags: list[str] = []
     for tag in tag_names:
         for matcher in recipe.matchers:
-            if matcher in tag:
+            if _whole_words(matcher, tag):
                 score += recipe.weight
                 hit_tags.append(tag)
                 break
@@ -240,24 +257,61 @@ def _matches(recipe: Recipe, tag_names: list[str], business_type: str) -> tuple[
     # still yields directions when the audience tags are narrow.
     if not hit_tags:
         lowered = business_type.lower()
-        if any(matcher in lowered for matcher in recipe.type_matchers):
+        if any(_whole_words(matcher, lowered) for matcher in recipe.type_matchers):
             score += 0.5
     return score, hit_tags
 
 
+#: The words Qloo uses in its own descriptions when the entity is an
+#: organisation rather than a place someone goes to. A park-managing
+#: nonprofit is not a dining room, and building a direction around one
+#: because it came back with a high local rating is how the evidence chain
+#: stops meaning anything.
+_ORGANISATION_WORDS = (
+    'nonprofit', 'non-profit', 'organization', 'organisation', 'corporation',
+    'company', 'foundation', 'agency', 'authority', 'department', 'llc',
+    'inc.', 'inc ', 'trust', 'association', 'society', 'consortium',
+)
+
+
+def _is_organisation(entity: dict) -> bool:
+    """Whether Qloo's own description says this is an organisation."""
+    text = (entity.get('description') or '').lower()
+    if not text:
+        return False
+    head = text[:160]
+    return any(word in head for word in _ORGANISATION_WORDS)
+
+
 def _facet_rank(facet: str, entities: list[dict]) -> list[dict]:
-    """Order evidence by the facet this concept leans on."""
+    """Order evidence by the facet this concept leans on.
+
+    Organisations come last in every ordering. They stay in the evidence —
+    Qloo returned them, and hiding that would be its own kind of lie — but
+    they do not become the place a direction is built around.
+    """
+    def by_organisation(rows: list[dict]) -> list[dict]:
+        # An organisation is never the place a direction is built around, so
+        # it sorts after every place.
+        return sorted(rows, key=lambda e: _is_organisation(e))
+
     if facet == FACET_RATING:
-        return sorted(entities, key=lambda e: (_number(e.get('business_rating')), _number(e.get('popularity'))), reverse=True)
+        return by_organisation(sorted(
+            entities, key=lambda e: (_number(e.get('business_rating')), _number(e.get('popularity'))),
+            reverse=True))
     if facet == FACET_ACCESSIBLE:
         priced = [e for e in entities if e.get('price_level') is not None]
         rest = [e for e in entities if e.get('price_level') is None]
-        return sorted(priced, key=lambda e: (_number(e.get('price_level')), -_number(e.get('popularity')))) + sorted(
-            rest, key=lambda e: _number(e.get('popularity')), reverse=True
-        )
-    if facet == FACET_DISTINCTIVE:
-        return sorted(entities, key=lambda e: (len(e.get('description') or ''), _number(e.get('popularity'))), reverse=True)
-    return sorted(entities, key=lambda e: (_number(e.get('popularity')), _number(e.get('business_rating'))), reverse=True)
+        return by_organisation(sorted(
+            priced, key=lambda e: (_number(e.get('price_level')), -_number(e.get('popularity'))))) + by_organisation(sorted(
+            rest, key=lambda e: _number(e.get('popularity')), reverse=True))
+    # There is no tag comparison at this point, so there is no measured notion
+    # of distinctiveness to rank by. The length of a marketing description is
+    # not one. This ordering says plainly what it can: the returned place with
+    # the strongest popularity and local rating.
+    return by_organisation(sorted(
+        entities, key=lambda e: (_number(e.get('popularity')), _number(e.get('business_rating'))),
+        reverse=True))
 
 
 def _number(value) -> float:
@@ -311,6 +365,10 @@ def compose(
 
     concepts: list[ComposedConcept] = []
     used_facets: set[str] = set()
+    # The three directions have to be visibly different, not three views of
+    # one venue. A place that is already the anchor of a direction is not
+    # used as the anchor of another.
+    used_anchors: set[str] = set()
 
     for _score, recipe, hit_tags in scored:
         if len(concepts) >= 3:
@@ -322,9 +380,22 @@ def compose(
         ranked = _facet_rank(recipe.facet, entities)
         if not ranked:
             continue
-        primary = ranked[0]
-        support = [e for e in ranked[1:3] if _number(e.get('popularity')) > 0 or e.get('price_level') is not None]
+        # An organisation Qloo described as an organisation does not become
+        # the place a business is built around. It stays in the evidence, and
+        # the direction is built from the places instead.
+        places = [e for e in ranked if not _is_organisation(e)]
+        if not places:
+            continue
+        fresh = [e for e in places
+                 if (e.get('entity_id') or e.get('id')) not in used_anchors]
+        if not fresh:
+            continue
+        primary = fresh[0]
+        support = [e for e in places[1:3]
+                   if (e.get('entity_id') or e.get('id')) != (primary.get('entity_id') or primary.get('id'))
+                   and (_number(e.get('popularity')) > 0 or e.get('price_level') is not None)]
         chosen = ([primary] + support)[:3]
+        used_anchors.add(primary.get('entity_id') or primary.get('id') or '')
 
         evidence_ids = []
         for entity in chosen:
@@ -389,6 +460,14 @@ def compose(
         limitations = [
             'Qloo supplied the audience tags and the local entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.',
         ]
+        skipped = [e.get('name') for e in ranked if _is_organisation(e) and e.get('name')]
+        if skipped:
+            limitations.append(
+                'Qloo also returned '
+                + ', '.join(skipped[:2])
+                + ', which its own description calls an organisation rather than a place to '
+                  'go to. It is in the evidence and it was not used as the anchor here.'
+            )
         if not any(_number(e.get('affinity')) != _number(chosen[0].get('affinity')) for e in chosen):
             limitations.append(
                 'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues. Popularity and local rating were used instead.'

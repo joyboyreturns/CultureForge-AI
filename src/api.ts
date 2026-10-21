@@ -213,6 +213,11 @@ export async function compareAudience(project: ProjectRequest, audience: string)
     trace: comparison.trace,
     delivery: comparison.delivery,
     notice: comparison.notice,
+    provenance: {
+      source: 'Qloo API',
+      endpoint: 'qloo exec find_tags → recommend',
+      resolved_tags: comparison.resolvedTags ?? [],
+    },
     dataMode: 'live',
     conceptMode: 'evidence_composed',
   })
@@ -326,6 +331,43 @@ export async function recompose(
 }
 
 // ---------------------------------------------------------------------------
+// Choosing what to show
+// ---------------------------------------------------------------------------
+
+/**
+ * What the model chose from the evidence.
+ *
+ * The model returns ids; the server renders its own words. So `sentences`
+ * here is Qloo's own text, never the model's.
+ */
+export interface EvidenceSelection {
+  entityId: string
+  sentences: string[]
+  sentenceIds: string[]
+  tagIds: string[]
+}
+
+export interface PresentationSelection {
+  selections: Record<string, EvidenceSelection>
+  /** 'model' when the model chose something usable; 'rules' otherwise. */
+  source: 'model' | 'rules'
+  model?: string | null
+  reason?: string | null
+  cached?: boolean
+}
+
+/**
+ * Ask the free model to choose which of Qloo's own sentences to lead with.
+ *
+ * It may only return ids, so it cannot write a fact. If it cannot be
+ * reached, or answers with something that does not pass the validation, the
+ * rules stay in place and nothing is lost.
+ */
+export async function selectPresentation(evidence: Evidence[]): Promise<PresentationSelection> {
+  return postJson<PresentationSelection>('/api/evidence/presentation', { evidence })
+}
+
+// ---------------------------------------------------------------------------
 // Testing a direction against the local evidence
 // ---------------------------------------------------------------------------
 
@@ -351,6 +393,12 @@ export interface ChallengedDirection {
   unprovenIf: string
   /** The order the directions arrived in, before the test. */
   arrivalOrder?: string[]
+  /** The place the direction is actually built around, when the test used
+   *  a different one. The concept itself was not rebuilt. */
+  originalAnchor?: { entityId: string; label: string } | null
+  /** True when the verdict answers for an alternative anchor rather than
+   *  the direction's own reference. */
+  isCounterfactual?: boolean
   /** The place the claim is held to. */
   anchor: { entityId: string | null; label: string | null } | null
   /** The other places it could have been held to. */
@@ -375,7 +423,18 @@ export interface ChallengeResult {
   /** The policy that produced the verdicts, so they can be traced. */
   policyVersion: string
   whatThisIs: string
-  profile: { demographic: string; location: string; signals: string[] }
+  profile: {
+    demographic: string
+    location: string
+    signals: string[]
+    /** Whether the brief actually named this demographic. */
+    inferred?: boolean
+    /** Who proposed the profile — CultureForge read it from the brief; Qloo
+     *  converted it into the request signals it ranked against. */
+    proposedBy?: string
+  }
+  /** The order the directions arrived in, before the test. */
+  arrivalOrder?: string[]
 }
 
 /**
@@ -386,9 +445,12 @@ export interface ChallengeResult {
  * cultural fit, and says so.
  */
 export async function challengeDirections(
-  project: ProjectRequest, directionId = '', anchorEntityId = ''
+  project: ProjectRequest, directionId = '', anchorEntityId = '',
+  revision?: { evidence: Evidence[]; concepts: Concept[]; resolvedTags: string[] }
 ): Promise<ChallengeResult> {
-  return postJson<ChallengeResult>('/api/projects/challenge', { project, directionId, anchorEntityId })
+  return postJson<ChallengeResult>('/api/projects/challenge', {
+    project, directionId, anchorEntityId, revision,
+  })
 }
 
 // ---------------------------------------------------------------------------

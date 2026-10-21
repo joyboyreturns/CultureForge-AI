@@ -42,6 +42,9 @@ class Evidence(BaseModel):
     image: Optional[str] = None
     location: Optional[str] = None
     traceId: Optional[str] = None
+    #: How this piece of evidence should be presented, derived from it by
+    #: rule. It changes nothing about the evidence itself.
+    presentation: Optional[dict] = None
 
 class Decision(BaseModel):
     """One business proposal, and the evidence it was derived from.
@@ -151,6 +154,27 @@ class RecomposeRequest(BaseModel):
     excludeTagIds: list[str] = Field(default_factory=list)
 
 
+class EvidencePresentationRequest(BaseModel):
+    """Ask the model to choose from the returned evidence what to show.
+
+    The body is the evidence itself. Every piece of it is a value Qloo
+    returned, so nothing here can introduce a fact.
+    """
+    evidence: list[Evidence] = Field(default_factory=list, max_length=50)
+
+
+class ChallengeRevision(BaseModel):
+    """The exploration exactly as it is on screen.
+
+    The test has to answer about what the reader is looking at. If the app
+    re-composed the brief, or the founder confirmed different audience seeds,
+    the stored evidence is the evidence — and the test is about that.
+    """
+    evidence: list[Evidence] = Field(default_factory=list, max_length=50)
+    concepts: list[Concept] = Field(default_factory=list, max_length=10)
+    resolvedTags: list[str] = Field(default_factory=list, max_length=10)
+
+
 class ChallengeRequest(BaseModel):
     """Test a direction against the local evidence."""
     project: ProjectRequest
@@ -159,6 +183,9 @@ class ChallengeRequest(BaseModel):
     #: Hold the claim to a different anchor: the same direction, built around
     #: a different place. The verdict then answers for that one.
     anchorEntityId: str = ''
+    #: The exploration as it stands. When it is sent, the test is about this
+    #: evidence and not a fresh generation from the brief.
+    revision: Optional[ChallengeRevision] = None
 
 
 # ---------------------------------------------------------------------------

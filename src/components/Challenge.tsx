@@ -29,12 +29,12 @@ const VERDICT_WORDS: Record<Verdict, string> = {
 }
 
 const VERDICT_NOTES: Record<Verdict, string> = {
-  supported: 'It passes the checks that could be run, within the evidence that was retrieved.',
+  supported: 'Both checks passed, within the evidence that was retrieved.',
   contested: 'The evidence contradicts a specific premise, and the premise is named.',
-  unproven: 'There was not enough retrieved evidence to say either way.',
+  unproven: 'A check could not be run, or the evidence did not settle it either way.',
 }
 
-const BOUNDARY = 'Local cultural fit only — not demand, profitability, footfall, or commercial viability.'
+const BOUNDARY = 'Anchor fit within the retrieved sample — not demand, profitability, footfall, or commercial viability.'
 
 /** What a direction looked like before the anchor was changed. */
 export interface VerdictStep {
@@ -62,6 +62,10 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
 }) {
   const [open, setOpen] = useState<string | null>(challenge.directions[0]?.directionId ?? null)
   const contested = challenge.directions.filter((entry) => entry.verdict === 'contested')
+  // Whether the order actually moved. The panel must not claim it did.
+  const orderMoved = challenge.arrivalOrder?.length
+    ? challenge.arrivalOrder.join('|') !== challenge.directions.map((entry) => entry.directionId).join('|')
+    : false
 
   return (
     <section className="challenge-panel">
@@ -82,10 +86,15 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
 
       {contested.length > 0 && (
         <div className="challenge-reversal">
-          <strong>The evidence moved {contested.length === 1 ? 'one direction' : `${contested.length} directions`}.</strong>
+          <strong>
+            {contested.length === 1
+              ? 'One anchor hypothesis was contested.'
+              : `${contested.length} anchor hypotheses were contested.`}
+            {orderMoved ? ' The order changed.' : ''}
+          </strong>
           <p>
-            {contested.map((entry) => entry.name).join(', ')} did not survive the test, so the
-            order below is the one the evidence leaves — not the one the first pass produced.
+            {contested.map((entry) => entry.name).join(', ')} failed the relative-ranking check
+            under this profile{orderMoved ? ', and the order below is the one the evidence leaves — not the one the first pass produced' : ''}.
           </p>
         </div>
       )}
@@ -100,6 +109,14 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
               <VerdictBadge verdict={entry.verdict} />
             </button>
             <p className="challenge-reason">{entry.reason}</p>
+            {entry.isCounterfactual && (
+              <p className="challenge-counterfactual">
+                Alternative anchor tested: <b>{entry.anchor?.label}</b>. Original concept reference:{' '}
+                <b>{entry.originalAnchor?.label ?? 'the place it was built around'}</b>.{' '}
+                {entry.verdict === 'supported' ? 'Supported' : entry.verdict === 'contested' ? 'Contested' : 'Unproven'}{' '}
+                under the alternative anchor — the concept itself was not recomposed.
+              </p>
+            )}
             <p className="challenge-boundary">{BOUNDARY}</p>
 
             {(history?.[entry.directionId]?.length ?? 0) > 0 && (
@@ -151,8 +168,11 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
                 </p>
                 <p className="challenge-coverage">
                   Judged on {entry.coverage.venuesRetrieved} places Qloo returned, {entry.coverage.venuesCited} of
-                  which this direction cites, against {entry.coverage.tagsUsed} cultural signals and the
-                  “{challenge.profile.demographic}” profile near {challenge.profile.location}.
+                  which this direction cites, using the “{challenge.profile.demographic}” profile near{' '}
+                  {challenge.profile.location}
+                  {challenge.profile.proposedBy ? ` — ${challenge.profile.proposedBy.toLowerCase()}` : ''}.{' '}
+                  The {entry.coverage.tagsUsed} audience seed{entry.coverage.tagsUsed === 1 ? '' : 's'} were used for
+                  retrieval, not for this ranking.
                 </p>
               </div>
             )}

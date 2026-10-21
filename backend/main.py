@@ -13,9 +13,12 @@ from .comparison import rank_entities, recompose
 from .challenge import challenge_directions
 from .evidence_store import get_store
 from .llm import status as llm_status
-from .models import (CompareAudiencesRequest, CompareRequest, ChallengeRequest, ErrorBody, ErrorResponse,
-                     GenerateResponse, ProjectRequest, RankRequest, RecomposeRequest,
-                     ShareRequest)
+from .presentation import presentation_key
+from .selector import select as select_evidence
+from .models import (CompareAudiencesRequest, CompareRequest, ChallengeRequest,
+                     ErrorBody, ErrorResponse, EvidencePresentationRequest,
+                     GenerateResponse, ProjectRequest, ProvenanceMetadata,
+                     RankRequest, RecomposeRequest, ShareRequest)
 from .platform import get_platform
 from . import metering
 from .investigation import FACET_QUESTIONS, FACETS, _bounds, _demographics, _geography_points, _workflow_for, investigate
@@ -689,6 +692,31 @@ def rank_anchors(request: RankRequest) -> dict:
     )
 
 
+def _revision_response(request: ChallengeRequest):
+    """The exploration as it stands, when the app sent it.
+
+    The test has to answer about the evidence on screen. A brief that was
+    recomposed, or an audience whose seeds were confirmed by hand, has an
+    answer that a fresh generation from the brief would not reproduce — and
+    a verdict about a different exploration would be a verdict about nothing.
+    """
+    revision = request.revision
+    if revision is None or not revision.evidence or not revision.concepts:
+        return None
+    return GenerateResponse(
+        projectId='cf-revision',
+        project=request.project,
+        concepts=revision.concepts,
+        signals=[],
+        dataMode='live',
+        conceptMode='evidence_composed',
+        notice='Tested against the exploration on screen.',
+        provenance=ProvenanceMetadata(source='Qloo API', resolved_tags=revision.resolvedTags),
+        evidence=revision.evidence,
+        trace=[],
+    )
+
+
 @app.post('/api/projects/challenge', tags=['evidence'],
           summary='Test the directions against the local evidence')
 def challenge_directions_route(request: ChallengeRequest) -> dict:
@@ -701,9 +729,36 @@ def challenge_directions_route(request: ChallengeRequest) -> dict:
     provider = get_provider()
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='Testing a direction needs the Qloo provider.')
-    response = provider.generate(request.project)
+    response = _revision_response(request)
+    if response is None:
+        # No revision was sent, so there is nothing on screen to test. The
+        # brief is composed from the evidence already held.
+        response = provider.generate(request.project)
     return challenge_directions(request.project, response, request.directionId or None,
                                 request.anchorEntityId or None)
+
+
+@app.post('/api/evidence/presentation', tags=['evidence'],
+          summary='Let a free model choose which of Qloo\'s own words to lead with')
+def evidence_presentation_route(request: EvidencePresentationRequest) -> dict:
+    """Choose from the returned evidence what to show first.
+
+    The model may only return ids. The server renders its own strings, so a
+    selection can never put a word the API did not return on the screen. A
+    selection that does not pass the validation is dropped, and the rules
+    stay in place.
+    """
+    evidence = [item.model_dump() for item in request.evidence]
+    key = presentation_key(evidence)
+    store = get_store()
+    held = store.get(f'presentation:{key}')
+    if held is not None:
+        return {**held, 'cached': True}
+    report = select_evidence(evidence)
+    if report.get('source') == 'model':
+        # A selection is held. A failure is not, so the next look tries again.
+        store.put(f'presentation:{key}', report, transport_requests=0)
+    return {**report, 'cached': False}
 
 
 @app.post('/api/projects/recompose', tags=['brief'],

@@ -425,18 +425,42 @@ class QlooHarnessProvider(CultureProvider):
 
     def generate(self, project: ProjectRequest, tag_result: Optional[dict] = None,
                  recommendations: Optional[dict] = None,
-                 seed_tag_ids: Optional[list[str]] = None) -> GenerateResponse:
+                 seed_tag_ids: Optional[list[str]] = None,
+                 allow_naming: bool = True) -> GenerateResponse:
         """Compose the answer for a brief.
 
         `tag_result` and `recommendations` may be supplied to reuse envelopes
         that are already held, which is how recomposition rebuilds the answer
         without spending another upstream call.
+
+        `allow_naming=False` skips the model entirely. Recomposition is a
+        zero-upstream operation, and asking a model to rename the rebuilt
+        directions would spend a request on a cosmetic step and could
+        reintroduce wording that belongs to the evidence that was removed.
         """
-        cache_payload = {'businessType': project.businessType, 'audience': project.audience, 'location': project.location, 'target_type': 'place'}
+        # The key covers everything the composed answer depends on. A brief
+        # whose budget or objectives changed is a different answer, and a
+        # cache that ignored those would serve the old concept metadata
+        # against the new top-level project.
+        cache_payload = {
+            'businessType': project.businessType,
+            'audience': project.audience,
+            'location': project.location,
+            'budget': project.budget,
+            'objectives': list(project.objectives),
+            'target_type': 'place',
+            'seeds': sorted(seed_tag_ids or []),
+        }
+        # When the envelopes are supplied, they *are* the evidence — a
+        # recomposition has removed places from them, and an answer composed
+        # from the full set would put the removed places straight back. So an
+        # explicitly supplied answer is never served from, or written to,
+        # the ordinary composed cache.
+        explicit = tag_result is not None and recommendations is not None
         cache_key = sha256(json.dumps(cache_payload, sort_keys=True).encode()).hexdigest()
         now = time.monotonic()
         with self._lock:
-            cached = self._cache.get(cache_key)
+            cached = None if explicit else self._cache.get(cache_key)
             if cached and now - cached[0] < self.CACHE_TTL_SECONDS:
                 # Reuse the evidence-backed result, but relabel the delivery so
                 # the UI can say plainly that this is cached, not fresh.
@@ -619,6 +643,17 @@ class QlooHarnessProvider(CultureProvider):
                 'price_level': properties.get('price_level'),
             })
 
+        # The presentation is derived from the evidence by rule, and attached
+        # to it. The evidence itself is untouched.
+        from .presentation import present_evidence
+        presentations = {
+            item['id']: item for item in present_evidence(evidence, project.location)
+        }
+        evidence = [
+            item.model_copy(update={'presentation': presentations.get(item.id)})
+            for item in evidence
+        ]
+
         composed = compose(
             business_type=project.businessType,
             audience=project.audience,
@@ -644,7 +679,11 @@ class QlooHarnessProvider(CultureProvider):
         # The rules above chose the tags, the venues and the evidence; this
         # only writes the words. A brief that was named before is served
         # from the evidence store and spends no model request at all.
-        named, naming = self._name_directions(project, composed, evidence, matched_tags)
+        if allow_naming:
+            named, naming = self._name_directions(project, composed, evidence, matched_tags)
+        else:
+            named, naming = {}, {'used': False, 'attempted': False, 'model': None,
+                                'reason': 'Not asked: this answer was rebuilt from held evidence.'}
         if composed:
             for index, concept in enumerate(composed):
                 wording = named.get(index) or named.get(str(index)) or {}
@@ -690,7 +729,7 @@ class QlooHarnessProvider(CultureProvider):
             # evidence store, so the next run costs no Qloo request and can
             # try the model again — rather than being told for a day that
             # this brief has no name.
-            held = not (naming.get('attempted') and not naming.get('used'))
+            held = not (naming.get('attempted') and not naming.get('used')) and not explicit
             if held:
                 if len(self._cache) >= self.CACHE_MAX_ENTRIES:
                     oldest_key = min(self._cache, key=lambda key: self._cache[key][0])

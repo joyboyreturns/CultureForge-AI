@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Concept, ProjectRequest } from '../contracts'
+import type { Concept, Evidence, ProjectRequest } from '../contracts'
 import { investigate, listFacets } from '../api'
 import type { Facet, Investigation } from '../api'
 import { GeoMap } from './GeoMap'
@@ -19,12 +19,18 @@ import { GeoMap } from './GeoMap'
  * wandering on its own.
  */
 export function Investigation({
-  concept, project, entityIds, seedTagIds, onClose,
+  concept, project, evidence, seedTagIds, testedAnchorLabel, onClose,
 }: {
   concept: Concept
   project: ProjectRequest
-  entityIds: string[]
+  /** The evidence the direction rests on. The reference is resolved through
+   *  it, because the concept cites evidence ids and the workflow needs the
+   *  Qloo ids behind them. */
+  evidence: Evidence[]
   seedTagIds?: string[]
+  /** When the direction has been tested against a different place, that place
+   *  is what the investigation has to follow. */
+  testedAnchorLabel?: string | null
   onClose: () => void
 }) {
   const [facets, setFacets] = useState<Facet[]>([])
@@ -35,10 +41,24 @@ export function Investigation({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const reference = concept.evidenceIds
-    .map((id) => entityIds.indexOf(id))
-    .filter((index) => index >= 0)[0]
-  const referenceId = reference != null ? entityIds[reference] : undefined
+  // The concept cites evidence ids ("ev-entity-5"). The workflow needs the
+  // Qloo entity ids behind them. Looking for one inside the other finds
+  // nothing, and the investigation then falls back to whichever place
+  // happened to be first — which is not the place the direction is about.
+  const places = evidence.filter((item) => item.kind === 'entity' && item.entityId)
+  const cited = concept.evidenceIds
+    .map((id) => places.find((item) => item.id === id))
+    .filter((item): item is Evidence => Boolean(item))
+  const tested = testedAnchorLabel
+    ? places.find((item) => item.label === testedAnchorLabel)
+    : undefined
+  const referencePlace = tested ?? cited[0] ?? places[0]
+  const referenceId = referencePlace?.entityId ?? undefined
+  const referenceLabel = referencePlace?.label ?? null
+  // The investigation follows *this* direction's places, not every place the
+  // brief returned. Asking about venues the direction was not built on
+  // answers a different question.
+  const entityIds = (cited.length ? cited : places).map((item) => item.entityId as string)
 
   async function openFacets() {
     try {
@@ -81,6 +101,12 @@ export function Investigation({
         <span className="small-cap"><span className="orange-dot"/> INVESTIGATE THIS DIRECTION</span>
         <h3>{concept.name}</h3>
         <p>{concept.tagline}</p>
+        {referenceLabel && (
+          <p className="investigation-reference">
+            Investigating <b>{referenceLabel}</b>
+            {tested ? ' — the alternative anchor this direction was last tested against.' : ' — the place this direction is built around.'}
+          </p>
+        )}
       </div>
       <button className="icon-button" onClick={onClose} aria-label="Close the investigation">✕</button>
     </header>

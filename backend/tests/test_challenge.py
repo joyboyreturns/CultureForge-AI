@@ -183,11 +183,25 @@ def test_the_profile_that_was_ranked_is_reported(monkeypatch):
 
 
 def test_the_demographic_is_read_from_the_audience():
-    assert challenge.guess_demographic('Design-conscious Gen Z') == 'gen z'
-    assert challenge.guess_demographic('young families') == 'young adults'
-    assert challenge.guess_demographic('retirees in the suburbs') == 'seniors'
-    assert challenge.guess_demographic('millennials') == 'millennials'
-    assert challenge.guess_demographic('designers') == 'millennials'
+    """The phrase is read from the founder's own words, and it is honest about it."""
+    assert challenge.guess_demographic('Design-conscious Gen Z') == ('gen z', True)
+    assert challenge.guess_demographic('young families') == ('young adults', True)
+    assert challenge.guess_demographic('retirees in the suburbs') == ('seniors', True)
+    assert challenge.guess_demographic('millennials') == ('millennials', True)
+    assert challenge.guess_demographic('women in their thirties') == ('women 35-44', True)
+    # No demographic was named, so the default is used and *says* it is one.
+    assert challenge.guess_demographic('designers') == ('millennials', False)
+
+
+def test_the_demographic_is_matched_on_whole_words():
+    """A word inside another word is not a word.
+
+    "restaurant" contains "rest", and "managers" contains "man". Matching on
+    substrings is how a brief about restaurants ends up profiled as "men".
+    """
+    assert challenge.guess_demographic('Restaurant regulars') == ('millennials', False)
+    assert challenge.guess_demographic('Warehouse managers') == ('millennials', False)
+    assert challenge.guess_demographic('The ageing crowd') == ('millennials', False)
 
 
 def test_the_verdict_states_what_it_is_about(monkeypatch):
@@ -237,3 +251,89 @@ def test_a_direction_can_be_held_to_a_different_place(monkeypatch):
         response.project, response, anchor_entity_id='id-2')['directions'][0]
     assert reanchored['anchor']['label'] == 'The Bell House'
     assert reanchored['verdict'] == challenge.SUPPORTED
+
+
+def test_the_comparison_set_is_every_other_retrieved_place(monkeypatch):
+    """Cited or not: the universe of comparators does not change with the anchor.
+
+    If the comparison used only the places a direction does not cite, then
+    changing the anchor would change two assumptions at once — the anchor and
+    the comparator set — and the two answers would not be comparable.
+    """
+    places = [('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C'), ('id-4', 'D')]
+    evidence = _evidence(places)
+    concepts = [_concept('live-1', 'One', ['ev-entity-0', 'ev-entity-1'])]
+    response = _response(evidence, concepts)
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': f'id-{index}', 'name': name, 'affinity': 0.5}
+                   for index, name in enumerate(['A', 'B', 'C', 'D'])],
+        compare={'tags': [], 'a': [], 'b': []})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+
+    default = challenge.challenge_directions(response.project, response)['directions'][0]
+    reanchored = challenge.challenge_directions(
+        response.project, response, anchor_entity_id='id-3')['directions'][0]
+
+    compare_calls = [payload for operation, payload in provider.calls
+                     if operation == 'compare_audiences']
+    first, second = compare_calls[0], compare_calls[1]
+    assert set(first['group_b']) == {'id-2', 'id-3', 'id-4'}
+    assert set(second['group_b']) == {'id-1', 'id-2', 'id-4'}
+    # Same size, same universe: only the anchor moved.
+    assert len(first['group_b']) == len(second['group_b'])
+    assert default['coverage']['venuesCompared'] == 4
+    assert reanchored['coverage']['venuesCompared'] == 4
+
+
+def test_a_tag_returned_for_both_sides_is_never_called_exclusive(monkeypatch):
+    """The comparison response is a bounded list. Absence is not proof.
+
+    A tag that comes back for the anchor may also come back for the other
+    places. The screen may not say the anchor alone has it.
+    """
+    places = [('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')]
+    evidence = _evidence(places)
+    concepts = [_concept('live-1', 'One', ['ev-entity-0'])]
+    response = _response(evidence, concepts)
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': 'id-1', 'name': 'A', 'affinity': 0.9},
+                   {'entity_id': 'id-2', 'name': 'B', 'affinity': 0.8},
+                   {'entity_id': 'id-3', 'name': 'C', 'affinity': 0.7}],
+        compare={'tags': [{'name': 'Live Music Venue',
+                           'tag_id': 'urn:tag:activities:place:live_music_venue',
+                           'query': {'score': 0.6}}],
+                 'a': [{'name': 'Live Music Venue',
+                        'tag_id': 'urn:tag:activities:place:live_music_venue'},
+                       {'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}],
+                 'b': [{'name': 'Live Music Venue',
+                        'tag_id': 'urn:tag:activities:place:live_music_venue'}]})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+
+    entry = challenge.challenge_directions(response.project, response)['directions'][0]
+    detail = entry['checks'][1]['detail']
+    assert 'the other places lack them' in detail
+    assert 'do not' not in detail.split('it does not establish')[0].replace('do not establish', '')
+    # The shared tag is reported as shared, not as an exclusive trait.
+    assert 'also returned' in detail.lower()
+
+
+def test_a_re_anchored_direction_is_labelled_as_a_counterfactual(monkeypatch):
+    """The badge says which place was tested, and that the idea was not rebuilt."""
+    evidence = _evidence([('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')])
+    concepts = [_concept('live-1', 'One', ['ev-entity-0'])]
+    response = _response(evidence, concepts)
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': 'id-2', 'name': 'B', 'affinity': 0.9},
+                   {'entity_id': 'id-1', 'name': 'A', 'affinity': 0.8},
+                   {'entity_id': 'id-3', 'name': 'C', 'affinity': 0.7}],
+        compare={'tags': [], 'a': [], 'b': []})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+
+    default = challenge.challenge_directions(response.project, response)['directions'][0]
+    assert default['isCounterfactual'] is False
+    assert default['originalAnchor'] is None
+
+    reanchored = challenge.challenge_directions(
+        response.project, response, anchor_entity_id='id-2')['directions'][0]
+    assert reanchored['isCounterfactual'] is True
+    assert reanchored['originalAnchor']['entityId'] == 'id-1'

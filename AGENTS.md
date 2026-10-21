@@ -82,10 +82,26 @@ does.
 And say what the check *did*, not what it sounds like it did. The ranking
 request sends a demographic profile and a location, not the audience's own
 cultural tags, so the reason must not say "for this audience's cultural
-signals". A comparison is against the places that were returned, not against a
-neighbourhood. One passing check and one missing check is not a verdict — it
-is half an answer, and it is `unproven`. When the policy's logic or wording
-changes, the policy version changes with it.
+signals" — and the profile was proposed by CultureForge from the brief, not
+inferred by Qloo, so it must not say Qloo inferred it either. A comparison
+is against **every other place that was returned**, cited or not, so that
+changing the anchor changes one assumption and not two. A tag returned for
+the anchor is never called exclusive: the comparison response is a bounded
+list, and absence is not proof. One passing check and one missing check is
+not a verdict — it is half an answer, and it is `unproven`. When the policy's
+logic or wording changes, the policy version changes with it.
+
+And when a direction is held to a different place, say so. The verdict then
+answers for that place and the concept was not rebuilt, so the screen states
+the alternative anchor, the original reference, and that nothing was
+recomposed. A badge beside a description and a photograph that belong to a
+different place is a contradiction a judge can see.
+
+And let the evidence go. Removing a place must rebuild the answer from what
+is left — out of the description, the photograph, the citations and the
+anchor — not merely out of the evidence list. A recomposition that claims to
+have rebuilt while the removed venue is still the anchor is the worst kind
+of lie this product could tell.
 
 A seventh: **never strand the reader.** Every state that can fail must offer a
 way out. An audience that resolves to nothing, a run that cannot finish, a

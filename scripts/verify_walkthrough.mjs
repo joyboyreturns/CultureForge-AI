@@ -200,6 +200,46 @@ async function main() {
     check('the recomposition keeps only directions that still have support',
       survivors.every((concept) => (concept.decisions ?? []).length > 0),
       `${survivors.length} of ${live.concepts.length} survived`);
+
+    // The removal has to happen *before* the composition. A venue that is
+    // gone from the evidence but still named in a description was not really
+    // removed.
+    const stillNamed = survivors.filter((concept) =>
+      (concept.description ?? '').includes(aVenue.label)
+      || (concept.imageAlt ?? '').includes(aVenue.label)
+      || (concept.image ?? '').includes(aVenue.entityId ?? '\u0000'));
+    check('the removed venue is gone from every description, photograph and caption',
+      stillNamed.length === 0,
+      stillNamed.map((concept) => concept.name).join(', ') || 'none mention it');
+
+    const citedIds = new Set((recomposed.body?.evidence ?? []).map((item) => item.id));
+    check('every citation in the recomposition resolves to the evidence that is left',
+      survivors.every((concept) => [
+        ...(concept.evidenceIds ?? []),
+        ...(concept.decisions ?? []).flatMap((decision) => decision.evidenceIds ?? []),
+      ].every((id) => citedIds.has(id))),
+      `${citedIds.size} pieces of evidence`);
+
+    // And the test that follows has to be about the recomposed answer, not
+    // about a fresh generation from the brief.
+    const retested = await api('/api/projects/challenge', {
+      method: 'POST',
+      body: {
+        project: BRIEF,
+        revision: {
+          evidence: recomposed.body?.evidence ?? [],
+          concepts: recomposed.body?.concepts ?? [],
+          resolvedTags: live.provenance?.resolved_tags ?? [],
+        },
+      },
+    });
+    check('the evidence test can be run against the exploration on screen',
+      retested.status === 200 && (retested.body?.directions ?? []).length > 0,
+      retested.body?.summary);
+    check('the removed venue does not come back when the answer is tested',
+      !(retested.body?.directions ?? []).some((entry) =>
+        (entry.anchor?.label ?? '').includes(aVenue.label)),
+      'the anchor is never the removed venue');
   }
 
   // 7b. investigate the leading direction

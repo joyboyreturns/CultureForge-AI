@@ -134,3 +134,152 @@ def test_the_shared_tags_carry_the_score_and_the_hit_counts(monkeypatch):
     assert shared['groupBHits'] == 1
     assert result['matchedEntities'] == 2
     assert len(result['groupA']) == 1 and len(result['groupB']) == 1
+
+
+# ---------------------------------------------------------------------------
+# Recomposition
+#
+# The check that the answer really depends on the evidence. Removing a venue
+# must change the answer, not just the list it was on.
+# ---------------------------------------------------------------------------
+
+class RecomposeProvider:
+    """A provider whose ``generate`` composes from the rows it is handed.
+
+    It uses the real composer, so a test that removes a venue and finds it
+    still in a description is a real failure and not an artefact of the stub.
+    """
+
+    def __init__(self, tag_rows, place_rows):
+        self.tag_rows = tag_rows
+        self.place_rows = place_rows
+        self.seen: list[tuple] = []
+
+    def rows(self, envelope):
+        rows = envelope.get('results')
+        return rows if isinstance(rows, list) else []
+
+    def tag_id(self, row):
+        value = row.get('id') or row.get('tag_id')
+        return value if isinstance(value, str) and value.startswith('urn:tag:') else None
+
+    def _affinity(self, row):
+        value = row.get('affinity')
+        return float(value) if value is not None else None
+
+    def generate(self, project, tag_result=None, recommendations=None,
+                 seed_tag_ids=None, allow_naming=True):
+        self.seen.append({
+            'tag_result': tag_result,
+            'recommendations': recommendations,
+            'allow_naming': allow_naming,
+        })
+        from backend.concept_composer import compose
+        from backend.models import Delivery, GenerateResponse, ProvenanceMetadata
+
+        tags = [{'id': tag} for tag in (self.tag_id(row) for row in self.rows(tag_result)) if tag]
+        entities = []
+        for row in self.rows(recommendations):
+            properties = row.get('properties') or {}
+            entities.append({
+                'entity_id': row.get('entity_id') or row.get('id'),
+                'name': row.get('name'),
+                'description': properties.get('description', ''),
+                'short_description': properties.get('short_description', ''),
+                'image': '',
+                'popularity': row.get('popularity', 0.0),
+                'affinity': self._affinity(row) or 0.0,
+                'business_rating': properties.get('business_rating'),
+                'price_level': properties.get('price_level'),
+            })
+        composed = compose(
+            business_type=project.businessType, audience=project.audience,
+            location=project.location, budget=project.budget,
+            tags=tags, entities=entities, evidence_index={},
+            tag_evidence_ids={tag: f'ev-tag-{index}' for index, tag in enumerate(t['id'] for t in tags)},
+            entity_evidence_ids={
+                entity['entity_id']: f'ev-entity-{index + len(tags)}'
+                for index, entity in enumerate(entities)
+            },
+            trace_id='trace-recommend',
+        )
+        evidence = []
+        for index, tag in enumerate(tags):
+            evidence.append({'id': f'ev-tag-{index}', 'kind': 'tag', 'label': tag['id'],
+                             'tagId': tag['id']})
+        for index, entity in enumerate(entities):
+            evidence.append({'id': f'ev-entity-{index + len(tags)}', 'kind': 'entity',
+                             'label': entity['name'], 'entityId': entity['entity_id'],
+                             'description': entity['description']})
+        return GenerateResponse(
+            projectId='cf-test', project=project,
+            concepts=[{
+                'id': f'live-{index}', 'name': f'Direction {index}', 'tagline': '',
+                'description': ' '.join(d['proposal'] for d in c.decisions),
+                'evidenceIds': list(c.evidence_ids), 'decisions': [dict(d) for d in c.decisions],
+                'signals': [], 'accent': '', 'image': '',
+                'budget': project.budget, 'investment': '',
+            } for index, c in enumerate(composed)],
+            signals=[], dataMode='live', conceptMode='evidence_composed', notice='',
+            provenance=ProvenanceMetadata(source='Qloo API', resolved_tags=[t['id'] for t in tags]),
+            evidence=evidence, trace=[],
+            delivery=Delivery(kind='cache', transportRequests=0),
+        )
+
+
+def test_removing_a_venue_rebuilds_the_directions_without_it(monkeypatch):
+    """The removal happens before the composition, not after it.
+
+    Filtering the composer's output afterwards would leave the removed
+    venue's name, photograph and decisions in place while the answer claimed
+    to have been rebuilt.
+    """
+    from backend.models import ProjectRequest
+
+    tag_rows = [{'id': 'urn:tag:interests:qloo:food_design', 'name': 'Food design',
+                 'popularity': 0.9}]
+    place_rows = [
+        {'entity_id': 'id-museum', 'name': 'Whitney Museum of American Art',
+         'properties': {'description': 'Museum dedicated to 20th-century American art.'}},
+        {'entity_id': 'id-bar', 'name': 'The Bell House',
+         'properties': {'description': 'Bar and performance venue in a former warehouse.'}},
+        {'entity_id': 'id-park', 'name': 'Brooklyn Bridge Park Corporation',
+         'properties': {'description': 'Nonprofit organization managing a waterfront park.'}},
+    ]
+    provider = RecomposeProvider(tag_rows, place_rows)
+
+    from backend.evidence_store import canonical_key
+
+    class StubStore:
+        """Answers with the tag envelope or the place envelope, by key."""
+
+        def __init__(self):
+            self.keys = {}
+
+        def get(self, key):
+            return self.keys.get(key)
+
+    store = StubStore()
+    store.keys[canonical_key('find_tags', {'query': 'Food & beverage Design-conscious Gen Z',
+                                           'limit': 3})] = {'status': 'ok', 'results': tag_rows}
+    store.keys[canonical_key('recommend', {
+        'target_type': 'place', 'signal_tags': ['urn:tag:interests:qloo:food_design'],
+        'signal_location': 'Brooklyn, New York', 'limit': 5,
+    })] = {'status': 'ok', 'results': place_rows}
+
+    monkeypatch.setattr(comparison, 'QlooHarnessProvider', lambda *a, **k: provider)
+    project = ProjectRequest(businessType='Food & beverage', audience='Design-conscious Gen Z',
+                             location='Brooklyn, New York', budget='$25k – $50k', objectives=[])
+
+    result = comparison.recompose(project, evidence_store=store,
+                                  exclude_entity_ids=['id-museum'])
+
+    # The held rows the composer was handed no longer contain the venue.
+    handed = provider.seen[0]['recommendations']
+    assert 'id-museum' not in [row.get('entity_id') for row in handed.get('results', [])]
+    # No model was asked to name anything.
+    assert provider.seen[0]['allow_naming'] is False
+    # And nothing in the answer still points at it.
+    assert 'Whitney' not in ' '.join(concept['description'] for concept in result['concepts'])
+    assert 'Whitney' not in ' '.join(
+        evidence.get('label') or '' for evidence in result['evidence'])

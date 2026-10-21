@@ -6,23 +6,28 @@ it* — and, more importantly, it is built so that the answer can be **no**.
 
 Two checks, each one a Qloo workflow, each one able to fail:
 
-1. **Does the audience pull toward this place?** (`rank`) The neighbourhood's
-   real venues are ranked against the audience's cultural signals. A
-   direction built around the place that ranks *last* for those signals is a
-   direction the audience does not pull toward.
-2. **Is there room, or a fight?** (`compare_audiences`) The direction's
-   anchor is compared with the rest of the neighbourhood. Qloo's tag URNs
-   carry their family, and the family is what makes this readable: a
-   ``genre`` or ``category`` tag says what the place **is** — a park is a
-   park — while an ``activities``, ``inclusivity``, ``interests`` or
-   ``lifestyle`` tag says what culture **happens** there. An anchor that
-   carries only the first kind brings nothing the neighbourhood does not
-   already have: it is the same crowd in a different room. An anchor that
-   carries the second kind is the opening.
+1. **Where does this place sit for that profile?** (`rank`) The retrieved
+   places are ranked against a demographic profile CultureForge proposed
+   from the founder's own words — because Qloo's ``rank`` workflow returns
+   nothing when it is given a location and a tag list alone. The request
+   carries a profile and a location, **not** the audience's own cultural
+   tags, and the wording says so. An anchor that ranks *last* within the
+   retrieved set fails this policy's relative-ranking check.
+2. **What cultural tags were returned for this anchor?**
+   (``compare_audiences``) The anchor is compared with **every other place
+   that was returned**, cited or not, so that changing the anchor changes
+   one assumption and not two. Qloo's tag URNs carry their family, and the
+   family is what makes this readable: a ``genre`` or ``category`` tag says
+   what the place **is** — a park is a park — while an ``activities``,
+   ``inclusivity``, ``interests`` or ``lifestyle`` tag says what culture
+   **happens** there. A qualifying cultural tag returned for the anchor is
+   a potential input to a concept. It is never called exclusive: the
+   comparison response is a bounded list, and a tag's absence from it is
+   not proof that the other places lack it.
 
-The verdicts are deliberately narrow. These checks establish **local cultural
-fit**, not demand, competition, rent or willingness to pay — and the reason
-each one is reported says exactly that:
+The verdicts are deliberately narrow. These checks assess a **scoped anchor
+hypothesis within the retrieved sample**, not demand, competition, rent or
+willingness to pay — and the reason each one is reported says exactly that:
 
 - ``supported`` — it passes the checks that could be run, within the
   evidence that was retrieved.
@@ -35,6 +40,7 @@ contested, or unproven, by the evidence.
 """
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from .models import Evidence, GenerateResponse, ProjectRequest
@@ -49,15 +55,16 @@ UNPROVEN = 'unproven'
 VERDICT_ORDER = {SUPPORTED: 0, UNPROVEN: 1, CONTESTED: 2}
 
 #: What the verdict is about, in words. The verdict is narrow on purpose: it
-#: says whether the *audience* pulls toward the place a direction is built
-#: around, and whether that place brings a cultural signal the neighbourhood
-#: does not already have. It does not say the business is good, and it is
-#: labelled so that nobody can read more into it than it says.
+#: says whether the place a direction is built around ranks well for a
+#: demographic profile, and whether Qloo returned a qualifying cultural tag
+#: for it in a comparison with the other retrieved places. It does not say the
+#: business is good, and it is labelled so that nobody can read more into it
+#: than it says.
 VERDICT_SCOPE = 'Anchor fit within the retrieved sample'
 
 #: The version of the decision policy. A verdict that cannot be traced to the
 #: policy that produced it is not a verdict, it is an opinion.
-POLICY_VERSION = 'anchor-fit-2'
+POLICY_VERSION = 'anchor-fit-3'
 
 #: Below this many retrieved venues, a check is reported as inconclusive
 #: rather than as a verdict. Two places are not a market.
@@ -81,29 +88,47 @@ CULTURAL_FAMILIES = ('cuisine', 'ambience', 'good_for', 'inclusivity', 'activiti
 SIGNAL_WORDS = 'cuisine, ambience, good_for, inclusivity, activities and the rest'
 
 
-def guess_demographic(audience: str) -> str:
+#: The demographic phrases Qloo's documented mapping understands, matched on
+#: whole words. A substring match is how "restaurant" ends up looking like
+#: "rest", so the pattern is anchored to word boundaries.
+_DEMOGRAPHIC_RULES: tuple[tuple[str, str], ...] = (
+    (r'\bseniors?\b|\belderly\b|\bretire\w*\b', 'seniors'),
+    (r'\bgen[\s-]?z\b|\bteens?\b|\bteenagers?\b', 'gen z'),
+    (r'\bmillennials?\b', 'millennials'),
+    (r'\bwomen\b|\bfemale\b|\bwoman\b', 'women'),
+    (r'\bmen\b|\bmale\b|\bman\b', 'men'),
+    (r'\byoung(?:er)?\b', 'young adults'),
+)
+
+#: The ages that move a profile up a band. Both the digits and the words
+#: count: "in their thirties" is as plain as "35".
+_OLDER_AGE = re.compile(r'\b(3\d|4\d|5\d)\b|\b(thirties|forties|fifties)\b')
+
+
+def guess_demographic(audience: str) -> tuple[str, bool]:
     """The demographic phrase to rank against, read from the founder's words.
 
     Qloo's ``rank`` workflow needs a profile to rank against — a location
     and a tag list on their own return nothing — and it converts a plain
-    phrase such as "young adults" into its own age and gender signals. The
-    phrase that was sent is returned with the answer, so the studio can show
-    it rather than leave the ranking unexplained.
+    phrase such as "young adults" into its own age and gender signals.
+
+    Two things this must not do. It must not match a word inside another
+    word: "restaurant" is not "rest". And it must not pretend the phrase was
+    inferred by Qloo — CultureForge proposes it from the brief, Qloo
+    converts it into request signals. The second value says whether the
+    phrase was actually named in the brief; when it was not, the screen says
+    that the profile was a default and that it can be changed.
     """
     text = (audience or '').lower()
-    if 'senior' in text or 'elderly' in text or 'retire' in text:
-        return 'seniors'
-    if 'gen z' in text or 'gen-z' in text or 'teen' in text:
-        return 'gen z'
-    if 'millennial' in text:
-        return 'millennials'
-    if 'women' in text or 'female' in text or 'woman' in text:
-        return 'women 35-44' if any(word in text for word in ('35', '40', '45')) else 'women 25-34'
-    if 'men' in text or 'male' in text or 'man' in text:
-        return 'men 35-44' if any(word in text for word in ('35', '40', '45')) else 'men 25-34'
-    if 'young' in text:
-        return 'young adults'
-    return 'millennials'
+    older = _OLDER_AGE.search(text)
+    for pattern, phrase in _DEMOGRAPHIC_RULES:
+        if not re.search(pattern, text):
+            continue
+        if phrase in ('women', 'men'):
+            band = '35-44' if older else '25-34'
+            return f'{phrase} {band}', True
+        return phrase, True
+    return 'millennials', False
 
 
 def _tag_family(tag_id: Optional[str]) -> str:
@@ -171,12 +196,17 @@ def _rank_venues(provider: QlooHarnessProvider, project: ProjectRequest,
     return ranked
 
 
-def _compare_with_neighbourhood(provider: QlooHarnessProvider, anchor: Evidence,
-                                other_venues: list[Evidence]) -> dict:
-    """Compare the direction's anchor with the rest of the neighbourhood.
+def _compare_with_other_places(provider: QlooHarnessProvider, anchor: Evidence,
+                               other_venues: list[Evidence]) -> dict:
+    """Compare the direction's anchor with the other retrieved places.
 
     One place against the others, so what comes back is about *that* place:
-    the tags it shares with the neighbourhood, and the ones only it carries.
+    the tags Qloo returned for it, and the tags both sides carry.
+
+    The comparison set is always **every other place Qloo returned**, whether
+    or not the direction cites it. A comparison against only the uncited
+    places would change the universe when the anchor changes, and the two
+    answers would not be comparable.
     """
     if not anchor.entityId or not other_venues:
         return {}
@@ -193,25 +223,42 @@ def _compare_with_neighbourhood(provider: QlooHarnessProvider, anchor: Evidence,
         value = results.get(key)
         return [row for row in value if isinstance(row, dict)] if isinstance(value, list) else []
 
-    shared = [row for row in rows('tags')]
+    shared = rows('tags')
     own = rows('a')
+    # A tag that appears in the shared list is explicitly carried by both
+    # sides. A tag that is absent from it is not proof that the other side
+    # lacks it — the comparison response is a bounded list — so nothing here
+    # claims that a tag is exclusive to the anchor.
+    shared_ids = {row.get('tag_id') for row in shared if row.get('tag_id')}
     signals = [row for row in own if _is_cultural_signal(row)]
     types = [row for row in own if not _is_cultural_signal(row)]
+    shared_labels = [
+        row.get('name') or row.get('tag_id')
+        for row in shared if row.get('name') or row.get('tag_id')
+    ]
     return {
         'shared': [{'tag': row.get('name') or row.get('tag_id'),
                     'score': (row.get('query') or {}).get('score') if isinstance(row.get('query'), dict) else None}
                    for row in shared if row.get('name') or row.get('tag_id')],
         'ownSignals': [{'tag': row.get('name') or row.get('tag_id'),
                         'family': _tag_family(row.get('tag_id')),
-                        'popularity': row.get('popularity')} for row in signals],
+                        'popularity': row.get('popularity'),
+                        'alsoShared': row.get('tag_id') in shared_ids}
+                       for row in signals],
         'ownTypes': [row.get('name') or row.get('tag_id') for row in types],
+        'sharedSignals': [
+            row.get('name') or row.get('tag_id')
+            for row in shared
+            if _is_cultural_signal(row) and (row.get('name') or row.get('tag_id'))
+        ] or shared_labels[:3],
         'compared': 1 + len(other_venues),
+        'comparedWith': [venue.label for venue in other_venues if venue.entityId],
     }
 
 
 def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
                    concept, venues: list[Evidence], tags: list[str],
-                   ranking: dict[str, dict], demographic: str,
+                   ranking: dict[str, dict], demographic: str, inferred: bool,
                    anchor_override: Optional[str] = None) -> dict:
     """One direction, and the checks run against it.
 
@@ -223,9 +270,12 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     # is built around, and that is the one the checks are about.
     by_id = {venue.id: venue for venue in venues}
     concept_venues = [by_id[eid] for eid in concept.evidenceIds if eid in by_id]
-    cited = {venue.id for venue in concept_venues}
-    other_venues = [venue for venue in venues if venue.id not in cited]
     primary = concept_venues[0] if concept_venues else None
+    original_anchor = primary.entityId if primary else None
+
+    # The comparison set is every other place Qloo returned, cited or not.
+    # Changing the anchor must change one assumption, not two.
+    other_venues = [venue for venue in venues if venue.entityId != (primary.entityId if primary else None)]
 
     # The judge may hold the claim to a different anchor: the same direction,
     # built around a different place. The verdict then answers for that one.
@@ -242,20 +292,31 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         'scope': VERDICT_SCOPE,
         'reason': '',
         'claim': (
-            f'Within the places Qloo returned, {primary.label} ranks high for the demographic '
-            'Qloo infers from the brief, and carries a cultural signal the other retrieved '
-            'comparison places do not.'
+            f'Within the places Qloo returned, {primary.label} ranks well for the demographic '
+            'CultureForge proposed from the brief, and Qloo returned a qualifying cultural tag '
+            'for it in the comparison against the other retrieved places.'
             if primary else 'This direction names no place, so it makes no claim to check.'
         ),
         'falsifier': (
             f'Qloo ranks {primary.label} last among the places it returned for that demographic, '
-            'or no distinctive cultural tag is identified for it under this policy.'
+            'or no qualifying cultural tag was returned for it in the comparison.'
             if primary else 'There is nothing to falsify.'
         ),
         'unprovenIf': (
-            'Qloo returned too few places to compare, or no ranking and no comparison came back.'
+            'Qloo returned too few places to compare, or either the ranking or the tag '
+            'comparison could not be run.'
         ),
         'anchor': {'entityId': primary.entityId, 'label': primary.label} if primary else None,
+        # When the anchor was changed, the direction itself was not rebuilt.
+        # The screen has to say so, or a badge sits beside a description and
+        # a photograph that belong to a different place.
+        'originalAnchor': ({
+            'entityId': original_anchor,
+            'label': next((venue.label for venue in venues
+                           if venue.entityId == original_anchor), ''),
+        } if original_anchor and primary and original_anchor != primary.entityId else None),
+        'isCounterfactual': bool(anchor_override and primary
+                                 and original_anchor != primary.entityId),
         'alternatives': [
             {'entityId': venue.entityId, 'label': venue.label}
             for venue in venues if primary is not None and venue.entityId != primary.entityId
@@ -288,7 +349,13 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     # The ranking request carries a demographic profile and a location, not
     # the audience's own cultural tags. The wording says so.
     rank_entry = ranking.get(primary.entityId) if primary else None
-    profile = f'the “{demographic}” demographic Qloo inferred from the brief, near {project.location}'
+    # CultureForge proposes the profile; Qloo converts it into the request
+    # signals it actually ranks against. The screen says which is which.
+    if inferred:
+        profile = f'the “{demographic}” demographic CultureForge proposed from the brief, near {project.location}'
+    else:
+        profile = (f'the default “{demographic}” demographic — no demographic was named in the '
+                   f'brief, so this is a default and can be changed — near {project.location}')
     if rank_entry:
         position, total = rank_entry['position'], rank_entry['total']
         affinity = rank_entry['affinity']
@@ -334,39 +401,49 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         })
 
     # ---- check 2: is there room, or a fight? -----------------------------
-    comparison = _compare_with_neighbourhood(provider, primary, other_venues) if primary else {}
+    comparison = _compare_with_other_places(provider, primary, other_venues) if primary else {}
     if comparison:
         result['coverage']['venuesCompared'] = comparison['compared']
-        signals, types, shared = comparison['ownSignals'], comparison['ownTypes'], comparison['shared']
-        others = 'the other retrieved comparison places'
+        result['coverage']['comparedWith'] = comparison['comparedWith']
+        signals, types = comparison['ownSignals'], comparison['ownTypes']
+        shared = comparison['shared']
+        others = 'the other retrieved places'
         if signals:
             labels = ', '.join(str(entry.get('tag')) for entry in signals[:3])
+            shared_note = ''
+            if comparison['sharedSignals']:
+                shared_note = (f' Qloo also returned '
+                               f'{", ".join(str(label) for label in comparison["sharedSignals"][:3])} '
+                               'for both sides.')
             result['checks'].append({
-                'name': 'What characterises this anchor?',
+                'name': 'What cultural tags were returned for this anchor?',
                 'result': 'pass',
                 'detail': (
-                    f'{primary.label} carries {len(signals)} cultural signal'
-                    f'{"" if len(signals) == 1 else "s"} {others} do not: {labels}. '
-                    'These are potential inputs to a concept, not evidence of an unmet need.'
+                    f'Qloo returned {len(signals)} qualifying cultural tag'
+                    f'{"" if len(signals) == 1 else "s"} for {primary.label} in the comparison '
+                    f'against {others}: {labels}.{shared_note} This is what the tag data shows '
+                    'about the anchor — it does not establish that the other places lack them, '
+                    'and it is not evidence of an unmet need.'
                 ),
                 'metric': {'signals': len(signals), 'shared': len(shared)},
             })
         elif types:
-            # The anchor differs from the others only by its type. That is not
-            # evidence against it, and it is not a cultural signal either.
+            # The tags returned for the anchor are type and operational tags.
+            # That is neither a cultural signal nor evidence against it.
             result['checks'].append({
-                'name': 'What characterises this anchor?',
+                'name': 'What cultural tags were returned for this anchor?',
                 'result': 'mixed',
                 'detail': (
-                    f'{primary.label} differs from {others} only by its type '
-                    f'({", ".join(str(label) for label in types[:3])}). No distinctive cultural '
-                    'tag was identified for it under this policy, so distinctiveness is unproven.'
+                    f'The tags returned for {primary.label} in this comparison are type and '
+                    f'operational tags ({", ".join(str(label) for label in types[:3])}). No '
+                    'qualifying cultural tag was returned for it under this policy, so '
+                    'distinctiveness is unproven.'
                 ),
                 'metric': {'signals': 0, 'shared': len(shared)},
             })
         else:
             result['checks'].append({
-                'name': 'What characterises this anchor?',
+                'name': 'What cultural tags were returned for this anchor?',
                 'result': 'mixed',
                 'detail': (
                     f'Qloo returned no qualifying cultural tag for {primary.label} in this '
@@ -376,7 +453,7 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
             })
     else:
         result['checks'].append({
-            'name': 'What characterises this anchor?',
+            'name': 'What cultural tags were returned for this anchor?',
             'result': 'mixed',
             'detail': 'There was no second group of places to compare these with.',
             'metric': {},
@@ -403,8 +480,8 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     result['coverage']['note'] = (
         f'Judged on {len(venues)} places Qloo returned for this brief, '
         f'{len(concept_venues)} of which this direction cites. '
-        'These checks speak to local cultural fit only — not demand, competition, rent, or '
-        'willingness to pay.'
+        'These checks assess a scoped anchor hypothesis within the retrieved sample — they do '
+        'not measure demand, competition, rent, or willingness to pay.'
     )
     result['coverage']['howSignalsWereCounted'] = (
         'This policy counts a Qloo tag as a cultural signal when its family is not one of '
@@ -431,14 +508,14 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
             'The audience did not resolve into cultural signals, so there is nothing to test against.',
             code='NO_EVIDENCE')
 
-    demographic = guess_demographic(project.audience)
+    demographic, inferred = guess_demographic(project.audience)
     ranking = _rank_venues(provider, project, venues, demographic)
     results = []
     for concept in response.concepts:
         if direction_id and concept.id != direction_id:
             continue
         results.append(_challenge_one(provider, project, concept, venues, tags, ranking,
-                                       demographic, anchor_entity_id))
+                                       demographic, inferred, anchor_entity_id))
     if not results:
         raise QlooHarnessError('That direction is not part of this exploration.', code='INVALID_REQUEST')
 
@@ -451,22 +528,31 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
         'order': [entry['directionId'] for entry in ordered],
         'arrivalOrder': [entry['directionId'] for entry in results],
         'summary': (
-            f'Tested {len(results)} direction{"" if len(results) == 1 else "s"} against '
-            f'{len(venues)} places and {len(tags)} cultural signals Qloo returned.'
+            f'Checked {len(results)} anchor hypoth'
+            f'{"esis" if len(results) == 1 else "eses"} using a demographic ranking and '
+            f'anchor-tag comparisons across {len(venues)} retrieved places. The '
+            f'{len(tags)} audience seed{"" if len(tags) == 1 else "s"} were used for '
+            'retrieval, not for this ranking.'
         ),
         'scope': VERDICT_SCOPE,
         'policyVersion': POLICY_VERSION,
         'profile': {
             'demographic': demographic,
+            # Whether the brief actually named this demographic. When it did
+            # not, the screen says the profile is a default that can be
+            # changed, rather than passing a guess off as an inference.
+            'inferred': inferred,
+            'proposedBy': 'CultureForge, from the founder’s own words',
             'location': project.location,
             'signals': tags,
         },
         'whatThisIs': (
-            'Local cultural fit, measured. These checks ask whether the audience pulls toward the '
-            'place an idea is built on, and whether that place brings a cultural signal the '
-            'neighbourhood does not already have. They are a consistency check against the same '
-            'retrieved evidence, not an independent validation of it. They do not measure demand, '
+            'A CultureForge policy check using Qloo ranking and the anchor tags Qloo returned. '
+            'It asks where the place an idea is built on sits for a demographic profile, and '
+            'whether a qualifying cultural tag was returned for it in a comparison with the '
+            'other retrieved places. It is a consistency check against the same retrieved '
+            'evidence, not an independent validation of it. It does not measure demand, '
             'profitability, footfall, commercial viability, competition, rent, or willingness to '
-            'pay, and they say nothing about the business as a business.'
+            'pay, and it says nothing about the business as a business.'
         ),
     }

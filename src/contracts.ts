@@ -19,6 +19,32 @@ export interface Evidence {
   image?: string | null
   location?: string | null
   traceId?: string | null
+  /** How this piece of evidence should be presented, derived from it by rule.
+   *  It changes nothing about the evidence itself. */
+  presentation?: EvidencePresentation | null
+}
+
+/** The tidied view of one piece of evidence. Every string in it is either
+ *  Qloo's own or a statement about what Qloo's own does not establish. */
+export interface EvidencePresentation {
+  version: string
+  id?: string | null
+  entityId?: string | null
+  label?: string
+  /** 'place', 'organisation' or 'seed', read from Qloo's own description. */
+  identity: 'place' | 'organisation' | 'seed'
+  /** The family the tag urn carries, for an audience seed. */
+  tagFamily?: string
+  tagBucket?: string
+  identityNote: string
+  /** A lead-in from the returned description, at a sentence boundary. */
+  excerpt: string
+  hasMore: boolean
+  description?: string | null
+  requestedLocation?: string | null
+  returnedLocation?: string | null
+  locationNote: string
+  notes: string[]
 }
 
 /** One business proposal and the evidence it came from. Always a CultureForge interpretation. */

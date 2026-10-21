@@ -18,13 +18,28 @@ EVIDENCE = [
 ]
 
 
-def test_a_number_qloo_returned_is_allowed():
+def test_a_number_qloo_returned_somewhere_else_is_still_dropped():
+    """A number that exists in the evidence does not license the model here.
+
+    The place is rated 4.5 and has a popularity of 0.7311. Neither of those
+    makes "the 4.5 rated museum" a true statement about a *different* place,
+    and neither licenses a service time. The guard is strict: no numbers in
+    a model-written name or tagline, unless the name is a name Qloo returned.
+    """
     answer = {'directions': [{'index': 0, 'name': 'The Reading Room',
-                              'tagline': 'A room for the 4.5 rated museum',
-                              'rationale': 'It sits next to the 0.7311 popularity of a real place.'}]}
+                              'tagline': 'A room for the 4.5 rated museum'}]}
     usable, dropped = llm.validate_directions(answer, EVIDENCE)
     assert usable[0]['name'] == 'The Reading Room'
-    assert usable[0]['tagline'] is not None
+    assert usable[0]['tagline'] is None
+    assert len(dropped) == 1
+
+
+def test_a_name_that_is_a_qloo_name_may_keep_its_digits():
+    """The exception: the model's name is exactly a name Qloo returned."""
+    answer = {'directions': [{'index': 0, 'name': 'Whitney Museum of American Art',
+                              'tagline': 'A room for it'}]}
+    usable, dropped = llm.validate_directions(answer, EVIDENCE)
+    assert usable[0]['name'] == 'Whitney Museum of American Art'
     assert dropped == []
 
 

@@ -9,13 +9,25 @@ import type { Evidence } from '../contracts'
  * next to the picture that came with them. Nothing here is styled to look
  * better than it is — the affinity and popularity are printed as Qloo
  * returned them, to four decimal places where they were given.
+ *
+ * The tidying is done by rule, not by a model. A place Qloo describes as an
+ * organisation is marked as one, and it is shown under its own name; a place
+ * that came back with the city but not the borough says so; a returned
+ * popularity of zero is printed as zero, because it is a real value and not
+ * a missing one.
  */
-export function PlaceStrip({ evidence, onInspect }: {
+export function PlaceStrip({ evidence, onInspect, requestedLocation }: {
   evidence: Evidence[]
   onInspect?: (evidenceId: string) => void
+  requestedLocation?: string
 }) {
-  const places = evidence.filter((item) => item.kind === 'entity' && item.image)
+  // A place without a photograph is still a place Qloo returned. It is shown
+  // without one, rather than dropped from the list of the evidence.
+  const places = evidence.filter((item) => item.kind === 'entity')
   if (!places.length) return null
+  const caveats = places
+    .map((place) => place.presentation?.locationNote ?? '')
+    .filter((note, index, all) => note && all.indexOf(note) === index)
 
   return <section className="place-strip" aria-label="The places Qloo returned, with the photographs it returned for them">
     <div className="place-strip-head">
@@ -24,12 +36,17 @@ export function PlaceStrip({ evidence, onInspect }: {
     </div>
     <ul className="place-strip-rail">
       {places.map((place) => (
-        <li key={place.id}>
+        <li key={place.id} className={place.presentation?.identity === 'organisation' ? 'is-organisation' : undefined}>
           <figure>
-            <img src={place.image!} alt={`Photograph Qloo returned for ${place.label}`} loading="lazy" />
+            {place.image
+              ? <img src={place.image} alt={`Photograph Qloo returned for ${place.label}`} loading="lazy" />
+              : <span className="place-strip-no-image" aria-hidden="true">NO PHOTOGRAPH RETURNED</span>}
             <figcaption>
               <b>{place.label}</b>
               {place.location && <span>{place.location}</span>}
+              {place.presentation?.identity === 'organisation' && (
+                <span className="place-strip-kind">ORGANISATION</span>
+              )}
             </figcaption>
           </figure>
           <div className="place-strip-metrics">
@@ -49,6 +66,7 @@ export function PlaceStrip({ evidence, onInspect }: {
       Every frame above was served by Qloo for this audience and this location. The
       numbers are Qloo&rsquo;s own affinity, popularity and rating — not a fit score
       for your business.
+      {caveats.length > 0 && ` ${caveats[0]}`}
     </p>
   </section>
 }
