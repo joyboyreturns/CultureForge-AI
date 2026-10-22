@@ -922,11 +922,11 @@
 @media (max-width: 900px) {
   .ox-body { grid-template-columns: minmax(0, 1fr); }
   .ox-stage { border-right: 0; border-bottom: 1px solid var(--line); }
-  .ox-canvas, .ox-skeleton.is-static { height: 420px; }
+  .ox-canvas, .ox-skeleton.is-static { height: clamp(460px, 66vh, 600px); }
   .ox-side { max-height: none; }
 }
 @media (max-width: 600px) {
-  .ox-canvas, .ox-skeleton.is-static { height: 380px; }
+  .ox-canvas, .ox-skeleton.is-static { height: clamp(460px, 66vh, 600px); }
   .ox-head, .ox-tools, .ox-hints, .ox-foot, .ox-undo { padding-left: 12px; padding-right: 12px; }
   .ox-hints { font-size: 11px; gap: 6px 10px; }
   .ox-side { padding: 12px; }
@@ -1840,3 +1840,9 @@ body:has(.guided-tour) .run-dock { right: auto; left: 250px; }
 .ox-keybar { position: absolute; left: 12px; bottom: 34px; z-index: 2; margin: 0; padding: 8px 12px; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; max-width: calc(100% - 24px); border: 1px solid var(--line); background: var(--map-glass, var(--surface)); backdrop-filter: blur(8px); font-size: 12px; color: var(--text); }
 .ox-keybar li { display: inline-flex; align-items: center; gap: 7px; }
 .ox-ring { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--map-context); background: rgba(127,127,127,.15); display: inline-block; }
+
+@media (max-width: 600px) {
+  .ox-keybar { left: 8px; bottom: 30px; padding: 5px 8px; gap: 3px 10px; font-size: 11px; max-width: calc(100% - 16px); }
+  .ox-keybar .ox-dot { width: 9px; height: 9px; }
+  .ox-keybar .ox-ring { width: 11px; height: 11px; }
+}
