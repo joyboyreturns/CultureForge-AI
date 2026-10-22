@@ -664,3 +664,21 @@ export async function fetchUsage(): Promise<{ requests: number; upstreamCalls: n
   if (!response.ok) throw new Error('The usage could not be read.')
   return await response.json() as { requests: number; upstreamCalls: number; byRoute: Record<string, number> }
 }
+
+/** Qloo interest cells for one place within an area: where its affinity is
+ *  strong, as latitude/longitude cells. They are not venue coordinates. */
+export interface InterestLayer {
+  entityId: string
+  within: string
+  points: { lat: number; lon: number; geohash?: string | null; affinity?: number | null; popularity?: number | null }[]
+  bounds: { west: number; south: number; east: number; north: number } | null
+  note: string
+  cached: boolean
+  transportRequests: number
+}
+export async function fetchInterestCells(entityId: string, within: string): Promise<InterestLayer> {
+  const body = await postJson<{ points: InterestLayer['points']; bounds: InterestLayer['bounds']; note: string; cached?: boolean; transportRequests?: number }>(
+    '/api/qloo/where-popular', { entity: entityId, within, limit: 20 })
+  return { entityId, within, points: body.points ?? [], bounds: body.bounds ?? null, note: body.note,
+    cached: Boolean(body.cached), transportRequests: body.transportRequests ?? 0 }
+}

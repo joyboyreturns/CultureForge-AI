@@ -1329,3 +1329,9 @@
 .profile-chooser p{font-size:12px;line-height:1.6;color:var(--muted);margin:0;flex:1 1 280px}
 .challenge-index{font-size:12px;line-height:1.7;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
 .challenge-index b{color:var(--text);font-weight:500}
+
+/* --- Interest cells as a results view -------------------------------------- */
+.interest-map-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.interest-map-controls label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0;flex:1 1 260px}
+.interest-map-controls select{background:var(--surface-raised);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:13px;padding:7px 8px;min-width:0;flex:1}
+.interest-map-cost{font-size:12px;color:var(--muted);margin:0 0 8px}
