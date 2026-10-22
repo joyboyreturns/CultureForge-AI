@@ -16,6 +16,7 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: python -m pip install -r requirements-dev.txt
+      - run: npm run lint
       - run: npm run build
       - run: python -m pytest backend/tests -q
       - run: npm run test:unit

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, LoaderCircle, RotateCcw, X } from 'lucide-react'
-import type { Concept, Evidence, GenerateResponse } from '../contracts'
+import type { Evidence, GenerateResponse } from '../contracts'
 import { recompose } from '../api'
 import { compareDirection, recipeKey } from '../evidenceDependence'
 import type { CellState } from '../evidenceDependence'

@@ -112,7 +112,6 @@ export function CulturalConstellation({
   onSelect: (conceptId: string) => void
   onInspect: (evidenceId: string) => void
 }) {
-  const [hovered, setHovered] = useState<string | null>(null)
   // The heat overlay draws Qloo's popularity as the size of each node, so the
   // map shows where the cultural weight actually is.
   const [heat, setHeat] = useState(false)
@@ -185,7 +184,6 @@ export function CulturalConstellation({
     selected.evidenceIds.forEach((id) => highlighted.add(id))
     selected.decisions.forEach((decision) => highlighted.add(`${selected.id}::${decision.id}`))
   }
-  const focus = hovered ?? (highlighted.size ? [...highlighted][0] : null)
 
   const dimmed = (id: string) => {
     if (!selected) return false
@@ -235,8 +233,6 @@ export function CulturalConstellation({
             <g
               key={node.id}
               className={`constellation-node is-${node.kind}${dimmed(node.id) ? ' is-faded' : ''}${isSelected ? ' is-selected' : ''}`}
-              onMouseEnter={() => setHovered(node.id)}
-              onMouseLeave={() => setHovered(null)}
               onClick={() => {
                 if (isDecision) onSelect(node.id.split('::')[0])
                 else if (node.kind === 'venue') onInspect(node.id)

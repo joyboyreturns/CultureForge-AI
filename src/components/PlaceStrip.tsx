@@ -16,10 +16,9 @@ import type { Evidence } from '../contracts'
  * popularity of zero is printed as zero, because it is a real value and not
  * a missing one.
  */
-export function PlaceStrip({ evidence, onInspect, requestedLocation }: {
+export function PlaceStrip({ evidence, onInspect }: {
   evidence: Evidence[]
   onInspect?: (evidenceId: string) => void
-  requestedLocation?: string
 }) {
   // A place without a photograph is still a place Qloo returned. It is shown
   // without one, rather than dropped from the list of the evidence.

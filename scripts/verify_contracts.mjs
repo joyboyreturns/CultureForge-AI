@@ -16,11 +16,10 @@
  *
  * Usage:
  *   node scripts/verify_contracts.mjs
- *   BASE_URL=http://127.0.0.1:8000 DEV_URL=http://localhost:5173 node scripts/verify_contracts.mjs
+ *   BASE_URL=http://127.0.0.1:8000 node scripts/verify_contracts.mjs
  */
 
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:8000';
-const DEV_URL = process.env.DEV_URL || 'http://localhost:5173';
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
