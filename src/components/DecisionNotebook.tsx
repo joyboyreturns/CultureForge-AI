@@ -51,7 +51,7 @@ export function DecisionNotebook({ result, concept, challenge, onClose }: {
     const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }))
     const link = document.createElement('a'); link.href = url; link.download = 'cultureforge-decision-record.md'; link.click()
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-    setNotice('Decision record exported with its Qloo citations and separately labelled founder observations.')
+    setNotice('Decision record exported with its Qloo citations and separately labelled team observations.')
   }
 
   return <div className="notebook-backdrop" onClick={onClose}>

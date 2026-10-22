@@ -8,6 +8,7 @@ The root MIT license applies to CultureForge's original software. Dependencies, 
 | Geist Pixel Circle | [Vercel Geist Pixel](https://github.com/vercel/geist-pixel-font), SIL Open Font License 1.1; the original notice is included in [fonts/OFL.txt](fonts/OFL.txt). |
 | Inter, loaded through Google Fonts | [Inter project](https://github.com/rsms/inter), SIL Open Font License 1.1. |
 | Font Awesome Free, loaded through cdnjs | [Font Awesome Free license](https://fontawesome.com/license/free): icons CC BY 4.0, fonts SIL OFL 1.1, code MIT. |
+| fpdf2 (the PDF export) | [py-pdf/fpdf2](https://github.com/py-pdf/fpdf2), LGPL-3.0-or-later. Used unmodified as a library dependency installed from PyPI; it is not vendored or relicensed here. |
 | React, Vite, Tailwind CSS, Motion, Lucide, FastAPI, Pydantic, Uvicorn | Respective upstream projects. Package license files remain with their distributions; consult installed packages and lockfiles for exact versions and terms. |
 
 ## Owner review before publication

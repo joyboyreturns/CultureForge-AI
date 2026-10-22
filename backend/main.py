@@ -26,7 +26,7 @@ from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequ
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
-                     ChatRequest, InvestigationRequest, ProfileRequest, ProjectRequest, ProvenanceMetadata,
+                     ChatRequest, InvestigationRequest, ProfileRequest, ReportRequest, ProjectRequest, ProvenanceMetadata,
                      RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
                      WherePopularRequest)
 from .platform import get_platform
@@ -802,6 +802,20 @@ def ask_the_evidence(request: ChatRequest) -> dict:
         return ask(request)
     except ChatUnavailable as exc:
         return error_response(exc.code, str(exc), retryable=True)
+
+
+@app.post('/api/report/pdf', tags=['brief'],
+          summary='The exploration as a client-ready PDF',
+          responses={200: {'content': {'application/pdf': {}}}})
+def report_pdf(request: ReportRequest) -> Response:
+    """Cover, audience seeds, directions with their cited evidence, verdicts,
+    the evidence table with Qloo IDs, held interest cells and the limits.
+    Makes no Qloo or model request."""
+    from .report_pdf import build_pdf
+    content = build_pdf(request.result, request.challenge)
+    name = ''.join(ch for ch in request.result.projectId if ch.isalnum() or ch == '-')[:40] or 'exploration'
+    return Response(content=content, media_type='application/pdf',
+                    headers={'Content-Disposition': f'attachment; filename="cultureforge-{name}.pdf"'})
 
 
 @app.post('/api/profile/propose', tags=['evidence'],
