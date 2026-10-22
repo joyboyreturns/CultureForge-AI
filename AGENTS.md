@@ -25,6 +25,8 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 
 ## Maintenance
 
+- The graph (`graphify-out/`), the vault (`CultureForge AI/`), `.graphifyignore`, `opencode.json`, `.agents/` and `.opencode/` are **local only** and gitignored. On a fresh clone, create them with `graphify update .` and `graphify export obsidian --dir "CultureForge AI"` before using the retrieval ladder.
+
 - Refresh the graph after substantial source changes: `graphify update .` (AST-only, no API cost).
 - Re-export the vault: `graphify export obsidian --dir "CultureForge AI"`.
 - Re-label communities after a major refactor: `graphify label . --missing-only`.

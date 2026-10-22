@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "cultureforge-graph": {
-      "command": "bash",
-      "args": ["scripts/graphify_mcp.sh"],
-      "cwd": "/Users/vincent/Documents/CultureForge AI"
-    }
-  }
-}

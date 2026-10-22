@@ -1,9 +1,0 @@
-# The Obsidian vault is an EXPORT of the knowledge graph, not an input to it.
-# Re-ingesting it duplicates every node, inflates query results, and feeds the
-# graph its own output (a feedback loop).
-/CultureForge AI/
-
-# Build artifacts
-/dist/
-/assets/
-/fonts/
