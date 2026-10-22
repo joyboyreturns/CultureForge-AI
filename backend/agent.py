@@ -46,6 +46,11 @@ from .providers import (QLOO_ENTITY_TYPES, QlooHarnessError, QlooHarnessProvider
 
 PROMPT_VERSION = 'agent-loop-1'
 MAX_STEPS = 8
+#: Seconds one model request may take. A live run showed the configured model
+#: answering a low-effort planning request in 5 to 29 seconds, so a 45-second
+#: limit sometimes ended the loop on a plan that was merely slow.
+PLAN_TIMEOUT_SECONDS = 90
+ANALYSIS_TIMEOUT_SECONDS = 120
 QLOO_TOOLS = ('find_tags', 'recommend', 'rank', 'compare_audiences', 'entity_tags',
               'where_popular', 'audience_demographics', 'trends', 'describe')
 #: Upstream failures that end the tool loop: the next call would meet the same wall.
@@ -350,7 +355,7 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
             model_calls += 1
             plan = reasoning.call_structured(
                 PLAN_PROMPT, _payload(response, observed, steps, step_limit - index + 1, qloo_left),
-                AgentStepPlan, effort='low', max_tokens=1200, timeout=45)
+                AgentStepPlan, effort='low', max_tokens=1200, timeout=PLAN_TIMEOUT_SECONDS)
         except reasoning.AnalysisUnavailable as exc:
             stopping = f'The model did not return a valid plan: {exc}'
             emit(_event(f'agent-step-{index}', 'error', stopping))
@@ -408,11 +413,12 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
         return AgentReport(model=model_name, mode='rules', status='limited', steps=steps, modelCalls=model_calls,
                            stoppingReason=f'{stopping} No time was left for the analysis; the rule composer’s answer stands.')
     try:
-        model_calls += 1
-        analysis = reasoning.call_structured(
+        analysis, attempts = reasoning.call_structured_twice(
             ANALYSIS_PROMPT, _payload(response, observed, steps, 0, qloo_left), AgentAnalysis,
-            effort='medium', max_tokens=3000, timeout=60)
+            effort='medium', max_tokens=3000, timeout=ANALYSIS_TIMEOUT_SECONDS)
+        model_calls += attempts
     except reasoning.AnalysisUnavailable as exc:
+        model_calls += 2
         emit(_event('agent-analysis', 'error', f'{exc} The rule composer’s answer stands.'))
         return AgentReport(model=model_name, mode='rules', status='limited', steps=steps, modelCalls=model_calls,
                            stoppingReason=f'{stopping} The analysis was not valid; the rule composer’s answer stands.')

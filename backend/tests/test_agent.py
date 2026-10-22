@@ -230,7 +230,20 @@ def test_the_planning_request_carries_the_schema_and_a_small_budget(monkeypatch,
 
     report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
     plan_body, plan_timeout = sent[0]
-    assert plan_body['reasoning'] == {'effort': 'low'} and plan_body['max_tokens'] == 1200 and plan_timeout == 45
+    assert plan_body['reasoning'] == {'effort': 'low'} and plan_body['max_tokens'] == 1200 and plan_timeout == agent.PLAN_TIMEOUT_SECONDS
     assert '"tool"' in plan_body['messages'][0]['content']  # the schema travels with the prompt
     assert 'test-only-placeholder' not in json.dumps(plan_body)
     assert report.mode == 'frontier_ai'
+
+
+def test_a_malformed_analysis_is_retried_once_and_then_stands_on_the_rules(monkeypatch, response, store):
+    bad = reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.')
+    good = analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A]))
+    script(monkeypatch, plan('finish'), bad, good)
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    assert report.mode == 'frontier_ai' and report.modelCalls == 3
+
+    store._cache.clear()
+    script(monkeypatch, plan('finish'), bad, bad)
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    assert report.mode == 'rules' and 'rule composer' in report.stoppingReason and report.modelCalls == 3

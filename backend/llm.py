@@ -15,7 +15,7 @@ import urllib.request
 from pathlib import Path
 from typing import Optional
 
-from . import config, ledger
+from . import config, ledger, modelpace
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 PROMPT_VERSION = 'naming-vercel-1'
@@ -200,10 +200,14 @@ def _post(payload: dict, timeout: int) -> dict:
         },
         method='POST',
     )
+    modelpace.wait_for_slot()
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read().decode('utf-8'))
     except urllib.error.HTTPError as exc:
+        if exc.code == 429:
+            # Naming never retries; the rest of the server waits out the pause.
+            modelpace.note_limited(exc.headers.get('Retry-After') if exc.headers else None)
         raise LlmUnavailable(
             f'Vercel AI Gateway refused the naming request ({exc.code}).',
             code='LLM_REJECTED', retryable=False, details={'status': exc.code}) from exc

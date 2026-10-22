@@ -70,3 +70,42 @@ def test_the_route_returns_a_pdf_and_rejects_a_malformed_body(store, recommend_p
     assert ok.status_code == 200 and ok.headers['content-type'] == 'application/pdf'
     assert ok.content.startswith(b'%PDF') and 'attachment' in ok.headers['content-disposition']
     assert client.post('/api/report/pdf', json={'result': {'projectId': 'x'}}).status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Non-Latin text: printed with a Unicode font when there is one, stated when not
+# ---------------------------------------------------------------------------
+
+def _tokyo(store, recommend_places):
+    response = _answer(store, recommend_places)
+    place = next(item for item in response.evidence if item.kind == 'entity')
+    return response.model_copy(update={'evidence': [
+        item.model_copy(update={'label': '資生堂パーラー 銀座本店ショップ'}) if item.id == place.id else item
+        for item in response.evidence]})
+
+
+def test_without_a_unicode_font_japanese_prints_as_question_marks_and_the_pdf_says_so(store, recommend_places, monkeypatch):
+    from backend import report_pdf
+
+    monkeypatch.setattr(report_pdf, 'unicode_font_path', lambda: None)
+    text = _text(build_pdf(_tokyo(store, recommend_places), None, compress=False))
+    assert '資' not in text and '?????' in text
+    assert 'No Unicode font was available' in text
+
+
+def test_with_a_unicode_font_the_pdf_embeds_it_and_drops_the_apology(store, recommend_places, monkeypatch):
+    import pytest
+
+    from backend import report_pdf
+
+    monkeypatch.delenv('CULTUREFORGE_PDF_FONT', raising=False)
+    if not report_pdf.unicode_font_path():
+        pytest.skip('no Unicode font on this machine; the Dockerfile installs fonts-droid-fallback')
+    pdf = build_pdf(_tokyo(store, recommend_places), None, compress=False)
+    assert b'CIDFontType2' in pdf or b'FontFile2' in pdf
+    assert b'No Unicode font was available' not in pdf
+
+
+def test_a_latin_only_brief_keeps_the_built_in_font(store, recommend_places):
+    pdf = build_pdf(_answer(store, recommend_places), None, compress=False)
+    assert b'CIDFontType2' not in pdf and b'FontFile2' not in pdf

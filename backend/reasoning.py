@@ -13,7 +13,7 @@ from typing import Optional
 
 from pydantic import ValidationError
 
-from . import config, ledger
+from . import config, ledger, modelpace
 from .llm import display_model
 from .evidence_store import canonical_key, get_store
 from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
@@ -134,8 +134,20 @@ def call_structured(system_prompt: str, payload: dict, output_model, *,
         headers={'Authorization': f"Bearer {os.environ['AI_GATEWAY_API_KEY'].strip()}",
                  'Content-Type': 'application/json'})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            raw = json.loads(response.read().decode('utf-8'))
+        raw = None
+        for attempt in (1, 2):
+            modelpace.wait_for_slot()
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as response:
+                    raw = json.loads(response.read().decode('utf-8'))
+                break
+            except urllib.error.HTTPError as exc:
+                # The gateway's own limit: wait out its Retry-After (shared with
+                # every other caller) and ask once more. A second refusal is raised.
+                if exc.code == 429 and attempt == 1:
+                    modelpace.note_limited(exc.headers.get('Retry-After') if exc.headers else None)
+                    continue
+                raise
         content = raw['choices'][0]['message']['content']
         data = json.loads(content)
         return output_model.model_validate(data)
@@ -143,7 +155,25 @@ def call_structured(system_prompt: str, payload: dict, output_model, *,
             ValueError, json.JSONDecodeError, ValidationError) as exc:
         # Never include upstream bodies: they can contain prompt data or other
         # sensitive provider details. The deterministic evidence remains usable.
+        # The server log, not the reader, gets the kind of failure.
+        import logging
+        logging.getLogger('cultureforge').warning(
+            'model request failed: %s%s', type(exc).__name__,
+            f' (HTTP {exc.code})' if isinstance(exc, urllib.error.HTTPError) else '')
         raise AnalysisUnavailable('The analysis model could not return a valid structured answer. Try again later; the evidence and Qloo verdict are unchanged.') from exc
+
+
+def call_structured_twice(system_prompt: str, payload: dict, output_model, **options):
+    """call_structured, with one more attempt if the answer was not valid.
+
+    The step that writes the final words is the one a reader sees, and a model
+    that returned malformed JSON once usually does not twice. Two attempts at
+    most; a second failure is raised as it is. Returns (answer, attempts).
+    """
+    try:
+        return call_structured(system_prompt, payload, output_model, **options), 1
+    except AnalysisUnavailable:
+        return call_structured(system_prompt, payload, output_model, **options), 2
 
 
 def _call(request: EvidenceAnalysisRequest, agent_context: Optional[dict] = None) -> EvidenceAnalysisOutput:

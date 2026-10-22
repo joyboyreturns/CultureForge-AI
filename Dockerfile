@@ -26,7 +26,7 @@ ENV QLOO_HARNESS_PATH=/usr/local/lib/node_modules/@qloo/qloo-harness \
     CULTUREFORGE_PROVIDER=qloo \
     PYTHONUNBUFFERED=1
 COPY requirements.txt ./
-RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-certificates && \
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-certificates fonts-droid-fallback && \
     rm -rf /var/lib/apt/lists/* && \
     pip install --no-cache-dir -r requirements.txt && \
     useradd --create-home --uid 10001 cultureforge && \

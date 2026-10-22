@@ -42,51 +42,99 @@ def _number(value, digits: int = 4) -> str:
     return f'{value:.{digits}f}' if isinstance(value, (int, float)) else '-'
 
 
+#: Fonts that cover Japanese, Chinese and Korean as well as Latin, in the order
+#: tried. fpdf2 reads TrueType and OpenType files, not .ttc collections. On
+#: Debian and Ubuntu, `fonts-droid-fallback` provides the first path (the
+#: Dockerfile installs it); on macOS the last is a stock font.
+#: CULTUREFORGE_PDF_FONT overrides the search.
+UNICODE_FONT_PATHS = (
+    '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
+    '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttf',
+    '/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf',
+    '/usr/share/fonts/truetype/unifont/unifont.ttf',
+    '/Library/Fonts/Arial Unicode.ttf',
+    '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+)
+
+
+def unicode_font_path() -> Optional[str]:
+    """A font file that can print text outside Latin-1, or None."""
+    import os
+    from pathlib import Path
+    override = os.getenv('CULTUREFORGE_PDF_FONT', '').strip()
+    for candidate in ([override] if override else []) + list(UNICODE_FONT_PATHS):
+        if candidate and Path(candidate).is_file():
+            return candidate
+    return None
+
+
+def needs_unicode(*parts) -> bool:
+    """Whether any text, after the plain-punctuation mapping, falls outside Latin-1."""
+    import json
+    text = json.dumps(parts, ensure_ascii=False, default=str).translate(_PLAIN)
+    return any(ord(ch) > 255 for ch in text)
+
+
 class Report(FPDF):
-    def __init__(self, title: str):
+    def __init__(self, title: str, font_path: Optional[str] = None):
         super().__init__(format='A4')
+        # With a Unicode font the whole document uses it, so Tokyo prints as
+        # Tokyo. Without one the built-in Latin-1 font is used and anything
+        # outside it prints as "?", which the limitations page states.
+        self.unicode_font = bool(font_path)
+        self.family = 'Helvetica'
+        if font_path:
+            self.add_font('CFUnicode', '', font_path)
+            self.add_font('CFUnicode', 'B', font_path)   # one weight: headings are not bolder
+            self.family = 'CFUnicode'
         self.title_text = title
         self.set_auto_page_break(auto=True, margin=18)
         self.set_margins(18, 18, 18)
 
+    def t(self, text) -> str:
+        """Text as this document's font can print it."""
+        if self.unicode_font:
+            return unicodedata.normalize('NFC', str(text if text is not None else ''))
+        return plain(text)
+
     def footer(self):
         self.set_y(-12)
-        self.set_font('Helvetica', '', 7.5)
+        self.set_font(self.family, '', 7.5)
         self.set_text_color(*MUTED)
-        self.cell(0, 5, plain(f'{self.title_text} - Qloo evidence, CultureForge interpretation - page {self.page_no()}'),
+        self.cell(0, 5, self.t(f'{self.title_text} - Qloo evidence, CultureForge interpretation - page {self.page_no()}'),
                   align='C')
 
     def heading(self, text: str, size: float = 15):
         self.ln(3)
-        self.set_font('Helvetica', 'B', size)
+        self.set_font(self.family, 'B', size)
         self.set_text_color(*INK)
-        self.multi_cell(0, size * 0.5, plain(text), align='L', new_x='LMARGIN', new_y='NEXT')
+        self.multi_cell(0, size * 0.5, self.t(text), align='L', new_x='LMARGIN', new_y='NEXT')
         self.ln(1.5)
 
     def label(self, text: str):
-        self.set_font('Helvetica', 'B', 7.5)
+        self.set_font(self.family, 'B', 7.5)
         self.set_text_color(*ACCENT)
-        self.multi_cell(0, 4.2, plain(text.upper()), align='L', new_x='LMARGIN', new_y='NEXT')
+        self.multi_cell(0, 4.2, self.t(text.upper()), align='L', new_x='LMARGIN', new_y='NEXT')
 
     def body(self, text: str, size: float = 9.5, color=INK):
-        self.set_font('Helvetica', '', size)
+        self.set_font(self.family, '', size)
         self.set_text_color(*color)
-        self.multi_cell(0, size * 0.52, plain(text), align='L', new_x='LMARGIN', new_y='NEXT')
+        self.multi_cell(0, size * 0.52, self.t(text), align='L', new_x='LMARGIN', new_y='NEXT')
         self.ln(0.8)
 
     def table(self, headers: list[str], rows: list[list[str]], widths: list[float]):
-        self.set_font('Helvetica', 'B', 7.5)
+        self.set_font(self.family, 'B', 7.5)
         self.set_text_color(*MUTED)
         with self.table_context(widths) as table:
             header = table.row()
             for text in headers:
-                header.cell(plain(text))
-            self.set_font('Helvetica', '', 7.5)
+                header.cell(self.t(text))
+            self.set_font(self.family, '', 7.5)
             self.set_text_color(*INK)
             for values in rows:
                 row = table.row()
                 for text in values:
-                    row.cell(plain(text))
+                    row.cell(self.t(text))
 
     def table_context(self, widths: list[float]):
         return super().table(col_widths=widths, text_align='LEFT', line_height=4.2,
@@ -129,9 +177,10 @@ def _plot(pdf: Report, points: list[dict]):
 
 def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, compress: bool = True) -> bytes:
     title = f'CultureForge evidence brief - {response.project.businessType}, {response.project.location}'
-    pdf = Report(title)
+    use_font = unicode_font_path() if needs_unicode(response.model_dump(), challenge) else None
+    pdf = Report(title, use_font)
     pdf.set_compression(compress)
-    pdf.set_title(plain(title))
+    pdf.set_title(pdf.t(title))
     pdf.set_author('CultureForge')
     pdf.add_page()
 
@@ -232,8 +281,10 @@ def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, comp
         'demand validation or competitive advantage is claimed.',
         'The demographic profile used by the evidence test is proposed by CultureForge from the brief; it is not '
         'Qloo-inferred and is not the audience\'s full cultural profile.',
-        'Characters outside Latin-1 (for example some place names) are shown as "?" in this PDF; the JSON export '
-        'keeps them.',
+        ('This PDF uses a Unicode font, so place names in any script are printed as Qloo returned them.'
+         if pdf.unicode_font else
+         'No Unicode font was available on the server, so characters outside Latin-1 (for example Japanese place '
+         'names) are shown as "?" in this PDF; the JSON export keeps them.'),
     ):
         if line:
             pdf.body(f'- {line}', 8.5)

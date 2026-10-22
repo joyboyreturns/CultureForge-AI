@@ -139,6 +139,16 @@ def test_a_failed_planning_step_still_answers_from_the_held_evidence(monkeypatch
 
 
 def test_a_failed_answer_is_a_stated_unavailable_never_a_guess(monkeypatch, store):
-    script(monkeypatch, finish(), reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.'))
+    bad = reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.')
+    script(monkeypatch, finish(), bad, bad)
     with pytest.raises(chat.ChatUnavailable):
         chat.ask(_request(), provider=FakeQloo())
+
+
+def test_one_malformed_answer_is_retried_once(monkeypatch, store):
+    bad = reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.')
+    script(monkeypatch, finish(), bad, chat.ChatAnswer(
+        answerable=True, answer='North Room anchors the direction.',
+        claims=[AgentClaim(statement='North Room is the direction’s anchor.', citations=[PLACE_A])]))
+    result = chat.ask(_request(), provider=FakeQloo())
+    assert result['refused'] is False and result['modelCalls'] == 3

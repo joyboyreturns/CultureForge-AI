@@ -156,7 +156,7 @@ example). Set the same environment variables, mount storage at `/data`
 | Variable | Value |
 | --- | --- |
 | `QLOO_API_KEY` | Your private hackathon key (secret) |
-| `RUN_PROFILE` | `judging` in `render.yaml`: the public demo runs with every call-count budget off. Use `dev` (the default everywhere else) while testing, to keep the caps ([JUDGING_DAY.md](JUDGING_DAY.md)) |
+| `RUN_PROFILE` | `judging` in `render.yaml` and `docker-compose.yml`: the demo runs with every call-count budget off. Set `dev` in `.env` while testing, to keep the caps; running the backend directly (`uvicorn`) also defaults to `dev` ([JUDGING_DAY.md](JUDGING_DAY.md)) |
 | `QLOO_LIVE_ENABLED` | `true`; `false` serves held evidence only |
 | `QLOO_MAX_CALLS_PER_HOUR` / `_PER_DAY` | 20 / 100 (dev profile only) |
 | `AI_GATEWAY_ENABLED` | `false`, or `true` to turn on naming, the agent loop and *Ask the evidence* |
@@ -165,6 +165,8 @@ example). Set the same environment variables, mount storage at `/data`
 | `CULTUREFORGE_KEY_SALT` | A long random string (the Render blueprint generates one). It salts the hashes of issued workspace API keys; the built-in default is for development only |
 | `CULTUREFORGE_OPERATOR_TOKEN` | Unset unless operator administration is deliberately enabled |
 | `PORT` | Set by most hosts; the container listens on it (default 8000) |
+
+The Dockerfile installs `fonts-droid-fallback` so the PDF can print Japanese and other non-Latin place names (outside Docker, set `CULTUREFORGE_PDF_FONT`).
 
 The Dockerfile sets `CULTUREFORGE_PROVIDER=qloo`, the trusted Qloo base URL,
 and the `/data` paths.

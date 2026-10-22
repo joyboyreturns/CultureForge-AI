@@ -43,6 +43,13 @@
 - It is optional, and off by default. With it off, the rule composer
   answers, the agent card says so, and *Ask the evidence* returns a stated
   503.
+- **The model gateway route in use allows 5 requests a minute** for this
+  team (observed on 22 October 2026 from its `X-Ratelimit-Limit-Requests`
+  header). Requests are paced to it (`LLM_REQUESTS_PER_MINUTE`) and a 429 is
+  waited out once, so the agent loop (up to ten requests) takes a few minutes
+  and *Ask the evidence* takes tens of seconds, and several people using the
+  model features at once share that rate. A route with a higher limit is the
+  fix.
 - The agent loop is bounded: eight steps and the run deadline in every
   profile. In dev it is also bounded by the run's Qloo allowance and the
   daily analysis allowance (10), so a single cold run can use most of a
@@ -67,10 +74,25 @@
   `rank` and three comparisons, plus any the agent chooses). So a judge's
   first click on a brief that is not held can meet a stated rate-limit message,
   and the prepared, held briefs are the dependable path.
+- **Also observed:** Qloo answered `QLOO_RATE_LIMIT` to one specific
+  comparison (the anchor "The Ritz-Carlton, Tokyo" against the other nine
+  places) on every attempt over about an hour, including a direct call, while
+  a comparison for another anchor and other workflows succeeded. That looks
+  request-specific, not a key-wide limit, so one such answer does not pause
+  other requests (two in a row do, for 60 seconds). The evidence test then
+  shows that direction's tag check as "could not be run", and the direction as
+  unproven, with Qloo's code.
 - Held evidence expires (24 hours in dev, 30 days in judging), after which a
   brief is fetched again.
-- The PDF's built-in fonts are Latin-1. Other characters print as "?"; the
-  JSON export keeps them.
+- The PDF prints place names in any script when the server has a Unicode
+  font (the Docker image installs `fonts-droid-fallback`; elsewhere set
+  `CULTUREFORGE_PDF_FONT` to a `.ttf`). Without one, characters outside
+  Latin-1 print as "?", and the PDF says so; the JSON export keeps them. The
+  Docker font path is not yet verified, because the image has not been built.
+- The eight direction recipes are generic (for example "design-led" can fire
+  for a bakery brief), and which places Qloo returns depends on how it
+  resolves the audience's tags. A tag can name another city ("Croissant Nyc"
+  for a Tokyo brief); the seeds screen lets you drop it.
 - The Qloo transport is the official harness CLI, run per request. A native
   HTTP client was not built.
 - The anonymous studio is one shared demo workspace. Use non-confidential

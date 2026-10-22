@@ -29,6 +29,8 @@ from .models import (AgentAnalysis, AgentClaim, AgentStep, AgentStepPlan, ChatRe
 from .providers import QlooHarnessError, QlooHarnessProvider
 
 PROMPT_VERSION = 'ask-the-evidence-1'
+PLAN_TIMEOUT_SECONDS = 75
+ANALYSIS_TIMEOUT_SECONDS = 100
 CHAT_MAX_STEPS = 3
 DEADLINE_SECONDS = 150
 
@@ -127,7 +129,7 @@ def ask(request: ChatRequest, provider: Optional[QlooHarnessProvider] = None) ->
         model_calls += 1
         try:
             plan = reasoning.call_structured(PLAN_PROMPT, _payload(request, observed, steps, CHAT_MAX_STEPS - index + 1),
-                                             AgentStepPlan, effort='low', max_tokens=1000, timeout=40)
+                                             AgentStepPlan, effort='low', max_tokens=1000, timeout=PLAN_TIMEOUT_SECONDS)
         except reasoning.AnalysisUnavailable as exc:
             # A planning step the model got wrong is not a reason to refuse the
             # question: answer from the evidence already held, and say that no
@@ -154,12 +156,19 @@ def ask(request: ChatRequest, provider: Optional[QlooHarnessProvider] = None) ->
             if exc.code in STOPPING_CODES:
                 break
             continue
+        except Exception:  # noqa: BLE001 - one odd tool step must not lose the whole question
+            import logging
+            logging.getLogger('cultureforge').exception('Ask the evidence: %s step failed', plan.tool)
+            step.status, step.detail = 'error', f'The {plan.tool} step failed unexpectedly; answering from the evidence already held.'
+            steps.append(step)
+            break
         steps.append(step)
 
-    model_calls += 1
     try:
-        reply = reasoning.call_structured(ANSWER_PROMPT, _payload(request, observed, steps, 0), ChatAnswer,
-                                          effort='medium', max_tokens=2000, timeout=60)
+        reply, attempts = reasoning.call_structured_twice(
+            ANSWER_PROMPT, _payload(request, observed, steps, 0), ChatAnswer,
+            effort='medium', max_tokens=2000, timeout=ANALYSIS_TIMEOUT_SECONDS)
+        model_calls += attempts
     except reasoning.AnalysisUnavailable as exc:
         raise ChatUnavailable(f'{exc} Nothing was guessed.') from exc
     # The claims go through the agent's validator; the answer text is held to
@@ -170,7 +179,8 @@ def ask(request: ChatRequest, provider: Optional[QlooHarnessProvider] = None) ->
         observed, exploration)
     answer = reply.answer.strip()
     if _DIGIT.search(answer):
-        answer = 'The model’s wording stated a number of its own, so only the cited claims are shown.'
+        # Numbers shown must be Qloo's, so the model's own sentence is dropped and the cited claims speak.
+        answer = 'Here is what the cited evidence supports.'
     refused = not reply.answerable or not kept['claims']
     if refused:
         answer = 'The evidence held for this brief does not answer that. ' + (

@@ -448,3 +448,59 @@ def test_the_evidence_policy_document_states_this_policy():
     assert challenge.POLICY_VERSION in text
     for phrase in ('total // 3', 'MINIMUM_VENUES', 'leave-one-out', 'not demand'):
         assert phrase in text, phrase
+
+
+# ---------------------------------------------------------------------------
+# When Qloo cannot answer part of the test
+# ---------------------------------------------------------------------------
+
+class FlakyProvider(FakeProvider):
+    """Answers some workflows and raises for the rest."""
+
+    def __init__(self, fail: set, error: Exception, rank_rows, compare):
+        super().__init__(rank_rows, compare)
+        self.fail, self.error = fail, error
+
+    def run_workflow_cached(self, operation, payload):
+        if operation in self.fail:
+            raise self.error
+        return super().run_workflow_cached(operation, payload)
+
+
+def _small_case(monkeypatch, fail, error):
+    places = [('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C'), ('id-4', 'D'), ('id-5', 'E')]
+    response = _response(_evidence(places), [_concept('d-1', 'Direction', ['ev-entity-0'])])
+    rank_rows = [{'entity_id': f'id-{n}', 'name': chr(64 + n), 'affinity': 1 - n / 10} for n in range(1, 6)]
+    compare = {'tags': [], 'a': [{'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}], 'b': []}
+    provider = FlakyProvider(set(fail), error, rank_rows, compare)
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+    return response
+
+
+def test_a_rate_limited_ranking_leaves_the_tag_check_and_the_direction_unproven(monkeypatch):
+    error = challenge.QlooHarnessError('Qloo rate limited this key.', code='RATE_LIMITED', retryable=True)
+    response = _small_case(monkeypatch, {'rank'}, error)
+    result = challenge.challenge_directions(response.project, response)
+    entry = result['directions'][0]
+    assert entry['verdict'] == challenge.UNPROVEN
+    assert entry['problems'] == [{'check': 'rank', 'code': 'RATE_LIMITED', 'message': 'Qloo rate limited this key.'}]
+    assert 'could not be run (RATE_LIMITED)' in entry['checks'][0]['detail']
+    assert entry['checks'][1]['result'] == 'pass'   # the tag check still ran
+    assert result['summary'].startswith('Qloo could not answer 1 of the checks (RATE_LIMITED)')
+
+
+def test_a_failed_comparison_is_unproven_not_contested_and_not_supported(monkeypatch):
+    error = challenge.QlooHarnessError('Qloo could not be reached.', code='PROVIDER_UNAVAILABLE', retryable=True)
+    response = _small_case(monkeypatch, {'compare_audiences'}, error)
+    entry = challenge.challenge_directions(response.project, response)['directions'][0]
+    assert entry['verdict'] == challenge.UNPROVEN
+    assert entry['problems'][0]['check'] == 'compare'
+    assert 'tag comparison could not be run' in entry['checks'][1]['detail']
+
+
+def test_when_qloo_answers_nothing_at_all_it_is_the_stated_error_not_a_screen_of_unproven(monkeypatch):
+    error = challenge.QlooHarnessError('Qloo rate limited this key.', code='RATE_LIMITED', retryable=True)
+    response = _small_case(monkeypatch, {'rank', 'compare_audiences'}, error)
+    with pytest.raises(challenge.QlooHarnessError) as caught:
+        challenge.challenge_directions(response.project, response)
+    assert caught.value.code == 'RATE_LIMITED'

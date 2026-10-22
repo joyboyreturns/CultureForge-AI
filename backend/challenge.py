@@ -347,7 +347,8 @@ def _compare_with_other_places(provider: QlooHarnessProvider, anchor: Evidence,
 def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
                    concept, venues: list[Evidence], tags: list[str],
                    ranking: dict[str, dict], demographic: str, inferred: bool,
-                   anchor_override: Optional[str] = None) -> dict:
+                   anchor_override: Optional[str] = None,
+                   rank_problem: Optional[QlooHarnessError] = None) -> dict:
     """One direction, and the checks run against it.
 
     The direction states what it is claiming before it is checked, and what
@@ -410,6 +411,9 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
             for venue in venues if primary is not None and venue.entityId != primary.entityId
         ],
         'checks': [],
+        # Checks Qloo could not answer, with the real code. A direction with a
+        # problem is unproven, never passed or failed on a guess.
+        'problems': [],
         'coverage': {
             'venuesRetrieved': len(venues),
             'venuesCited': len(concept_venues),
@@ -462,6 +466,16 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
             'metric': {'affinity': affinity, 'position': position, 'of': total,
                        'demographic': demographic},
         })
+    elif rank_problem is not None:
+        # A check that could not run is unproven, not passed and not failed,
+        # and the reason is the real one.
+        result['problems'].append({'check': 'rank', 'code': rank_problem.code, 'message': str(rank_problem)})
+        result['checks'].append({
+            'name': 'Where does this place sit for that profile?',
+            'result': 'mixed',
+            'detail': f'The ranking could not be run ({rank_problem.code}): {rank_problem}',
+            'metric': {'demographic': demographic},
+        })
     else:
         result['checks'].append({
             'name': 'Where does this place sit for that profile?',
@@ -471,8 +485,20 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         })
 
     # ---- check 2: is there room, or a fight? -----------------------------
-    comparison = _compare_with_other_places(provider, primary, other_venues) if primary else {}
-    if comparison:
+    compare_problem: Optional[QlooHarnessError] = None
+    try:
+        comparison = _compare_with_other_places(provider, primary, other_venues) if primary else {}
+    except QlooHarnessError as exc:
+        comparison, compare_problem = {}, exc
+        result['problems'].append({'check': 'compare', 'code': exc.code, 'message': str(exc)})
+    if compare_problem is not None:
+        result['checks'].append({
+            'name': 'What cultural tags were returned for this anchor?',
+            'result': 'mixed',
+            'detail': f'The tag comparison could not be run ({compare_problem.code}): {compare_problem}',
+            'metric': {},
+        })
+    elif comparison:
         result['coverage']['venuesCompared'] = comparison['compared']
         result['coverage']['comparedWith'] = comparison['comparedWith']
         signals, types = comparison['ownSignals'], comparison['ownTypes']
@@ -608,15 +634,26 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
         demographic, inferred = demographic_override, 'chosen'
     else:
         demographic, inferred = proposed, named
-    ranking = _rank_venues(provider, project, venues, demographic)
+    rank_problem: Optional[QlooHarnessError] = None
+    try:
+        ranking = _rank_venues(provider, project, venues, demographic)
+    except QlooHarnessError as exc:
+        if exc.code == 'INVALID_REQUEST':
+            raise
+        ranking, rank_problem = {}, exc
     results = []
     for concept in response.concepts:
         if direction_id and concept.id != direction_id:
             continue
         results.append(_challenge_one(provider, project, concept, venues, tags, ranking,
-                                       demographic, inferred, anchor_entity_id))
+                                       demographic, inferred, anchor_entity_id, rank_problem))
     if not results:
         raise QlooHarnessError('That direction is not part of this exploration.', code='INVALID_REQUEST')
+    # Qloo answering nothing at all is an error the reader can retry, not a
+    # screen of "unproven". A partial answer is shown with what is missing.
+    failures = [problem for entry in results for problem in entry['problems']]
+    if failures and not ranking and not any(entry['coverage']['venuesCompared'] for entry in results):
+        raise rank_problem or QlooHarnessError(failures[0]['message'], code=failures[0]['code'])
 
     ordered = sorted(results, key=lambda entry: (VERDICT_ORDER.get(entry['verdict'], 1), entry['name']))
     return {
@@ -627,7 +664,9 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
         'order': [entry['directionId'] for entry in ordered],
         'arrivalOrder': [entry['directionId'] for entry in results],
         'summary': (
-            f'Checked {len(results)} anchor hypoth'
+            (f'Qloo could not answer {len(failures)} of the checks ({", ".join(sorted({f["code"] for f in failures}))}), '
+             'so those parts are unproven rather than passed or failed. ' if failures else '')
+            + f'Checked {len(results)} anchor hypoth'
             f'{"esis" if len(results) == 1 else "eses"} using a demographic ranking and '
             f'anchor-tag comparisons across {len(venues)} retrieved places. The '
             f'{len(tags)} audience seed{"" if len(tags) == 1 else "s"} were used for '

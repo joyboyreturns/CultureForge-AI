@@ -129,6 +129,16 @@ async def http_error_handler(request: Request, exc: HTTPException):
     return error_response(code, message, status=exc.status_code)
 
 
+@app.exception_handler(Exception)
+async def unexpected_error_handler(request: Request, exc: Exception):
+    """Whatever nothing else caught still answers in the one envelope, with an id
+    a person can quote, and the traceback goes to the server log."""
+    import logging
+    logging.getLogger('cultureforge').exception('Unhandled error on %s %s', request.method, request.url.path)
+    return error_response('INTERNAL_ERROR', 'Something went wrong on the server, and nothing was changed. '
+                          'Try again; if it keeps happening, quote the request id.', status=500, retryable=True)
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Return a readable message instead of FastAPI's default error list.

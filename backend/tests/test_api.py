@@ -228,3 +228,18 @@ def test_operator_bodies_are_typed(client):
     assert client.post('/api/workspaces', json={'name': ''}).status_code == 422
     assert client.post('/api/workspaces', json={'name': 'x', 'surprise': 1}).status_code == 422
     assert client.post('/api/workspaces/w/keys', json={'scopes': ['admin']}).status_code == 422
+
+
+def test_an_unexpected_error_is_still_the_one_envelope_with_a_request_id(client, monkeypatch):
+    import backend.chat as chat_module
+
+    def boom(_request):
+        raise RuntimeError('boom')
+    monkeypatch.setattr(chat_module, 'ask', boom)
+    body = {'project': {'businessType': 'Retail', 'audience': 'collectors', 'location': 'Paris', 'budget': 'b'},
+            'question': 'Which place anchors it?'}
+    response = client.post('/api/chat', json=body)
+    assert response.status_code == 500
+    payload = response.json()
+    assert payload['error']['code'] == 'INTERNAL_ERROR' and payload['error']['retryable'] is True
+    assert payload['requestId'].startswith('req-') and 'boom' not in response.text
