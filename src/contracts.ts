@@ -116,7 +116,9 @@ export interface GenerateResponse {
 }
 
 export interface AgentReport {
+  /** `frontier_ai` means the configured model planned and reflected; `model` names it. */
   mode: 'frontier_ai' | 'rules'
+  model?: string | null
   status: 'complete' | 'limited' | 'skipped'
   plan?: {
     operation: 'remove_anchor' | 'finish'

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check Frontier AI through Vercel AI Gateway, without repeated requests.
+"""Check the Vercel AI Gateway model, without repeated requests.
 
 The naming layer is optional: without a key, the rule engine names the
 directions and everything still works. This script tells you which state you
@@ -53,7 +53,7 @@ def main() -> int:
     live = '--live' in sys.argv
     state = llm.status()
     print('=' * 64)
-    print(' CultureForge — Frontier AI via Vercel AI Gateway')
+    print(' CultureForge — the model layer via Vercel AI Gateway')
     print('=' * 64)
     print(f"configured : {state['configured']}")
     print(f"model      : {state['model'] or '(none — the rule engine names the directions)'}")
@@ -64,7 +64,7 @@ def main() -> int:
 
     if not state['configured']:
         print()
-        print('Frontier AI is disabled or missing its Vercel credentials. Directions keep the names')
+        print('The model gateway is disabled or missing its Vercel credentials. Directions keep the names')
         print('the rule engine gives them, and all other product features still work.')
         print('Set AI_GATEWAY_ENABLED=true and configure the server-only Vercel key and model in')
         print('.env, then run this script again.')
@@ -76,7 +76,7 @@ def main() -> int:
         return 0
 
     print()
-    print('Asking Frontier AI for one naming…')
+    print(f"Asking {state['model']} for one naming…")
     evidence = [
         {'label': 'Whitney Museum of American Art', 'kind': 'entity',
          'description': 'A museum of American art in New York City.',

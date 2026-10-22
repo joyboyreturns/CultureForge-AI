@@ -108,8 +108,21 @@ def test_gateway_requires_explicit_enablement_and_credentials(monkeypatch):
     assert llm.is_configured() is True
     state = llm.status()
     assert state['provider'] == 'Vercel AI Gateway'
-    assert state['model'] == 'Frontier AI'
-    assert 'test/frontier-model' not in str(state)
+    # The studio names the model that answered. The model id is not a
+    # credential; the key is, and it never appears.
+    assert state['model'] == 'test/frontier-model'
+    assert 'test-only-placeholder' not in str(state)
+
+
+def test_a_display_name_can_stand_in_for_the_model_id(monkeypatch):
+    monkeypatch.setattr(llm, '_load_env_once', lambda: None)
+    monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')
+    assert llm.display_model() == 'test/frontier-model'
+    monkeypatch.setenv('AI_GATEWAY_DISPLAY_MODEL', 'Test Frontier 1')
+    assert llm.display_model() == 'Test Frontier 1'
+    monkeypatch.setenv('AI_GATEWAY_MODEL', '')
+    monkeypatch.setenv('AI_GATEWAY_DISPLAY_MODEL', '')
+    assert llm.display_model() is None
 
 
 def test_disabled_gateway_never_attempts_a_naming_call(monkeypatch):
@@ -142,7 +155,7 @@ def test_naming_request_uses_vercel_and_one_model_call(monkeypatch):
 
     payload, timeout = sent[0]
     assert answer == {'directions': []}
-    assert model == 'Frontier AI'
+    assert model == 'test/frontier-model'
     assert requests == 1 and len(sent) == 1
     assert payload['model'] == 'test/frontier-model'
     assert 'models' not in payload

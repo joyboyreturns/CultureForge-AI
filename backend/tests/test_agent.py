@@ -31,7 +31,7 @@ def response():
 def reflection():
     return EvidenceAnalysisResult(
         directions=[], recommendationRationale='The direction remains a hypothesis.',
-        whatWouldChangeTheConclusion='A new result from another audience.', model='Frontier AI')
+        whatWouldChangeTheConclusion='A new result from another audience.', model='test/frontier-model')
 
 
 def test_agent_executes_one_valid_removal_from_this_runs_exact_evidence(response, monkeypatch, store):
@@ -52,11 +52,13 @@ def test_agent_executes_one_valid_removal_from_this_runs_exact_evidence(response
         calls.append((project, kwargs))
         return {'concepts': [], 'evidence': [], 'notice': 'held evidence'}
     monkeypatch.setattr(agent, 'recompose', fake_recompose)
+    monkeypatch.setenv('AI_GATEWAY_DISPLAY_MODEL', 'Test Frontier 1')
 
     report = agent.run_agent(response, envelopes['tags'], envelopes['places'], 1,
                               time.time() + 30)
 
     assert report.mode == 'frontier_ai' and report.status == 'complete'
+    assert report.model == 'Test Frontier 1'
     assert len(calls) == 1
     assert calls[0][1]['tag_envelope'] is envelopes['tags']
     assert calls[0][1]['recommend_envelope'] is envelopes['places']

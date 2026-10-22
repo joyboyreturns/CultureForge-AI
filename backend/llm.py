@@ -19,7 +19,6 @@ from typing import Optional
 from . import config
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
-DISPLAY_MODEL = 'Frontier AI'
 PROMPT_VERSION = 'naming-vercel-1'
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_TOKENS = 2048
@@ -66,6 +65,17 @@ def _model() -> str:
     return os.getenv('AI_GATEWAY_MODEL', '').strip()
 
 
+def display_model() -> Optional[str]:
+    """The model name the studio and the trace show.
+
+    AI_GATEWAY_DISPLAY_MODEL when it is set (a readable name for the same
+    model), otherwise the Gateway model id itself. The id is not a secret;
+    the key is, and it never leaves the server.
+    """
+    _load_env_once()
+    return os.getenv('AI_GATEWAY_DISPLAY_MODEL', '').strip() or _model() or None
+
+
 def is_configured() -> bool:
     _load_env_once()
     return (os.getenv('AI_GATEWAY_ENABLED', '').lower() == 'true'
@@ -109,7 +119,7 @@ def _check_budget() -> None:
         if ((hour_limit is not None and sum(now - stamp < 3600 for stamp in calls) >= hour_limit)
                 or (day_limit is not None and len(calls) >= day_limit)):
             raise LlmUnavailable(
-                'The Frontier AI naming allowance is used up for now. The rule-based names remain available.',
+                'The model naming allowance is used up for now. The rule-based names remain available.',
                 code='LLM_QUOTA_EXHAUSTED', retryable=True,
                 details={'resetsInSeconds': 3600 - int(now % 3600)})
 
@@ -137,7 +147,7 @@ def status() -> dict:
     return {
         'configured': configured,
         'provider': 'Vercel AI Gateway' if configured else None,
-        'model': DISPLAY_MODEL if configured else None,
+        'model': display_model() if configured else None,
         'budget': budget_state(),
     }
 
@@ -216,7 +226,7 @@ def _post(payload: dict, timeout: int) -> dict:
         raise LlmUnavailable('Vercel AI Gateway could not be reached.',
                              code='LLM_UNREACHABLE', retryable=True) from exc
     except TimeoutError as exc:
-        raise LlmUnavailable('Frontier AI naming timed out.',
+        raise LlmUnavailable('The model naming request timed out.',
                              code='LLM_TIMEOUT', retryable=True) from exc
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise LlmUnavailable('Vercel AI Gateway returned an invalid response envelope.',
@@ -248,11 +258,11 @@ def _ask_model(brief: dict, directions: list[dict], timeout: int,
         after_request()
     choices = body.get('choices') or []
     if not choices:
-        raise LlmUnavailable('Frontier AI returned no naming result.', code='LLM_EMPTY')
+        raise LlmUnavailable('The model returned no naming result.', code='LLM_EMPTY')
     content = (choices[0].get('message') or {}).get('content')
     if not isinstance(content, str) or not content.strip():
-        raise LlmUnavailable('Frontier AI returned an empty naming result.', code='LLM_EMPTY')
-    return _parse_json(content), DISPLAY_MODEL, 1
+        raise LlmUnavailable('The model returned an empty naming result.', code='LLM_EMPTY')
+    return _parse_json(content), display_model(), 1
 
 def _parse_json(content: str) -> dict:
     """Pull the JSON out of an answer, whatever the model wrapped it in."""
@@ -409,7 +419,7 @@ def select_source_items(records: list[dict], timeout: Optional[int] = None) -> t
     """Select IDs from the supplied source records; render only server strings."""
     report = {'used': False, 'attempted': False, 'model': None, 'reason': None}
     if not is_configured():
-        report['reason'] = 'Frontier AI is not enabled or configured on this server.'
+        report['reason'] = 'The model gateway is not enabled or configured on this server.'
         return None, report
     if not records:
         report['reason'] = 'There was nothing to choose from.'
@@ -434,7 +444,7 @@ def select_source_items(records: list[dict], timeout: Optional[int] = None) -> t
         report.update(reason=str(exc), code=exc.code, requests=0)
         return None, report
     except Exception as exc:  # a naming failure must not break the evidence answer
-        report['reason'] = f'Frontier AI could not be used ({type(exc).__name__}).'
+        report['reason'] = f'{display_model()} could not be used ({type(exc).__name__}).'
         return None, report
 
 
@@ -443,7 +453,7 @@ def name_directions(brief: dict, directions: list[dict],
     """Name directions through Vercel; deterministic wording remains the fallback."""
     report = {'used': False, 'attempted': False, 'model': None, 'reason': None, 'dropped': []}
     if not is_configured():
-        report['reason'] = 'Frontier AI is not enabled or configured on this server.'
+        report['reason'] = 'The model gateway is not enabled or configured on this server.'
         return {}, report
     if not directions:
         report['reason'] = 'There were no directions to name.'
@@ -461,12 +471,12 @@ def name_directions(brief: dict, directions: list[dict],
         report.update(reason=str(exc), code=exc.code, requests=0, attempts=1)
         return {}, report
     except Exception as exc:  # a naming failure must not break the evidence answer
-        report['reason'] = f'Frontier AI could not be used ({type(exc).__name__}).'
+        report['reason'] = f'{display_model()} could not be used ({type(exc).__name__}).'
         return {}, report
     usable, dropped = validate_directions(answer, evidence)
     report['used'] = bool(usable)
     report['model'] = model
     report['dropped'] = dropped
     if not usable:
-        report['reason'] = 'Frontier AI answered, but none of the names passed the evidence checks.'
+        report['reason'] = f'{display_model()} answered, but none of the names passed the evidence checks.'
     return usable, report

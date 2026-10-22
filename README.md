@@ -56,7 +56,7 @@ flowchart LR
 - **HTTP contracts:** FastAPI and Pydantic; typed requests and a consistent readable error envelope.
 - **Qloo:** official [Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) harness, with workflow-specific request builders and a timeout-aware wrapper that disables blind transport retries.
 - **Research:** an observable state machine. Optional model control makes one schema-checked plan, at most one allowlisted evidence test, and reflection. Investigations use named, typed workflows.
-- **Optional models:** Vercel AI Gateway exclusively. A model may name directions, select existing evidence or interpret cited observations. Deterministic rules retain factual claims, citations and verdicts. Unavailable or invalid model output leaves the rule-based result intact and reports its state.
+- **Optional models:** Vercel AI Gateway exclusively. A model may name directions, select existing evidence or interpret cited observations. Deterministic rules retain factual claims, citations and verdicts. Unavailable or invalid model output leaves the rule-based result intact and reports its state. The studio and trace name the model that answered: `AI_GATEWAY_DISPLAY_MODEL` if set, otherwise the configured `AI_GATEWAY_MODEL` id.
 - **Persistence:** durable evidence files and SQLite workspaces, saved explorations, share links and usage. The production package uses one process and a persistent volume.
 
 Exact workflow contracts are exposed at `/api/qloo/workflows`; API documentation is at `/docs`.

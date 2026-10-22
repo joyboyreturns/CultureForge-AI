@@ -136,7 +136,7 @@ class GenerateResponse(BaseModel):
     evidence: list[Evidence] = Field(default_factory=list)
     trace: list[TraceEvent] = Field(default_factory=list)
     delivery: Optional[Delivery] = None
-    # Present when the bounded Frontier AI controller ran during research.
+    # Present when the bounded model controller ran during research.
     agent: Optional['AgentReport'] = None
     # Which composer produced these directions, so an old snapshot is never
     # mistaken for a current one.
@@ -334,6 +334,8 @@ class AgentReport(BaseModel):
     reflection: Optional[dict[str, object]] = None
     modelCalls: int = Field(default=0, ge=0, le=2)
     stoppingReason: str = Field(max_length=400)
+    # The model that planned and reflected, as the trace names it.
+    model: Optional[str] = Field(default=None, max_length=120)
 
 
 GenerateResponse.model_rebuild()
