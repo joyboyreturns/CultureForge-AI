@@ -41,7 +41,7 @@ from .research import registry as research_registry, start_research
 
 app = FastAPI(
     title='CultureForge API',
-    version='0.2.0',
+    version='0.3.0',
     description=(
         'CultureForge turns a business brief into evidence-backed directions, using Qloo. '
         'Every response is either a result or the same error envelope: '

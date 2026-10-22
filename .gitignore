@@ -10,27 +10,20 @@ __pycache__
 .pytest_cache/
 .data/
 
-# --- Knowledge graph (graphify) -------------------------------------------------
-# The graph itself (graph.json) and its report ARE committed so a fresh clone
-# has a working MCP server with no build step. Everything else is derived.
-graphify-out/cache/
-graphify-out/graph.html
-graphify-out/20??-??-??/
+# --- Agent scaffolding (local only) -------------------------------------------
+# The graphify knowledge graph, the Obsidian vault exported from it, and the
+# per-tool agent configs are working aids for coding agents, not product code.
+# They live on the developer's machine; a fresh clone recreates the graph with
+# `graphify update .` and the vault with `graphify export obsidian`.
+/.agents/
+/.opencode/
+/.claude/
+/opencode.json
+/.graphifyignore
+/graphify-out/
+/CultureForge AI/
 
-# Machine-local pointers and transient intermediates. The MCP wrapper and
-# graphify itself re-resolve the interpreter when these are absent.
-graphify-out/.graphify_python
-graphify-out/.graphify_root
-graphify-out/.graphify_analysis.json
-graphify-out/.graphify_labels.pending.json
-
-# --- Obsidian vault -------------------------------------------------------------
-# The vault is an EXPORT of the graph: `graphify export obsidian --dir "CultureForge AI"`.
-# Generated notes are not committed (300+ files of derived markdown). The
-# hand-written notes and the Obsidian config are kept.
-/CultureForge AI/*
-!/CultureForge AI/.obsidian/
-!/CultureForge AI/Welcome.md
-!/CultureForge AI/Graphify Workflow.md
+# Test coverage output
 .coverage
+.coverage.*
 coverage.xml
