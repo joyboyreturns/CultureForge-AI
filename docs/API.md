@@ -22,6 +22,7 @@ than on the wording:
 | `RATE_LIMITED`, `ALLOWANCE_EXHAUSTED` | 429 | Qloo rate-limited the key (live calls then pause for a cool-down), or a research run used its allowance |
 | `QUOTA_EXHAUSTED`, `LIVE_DISABLED`, `BUDGET_UNAVAILABLE`, `PROVIDER_UNAVAILABLE`, `MODEL_UNAVAILABLE` | 503 | A local budget is used up, the kill switch is on, the ledger is unreadable, Qloo cannot be reached, or no model is configured |
 | `UPSTREAM_TIMEOUT`, `RUN_TIMEOUT` | 504 | Qloo or a research run took too long. Nothing is retried blindly. |
+| `INTERNAL_ERROR` | 500 | Something unexpected failed on the server. Nothing was changed; quote the `requestId` (the traceback is in the server log) |
 | `UPSTREAM_UNAUTHENTICATED`, `UPSTREAM_MALFORMED`, `UPSTREAM_REJECTED` | 502 | Qloo refused the key, answered unreadably, or rejected the request |
 
 ## Routes

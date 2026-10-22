@@ -421,6 +421,8 @@ export interface ChallengedDirection {
   /** The other places it could have been held to. */
   alternatives: { entityId: string | null; label: string | null }[]
   checks: ChallengeCheck[]
+  /** Checks Qloo could not answer, with the real code; such a direction is unproven. */
+  problems?: { check: 'rank' | 'compare'; code: string; message: string }[]
   /** The anchor-fit-4 index: the rule's inputs and outcome, its confidence
    *  and its sensitivity. It holds positions and counts, never a score. */
   index?: {

@@ -18,6 +18,14 @@ def isolated_runtime(tmp_path, monkeypatch):
     # A developer's .env may hold RUN_PROFILE=judging or the kill switch; the
     # suite runs in the dev profile unless a test says otherwise.
     monkeypatch.setitem(providers._RATE_LIMIT, 'until', 0.0)
+    monkeypatch.setitem(providers._RATE_LIMIT, 'strikes', 0)
+    monkeypatch.setitem(providers._PACE, 'next', 0.0)
+    monkeypatch.setenv('QLOO_MIN_CALL_INTERVAL_SECONDS', '0')
+    # No pacing of model requests in tests: they are scripted, and a test of
+    # the pacer itself sets its own clock.
+    monkeypatch.setenv('LLM_REQUESTS_PER_MINUTE', '0')
+    from backend import modelpace
+    modelpace.reset()
     monkeypatch.setenv('RUN_PROFILE', 'dev')
     monkeypatch.setenv('QLOO_LIVE_ENABLED', 'true')
     for name in ('CULTUREFORGE_EVIDENCE_TTL_HOURS', 'QLOO_RATE_LIMIT_COOLDOWN_SECONDS'):

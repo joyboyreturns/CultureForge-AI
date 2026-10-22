@@ -422,7 +422,7 @@ export default function App() {
         evidence: result.evidence,
         concepts: result.concepts,
         resolvedTags: result.provenance?.resolved_tags ?? [],
-      }, profileChoice)
+      }, profileChoice === profileProposal?.demographic ? '' : profileChoice)
       if (currentResult.current !== result) { setChallenging(false); return }
       // A re-anchored direction may have changed its verdict. Say so, because
       // "change this assumption and it loses" is the point of the exercise.

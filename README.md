@@ -112,10 +112,11 @@ from `backend/config.py`.
 | `LLM_MAX_CALLS_PER_HOUR` | 20 | unlimited | Model naming calls per hour | `config.py` |
 | `LLM_MAX_CALLS_PER_DAY` | 50 | unlimited | Model naming calls per day | `config.py` |
 | `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited | Agent, analysis and chat model calls per day | `config.py` |
-| `RESEARCH_RUN_MAX_WORKFLOWS` | 8 | unlimited | Qloo workflows per research run (judging is bounded by the 240 s deadline) | `config.py` |
+| `RESEARCH_RUN_MAX_WORKFLOWS` | 8 | unlimited | Qloo workflows per research run (judging is bounded by the 420 s deadline) | `config.py` |
 | `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 720 | How long held evidence answers | `config.py` |
 | `QLOO_LIVE_ENABLED` | true | true | `false` serves held evidence only | `config.py` |
-| `QLOO_RATE_LIMIT_COOLDOWN_SECONDS` | 60 | 60 | Pause after a Qloo 429 | `config.py` |
+| `QLOO_RATE_LIMIT_COOLDOWN_SECONDS` | 60 | 60 | Pause after two Qloo rate-limit answers in a row | `config.py` |
+| `QLOO_MIN_CALL_INTERVAL_SECONDS` | 2 | 2 | Least time between live Qloo requests, server-wide (0 disables) | `config.py` |
 | `CULTUREFORGE_BRIDGE_DOMAINS` | artist,movie,brand | same | Audience-bridge domains; `off` disables | `config.py` |
 | `QLOO_API_KEY` | — | — | Hackathon key (secret, server only) | `providers.py`, `qloo_exec.mjs` |
 | `QLOO_BASE_URL`, `QLOO_TRUSTED_BASE_URL` | hackathon host | same | Set by the Dockerfile; hackathon keys work only against `https://hackathon.api.qloo.com` | Dockerfile, `check_api.py` |
@@ -129,9 +130,11 @@ from `backend/config.py`.
 | `AI_GATEWAY_API_KEY`, `AI_GATEWAY_MODEL` | — | — | Vercel key (secret) and model id | `llm.py` |
 | `AI_GATEWAY_DISPLAY_MODEL` | model id | same | Readable name shown for the model | `llm.py` |
 | `LLM_TIMEOUT_SECONDS` | 30 | same | Naming request timeout | `llm.py` |
+| `LLM_REQUESTS_PER_MINUTE` | 5 | 5 | Model requests that may start in a rolling minute (pacing, not a budget; 0 disables) | `modelpace.py` |
 | `CULTUREFORGE_CACHE_DIR` | `~/.cache/cultureforge` | same | Evidence store and `budget.db` | `evidence_store.py`, `ledger.py` |
 | `CULTUREFORGE_DB` | `~/.cache/cultureforge/platform.db` | same | Workspaces and saved explorations | `platform.py` |
 | `CULTUREFORGE_STATIC_DIR` | unset | same | Serve the built UI (set in Docker) | `main.py` |
+| `CULTUREFORGE_PDF_FONT` | auto-detected | same | A `.ttf` that covers non-Latin text, for the PDF (the Docker image installs one) | `report_pdf.py` |
 | `CULTUREFORGE_ALLOWED_ORIGINS` | empty | same | Extra CORS origins if the UI is hosted elsewhere | `main.py` |
 | `CULTUREFORGE_KEY_SALT` | dev default | set it | Salt for issued workspace keys | `platform.py` |
 | `CULTUREFORGE_OPERATOR_TOKEN` | unset | unset | Opens operator routes away from localhost | `main.py` |

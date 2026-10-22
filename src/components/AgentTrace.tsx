@@ -101,7 +101,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
 
       {slow && !error && run?.status === 'running' && (
         <div className="agent-trace-waiting" role="status">
-          <span className="orange-dot" /> Still processing. The answer is being cooked: new evidence and the AI analysis can take a minute or two.
+          <span className="orange-dot" /> Still processing. The answer is being cooked: new evidence and the AI analysis can take a few minutes: the model gateway paces its requests.
         </div>
       )}
 

@@ -24,6 +24,16 @@
 - Agent scaffolding (the graph, the vault and tool configs) is local-only and no longer tracked.
 
 ### Fixed
+- A live "bakery in Tokyo" run found and fixed:
+  * model requests are paced to the gateway's 5-a-minute limit (`LLM_REQUESTS_PER_MINUTE`) and a 429's `Retry-After` is waited out once, instead of ending the agent loop on a plan that was merely refused;
+  * model timeouts were 40-60 seconds against a model that took 5-29 seconds for a low-effort answer, so they are 75-120 seconds, and the final analysis and chat answer get one more attempt if malformed;
+  * the Qloo rate-limit pause is shared by every provider instance and starts only after two answers in a row, because Qloo refused one specific comparison on every attempt while others worked;
+  * live Qloo requests are spaced (`QLOO_MIN_CALL_INTERVAL_SECONDS`);
+  * the evidence test reports a partial result (unproven, with Qloo's code) when part of it cannot run, instead of one error;
+  * the PDF prints Japanese and other non-Latin place names with a Unicode font when one is installed;
+  * the answer states the whole run's cost, Ask the evidence survives a failed planning step, and any unexpected server error is the standard envelope with a request id instead of a bare 500;
+  * the studio sent the proposed evidence-test profile as if the user had chosen it.
+- The demo defaults to no call-count caps: `docker-compose.yml` and `render.yaml` run `RUN_PROFILE=judging`, and the judging evidence TTL is 30 days.
 - The sidebar no longer shows a personal workspace name; it reads "Shared workspace".
 - The Render blueprint deploys with `RUN_PROFILE=judging`, so the public demo runs with every call-count budget off (dev stays the default everywhere else).
 - The provenance drawer stayed open over other screens, still showing a place that had been removed; it now closes when the screen or exploration changes.

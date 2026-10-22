@@ -34,7 +34,7 @@ from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_payl
 # where the timeout below is what bounds a run.
 _FROM_PROFILE = object()
 # A run is abandoned if it takes longer than this.
-DEFAULT_RUN_TIMEOUT_SECONDS = 240
+DEFAULT_RUN_TIMEOUT_SECONDS = 420
 
 STATUS_RUNNING = 'running'
 STATUS_COMPLETE = 'complete'

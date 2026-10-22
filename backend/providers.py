@@ -281,7 +281,27 @@ def mark_reused(event: TraceEvent, detail: Optional[str] = None) -> TraceEvent:
 #: When Qloo last rate-limited this key, live calls wait until here. It is
 #: shared by every provider instance: routes and research runs each create
 #: their own, and a pause that lived on one instance paused nothing.
-_RATE_LIMIT = {'until': 0.0}
+_RATE_LIMIT = {'until': 0.0, 'strikes': 0}
+#: How many rate-limit answers in a row start the server-wide pause. One is not
+#: enough: a live test found Qloo answering "rate limit" to one specific
+#: comparison every time, on every retry, while other requests went through.
+#: A pause for that would have blocked the requests that were working.
+RATE_LIMIT_STRIKES = 2
+#: Spacing between live Qloo requests (config.min_call_interval_seconds).
+_PACE = {'lock': threading.Lock(), 'next': 0.0}
+
+
+def _pace_live_call() -> None:
+    """Wait, if needed, so live requests start at least the configured gap apart."""
+    gap = config.min_call_interval_seconds()
+    if gap <= 0:
+        return
+    with _PACE['lock']:
+        now = time.time()
+        start = max(now, _PACE['next'])
+        _PACE['next'] = start + gap
+    if start > now:
+        time.sleep(start - now)
 
 
 class QlooHarnessProvider(CultureProvider):
@@ -390,12 +410,20 @@ class QlooHarnessProvider(CultureProvider):
                 details={'resetsInSeconds': int(remaining) + 1})
 
     def _note_rate_limited(self) -> None:
-        _RATE_LIMIT['until'] = time.time() + config.rate_limit_cooldown_seconds()
+        _RATE_LIMIT['strikes'] += 1
+        if _RATE_LIMIT['strikes'] >= RATE_LIMIT_STRIKES:
+            _RATE_LIMIT['until'] = time.time() + config.rate_limit_cooldown_seconds()
+
+    @staticmethod
+    def _note_answered() -> None:
+        """A live request got an answer, so rate-limit answers are not a streak."""
+        _RATE_LIMIT['strikes'] = 0
 
     def _run_workflow(self, operation: str, payload: dict) -> dict:
         self._check_live_allowed()
         command = self._resolve_command()
         self._consume_call_budget()
+        _pace_live_call()
         # The CLI accepts a request file; using a mode-0600 temporary file avoids putting
         # audience text in shell arguments and avoids leaking it to process listings.
         try:
@@ -432,7 +460,7 @@ class QlooHarnessProvider(CultureProvider):
                 code = ''
             if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED') or status == 429:
                 self._note_rate_limited()
-                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.', code='RATE_LIMITED', retryable=True,
+                raise QlooHarnessError('Qloo answered this request with a rate-limit error. Wait before retrying; if other requests still work, this one may be refused on its own.', code='RATE_LIMITED', retryable=True,
                                        details={'resetsInSeconds': config.rate_limit_cooldown_seconds()})
             if code == 'QLOO_AUTH' or status == 401:
                 raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.', code='UPSTREAM_UNAUTHENTICATED')
@@ -472,6 +500,7 @@ class QlooHarnessProvider(CultureProvider):
                         'Qloo returned the place this probe asked it to exclude. The filter did not hold, so no conclusion was drawn.',
                         code='FILTER_IGNORED',
                     )
+        self._note_answered()
         return result
 
     def run_workflow_cached(self, operation: str, payload: dict) -> tuple[dict, bool, int]:

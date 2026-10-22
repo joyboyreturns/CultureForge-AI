@@ -172,16 +172,37 @@ def test_the_kill_switch_serves_held_evidence_and_fetches_nothing(provider, judg
     assert QlooHarnessProvider.budget_state()['callsToday'] == 0
 
 
-def test_a_429_pauses_live_calls_without_a_retry(provider, judging, monkeypatch):
+def test_two_rate_limit_answers_in_a_row_pause_live_calls_without_a_retry(provider, judging, monkeypatch):
     calls = _fake_cli(monkeypatch, {'error': {'code': 'QLOO_RATE_LIMITED', 'status': 429}}, returncode=1)
-    with pytest.raises(QlooHarnessError) as first:
-        provider._run_workflow('find_tags', {'query': 'a', 'limit': 3})
-    assert first.value.code == 'RATE_LIMITED'
-    with pytest.raises(QlooHarnessError) as second:
-        provider._run_workflow('find_tags', {'query': 'b', 'limit': 3})
-    assert second.value.code == 'RATE_LIMITED'
-    assert second.value.details['resetsInSeconds'] > 0
-    assert len(calls) == 1
+    for query in ('a', 'b'):
+        with pytest.raises(QlooHarnessError) as caught:
+            provider._run_workflow('find_tags', {'query': query, 'limit': 3})
+        assert caught.value.code == 'RATE_LIMITED'
+    assert len(calls) == 2            # each was asked once; neither was retried
+    with pytest.raises(QlooHarnessError) as paused:
+        provider._run_workflow('find_tags', {'query': 'c', 'limit': 3})
+    assert paused.value.code == 'RATE_LIMITED' and paused.value.details['resetsInSeconds'] > 0
+    assert len(calls) == 2            # the third never reached Qloo
+
+
+def test_one_refused_request_does_not_pause_the_requests_that_work(provider, monkeypatch):
+    """Qloo refused one specific comparison on every attempt while others went through."""
+    outcomes = [({'error': {'code': 'QLOO_RATE_LIMIT'}}, 1), ({'status': 'ok', 'results': []}, 0),
+                ({'error': {'code': 'QLOO_RATE_LIMIT'}}, 1), ({'status': 'ok', 'results': []}, 0)]
+    asked = []
+
+    def run(*args, **kwargs):
+        stdout, code = outcomes[len(asked)]
+        asked.append(1)
+        return SimpleNamespace(returncode=code, stdout=json.dumps(stdout), stderr='')
+    monkeypatch.setattr(subprocess, 'run', run)
+    for n, expect_error in enumerate((True, False, True, False)):
+        if expect_error:
+            with pytest.raises(QlooHarnessError):
+                provider._run_workflow('compare_audiences', {'group_a': ['x'], 'group_b': ['y'], 'n': n})
+        else:
+            provider._run_workflow('find_tags', {'query': str(n), 'limit': 3})
+    assert len(asked) == 4            # nothing was skipped by a pause
 
 
 def test_the_cool_down_can_be_turned_off(provider, monkeypatch):
@@ -310,11 +331,32 @@ def test_a_held_answer_states_when_it_was_fetched_and_when_it_expires(
 def test_the_rate_limit_pause_is_shared_by_every_provider_instance(monkeypatch):
     """Routes and runs each build their own provider; the pause must still hold for all of them."""
     calls = _fake_cli(monkeypatch, {'error': {'code': 'QLOO_RATE_LIMITED', 'status': 429}}, returncode=1)
-    first, second = QlooHarnessProvider(), QlooHarnessProvider()
-    for instance in (first, second):
+    first, second, third = QlooHarnessProvider(), QlooHarnessProvider(), QlooHarnessProvider()
+    for instance in (first, second, third):
         monkeypatch.setattr(instance, '_resolve_command', lambda: ['fake-qloo'])
-    with pytest.raises(QlooHarnessError):
-        first._run_workflow('find_tags', {'query': 'a', 'limit': 3})
+    for instance in (first, second):
+        with pytest.raises(QlooHarnessError):
+            instance._run_workflow('find_tags', {'query': 'a', 'limit': 3})
     with pytest.raises(QlooHarnessError) as caught:
-        second._run_workflow('find_tags', {'query': 'b', 'limit': 3})
-    assert caught.value.code == 'RATE_LIMITED' and len(calls) == 1
+        third._run_workflow('find_tags', {'query': 'b', 'limit': 3})
+    assert caught.value.code == 'RATE_LIMITED' and len(calls) == 2
+
+
+def test_live_qloo_calls_are_spaced_and_held_evidence_is_not(monkeypatch, store):
+    from backend import providers
+
+    monkeypatch.setenv('QLOO_MIN_CALL_INTERVAL_SECONDS', '0.2')
+    monkeypatch.setitem(providers._PACE, 'next', 0.0)
+    stamps = []
+    provider = QlooHarnessProvider()
+    monkeypatch.setattr(provider, '_resolve_command', lambda: ['fake-qloo'])
+    monkeypatch.setattr(subprocess, 'run', lambda *a, **k: (stamps.append(__import__('time').time()),
+                        SimpleNamespace(returncode=0, stdout=json.dumps({'status': 'ok', 'results': []}), stderr=''))[1])
+    for query in ('a', 'b', 'c'):
+        provider._run_workflow('find_tags', {'query': query, 'limit': 3})
+    assert stamps[1] - stamps[0] >= 0.19 and stamps[2] - stamps[1] >= 0.19
+    # held evidence goes nowhere near the pacing
+    store.put(canonical_key('find_tags', {'query': 'held', 'limit': 3}), {'status': 'ok', 'results': []})
+    before = __import__('time').time()
+    provider.run_workflow_cached('find_tags', {'query': 'held', 'limit': 3})
+    assert __import__('time').time() - before < 0.1

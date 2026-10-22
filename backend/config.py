@@ -138,6 +138,40 @@ def evidence_ttl_seconds() -> int:
     return max(1, int(hours * 3600))
 
 
+DEFAULT_LLM_REQUESTS_PER_MINUTE = 5
+
+
+def llm_requests_per_minute() -> int:
+    """How many model-gateway requests may start in a rolling minute (0 = no pacing).
+
+    The route this project was tested on allows 5 a minute for its team, so
+    that is the default. It paces requests; it is not a call budget, so it
+    applies in the judging profile too.
+    """
+    raw = os.getenv('LLM_REQUESTS_PER_MINUTE', '').strip()
+    try:
+        return max(0, int(raw)) if raw else DEFAULT_LLM_REQUESTS_PER_MINUTE
+    except ValueError:
+        return DEFAULT_LLM_REQUESTS_PER_MINUTE
+
+
+DEFAULT_MIN_CALL_INTERVAL_SECONDS = 2.0
+
+
+def min_call_interval_seconds() -> float:
+    """The least time between two live Qloo requests, across the whole server.
+
+    Qloo's own limit is unpublished and a live test answered 429 after a
+    burst of back-to-back calls. Spacing them is cheap insurance in both
+    profiles; 0 turns it off. Held evidence is never delayed.
+    """
+    raw = os.getenv('QLOO_MIN_CALL_INTERVAL_SECONDS', '').strip()
+    try:
+        return max(0.0, float(raw)) if raw else DEFAULT_MIN_CALL_INTERVAL_SECONDS
+    except ValueError:
+        return DEFAULT_MIN_CALL_INTERVAL_SECONDS
+
+
 def rate_limit_cooldown_seconds() -> int:
     raw = os.getenv('QLOO_RATE_LIMIT_COOLDOWN_SECONDS', '').strip()
     try:
@@ -161,4 +195,6 @@ def summary() -> dict:
         'evidenceTtlHours': round(evidence_ttl_seconds() / 3600, 2),
         'rateLimitCooldownSeconds': rate_limit_cooldown_seconds(),
         'bridgeDomains': bridge_domains(),
+        'llmRequestsPerMinute': llm_requests_per_minute(),
+        'qlooMinCallIntervalSeconds': min_call_interval_seconds(),
     }
