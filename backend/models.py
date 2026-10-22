@@ -191,7 +191,8 @@ class EntityListRequest(BaseModel):
 class WherePopularRequest(EntityRequest):
     """One entity, and the area to map it within."""
     within: str = Field(min_length=1, max_length=160)
-    limit: int = Field(default=20, ge=1, le=100)
+    # The harness caps where_popular at 20 cells.
+    limit: int = Field(default=20, ge=1, le=20)
 
 
 class TrendsRequest(EntityListRequest):
