@@ -1770,3 +1770,33 @@ body { background-attachment: fixed; }
 .clarification-question{margin-top:6px}
 .agent-trace-error .text-link{display:inline-flex;margin-right:12px}
 @media (max-width:640px){.intent-streams{grid-template-columns:1fr}.intent-summary{padding:14px}}
+
+/* --- Background research: the dock and the studio navigation ---------------- */
+.run-dock { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 32px)); }
+.run-monitor { border: 1.5px solid var(--card-edge); box-shadow: 6px 6px 0 var(--card-shadow); background: var(--beet); color: var(--band-text); padding: 14px 16px; display: grid; gap: 8px; font-size: 13px; line-height: 1.5; }
+.run-monitor-head { display: flex; gap: 10px; align-items: flex-start; }
+.run-monitor-head > div { flex: 1; display: grid; gap: 1px; }
+.run-monitor-head small { opacity: .75; font-size: 12px; }
+.run-monitor-dot { flex: none; width: 16px; height: 16px; margin-top: 3px; border-radius: 50%; background: var(--clay, #e2622f); display: inline-grid; place-items: center; color: #fff; }
+.run-monitor-dot.pulse { animation: run-pulse 1.4s ease-in-out infinite; }
+@keyframes run-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(226,98,47,.55); } 50% { box-shadow: 0 0 0 7px rgba(226,98,47,0); } }
+.run-monitor-x { background: none; border: 0; color: inherit; cursor: pointer; padding: 2px; opacity: .7; }
+.run-monitor-bar { height: 3px; background: rgba(255,255,255,.2); overflow: hidden; }
+.run-monitor-bar span { display: block; height: 100%; width: 40%; background: var(--clay, #e2622f); animation: run-slide 1.6s ease-in-out infinite; }
+@keyframes run-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+.run-monitor-step, .run-monitor-meta { margin: 0; }
+.run-monitor-step { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.run-monitor-meta { font-size: 12px; opacity: .75; }
+.run-monitor .text-link { color: inherit; justify-self: start; text-decoration: underline; }
+.run-monitor-primary { justify-self: start; display: inline-flex; gap: 8px; align-items: center; cursor: pointer; border: 1.5px solid currentColor; background: var(--clay, #e2622f); color: #fff; padding: 8px 12px; font-weight: 600; }
+.studio-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 18px; padding-bottom: 12px; border-bottom: 1px solid var(--card-edge); }
+.studio-nav-spacer { flex: 1; }
+.studio-nav button { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13px; background: none; border: 0; color: var(--muted); padding: 6px 2px; }
+.studio-nav button:hover { color: var(--accent); }
+.studio-nav-back { font-weight: 600; color: inherit !important; }
+.studio-nav .is-primary { border: 1.5px solid var(--card-edge); padding: 6px 12px; color: inherit; }
+@media (max-width: 700px) { .run-dock { right: 16px; bottom: 16px; } }
+
+/* The dock steps aside while the guided tour is open, so neither hides the other. */
+body:has(.guided-tour) .run-dock { right: auto; left: 250px; }
+@media (max-width: 900px) { body:has(.guided-tour) .run-dock { left: 16px; bottom: auto; top: 76px; } }
