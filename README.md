@@ -67,7 +67,7 @@ Every displayed Qloo measurement is returned by Qloo. CultureForge does not inve
 
 The server caches successful evidence for 24 hours in the dev profile and 14 days in judging. The browser holds composed live answers for 12 hours. Both are labelled, and a reused answer reports zero new upstream requests. Failures are not cached as successful evidence. Opening the landing page does not run a lookup; the example is explicit.
 
-A basic brief typically needs two Qloo workflows; a three-direction challenge can add one ranking and three comparisons. Optional investigation/model-selected tests can add calls. Held evidence is reused.
+A brief needs two Qloo workflows (audience seeds, then up to ten places) plus one per audience-bridge domain (artist, movie and brand by default, fetched in parallel; `CULTUREFORGE_BRIDGE_DOMAINS=off` turns them off); a three-direction challenge can add one ranking and three comparisons. Optional investigation/model-selected tests can add calls. Held evidence is reused.
 
 ### Run profiles
 
@@ -80,7 +80,7 @@ A basic brief typically needs two Qloo workflows; a three-direction challenge ca
 | `LLM_MAX_CALLS_PER_HOUR` | 20 | unlimited |
 | `LLM_MAX_CALLS_PER_DAY` | 50 | unlimited |
 | `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited |
-| `RESEARCH_RUN_MAX_WORKFLOWS` | 3 | unlimited |
+| `RESEARCH_RUN_MAX_WORKFLOWS` | 5 | unlimited |
 | `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 336 |
 
 In dev, the environment can change a budget but not switch it off: a value below one becomes one, and the analysis allowance cannot be raised above 10. Do not raise limits to work around errors. `backend/tests/test_config.py` fails if this table or `.env.example` drifts from `config.py`.

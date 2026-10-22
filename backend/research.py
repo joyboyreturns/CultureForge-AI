@@ -284,8 +284,29 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
                 acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
             ))
 
+        # ---- the audience bridge: what else this audience gravitates to ----
+        # Each domain is one more workflow, so in dev the run's allowance
+        # decides how many are asked; any left out are stated, not hidden.
+        domains = config.bridge_domains()
+        if allowance is not None:
+            room = max(0, allowance - run.workflow_calls)
+            if room < len(domains):
+                run.add_event(TraceEvent(
+                    id=f'trace-{uuid.uuid4().hex[:8]}', step='bridge-domains', status='skipped',
+                    detail=(f"The run allowance left room for {room} of {len(domains)} bridge domains; "
+                            f"skipped: {', '.join(domains[room:])}."),
+                    acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())))
+            domains = domains[:room]
+        run.workflow_calls += len(domains)
+
         response = provider.generate(run.project, seed_tag_ids=run.seed_tag_ids or None,
-                                     on_step=announce)
+                                     on_step=announce, domains=domains)
+        # The seeds and places were held by now, so what generate() spent
+        # is what the bridge fetched.
+        run.transport_requests += (response.delivery.transportRequests or 0) if response.delivery else 0
+        for event in response.trace:
+            if event.step.startswith('bridge-'):
+                run.add_event(event)
         # The announced step is now finished, and it is closed with what
         # actually happened rather than left running for ever.
         naming_event = next((event for event in response.trace

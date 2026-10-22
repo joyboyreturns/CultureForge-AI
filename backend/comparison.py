@@ -202,7 +202,9 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
 
     # No model call: this is a zero-upstream operation, and the deterministic
     # wording is what the rules produce on their own.
-    response = provider.generate(project, tag_envelope, rec_envelope, allow_naming=False)
+    # The bridge is read from held evidence only: a rebuild never calls Qloo.
+    response = provider.generate(project, tag_envelope, rec_envelope, allow_naming=False,
+                                 bridge_held_only=True)
 
     # And the evidence and decisions are checked against what is actually
     # left, so nothing cites a venue that is gone.

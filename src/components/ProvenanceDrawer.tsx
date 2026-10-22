@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Concept, Evidence, ProjectRequest, TraceEvent } from '../contracts'
+import { evidenceKindLabel } from '../evidenceSummary'
 
 /**
  * The provenance inspector.
@@ -83,7 +84,7 @@ export function ProvenanceDrawer({
         </header>
 
         <div className="provenance-facts">
-          <div><span>KIND</span><strong>{item.kind === 'tag' ? 'Audience seed' : 'Qloo place'}</strong></div>
+          <div><span>KIND</span><strong>{evidenceKindLabel(item)}</strong></div>
           {item.entityId && <div><span>ENTITY ID</span><strong className="mono">{item.entityId}</strong></div>}
           {item.tagId && <div><span>TAG URN</span><strong className="mono">{item.tagId}</strong></div>}
           {item.affinity != null && <div><span>AFFINITY</span><strong>{item.affinity.toFixed(4)}</strong></div>}

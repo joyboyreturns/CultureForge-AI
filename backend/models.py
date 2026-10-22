@@ -30,7 +30,10 @@ class Evidence(BaseModel):
     entity, a metric, or a location.
     """
     id: str = Field(max_length=180)
-    kind: Literal['entity', 'tag'] = 'entity'
+    # entity: a place returned for the brief's location. tag: an audience
+    # seed. crossdomain: a non-place entity (artist, film, brand…) returned for
+    # the same audience tags, with no location.
+    kind: Literal['entity', 'tag', 'crossdomain'] = 'entity'
     label: str = Field(max_length=400)
     entityId: Optional[str] = Field(default=None, max_length=300)
     entityType: Optional[str] = Field(default=None, max_length=120)
