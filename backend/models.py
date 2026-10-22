@@ -338,6 +338,55 @@ class AgentObservation(BaseModel):
     result: dict[str, object] = Field(default_factory=dict)
 
 
+#: The tools the agent loop may choose. Nine are Qloo workflows; remove_anchor
+#: is a local recomposition from held evidence; finish ends the loop.
+AgentTool = Literal['find_tags', 'recommend', 'rank', 'compare_audiences', 'entity_tags',
+                    'where_popular', 'audience_demographics', 'trends', 'describe',
+                    'remove_anchor', 'finish']
+
+
+class AgentStepPlan(BaseModel):
+    """What the model asks for on one turn. The server builds the Qloo request."""
+    model_config = ConfigDict(extra='forbid')
+    tool: AgentTool
+    arguments: dict[str, object] = Field(default_factory=dict)
+    question: str = Field(default='', max_length=240)
+    reason: str = Field(min_length=4, max_length=400)
+
+
+class AgentClaim(BaseModel):
+    """One analytical statement, and the Qloo identifiers it rests on."""
+    model_config = ConfigDict(extra='forbid')
+    statement: str = Field(min_length=8, max_length=400)
+    citations: list[str] = Field(min_length=1, max_length=8)
+    directionId: Optional[str] = Field(default=None, max_length=120)
+
+
+class AgentAnalysis(BaseModel):
+    """The model's final analysis, before the citation validator reads it."""
+    model_config = ConfigDict(extra='forbid')
+    claims: list[AgentClaim] = Field(max_length=8)
+    recommendedDirectionId: Optional[str] = Field(default=None, max_length=120)
+    summary: str = Field(min_length=8, max_length=800)
+    whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=500)
+
+
+class AgentStep(BaseModel):
+    """One turn of the loop, as the trace shows it."""
+    model_config = ConfigDict(extra='forbid')
+    index: int = Field(ge=1, le=20)
+    tool: str = Field(max_length=40)
+    arguments: dict[str, object] = Field(default_factory=dict)
+    question: str = Field(default='', max_length=240)
+    reason: str = Field(default='', max_length=400)
+    status: Literal['ok', 'rejected', 'error', 'skipped']
+    detail: str = Field(max_length=800)
+    upstreamRequests: int = Field(default=0, ge=0)
+    cached: bool = False
+    resultCount: int = Field(default=0, ge=0)
+    observed: list[dict[str, object]] = Field(default_factory=list, max_length=12)
+
+
 class AgentReport(BaseModel):
     model_config = ConfigDict(extra='forbid')
     mode: Literal['frontier_ai', 'rules']
@@ -345,7 +394,13 @@ class AgentReport(BaseModel):
     plan: Optional[AgentAction] = None
     observation: Optional[AgentObservation] = None
     reflection: Optional[dict[str, object]] = None
-    modelCalls: int = Field(default=0, ge=0, le=2)
+    # The plan-act-observe loop (agent-loop-1): every step, the validated
+    # claims, and the claims the validator rejected with the reason.
+    steps: list[AgentStep] = Field(default_factory=list, max_length=20)
+    analysis: Optional[dict[str, object]] = None
+    rejectedClaims: list[dict[str, object]] = Field(default_factory=list, max_length=12)
+    cached: bool = False
+    modelCalls: int = Field(default=0, ge=0, le=20)
     stoppingReason: str = Field(max_length=400)
     # The model that planned and reflected, as the trace names it.
     model: Optional[str] = Field(default=None, max_length=120)

@@ -106,8 +106,14 @@ def _prompt(request: EvidenceAnalysisRequest) -> str:
     }, ensure_ascii=False)
 
 
-def call_structured(system_prompt: str, payload: dict, output_model):
-    """One bounded Gateway call whose requested schema is explicit and checked."""
+def call_structured(system_prompt: str, payload: dict, output_model, *,
+                    effort: str = 'high', max_tokens: int = MAX_OUTPUT_TOKENS,
+                    timeout: int = TIMEOUT_SECONDS):
+    """One bounded Gateway call whose requested schema is explicit and checked.
+
+    The agent loop asks for low effort and a small answer on each planning
+    step, so eight steps fit inside a research run's deadline.
+    """
     _reserve()
     model = os.getenv('AI_GATEWAY_MODEL', '').strip()
     if not model:
@@ -120,15 +126,15 @@ def call_structured(system_prompt: str, payload: dict, output_model):
             {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)},
         ],
         'temperature': 0,
-        'max_tokens': MAX_OUTPUT_TOKENS,
-        'reasoning': {'effort': 'high'},
+        'max_tokens': max_tokens,
+        'reasoning': {'effort': effort},
         'response_format': {'type': 'json_object'},
     }
     req = urllib.request.Request(ENDPOINT, data=json.dumps(body).encode('utf-8'), method='POST',
         headers={'Authorization': f"Bearer {os.environ['AI_GATEWAY_API_KEY'].strip()}",
                  'Content-Type': 'application/json'})
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
             raw = json.loads(response.read().decode('utf-8'))
         content = raw['choices'][0]['message']['content']
         data = json.loads(content)
