@@ -275,13 +275,9 @@ function checkResponse(where, response) {
   }
 }
 
-const SAMPLE = {
-  businessType: 'Food & beverage',
-  audience: 'Design-conscious Gen Z & young professionals',
-  location: 'Brooklyn, New York',
-  budget: '$25k – $50k',
-  objectives: ['Build a loyal community'],
-};
+// The first prepared brief, which scripts/prewarm.py keeps held. Run this
+// against a backend with QLOO_LIVE_ENABLED=false to be sure it spends nothing.
+const SAMPLE = JSON.parse(readFileSync(fileURLToPath(new URL('shared/demoBriefs.json', PROJECT_ROOT)), 'utf8')).briefs[0].project;
 
 async function main() {
   console.log('='.repeat(64));

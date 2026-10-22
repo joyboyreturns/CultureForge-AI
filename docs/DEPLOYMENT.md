@@ -23,8 +23,10 @@ Use a host that supports a long-running Docker web service, HTTPS, a persistent 
 | CULTUREFORGE_PROVIDER | qloo |
 | QLOO_BASE_URL | https://hackathon.api.qloo.com |
 | QLOO_TRUSTED_BASE_URL | https://hackathon.api.qloo.com |
-| QLOO_MAX_CALLS_PER_HOUR | 20, or a lower bound |
-| QLOO_MAX_CALLS_PER_DAY | 100, or a lower bound |
+| RUN_PROFILE | dev while rehearsing; judging to lift every call-count budget |
+| QLOO_LIVE_ENABLED | true; false serves held evidence only |
+| QLOO_MAX_CALLS_PER_HOUR | 20, or a lower bound (dev profile only) |
+| QLOO_MAX_CALLS_PER_DAY | 100, or a lower bound (dev profile only) |
 | AI_GATEWAY_ENABLED | false, or true if deliberately enabling the model |
 | AI_GATEWAY_API_KEY | Private Vercel key, if enabled |
 | AI_GATEWAY_MODEL | Your configured Gateway model identifier, if enabled |
@@ -32,6 +34,8 @@ Use a host that supports a long-running Docker web service, HTTPS, a persistent 
 The container listens on `PORT`, default 8000. Mount durable storage at `/data`, writable by UID 10001. Keep one process and one replica: research runs and request de-duplication are held in memory; this is not a multi-instance architecture. Do not add workers as a performance workaround.
 
 Evidence and all provider budget journals live under `/data/cache`; saved explorations and share links use `/data/platform.db`. Losing that volume loses saved links and quota history. A bind mount must be writable by the container user. The anonymous studio uses a shared demo workspace; use synthetic/non-confidential business briefs during public judging. Keep operator administration disabled unless you deliberately set a private `CULTUREFORGE_OPERATOR_TOKEN`.
+
+After switching to `RUN_PROFILE=judging`, prewarm the prepared briefs into this instance's volume with `python3 scripts/prewarm.py --live --base-url https://<host>`, then confirm `/api/health` shows `"profile": "judging"` and a non-zero `cache.entries`.
 
 For container-native health checks use `/health`. The Docker health command follows `PORT`. Keep the service awake and free to try throughout judging.
 

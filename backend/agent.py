@@ -25,7 +25,7 @@ def _recipe(concept) -> tuple[str, ...]:
     return tuple(sorted({decision.ruleId for decision in concept.decisions if decision.ruleId}))
 
 
-def _payload(response: GenerateResponse, remaining_allowance: int) -> dict:
+def _payload(response: GenerateResponse, remaining_allowance: Optional[int]) -> dict:
     by_id = {item.id: item for item in response.evidence}
     eligible = []
     for concept in response.concepts:
@@ -55,7 +55,8 @@ def _payload(response: GenerateResponse, remaining_allowance: int) -> dict:
             {'operation': 'remove_anchor', 'description': 'Remove one cited returned venue and recompose locally from this run’s held Qloo envelopes.'},
             {'operation': 'finish', 'description': 'Stop without running an evidence test.'},
         ],
-        'remainingQlooWorkflowAllowance': max(0, remaining_allowance),
+        # None in the judging profile: the run is bounded by its deadline instead.
+        'remainingQlooWorkflowAllowance': 'unlimited' if remaining_allowance is None else max(0, remaining_allowance),
     }
 
 
@@ -82,7 +83,7 @@ def _event(step: str, status: str, detail: str, evidence_ids: Optional[list[str]
 
 
 def run_agent(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dict,
-              remaining_allowance: int, deadline: float,
+              remaining_allowance: Optional[int], deadline: float,
               on_event: Optional[Callable[[TraceEvent], None]] = None) -> AgentReport:
     """Run plan → one validated evidence tool → reflection, with a rules fallback."""
     def emit(event: TraceEvent) -> None:

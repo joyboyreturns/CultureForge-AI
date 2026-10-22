@@ -3,6 +3,8 @@
  * Vanilla JS + Framer Motion (Motion engine) enhancements
  */
 
+import demoBriefs from './shared/demoBriefs.json';
+
 (function () {
   'use strict';
 
@@ -548,13 +550,9 @@
     const status = pulse.querySelector('[data-pulse-status]');
     const list = pulse.querySelector('[data-pulse-list]');
     const note = pulse.querySelector('[data-pulse-note]');
-    const brief = {
-      businessType: 'Food & beverage',
-      audience: 'Design-conscious Gen Z & young professionals',
-      location: 'Brooklyn, New York',
-      budget: '$25k – $50k',
-      objectives: ['Build a loyal community'],
-    };
+    // The first prepared brief: the studio offers the same one, and
+    // scripts/prewarm.py fetches its evidence before anyone clicks.
+    const brief = demoBriefs.briefs[0].project;
 
     function fail(message) {
       status.textContent = message || 'The example could not be retrieved. Try again or start your own exploration.';

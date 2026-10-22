@@ -21,7 +21,8 @@ from __future__ import annotations
 from typing import Optional
 
 from .evidence_store import canonical_key, get_store
-from .providers import QlooHarnessError, QlooHarnessProvider, safe_query
+from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_payload,
+                        brief_tags_payload, safe_query)
 
 __all__ = ['compare_audiences', 'rank_entities', 'recompose', 'safe_query']
 
@@ -180,8 +181,7 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
 
     # The cached envelopes are addressed by the same canonical key the
     # provider used, so this costs no upstream request.
-    query = f'{project.businessType} {project.audience}'.strip()
-    tag_key = canonical_key('find_tags', {'query': query, 'limit': 3})
+    tag_key = canonical_key('find_tags', brief_tags_payload(project.businessType, project.audience))
     store = evidence_store or get_store()
     tag_envelope = tag_envelope or store.get(tag_key)
     if tag_envelope is None:
@@ -190,10 +190,7 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     tags = [tag for tag in tags if tag not in exclude_tag_ids]
     if not tags:
         raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.', code='INVALID_REQUEST')
-    rec_key = canonical_key('recommend', {
-        'target_type': 'place', 'signal_tags': tags,
-        'signal_location': project.location, 'limit': 5,
-    })
+    rec_key = canonical_key('recommend', brief_places_payload(tags, project.location))
     rec_envelope = recommend_envelope or store.get(rec_key)
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')

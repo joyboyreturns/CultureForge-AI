@@ -118,7 +118,7 @@ thing.
 
 - The model writes bounded direction names/taglines or selects existing evidence strings; deterministic rules retain all factual claims, Qloo evidence, verdicts, and citations. Reject unsupported numbers and malformed output.
 - Naming makes one bounded request and never retries or switches providers. Missing credentials, budget exhaustion, timeout, or invalid output leaves the rule-based wording intact and reports the state in the trace.
-- The local naming allowance is `LLM_MAX_CALLS_PER_HOUR` / `LLM_MAX_CALLS_PER_DAY` (defaults 20/50). Do not raise these limits to work around a failure.
+- The local naming allowance is `LLM_MAX_CALLS_PER_HOUR` / `LLM_MAX_CALLS_PER_DAY` (defaults 20/50, enforced in the dev profile only). Do not raise these limits to work around a failure.
 - Evidence analysis uses the same Vercel gateway, with its own bounded daily allowance. Keep its reasoning and response budgets capped and never put provider credentials in browser code.
 - Cache successful model-derived results with the evidence they depend on. Do not cache failures or empty output as a successful answer.
 
@@ -127,7 +127,7 @@ thing.
 Two caches, both holding real answers:
 
 - **The server's evidence store** (`backend/evidence_store.py`) keeps every
-  workflow envelope on disk for 24 hours, keyed by the canonical workflow
+  workflow envelope on disk for 24 hours (14 days in the judging profile), keyed by the canonical workflow
   input. A repeated brief is served from it for zero upstream requests.
 - **The browser's copy** (`src/api.ts`) keeps the composed answer for 12
   hours, so a reload paints instantly. The UI says which one served it:
@@ -144,7 +144,9 @@ be held and the next run will pay for it again.
 - Hackathon keys work only against `https://hackathon.api.qloo.com` (set via `qloo config set base-url ...`). The wrong host returns 401.
 - Rate and monthly limits are unpublished and reset monthly. Assume the quota is finite.
 - `scripts/check_api.py` is read-only by default. Use `--live` to spend a request; never run it in a loop.
-- The backend enforces a local budget (`QLOO_MAX_CALLS_PER_HOUR`, `QLOO_MAX_CALLS_PER_DAY`) checked *before* each request. A brief costs two calls, so the current caps (30 an hour, 150 a day) are fifteen briefs an hour and seventy-five a day for a room of judges. Don't raise them to work around a failure.
+- `RUN_PROFILE` (`backend/config.py`) is the one switch. In `dev` (the default) the backend enforces a local budget (`QLOO_MAX_CALLS_PER_HOUR`, `QLOO_MAX_CALLS_PER_DAY`, default 20 and 100) checked *before* each request; a brief costs two calls. `judging` lifts every call-count budget, deliberately, and keeps the timeouts, the 429 cool-down, single-flight and the cache. Don't raise the dev caps to work around a failure, and don't switch profiles for that reason either.
+- `QLOO_LIVE_ENABLED=false` is the kill switch: held evidence only, no new Qloo request.
+- `scripts/prewarm.py` is read-only by default; `--live` fetches the prepared briefs in `shared/demoBriefs.json` through the serving instance. Run it deliberately, not in a loop.
 - Prefer the held evidence over a new call — that is what the store and the
   browser cache are for. The mock provider is the test fixture, not a way to
   avoid the quota.
