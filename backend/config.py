@@ -138,6 +138,21 @@ def evidence_ttl_seconds() -> int:
     return max(1, int(hours * 3600))
 
 
+#: How long an empty category answer (a tag that returned no places for a city) is trusted before the
+#: request is made again. Shorter than the evidence TTL, because "no places" is the answer most likely
+#: to change, and a wrong "no" costs the founder a category.
+NEGATIVE_TTL_HOURS = 6
+
+
+def negative_ttl_seconds() -> int:
+    raw = os.getenv('CULTUREFORGE_NEGATIVE_TTL_HOURS', '').strip()
+    try:
+        hours = float(raw) if raw else NEGATIVE_TTL_HOURS
+    except ValueError:
+        hours = NEGATIVE_TTL_HOURS
+    return max(60, min(int(hours * 3600), evidence_ttl_seconds()))
+
+
 DEFAULT_LLM_REQUESTS_PER_MINUTE = 5
 
 

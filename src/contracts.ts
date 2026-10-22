@@ -134,6 +134,7 @@ export interface GenerateResponse {
   conceptMode: 'sample' | 'evidence_composed'
   notice: string
   outcome?: Outcome | null
+  intent?: BusinessIntent | null
   provenance?: ProvenanceMetadata | null
   evidence: Evidence[]
   trace: TraceEvent[]
@@ -201,6 +202,51 @@ export interface AgentReport {
   cached?: boolean
   modelCalls: number
   stoppingReason: string
+}
+
+export type IntentState = 'exact' | 'near' | 'broader' | 'tag_no_places' | 'unresolved' | 'not_retrieved' | 'provider_error'
+
+export interface IntentComponent {
+  role: 'primary' | 'secondary'
+  phrase: string
+  categoryId: string
+  categoryLabel: string
+  status: 'canonical' | 'open_vocabulary' | 'unresolved'
+  queries: string[]
+  modifiers: string[]
+  source: 'rules' | 'model'
+}
+
+export interface IntentPlace { entityId: string | null; name: string; location: string | null; evidenceClass: string | null; anchorEligible: boolean }
+
+/** What Qloo returned for one business in the idea. Counts are counts of returned places, nothing else. */
+export interface IntentEvidence {
+  role: 'primary' | 'secondary'
+  phrase: string
+  categoryLabel: string
+  state: IntentState
+  queriesTried: string[]
+  tag: { id: string; name: string | null; quality: 'exact' | 'near' | 'broader' | null } | null
+  placeCount: number
+  directCount: number
+  places: IntentPlace[]
+  modifiers: { word: string; mentionedIn: number; of: number }[]
+  categoryOnly: boolean
+  message: string
+  code?: string
+}
+
+export interface BusinessIntent {
+  original: string
+  components: IntentComponent[]
+  hybrid: boolean
+  ambiguous: boolean
+  clarification: string
+  unused: string[]
+  substitutions: string[]
+  source: 'rules' | 'model'
+  evidence: IntentEvidence[]
+  overlap: { established: boolean; sharedPlaces: { entityId: string; name: string }[]; statement: string } | null
 }
 
 export type OutcomeState = 'supported' | 'promising_unverified' | 'contested' | 'insufficient_evidence' | 'provider_failure'

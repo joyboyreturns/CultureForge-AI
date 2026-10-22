@@ -1,6 +1,29 @@
 # Changelog
 
-## Unreleased — judging hardening, 2026-10-22
+## Unreleased — business intent and tag resolution
+
+- **Business intent** (`backend/intent.py`). An idea is read into typed components: every business it names
+  (a hybrid is two components, never one), every specialisation word, and every simplification as a sentence.
+  Fixes the silent truncation of "bakery combined with a bookstore" to a bakery, and the silent loss of
+  "vegan" and "specialty".
+- **Tag resolution is staged and honest.** `rank_category_tag` reports `exact` or `near` (name matches
+  only: Qloo documents no tag hierarchy). A specific phrase that matches no tag may fall back to one broader
+  search string, disclosed as CultureForge's own broadening. Nothing else is ever substituted. New code
+  `UNSUPPORTED_CATEGORY` when no returned tag matches; a category with no local places is `NO_EVIDENCE`
+  with `details.reason = category_no_places`.
+- **Hybrids.** The second business is resolved and retrieved separately (at most two extra workflows, three
+  with the category-only fallback), shown as its own evidence stream; overlap is only places Qloo returned
+  for both, otherwise "Overlap not established".
+- **One optional model reading** (`llm.interpret_business`) only when the rules cannot read the idea. Its
+  answer is a validated proposal of component phrases and search strings; it cannot name a tag.
+- **Negative cache.** A verified empty `recommend` for a category, city and audience is trusted for
+  `CULTUREFORGE_NEGATIVE_TTL_HOURS` (default 6) instead of the full evidence TTL. Failures are never held.
+- **Relevance.** An unfamiliar business matches on all its product words (not any one), plurals count, and
+  specialisation words are reported against the returned text ("1 of 10 returned places mention vegan").
+- **UI.** "How your idea was read" panel, a typed clarification card whose actions all work, and typed
+  failure copy with Try again / Change the location.
+
+## Earlier unreleased — judging hardening, 2026-10-22
 
 - Resolve business categories from returned Qloo taxonomy IDs and expose
   direct/indirect relevance decisions. Compose only relevant, differentiated

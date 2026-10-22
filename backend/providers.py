@@ -21,9 +21,10 @@ try:
 except ImportError:
     pass
 
-from . import config, ledger, metering
+from . import config, intent_report, ledger, metering
 from .concept_composer import compose
 from .evidence_store import cached_call, canonical_key, get_store, known_location
+from .intent import interpret
 
 # Bumped whenever the composer changes what a concept means, so a stored
 # snapshot is never mistaken for a current result.
@@ -209,17 +210,33 @@ def brief_tags_payload(business_type: str, audience: str) -> dict:
     return {'query': f'{business_type} {audience}'.strip(), 'limit': BRIEF_TAG_LIMIT}
 
 
+def effective_category_query(queries: list[str]) -> str:
+    """The search string a brief's category is resolved with, given what is already held.
+
+    The most specific string comes first. If its answer is held and holds no matching tag, the next
+    (broader) string is used, so every payload builder agrees with the resolution step without
+    asking Qloo anything.
+    """
+    store = get_store()
+    for query in queries:
+        held = store.get(canonical_key('find_tags', {'query': query, 'limit': 10}))
+        if held is None or select_category_tag(held, query):
+            return query
+    return queries[-1]
+
+
 def brief_category_payload(business_idea: str) -> Optional[dict]:
     """The find_tags request that resolves the idea's own category.
 
     Known categories carry a query term; an unfamiliar one is looked up by its
-    own words. A category that cannot be named sends no filter at all.
+    own words. A hybrid idea resolves its first business here (the others are
+    retrieved separately). A category that cannot be named sends no filter at all.
     """
-    from .category import resolve
-    resolution = resolve(business_idea) if business_idea else None
-    if resolution is None or resolution.status == 'unresolved' or not resolution.query:
+    from .intent import interpret
+    primary = interpret(business_idea).primary if business_idea else None
+    if primary is None or primary.status == 'unresolved' or not primary.queries:
         return None
-    return {'query': resolution.query, 'limit': 10}
+    return {'query': effective_category_query(primary.queries), 'limit': 10}
 
 
 def _name_tokens(text: str) -> set[str]:
@@ -231,22 +248,24 @@ def _name_tokens(text: str) -> set[str]:
     return out
 
 
-def select_category_tag(envelope: dict, query: str) -> Optional[str]:
-    """Choose a returned category tag, preferring Qloo's place-specific categories.
+def rank_category_tag(envelope: dict, query: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    """(tag id, 'exact' or 'near', tag name) for a returned category tag, or (None, None, None).
 
     A natural language label resolves to many tag families, and many of them
     (cuisine, product service, amenity) return no places at all. The place
     categories (``urn:tag:category:place:…``, ``genre:place:…``,
     ``specialty_dish:place:…``) are the ones places carry. An exact label wins
-    over a near one; a near one must contain every word of the query. No URN is
-    ever written here: only a returned identifier is chosen.
+    over a near one; a near one must contain every word of the query. Both are
+    name matches: Qloo documents no tag hierarchy, so nothing here is a
+    parent or child relationship. No URN is ever written here: only a
+    returned identifier is chosen.
     """
     families = ('category', 'genre', 'specialty_dish', 'cuisine', 'product_category', 'service_type',
                 'product_service', 'setting')
     wanted = _name_tokens(query)
-    rows = [row for row in QlooHarnessProvider.rows(envelope)
+    rows = [row for row in QlooHarnessProvider.rows(envelope or {})
             if isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')
-            and row['id'].split(':')[2] in families]
+            and len(row['id'].split(':')) >= 4 and row['id'].split(':')[2] in families]
 
     def rank(row: dict) -> tuple[int, int]:
         parts = row['id'].split(':')
@@ -254,10 +273,16 @@ def select_category_tag(envelope: dict, query: str) -> Optional[str]:
 
     exact = [r for r in rows if _name_tokens(r.get('name', '')) == wanted]
     near = [r for r in rows if wanted and wanted <= _name_tokens(r.get('name', ''))]
-    for group in (exact, near):
+    for quality, group in (('exact', exact), ('near', near)):
         if group:
-            return min(group, key=rank)['id']
-    return None
+            best = min(group, key=rank)
+            return best['id'], quality, best.get('name') if isinstance(best.get('name'), str) else None
+    return None, None, None
+
+
+def select_category_tag(envelope: dict, query: str) -> Optional[str]:
+    """The tag id :func:`rank_category_tag` chose, or None."""
+    return rank_category_tag(envelope, query)[0]
 
 
 def brief_places_payload(tags: list[str], location: str, business_idea: str = '') -> dict:
@@ -635,6 +660,13 @@ class QlooHarnessProvider(CultureProvider):
         key = canonical_key(operation, payload)
         store = get_store()
         cached = store.get(key)
+        if (cached is not None and operation == 'recommend' and payload.get('include_tags')
+                and not self.rows(cached)
+                and time.time() - (store.stored_at(key) or 0) > config.negative_ttl_seconds()):
+            # A verified "no places" for this category, city and audience is trusted for a shorter
+            # time than a positive answer. The key already carries the tag, the location and the signals.
+            store.discard(key)
+            cached = None
         if cached is not None:
             return cached, True, 0
         envelope, was_cached, requests = cached_call(key, lambda: self._run_workflow(operation, payload))
@@ -683,13 +715,38 @@ class QlooHarnessProvider(CultureProvider):
         except (TypeError, ValueError):
             return None
 
+    def interpret_idea(self, idea: str):
+        """The idea as components. One model reading is requested only when the rules cannot read it.
+
+        The proposal is validated, and held with the evidence it depends on; a failure is never held.
+        Returns (intent, trace event or None).
+        """
+        from . import llm
+        from .intent import interpret, llm_key, needs_model
+        reading = interpret(idea)
+        if not needs_model(reading) or not llm.is_configured():
+            return reading, None
+        started = time.monotonic()
+        proposal, report = llm.interpret_business(idea)
+        event = TraceEvent(
+            id='trace-interpret-idea', step='interpret-business-idea', status='ok' if proposal else 'skipped',
+            resultCount=len(proposal['components']) if proposal else 0,
+            durationMs=int((time.monotonic() - started) * 1000),
+            detail=('A model proposed a reading of the idea; Qloo still decides which category tag exists.' if proposal
+                    else f"The rules kept their reading. {report.get('reason') or ''}".strip())[:600])
+        if proposal:
+            get_store().put(llm_key(idea), {'status': 'ok', 'proposal': proposal}, 0)
+            reading = interpret(idea)
+        return reading, event
+
     def generate(self, project: ProjectRequest, tag_result: Optional[dict] = None,
                  recommendations: Optional[dict] = None,
                  seed_tag_ids: Optional[list[str]] = None,
                  allow_naming: bool = True,
                  on_step=None,
                  domains: Optional[list[str]] = None,
-                 bridge_held_only: bool = False) -> GenerateResponse:
+                 bridge_held_only: bool = False,
+                 retrieve_secondary: bool = True) -> GenerateResponse:
         """Compose the answer for a brief.
 
         `tag_result` and `recommendations` may be supplied to reuse envelopes
@@ -800,15 +857,25 @@ class QlooHarnessProvider(CultureProvider):
 
         category_result = None
         category_reused = False
+        workflows_used = 0
+        intent_trace: list[TraceEvent] = []
         if recommendations is None:
-            category_payload = brief_category_payload(project.businessIdea)
-            if category_payload:
-                category_result, was_cached, requests = self.run_workflow_cached('find_tags', category_payload)
-                category_reused = was_cached
-                spent += requests
-                live = live or not was_cached
-                if not select_category_tag(category_result, category_payload['query']):
-                    raise QlooHarnessError('Qloo did not resolve an exact business category. Refine the business idea or use a broader category.', code='NEEDS_INPUT')
+            interpretation, interpret_event = self.interpret_idea(project.businessIdea)
+            if interpret_event:
+                intent_trace.append(interpret_event)
+            primary = interpretation.primary
+            if primary is not None and primary.status != 'unresolved':
+                from .intent_report import resolve_tag
+                resolution = resolve_tag(self, primary)
+                category_result, category_reused = resolution.result, resolution.cached
+                spent += resolution.requests
+                workflows_used += resolution.workflows
+                live = live or not resolution.cached
+                if not resolution.tag:
+                    raise QlooHarnessError(
+                        f'Qloo returned no category tag matching "{primary.phrase}". CultureForge did not substitute '
+                        'another category.', code='UNSUPPORTED_CATEGORY',
+                        details={'phrase': primary.phrase, 'tried': resolution.tried, 'field': 'businessIdea'})
             recommendations, was_cached, requests = self.recommend_places(
                 matched_tags, project.location, project.businessIdea)
             spent += requests
@@ -829,6 +896,17 @@ class QlooHarnessProvider(CultureProvider):
                 detail += f' Raw affinity returned by Qloo: {affinity:g}.'
             signals.append(CulturalSignal(label=label, detail=detail, affinity=affinity, category='Qloo recommendation', provenance_id=entity_id if isinstance(entity_id, str) else None))
         if not signals:
+            from .intent_report import held_tag
+            held_primary = interpret(project.businessIdea).primary
+            held_category = held_tag(held_primary)[0] if held_primary and held_primary.status != 'unresolved' else None
+            if held_category and held_category.tag:
+                raise QlooHarnessError(
+                    f'Qloo has a category for "{held_primary.phrase}" but returned no places for it in '
+                    f"'{project.location}'. That is a gap in Qloo's local evidence, not a finding about the business.",
+                    code='NO_EVIDENCE',
+                    details={'location': project.location, 'reason': 'category_no_places', 'phrase': held_primary.phrase,
+                             'tag': held_category.tag, 'field': 'location',
+                             'suggestion': self._known_location(matched_tags, project.location)})
             suggestion = self._known_location(matched_tags, project.location)
             if suggestion:
                 raise QlooHarnessError(
@@ -1121,8 +1199,21 @@ class QlooHarnessProvider(CultureProvider):
             notice += caveat
             trace.append(TraceEvent(id='trace-category-only', step='category-only-retrieval', status='ok',
                                     resultCount=len(entity_rows), detail=caveat.strip()))
+        # What was asked for, read into components, with the evidence found for each. A hybrid's second
+        # business is retrieved here only when this call may spend a request (no explicit envelopes).
+        intent_report_value, extra_spent, extra_live, _used = intent_report.build(
+            self, project, interpret(project.businessIdea), matched_tags, evidence, recommendations,
+            retrieve=not explicit and retrieve_secondary, remaining=None)
+        spent += extra_spent
+        live = live or extra_live
+        trace.extend(intent_trace)
+        if intent_report_value.hybrid:
+            trace.append(TraceEvent(
+                id='trace-hybrid', step='retrieve-second-business', status='ok' if extra_spent or not extra_live else 'ok',
+                resultCount=sum(e['placeCount'] for e in intent_report_value.evidence[1:]),
+                detail='; '.join(f"{e['phrase']}: {e['state']}" for e in intent_report_value.evidence)[:600]))
         response = GenerateResponse(
-            projectId=f'cf-{uuid4().hex[:10]}', project=project,
+            projectId=f'cf-{uuid4().hex[:10]}', project=project, intent=intent_report_value,
             concepts=concepts, signals=signals, dataMode='live', conceptMode=concept_mode,
             notice=notice,
             outcome=build_outcome(category=category, evidence=evidence, concepts=concepts),

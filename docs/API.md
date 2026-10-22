@@ -17,7 +17,7 @@ than on the wording:
 
 | Code | Status | Meaning |
 | --- | --- | --- |
-| `INVALID_REQUEST`, `INVALID_UPSTREAM_REQUEST`, `NEEDS_INPUT`, `NO_EVIDENCE` | 422 | The request, or what Qloo made of it, cannot be answered as asked |
+| `INVALID_REQUEST`, `INVALID_UPSTREAM_REQUEST`, `NEEDS_INPUT`, `NO_EVIDENCE`, `UNSUPPORTED_CATEGORY` | 422 | The request, or what Qloo made of it, cannot be answered as asked |
 | `NO_CACHED_EVIDENCE` | 409 | A rebuild needs evidence that is not held |
 | `RATE_LIMITED`, `ALLOWANCE_EXHAUSTED` | 429 | Qloo rate-limited the key (live calls then pause for a cool-down), or a research run used its allowance |
 | `QUOTA_EXHAUSTED`, `LIVE_DISABLED`, `BUDGET_UNAVAILABLE`, `PROVIDER_UNAVAILABLE`, `MODEL_UNAVAILABLE` | 503 | A local budget is used up, the kill switch is on, the ledger is unreadable, Qloo cannot be reached, or no model is configured |
@@ -70,3 +70,24 @@ curl -s -X POST localhost:8000/api/projects/generate -H 'Content-Type: applicati
 
 `businessType` is one of `Food & beverage`, `Retail`, `Hospitality`,
 `Wellness` and `Entertainment`.
+
+
+## Business intent and the states around it
+
+`GenerateResponse.intent` (optional) reads the idea: `components` (phrase, category, search strings tried
+in order, specialisation `modifiers`), `hybrid`, `ambiguous`, `substitutions` (every simplification, as a
+sentence), and `evidence`, one entry per business. Each entry's `state` is one of:
+
+| state | meaning |
+|---|---|
+| `exact` / `near` | a returned Qloo category tag matched the words (name match; Qloo exposes no hierarchy) |
+| `broader` | no tag matched the specific words; a broader search string was used (CultureForge's broadening) |
+| `tag_no_places` | the tag exists; Qloo returned no places for it in this city |
+| `unresolved` | no returned tag matched any search string tried |
+| `not_retrieved` | not held, and this answer may not spend a request |
+| `provider_error` | Qloo could not answer (carries `code`); not a statement about coverage |
+
+`UNSUPPORTED_CATEGORY` (422) means find_tags answered and no returned tag matched; it is never produced by a
+rate limit, timeout, credential or malformed-response failure, which keep their own codes. A research run that
+stops to ask returns `clarification.code` (`UNSUPPORTED_CATEGORY`, `AMBIGUOUS_IDEA`, `CATEGORY_NO_PLACES`) and
+`clarification.actions` (`{kind: 'idea', label, value}`) built only from words the founder wrote.

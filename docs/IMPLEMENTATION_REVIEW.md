@@ -215,3 +215,38 @@ disk, configure server-only secrets, deliberately prewarm a selected brief,
 verify the public URL in a private browser, record it in `submission.json`,
 and complete the owner's eligibility/asset-rights review. Do not treat those
 external actions as already complete.
+
+
+## Business intent and tag resolution: what is proven and what is not
+
+**Proven offline (scripted Qloo, `backend/tests/test_intent.py`, `test_research.py`):** hybrids keep both
+businesses; specialisations are carried and disclosed; a specific phrase falls back to at most one broader
+search string and says so; no matching tag is `UNSUPPORTED_CATEGORY` and never a substitution; provider
+failures (429, timeout, 401, malformed) are never read as an unsupported category and never cached; a
+verified-empty `recommend` expires on its own TTL; identical concurrent requests make one upstream call; the
+model reading is validated, one call at most, and cannot name a tag.
+
+**Proven with real held evidence (artifacts):** `artifacts/validation/bakery-tag-resolution.json` is a real
+`find_tags("bakery")` answer; it contains no `category:place:bakery` row, so a bakery brief resolves through a
+`cuisine`/`industry` family tag. Three prepared briefs (Tokyo bakery, Paris ice cream, Melbourne coffee)
+replay from the evidence store at zero upstream requests after this change, so their cache keys are unchanged.
+
+**Not proven (needs live Qloo; predictions only):**
+
+| Question | Smallest live check | Requests |
+|---|---|---|
+| Does `find_tags("bubble tea shop")` return a tag that places carry? | 1 `find_tags`, then 1 `recommend` for Los Angeles | 2 |
+| Does `find_tags("vintage sneaker store")` / `"sneaker store"` return any matching tag? | 2 `find_tags` | 2 |
+| Does `find_tags("board game café")` match, or does `arcade` carry the fallback? | 1–2 `find_tags` | 1–2 |
+| Do `bookstore` and `coworking space` resolve to tags places carry in Paris / a second city? | 2 `find_tags`, 2 `recommend` | 4 |
+| Does a hybrid cost the stated budget (<= 2 extra workflows)? | one cold Paris "bakery and bookstore" brief, counting `transportRequests` | about 5 |
+
+About 14 requests in total; stop on the first sustained 429 (the key has answered 429 for more than ten minutes
+after about seven workflows in 90 seconds). None of these were run for this change, so none of the Qloo
+behaviours in the table is claimed.
+
+**UI checks run:** the studio was driven in the in-app browser against a throwaway synthetic Qloo (every place
+named SYNTHETIC, no network, scratch cache) to exercise the hybrid panel, the unsupported-category and
+category-without-places clarification cards, the typed rate-limit failure and its working Try again, and a
+375px viewport (no horizontal overflow). That shows the UI states render and their buttons work; it is not
+evidence about Qloo.

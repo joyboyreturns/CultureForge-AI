@@ -272,10 +272,21 @@ export interface ResearchRun {
   result: GenerateResponse | null
   partialResult?: GenerateResponse | null
   timings?: { firstEvidenceMs?: number; firstConceptMs?: number; completeMs?: number }
-  clarification: { reason: string; question: string; field: string; suggestion?: string | null } | null
+  clarification: ClarificationAsk | null
   error: string | null
+  errorCode?: string | null
   transportRequests: number
   workflowCalls: number
+}
+
+/** A way out of a research run that stopped to ask. Every action is something the studio can carry out. */
+export interface ClarificationAsk {
+  reason: string
+  question: string
+  field: string
+  suggestion?: string | null
+  code?: 'UNSUPPORTED_CATEGORY' | 'AMBIGUOUS_IDEA' | 'CATEGORY_NO_PLACES' | string
+  actions?: { kind: 'idea'; label: string; value: string }[]
 }
 
 export async function startResearch(project: ProjectRequest, audience: string, seedTagIds: string[] = []): Promise<{ runId: string; status: string }> {

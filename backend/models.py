@@ -4,6 +4,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 BusinessType = Literal['Food & beverage', 'Retail', 'Hospitality', 'Wellness', 'Entertainment']
 
+from .intent import BusinessIntent  # noqa: E402
+
+
 class ProjectRequest(BaseModel):
     businessType: BusinessType
     businessIdea: str = Field(default='', max_length=160)
@@ -153,6 +156,8 @@ class GenerateResponse(BaseModel):
     composerVersion: Optional[str] = None
     # Why there is, or is not, a supported direction; see backend/outcome.py.
     outcome: Optional[dict] = None
+    # What the founder asked for, read into components and the evidence found for each; see backend/intent.py.
+    intent: Optional['BusinessIntent'] = None
 
 class CompareRequest(BaseModel):
     """Re-research a brief for a different audience."""

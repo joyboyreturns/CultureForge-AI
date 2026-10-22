@@ -26,6 +26,7 @@ from . import config
 from .evidence_store import known_location
 from .agent import run_agent
 from .models import ProjectRequest, TraceEvent
+from .intent_report import build as build_intent_report, idea_alternatives, resolve_tag
 from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_retrieval_payload,
                         brief_tags_payload, brief_category_payload, select_category_tag, mark_reused)
 
@@ -238,23 +239,41 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             return
 
         # ---- step 2: retrieve the local evidence ----
-        category_payload = brief_category_payload(run.project.businessIdea)
-        if category_payload:
+        interpretation, interpret_event = provider.interpret_idea(run.project.businessIdea)
+        if interpret_event:
+            run.add_event(interpret_event)
+        primary = interpretation.primary
+        resolution = None
+        if run.project.businessIdea.strip() and primary is not None and primary.status == 'unresolved':
+            # Nothing is spent on a request whose business cannot be named: ask instead.
+            run.status = STATUS_CLARIFY
+            run.clarification = {'reason': interpretation.clarification or 'The idea does not name one business.',
+                                 'question': 'Which kind of business is it? Name the main one.',
+                                 'field': 'businessIdea', 'code': 'AMBIGUOUS_IDEA',
+                                 'actions': idea_alternatives(interpretation)}
+            return
+        if primary is not None and primary.status != 'unresolved':
             if allowance is not None and run.workflow_calls >= allowance:
                 raise QlooHarnessError('The run reached its allowance before category resolution.', code='ALLOWANCE_EXHAUSTED')
-            run.workflow_calls += 1
-            category_result, cached, requests = provider.run_workflow_cached('find_tags', category_payload)
-            run.transport_requests += requests
-            category_event = _event(run, 'resolve-business-category', category_result,
-                                    result_count=len(provider.rows(category_result)))
-            if cached:
+            resolution = resolve_tag(provider, primary)
+            run.workflow_calls += resolution.workflows
+            run.transport_requests += resolution.requests
+            category_event = _event(run, 'resolve-business-category', resolution.result,
+                                    result_count=len(provider.rows(resolution.result)))
+            category_event.detail = (
+                f'Selected a returned Qloo tag ({resolution.quality}); this is a category filter, not an audience seed.'
+                if resolution.tag else
+                f'No returned tag matched {", ".join(chr(34) + q + chr(34) for q in resolution.tried)}.')
+            if resolution.cached:
                 mark_reused(category_event)
             run.add_event(category_event)
-            if not select_category_tag(category_result, category_payload['query']):
+            if not resolution.tag:
                 run.status = STATUS_CLARIFY
-                run.clarification = {'reason': 'Qloo returned no exact category tag for the business idea.',
-                                     'question': 'Use a clearer category, such as bakery or record store.',
-                                     'field': 'businessIdea'}
+                run.clarification = {
+                    'reason': f'Qloo returned no category tag matching "{primary.phrase}". CultureForge did not substitute another category.',
+                    'question': 'Use a different or broader kind of business.',
+                    'field': 'businessIdea', 'code': 'UNSUPPORTED_CATEGORY',
+                    'actions': idea_alternatives(interpretation, tuple(resolution.tried))}
                 return
         if allowance is not None and run.workflow_calls >= allowance:
             raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.', code='ALLOWANCE_EXHAUSTED')
@@ -285,6 +304,16 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             # these same signals somewhere else, that location is offered —
             # it is evidence, not a guess, and it costs nothing to take.
             suggestion = known_location(tags, run.project.location)
+            if primary is not None and primary.status != 'unresolved' and resolution is not None and resolution.tag:
+                # The category exists in Qloo; its places in this city do not. That is a gap in local
+                # evidence, and it is said as that, with the founder's own words as ways out.
+                run.clarification = {
+                    'reason': f'Qloo has a category for "{primary.phrase}" but returned no places for it in '
+                              f"'{run.project.location}'. That is a gap in Qloo's local evidence, not a finding about the business.",
+                    'question': 'Try a nearby or larger city, or a broader kind of business.',
+                    'field': 'location', 'suggestion': suggestion, 'code': 'CATEGORY_NO_PLACES',
+                    'actions': idea_alternatives(interpretation)}
+                return
             run.clarification = {
                 'reason': f"Qloo returned no places for '{run.project.location}' for this audience.",
                 'question': 'Try a nearby city, or describe the audience differently.',
@@ -305,6 +334,23 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
                 initial.delivery.kind = 'fresh'
                 initial.delivery.cachedIn = None
         run.partial_result = initial.model_dump()
+        # A hybrid's second business is retrieved here, inside the run's allowance, so every later
+        # composition finds it held and spends nothing.
+        if interpretation.hybrid:
+            room = None if allowance is None else max(0, allowance - run.workflow_calls)
+            hybrid, spent_extra, _live, used = build_intent_report(
+                provider, run.project, interpretation, tags, initial.evidence, rec_envelope, retrieve=True, remaining=room)
+            initial.intent = hybrid
+            run.partial_result = initial.model_dump()
+            run.workflow_calls += used
+            run.transport_requests += spent_extra
+            for entry in hybrid.evidence[1:]:
+                run.add_event(TraceEvent(
+                    id=f'trace-{uuid.uuid4().hex[:8]}', step='retrieve-second-business',
+                    status='error' if entry['state'] == 'provider_error' else 'ok', resultCount=entry['placeCount'],
+                    detail=f"{entry['phrase']}: {entry['state']}. {entry.get('message') or ''}".strip()[:600],
+                    acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())))
+
         if initial.concepts:
             run.timings['firstConceptMs'] = round((time.monotonic() - clock_started) * 1000)
         run.add_event(TraceEvent(
@@ -344,7 +390,7 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
         run.workflow_calls += len(domains)
 
         response = provider.generate(run.project, seed_tag_ids=run.seed_tag_ids or None,
-                                     on_step=announce, domains=domains)
+                                     on_step=announce, domains=domains, retrieve_secondary=False)
         # The seeds and places were held by now, so what generate() spent
         # is what the bridge fetched.
         run.transport_requests += (response.delivery.transportRequests or 0) if response.delivery else 0

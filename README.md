@@ -116,6 +116,7 @@ from `backend/config.py`.
 | `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited | Agent, analysis and chat model calls per day | `config.py` |
 | `RESEARCH_RUN_MAX_WORKFLOWS` | 8 | unlimited | Qloo workflows per research run (judging is bounded by the 420 s deadline) | `config.py` |
 | `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 720 | How long held evidence answers | `config.py` |
+| `CULTUREFORGE_NEGATIVE_TTL_HOURS` | 6 | 6 | How long a verified "no places for this category here" answer is trusted (never longer than the evidence TTL) | `config.py` |
 | `QLOO_LIVE_ENABLED` | true | true | `false` serves held evidence only | `config.py` |
 | `QLOO_RATE_LIMIT_COOLDOWN_SECONDS` | 60 | 60 | Pause after two Qloo rate-limit answers in a row | `config.py` |
 | `QLOO_MIN_CALL_INTERVAL_SECONDS` | 2 | 2 | Least time between live Qloo requests, server-wide (0 disables) | `config.py` |

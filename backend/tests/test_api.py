@@ -250,3 +250,21 @@ def test_an_unexpected_error_is_still_the_one_envelope_with_a_request_id(client,
     payload = response.json()
     assert payload['error']['code'] == 'INTERNAL_ERROR' and payload['error']['retryable'] is True
     assert payload['requestId'].startswith('req-') and 'boom' not in response.text
+
+
+def test_an_unsupported_category_is_a_422_with_its_own_code_and_no_provider_detail(client, monkeypatch):
+    from backend.providers import QlooHarnessError
+
+    class Refusing:
+        def generate(self, project):
+            raise QlooHarnessError('Qloo returned no category tag matching "x".', code='UNSUPPORTED_CATEGORY',
+                                   details={'phrase': 'x', 'tried': ['x'], 'field': 'businessIdea'})
+
+    monkeypatch.setattr(main, 'get_provider', lambda: Refusing())
+    response = client.post('/api/projects/generate', json={
+        'businessType': 'Retail', 'businessIdea': 'x', 'audience': 'Design students', 'location': 'Tokyo, Japan',
+        'budget': '$25k – $50k', 'objectives': ['a']})
+    assert response.status_code == 422
+    body = response.json()
+    assert body['error']['code'] == 'UNSUPPORTED_CATEGORY' and body['error']['retryable'] is False
+    assert body['requestId'].startswith('req-') and 'Traceback' not in response.text

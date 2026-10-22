@@ -94,9 +94,16 @@ CATEGORIES: dict[str, dict] = {
     'music': {'label': 'Music venue', 'terms': ('music venue', 'live music', 'concert hall', 'jazz club'),
               'query': 'music venue', 'adjacent': ('records',)},
     'gaming': {'label': 'Gaming venue',
-               'terms': ('gaming cafe', 'gaming bar', 'board game cafe', 'board game bar', 'internet cafe',
-                         'esports bar', 'arcade', 'video game shop'),
-               'query': 'arcade', 'adjacent': ()},
+               'terms': ('gaming cafe', 'gaming bar', 'gaming lounge', 'game lounge', 'board game cafe', 'board game café',
+                         'board game bar', 'internet cafe', 'esports bar', 'arcade', 'video game shop'),
+               'query': 'arcade', 'adjacent': (),
+               # Terms narrower than the category query: asked about whole first, and the
+               # broader 'arcade' tag is used only if disclosed as a substitution.
+               'narrow': ('board game cafe', 'board game café', 'board game bar', 'gaming cafe', 'gaming bar', 'esports bar')},
+    'coworking': {'label': 'Coworking space',
+                  'terms': ('coworking space', 'co-working space', 'coworking', 'co-working', 'shared office',
+                            'shared workspace', 'workspace'),
+                  'query': 'coworking space', 'adjacent': ('coffee',)},
     'pharmacy': {'label': 'Pharmacy', 'terms': ('medical store', 'pharmacy', 'chemist', 'drugstore', 'apothecary'),
                  'query': 'pharmacy', 'adjacent': ()},
     'clinic': {'label': 'Clinic', 'terms': ('hospital', 'clinic', 'dentist'), 'query': 'clinic', 'adjacent': ()},
@@ -117,6 +124,31 @@ NEUTRAL = frozenset({'a', 'an', 'the', 'best', 'good', 'great', 'new', 'small', 
                      'parlor', 'and', 'bar'})
 GENERIC_ONLY = frozenset({'shop', 'store', 'studio', 'parlour', 'parlor', 'place', 'business', 'venue', 'bar',
                           'club', 'house', 'centre', 'center', 'space', 'company', 'startup'})
+
+#: Words that say how a business specialises rather than what it is. They are kept in the
+#: interpreted intent, never silently dropped, and are not treated as the place's category.
+SPECIALISATIONS = frozenset({'vegan', 'vegetarian', 'gluten-free', 'glutenfree', 'halal', 'kosher', 'organic',
+                             'specialty', 'speciality', 'artisan', 'artisanal', 'craft', 'vintage', 'second-hand',
+                             'secondhand', 'sustainable', 'luxury', 'premium', 'third-wave', 'handmade', 'retro',
+                             'family-run', 'zero-waste', 'plant-based'})
+#: A phrase ending in one of these names a place of business, so it can be a hybrid component.
+BUSINESS_NOUNS = frozenset({'shop', 'store', 'studio', 'cafe', 'café', 'bar', 'lounge', 'space', 'gallery', 'parlour',
+                            'parlor', 'bakery', 'restaurant', 'bistro', 'roastery', 'market', 'boutique', 'club',
+                            'kitchen', 'salon', 'spa', 'gym', 'hotel', 'workspace', 'coworking', 'pub', 'diner',
+                            'deli', 'brewery', 'taproom', 'florist', 'pharmacy', 'clinic', 'arcade', 'hostel'})
+
+
+def modifiers_in(text: str) -> tuple[str, ...]:
+    """Specialisation words in a phrase, in the order written, each once."""
+    normalised = re.sub(r'\bthird[\s-]wave\b', 'third-wave', (text or '').casefold())
+    normalised = re.sub(r'\bgluten[\s-]free\b', 'gluten-free', normalised)
+    normalised = re.sub(r'\bplant[\s-]based\b', 'plant-based', normalised)
+    found: list[str] = []
+    for word in re.findall(r"[\w'’-]+", normalised):
+        if word in SPECIALISATIONS and word not in found:
+            found.append(word)
+    return tuple(found)
+
 
 _FRAME = re.compile(
     r'^\s*(?:(?:where|how|what|which)\b[^?]*?\b(?:open|start|launch|build|set up|run)\s+)?'
@@ -185,7 +217,7 @@ def resolve(idea: str) -> CategoryResolution:
         if term.casefold() in GENERIC_HEADS and leftover:
             words = re.findall(r"[\w'’]+", phrase)
             distinctive = tuple(w.casefold() for w in words if len(w) > 2 and w.casefold() not in
-                                GENERIC_HEADS | GENERIC_ONLY | NEUTRAL)
+                                GENERIC_HEADS | GENERIC_ONLY | NEUTRAL | SPECIALISATIONS)
             if distinctive and len(words) <= 4:
                 return CategoryResolution('', phrase, phrase.casefold(), 'open_vocabulary', phrase.casefold(),
                                           distinctive, (cid,),
@@ -201,9 +233,13 @@ def resolve(idea: str) -> CategoryResolution:
                                   f'"{phrase}" names the {spec["label"].lower()} category through "{term}".')
     words = re.findall(r"[\w'’]+", phrase)
     if 1 <= len(words) <= 4 and not all(w.casefold() in GENERIC_ONLY | NEUTRAL for w in words):
+        core = tuple(w.casefold() for w in words if len(w) > 2 and w.casefold() not in
+                     GENERIC_HEADS | GENERIC_ONLY | NEUTRAL | SPECIALISATIONS)
+        # A trailing business noun ("taproom") names the kind of place, not the product.
+        product = tuple(w for w in core if w not in BUSINESS_NOUNS)
+        core = product or core
         return CategoryResolution('', phrase, phrase.casefold(), 'open_vocabulary', phrase.casefold(),
-                                  tuple(w.casefold() for w in words if len(w) > 2 and w.casefold() not in
-                                        GENERIC_HEADS | GENERIC_ONLY | NEUTRAL) or tuple(w.casefold() for w in words if len(w) > 2), (),
+                                  core or tuple(w.casefold() for w in words if len(w) > 2), (),
                                   f'"{phrase}" is not a category CultureForge knows in advance, so Qloo\'s own '
                                   'taxonomy is asked what it is. It counts as resolved only if a returned '
                                   'category tag matches the phrase.')

@@ -11,7 +11,9 @@ async function loadTs(path, replacements = {}) {
   return { module: await import(url), url };
 }
 const summary = await loadTs('../src/evidenceSummary.ts');
-const { renderBrief } = (await loadTs('../src/brief.ts', { "'./evidenceSummary'": `'${summary.url}'` })).module;
+const intentView = (await loadTs('../src/intentView.ts')).module;
+const intentViewUrl = (await loadTs('../src/intentView.ts')).url;
+const { renderBrief } = (await loadTs('../src/brief.ts', { "'./evidenceSummary'": `'${summary.url}'`, "'./intentView'": `'${intentViewUrl}'` })).module;
 const concept = { id: 'direction', name: 'A proposed experience', tagline: 'A hypothesis', description: 'A cultural interpretation', investment: '$25k',
   signals: [], limitations: ['No demand evidence'], evidenceIds: ['known', 'missing'], decisions: [
     { field: 'format', proposal: 'Try a quiet setting', ruleId: 'quiet', evidenceIds: ['known'] },
@@ -107,3 +109,24 @@ assert.equal(grid.sources.openmaptiles, undefined, 'The fallback loads no tiles'
 assert.equal(grid.glyphs, undefined);
 assert.ok(!grid.layers.some((l) => l.type === 'symbol'), 'The fallback needs no glyphs');
 console.log('[ok] The map plots only geocoded venues, never restores another city, searches only held evidence, and falls back without tiles.');
+
+const entry = (state, extra = {}) => ({ role: 'primary', phrase: 'bakery', categoryLabel: 'Bakery', state, queriesTried: ['bakery'], tag: null,
+  placeCount: 2, directCount: 1, places: [], modifiers: [], categoryOnly: false, message: '', ...extra });
+const comp = (phrase, modifiers = []) => ({ role: 'primary', phrase, categoryId: '', categoryLabel: phrase, status: 'canonical', queries: [phrase], modifiers, source: 'rules' });
+const plain = { original: 'Bakery', components: [comp('bakery')], hybrid: false, ambiguous: false, clarification: '', unused: [], substitutions: [], source: 'rules', evidence: [entry('exact')], overlap: null };
+assert.equal(intentView.intentIsWorthShowing(plain), false, 'An exact, unspecialised, single-business reading adds nothing to show');
+assert.equal(intentView.intentIsWorthShowing({ ...plain, hybrid: true }), true);
+assert.equal(intentView.intentIsWorthShowing({ ...plain, components: [comp('vegan restaurant', ['vegan'])] }), true, 'A specialisation is always shown');
+assert.equal(intentView.intentIsWorthShowing({ ...plain, evidence: [entry('tag_no_places')] }), true);
+assert.equal(intentView.intentIsWorthShowing(null), false);
+const hybrid = { ...plain, original: 'Bakery and bookstore', hybrid: true, components: [comp('bakery'), comp('bookstore')],
+  evidence: [entry('exact'), entry('tag_no_places', { phrase: 'bookstore', role: 'secondary', placeCount: 0 })],
+  overlap: { established: false, sharedPlaces: [], statement: 'Overlap not established: no places were retrieved for bookstore.' },
+  substitutions: ['Showing general bakery evidence; vegan-specific relevance is not verified by Qloo\'s category.'] };
+const exported = renderBrief({ ...result, intent: hybrid }, [concept]).split('\n');
+assert.ok(exported.includes('Businesses: bakery + bookstore (a combination)'));
+assert.ok(exported.some(line => line.includes('bookstore') && line.includes('Category exists') && line.includes('0 returned places')), 'Each business keeps its own evidence line');
+assert.ok(exported.some(line => line.startsWith('Overlap: Overlap not established')), 'No overlap is manufactured');
+assert.ok(exported.some(line => line.startsWith('Simplified or not verified: Showing general bakery')));
+assert.equal(renderBrief(result, [concept]).includes('How the idea was read'), false, 'An answer with no reading exports exactly as before');
+console.log('[ok] The idea reading is shown only when informative, and exports each business, the overlap and every simplification.');

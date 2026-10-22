@@ -38,6 +38,25 @@
   returned for the audience tags alone, and are cited as audience-level,
   not direction-specific.
 
+## Limits of business-idea support
+
+- **Any reasonable idea is accepted; Qloo coverage is not promised.** An unfamiliar business is searched in
+  Qloo's own tag taxonomy and counts as resolved only if a returned tag's name matches its words. Otherwise the
+  founder is told so and nothing else is substituted.
+- **`exact`/`near` are name matches.** Qloo documents no tag hierarchy, so "broader" is CultureForge's own
+  widening (dropping a specialisation word, or the `arcade` fallback for a board-game café) and is labelled so.
+- **A tag existing does not mean places exist.** Only the normal places request shows local coverage, which
+  is why `tag_no_places` is its own state and is cached for a shorter time than a positive answer.
+- **Specialisations are reported, not verified.** "Vegan restaurant" searches the restaurant category; the
+  panel counts how many returned places mention "vegan" in their Qloo text and says the category itself does not.
+- **Hybrids are two separate samples.** At most two businesses are researched. Overlap is the places returned
+  for both (bounded lists), and says nothing about demand for the combination. The second business's places are
+  shown in the "How your idea was read" panel; they are not plotted on the map and do not feed the directions.
+- **The optional model reading is a proposal.** It runs at most once per idea, only when the rules cannot read
+  it, and its search strings are validated; every tag still comes from Qloo.
+- **Unverified here:** how many niche categories Qloo's place tags actually cover per city. The offline tests
+  script Qloo; only the live matrix in `docs/IMPLEMENTATION_REVIEW.md` records real observations.
+
 ## Limits of the model layer
 
 - It is optional, and off by default. With it off, the rule composer
