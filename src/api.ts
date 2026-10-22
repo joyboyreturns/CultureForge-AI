@@ -682,3 +682,25 @@ export async function fetchInterestCells(entityId: string, within: string): Prom
   return { entityId, within, points: body.points ?? [], bounds: body.bounds ?? null, note: body.note,
     cached: Boolean(body.cached), transportRequests: body.transportRequests ?? 0 }
 }
+
+/** One answer from Ask the evidence. Every claim cites Qloo identifiers observed for this brief. */
+export interface ChatReply {
+  question: string
+  answer: string
+  refused: boolean
+  claims: { statement: string; directionId?: string | null; citations: { id: string; label: string }[] }[]
+  rejectedClaims: { statement: string; reason: string }[]
+  steps: { index: number; tool: string; status: string; detail: string; upstreamRequests: number; cached: boolean }[]
+  model: string | null
+  modelCalls: number
+  upstreamRequests: number
+  cached: boolean
+  scope: string
+}
+export async function askTheEvidence(result: GenerateResponse, question: string,
+  history: { question: string; answer: string }[]): Promise<ChatReply> {
+  return postJson<ChatReply>('/api/chat', {
+    project: result.project, evidence: result.evidence,
+    concepts: result.concepts, question, history,
+  })
+}

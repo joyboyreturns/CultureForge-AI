@@ -1349,3 +1349,18 @@
 .agent-citations code{font:10px 'DM Mono',monospace;border:1px solid var(--line);border-radius:4px;padding:2px 5px;color:var(--muted)}
 .agent-rejected{font-size:12px;color:var(--muted);margin-top:10px}
 .agent-rejected li{margin:4px 0}
+
+/* --- Ask the evidence ---------------------------------------------------------- */
+.evidence-chat{padding:20px;margin-top:20px}
+.evidence-chat-turns{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:14px}
+.evidence-chat-turns>li{border-left:2px solid var(--sage);padding-left:12px}
+.evidence-chat-turns>li.is-refused{border-left-color:var(--accent)}
+.evidence-chat-turns strong{font-size:13px}
+.evidence-chat-turns p{font-size:13px;line-height:1.7;margin:4px 0}
+.evidence-chat-turns ul{margin:6px 0;padding-left:18px;font-size:12px;line-height:1.6;display:flex;flex-direction:column;gap:6px}
+.evidence-chat-turns small{font-size:11px;color:var(--subtle)}
+.evidence-chat-starters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.evidence-chat-starters button{border:1px solid var(--line);border-radius:5px;padding:7px 9px;font-size:12px;color:var(--muted);text-align:left}
+.evidence-chat-starters button:hover{border-color:var(--accent);color:var(--text)}
+.evidence-chat form{display:flex;gap:8px;margin-top:10px}
+.evidence-chat input{flex:1;min-width:0;background:var(--surface-raised);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:13px;padding:9px 10px}
