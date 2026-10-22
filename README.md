@@ -47,13 +47,21 @@ willingness to pay.
 
 *The guided tour follows the reader to each step and highlights what it describes.*
 
+![The cultural opportunity map, Tokyo, dark theme](docs/screenshots/map-tokyo-dark.jpg)
+
+*The map, made for non-technical readers: a real street map with named pins, a plain-words key, hover cards and a clickable venue list. Pins are address matches, never surveyed points.*
+
+![The cultural opportunity map, Paris, light theme](docs/screenshots/map-paris-light.jpg)
+
+*The same map in the light theme. Pins the selected direction cites carry a halo; the rest fade back.*
+
 ![Scenario lab: same vision, a different audience](docs/screenshots/scenario-lab.jpg)
 
 *Scenario lab. Change the audience or the place and let Qloo measure what changes.*
 
 ![The agent workspace while a run is in progress](docs/screenshots/agent-workspace.jpg)
 
-*The agent workspace, showing the steps of a real research run.*
+*The agent workspace tells the reader what to expect: usually 2–3 minutes for a brand-new idea, rarely 5 or more, while held ideas open in seconds.*
 
 <img src="docs/screenshots/mobile-brief.jpg" alt="The studio on a phone" width="260"/>
 

@@ -55,6 +55,7 @@ export function OpportunityMap({
   cellsControl: ReactNode
 }) {
   const uid = useId()
+  const [tip, setTip] = useState<{ x: number; y: number; label: string; kind: string; cited: boolean } | null>(null)
   const location = project.location
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -63,7 +64,7 @@ export function OpportunityMap({
   const [status, setStatus] = useState<Status>('loading')
   const [basemap, setBasemap] = useState<{ mode: BasemapMode; reason: string }>({ mode: 'streets', reason: '' })
   const [visible, setVisible] = useState<OverlayVisibility>({ heat: true, venues: true, context: true })
-  const [layersOpen, setLayersOpen] = useState(() => !window.matchMedia?.('(max-width: 600px)').matches)
+  const [layersOpen, setLayersOpen] = useState(false)
   const [focus, setFocus] = useState(true)
   const [venueId, setVenueId] = useState<string | null>(null)
   const [cellIndex, setCellIndex] = useState<number | null>(null)
@@ -242,6 +243,12 @@ export function OpportunityMap({
         m.on('mouseenter', id, () => { canvas.style.cursor = 'pointer' })
         m.on('mouseleave', id, () => { canvas.style.cursor = '' })
       }
+      // A name and a plain-words kind follow the pointer over a pin.
+      m.on('mousemove', CLICKABLE.venue, (event: MapLayerMouseEvent) => {
+        const props = event.features?.[0]?.properties
+        if (props && typeof props.label === 'string') setTip({ x: event.point.x, y: event.point.y, label: props.label, kind: String(props.kind), cited: props.cited === 1 })
+      })
+      m.on('mouseleave', CLICKABLE.venue, () => setTip(null))
       m.on('movestart', (event) => { if ((event as { originalEvent?: unknown }).originalEvent) { userMoved.current = true; mark(0) } })
       m.on('moveend', () => {
         if (!framed.current) return
@@ -449,6 +456,10 @@ export function OpportunityMap({
         {status !== 'failed' && <LayersPanel open={layersOpen} setOpen={setLayersOpen} visible={visible} setVisible={setVisible} counts={counts}
           heatLegend={heatLegend} cellsControl={cellsControl} contextNote={contextNote}/>}
         <div ref={containerRef} className="ox-canvas"/>
+        {tip && <div className="ox-tip" style={{ left: tip.x + 14, top: tip.y + 14 }} role="presentation"><strong>{tip.label}</strong><span>{KIND_WORDS[tip.kind as keyof typeof KIND_WORDS] ?? tip.kind}{tip.cited ? ' · cited by this direction' : ''}</span><em>Click for details</em></div>}
+        {status === 'ready' && plotted.length > 0 && <ul className="ox-keybar" aria-label="What the pins mean">
+          <li><i className="ox-dot is-direct"/>Direct match</li><li><i className="ox-dot is-indirect"/>Related business</li><li><i className="ox-dot is-attraction"/>Cultural attraction</li><li><i className="ox-ring"/>Cited by this direction</li>
+        </ul>}
         {status === 'loading' && <div className="ox-skeleton" role="status"><span/>Loading the street map…</div>}
         {status === 'failed' && <p className="ox-overlay" role="alert">This browser could not start the map (WebGL is unavailable or blocked). Every venue and its status is listed beside it.</p>}
         {status === 'ready' && !anyEvidence && geo.pending === 0 && <p className="ox-overlay is-soft">Nothing in this exploration has a verified coordinate yet, so the map is not centred on {location}. CultureForge does not guess where a city is. The venues and their reasons are listed beside the map.</p>}

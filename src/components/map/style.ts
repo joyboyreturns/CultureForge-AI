@@ -23,9 +23,9 @@ export type BasemapMode = 'streets' | 'grid'
 
 const PALETTE: Record<Theme, Record<string, string>> = {
   dark: {
-    background: '#111814', water: '#142731', landcover: '#15211a', park: '#17281d', landuse: '#141d18', building: '#1b251f',
-    minor: '#232f28', major: '#2f3d34', motorway: '#45513d', casing: '#0c110e', boundary: '#4b5a4f',
-    label: '#97a598', labelMajor: '#c9d2c6', halo: '#111814', grid: '#2a362f',
+    background: '#16201a', water: '#1d3b4d', landcover: '#1b2b21', park: '#234a2f', landuse: '#18241d', building: '#27352c',
+    minor: '#34443a', major: '#4b5d51', motorway: '#6b7a4a', casing: '#0d130f', boundary: '#6a7c6e',
+    label: '#b8c6b9', labelMajor: '#e6eee3', halo: '#121a15', grid: '#2a362f',
   },
   light: {
     background: '#eef0e6', water: '#c6d7dc', landcover: '#e2e8d5', park: '#d8e4c9', landuse: '#e9ebe0', building: '#dfdfd3',
@@ -46,7 +46,7 @@ function basemapLayers(theme: Theme): LayerSpecification[] {
     { id: 'bm-landuse', type: 'fill', source: src, 'source-layer': 'landuse', paint: { 'fill-color': c.landuse, 'fill-opacity': 0.6 } },
     { id: 'bm-park', type: 'fill', source: src, 'source-layer': 'park', paint: { 'fill-color': c.park, 'fill-opacity': 0.85 } },
     { id: 'bm-water', type: 'fill', source: src, 'source-layer': 'water', paint: { 'fill-color': c.water } },
-    { id: 'bm-building', type: 'fill', source: src, 'source-layer': 'building', minzoom: 14, paint: { 'fill-color': c.building, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 15, 0.9] as unknown as number } },
+    { id: 'bm-building', type: 'fill', source: src, 'source-layer': 'building', minzoom: 13, paint: { 'fill-color': c.building, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14.5, 0.95] as unknown as number } },
     { id: 'bm-boundary', type: 'line', source: src, 'source-layer': 'boundary', filter: ['all', ['<=', ['get', 'admin_level'], 4], ['!=', ['get', 'maritime'], 1]] as never, minzoom: 3,
       paint: { 'line-color': c.boundary, 'line-width': 1, 'line-dasharray': [3, 2] } },
     { id: 'bm-road-minor', type: 'line', source: src, 'source-layer': 'transportation', minzoom: 12,
