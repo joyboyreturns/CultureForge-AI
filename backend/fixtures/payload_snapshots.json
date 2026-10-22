@@ -1,0 +1,60 @@
+{
+  "audience_demographics_payload": {
+    "entity": "e1",
+    "entity_type": "place",
+    "limit": 5
+  },
+  "bridge_payload": {
+    "limit": 5,
+    "signal_tags": [
+      "urn:tag:a"
+    ],
+    "target_type": "artist"
+  },
+  "brief_places_payload": {
+    "limit": 10,
+    "signal_location": "Brooklyn, New York",
+    "signal_tags": [
+      "urn:tag:a",
+      "urn:tag:b"
+    ],
+    "target_type": "place"
+  },
+  "brief_tags_payload": {
+    "limit": 3,
+    "query": "Food & beverage Design-conscious Gen Z"
+  },
+  "describe_payload": {
+    "entity": "North Room",
+    "type": "place"
+  },
+  "describe_payload_untyped": {
+    "entity": "North Room"
+  },
+  "entity_tags_payload": {
+    "entities": [
+      "e1",
+      "e2",
+      "e3",
+      "e4",
+      "e5"
+    ],
+    "entity_type": "place",
+    "limit": 10
+  },
+  "trends_payload": {
+    "end_date": "2026-10-01",
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "entity_type": "place",
+    "limit": 10,
+    "start_date": "2026-07-01"
+  },
+  "where_popular_payload": {
+    "entity": "e1",
+    "limit": 20,
+    "within": "Brooklyn, New York"
+  }
+}
