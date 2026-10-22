@@ -1,9 +1,8 @@
 # Ready-to-send continuation prompt
 
 Copy everything below into the other provider. If it cannot access the local
-workspace, also attach `cultureforge-handoff.bundle` from
-`artifacts/validation/`. That bundle contains the local implementation commits;
-the public remote alone may not contain them.
+workspace, clone the public repository. A portable
+`artifacts/validation/cultureforge-handoff.bundle` is also available locally.
 
 ---
 
@@ -17,8 +16,9 @@ Repository: https://github.com/joyboyreturns/CultureForge-AI
 Local workspace: `/Users/vincent/Documents/CultureForge AI`
 Branch: `main`. Starting verified public commit:
 `141b33372dd798c3ec920567b70d39da9daf1290`.
-The implementation was committed locally; inspect `git log` for the final
-hashes. It was not pushed because release verification still has unresolved
+The three implementation commits through `026f3d1` were pushed to `origin/main`
+on 22 October 2026 at the owner's explicit request; inspect `git log` for the
+latest hashes. Release verification still has unresolved external/owner
 gates. If using the supplied Git bundle, clone the public repository, inspect
 the bundle with `git bundle verify /path/cultureforge-handoff.bundle`, and
 fetch it into a new review branch rather than overwriting local changes:
