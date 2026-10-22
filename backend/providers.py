@@ -375,7 +375,7 @@ class QlooHarnessProvider(CultureProvider):
         if not config.qloo_live_enabled():
             raise QlooHarnessError(
                 'Live Qloo retrieval is switched off on this server, so only evidence it already '
-                'holds can be shown. Try one of the prepared example briefs.',
+                'holds can be shown. Try a prepared example marked “Evidence held”.',
                 code='LIVE_DISABLED')
         remaining = self._rate_limited_until - time.time()
         if remaining > 0:
