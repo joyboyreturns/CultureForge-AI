@@ -22,7 +22,7 @@ from .reasoning import budget_state as analysis_budget_state
 from .llm import status as llm_status
 from .presentation import presentation_key
 from .selector import select as select_evidence
-from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequest, ChallengeRequest,
+from .models import (GeoVenuesRequest, CompareAudiencesRequest, CompareRequest, ChallengeProbeRequest, ChallengeRequest,
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
@@ -534,6 +534,14 @@ def qloo_workflows() -> dict:
         'note': ('Every workflow is read-only, cached, and metered. The delivery on any '
                  'result says whether the evidence was freshly fetched or already held.'),
     }
+
+
+@app.post('/api/geo/venues', tags=['evidence'], summary='Resolve returned venue addresses to verified coordinates')
+def geo_venues(request: GeoVenuesRequest) -> dict:
+    """Geocode the addresses Qloo returned. A venue that cannot be resolved unambiguously inside its city is
+    reported as not plotted, with the reason; nothing is guessed. See backend/geocode.py."""
+    from .geocode import enabled, geocode_venues
+    return {'results': geocode_venues([venue.model_dump() for venue in request.venues]), 'enabled': enabled()}
 
 
 @app.post('/api/qloo/describe', tags=['evidence'], summary='Resolve one entity and describe it')

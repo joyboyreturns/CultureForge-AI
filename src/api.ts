@@ -1,5 +1,5 @@
 import type {
-  Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, ProjectRequest, TraceEvent,
+  Concept, CulturalSignal, Delivery, Evidence, GenerateResponse, GeoVenuesResponse, ProjectRequest, TraceEvent,
 } from './contracts'
 
 /**
@@ -694,6 +694,31 @@ export async function fetchInterestCells(entityId: string, within: string): Prom
     '/api/qloo/where-popular', { entity: entityId, within, limit: 20 })
   return { entityId, within, points: body.points ?? [], bounds: body.bounds ?? null, note: body.note,
     cached: Boolean(body.cached), transportRequests: body.transportRequests ?? 0 }
+}
+
+/**
+ * Resolve the addresses Qloo returned for some venues, on the server.
+ *
+ * The browser never calls a geocoder itself: the server throttles and caches
+ * Nominatim per its usage policy. At most 12 venues per request. A venue the
+ * server cannot place unambiguously inside the city comes back with a status
+ * and a reason, never a guessed coordinate.
+ */
+export async function geocodeVenues(venues: { id: string; address: string; city: string; name?: string }[], signal?: AbortSignal): Promise<GeoVenuesResponse> {
+  let response: Response
+  try {
+    response = await fetch('/api/geo/venues', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ venues: venues.slice(0, 12) }), signal })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    throw new Error('The CultureForge backend could not be reached to locate the venues.')
+  }
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(detailMessage(payload, `The venues could not be located (${response.status}).`))
+  }
+  const body = await response.json() as Partial<GeoVenuesResponse>
+  return { results: Array.isArray(body.results) ? body.results : [], enabled: body.enabled !== false }
 }
 
 /** One answer from Ask the evidence. Every claim cites Qloo identifiers observed for this brief. */

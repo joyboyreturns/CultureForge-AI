@@ -6,8 +6,9 @@
  * URL handed to MapLibre, because the library's default (a file next to its
  * own module) does not exist once the app is bundled.
  *
- * No tile server, no style URL and no key: the map style is built in code
- * from the evidence alone.
+ * No key and no third-party style file: the explorer's style is written in
+ * code (src/components/map/style.ts) over OpenFreeMap tiles, and the
+ * investigation view's interest plot draws no basemap at all.
  */
 import { AttributionControl, Map as MapLibreMap, NavigationControl, ScaleControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'

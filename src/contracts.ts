@@ -19,17 +19,34 @@ export interface Evidence {
   description?: string | null
   image?: string | null
   location?: string | null
+  /** The street address Qloo returned for a place, verbatim. Qloo places carry no coordinates. */
+  address?: string | null
   traceId?: string | null
   /** How this piece of evidence should be presented, derived from it by rule.
    *  It changes nothing about the evidence itself. */
   presentation?: EvidencePresentation | null
   relevance?: { version: string; evidenceClass?: EvidenceClass | null; relationship: 'direct' | 'indirect' | 'unknown' | 'excluded'; category: string; anchorEligible: boolean; geography: string; audience: string; confidence: string; reasons: string[] } | null
-  /** A coordinate for the place itself, present only when an upstream
-   *  response carried one. CultureForge never geocodes an address into one,
-   *  and Qloo's place geocode today carries an address, so this is usually
-   *  absent and the map says so. */
+  /** A coordinate for the place itself, set only from a verified geocode of
+   *  the address Qloo returned (backend/geocode.py). It is an address match,
+   *  not a surveyed venue point, and is usually absent. */
   coordinates?: { lat: number; lon: number; source?: string | null } | null
 }
+
+/** What `POST /api/geo/venues` says about one venue's returned address. */
+export type VenueGeocodeStatus = 'plotted' | 'not_found' | 'outside_city' | 'ambiguous' | 'no_address' | 'unavailable'
+export interface VenueGeocode {
+  id: string
+  status: VenueGeocodeStatus
+  lat?: number | null
+  lon?: number | null
+  /** The geocoder's own name for the matched place. */
+  matched?: string | null
+  source?: string | null
+  precision?: string | null
+  reason?: string | null
+  cached?: boolean | null
+}
+export interface GeoVenuesResponse { results: VenueGeocode[]; enabled: boolean }
 
 /** What a piece of evidence is to this brief, by CultureForge's relevance rule. */
 export type EvidenceClass = 'direct_business' | 'indirect_business' | 'cultural_attraction' | 'audience_affinity' | 'unverified_geography' | 'unrelated'

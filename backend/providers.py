@@ -882,6 +882,7 @@ class QlooHarnessProvider(CultureProvider):
                 description=properties.get('short_description') or properties.get('description'),
                 image=image_url if isinstance(image_url, str) else None,
                 location=', '.join(part for part in (geocode.get('city'), geocode.get('admin1_region')) if part) or None,
+                address=properties.get('address') if isinstance(properties.get('address'), str) else None,
                 traceId=entity_trace.id,
             ))
             entity_rows.append({

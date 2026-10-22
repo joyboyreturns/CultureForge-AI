@@ -229,7 +229,7 @@ def test_the_prepared_briefs_keep_the_category_they_were_written_for():
         'london-mindful-wellness': ('wellness', 'business_type'), 'lisbon-local-stay': ('hospitality', 'business_type'),
         'austin-live-music': ('music', 'business_type'), 'chicago-vinyl-retail': ('records', 'audience'),
         'los-angeles-slow-fashion': ('fashion', 'audience'), 'tokyo-ceramics-studio': ('ceramics', 'audience'),
-        'tokyo-morning-bakery': ('bakery', 'idea'),
+        'tokyo-morning-bakery': ('bakery', 'idea'), 'paris-ice-cream': ('frozen_dessert', 'idea'),
     }
     seen = {}
     for brief in briefs:
