@@ -241,6 +241,23 @@ class ChallengeRevision(BaseModel):
     resolvedTags: list[str] = Field(default_factory=list, max_length=10)
 
 
+class ChatTurn(BaseModel):
+    """An earlier question and answer in the same conversation."""
+    model_config = ConfigDict(extra='forbid')
+    question: str = Field(min_length=1, max_length=500)
+    answer: str = Field(max_length=1200)
+
+
+class ChatRequest(BaseModel):
+    """Ask a question of the exploration on screen."""
+    model_config = ConfigDict(extra='forbid')
+    project: ProjectRequest
+    evidence: list[Evidence] = Field(default_factory=list, max_length=60)
+    concepts: list[Concept] = Field(default_factory=list, max_length=10)
+    question: str = Field(min_length=3, max_length=500)
+    history: list[ChatTurn] = Field(default_factory=list, max_length=8)
+
+
 class ProfileRequest(BaseModel):
     """Ask which demographic profile the evidence test would use."""
     audience: str = Field(min_length=2, max_length=240)

@@ -26,7 +26,7 @@ from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequ
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
-                     InvestigationRequest, ProfileRequest, ProjectRequest, ProvenanceMetadata,
+                     ChatRequest, InvestigationRequest, ProfileRequest, ProjectRequest, ProvenanceMetadata,
                      RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
                      WherePopularRequest)
 from .platform import get_platform
@@ -89,6 +89,7 @@ ERROR_STATUS = {
     'QUOTA_EXHAUSTED': 503,
     'LIVE_DISABLED': 503,
     'BUDGET_UNAVAILABLE': 503,
+    'MODEL_UNAVAILABLE': 503,
     'PROVIDER_UNAVAILABLE': 503,
     'UPSTREAM_TIMEOUT': 504,
     'RUN_TIMEOUT': 504,
@@ -787,6 +788,20 @@ def challenge_directions_route(request: ChallengeRequest) -> dict:
         response = provider.generate(request.project)
     return challenge_directions(request.project, response, request.directionId or None,
                                 request.anchorEntityId or None, request.demographic or None)
+
+
+@app.post('/api/chat', tags=['agent'],
+          summary='Ask the evidence a follow-up question; every claim cites Qloo IDs')
+def ask_the_evidence(request: ChatRequest) -> dict:
+    """Answer from the exploration's own evidence, plus at most three Qloo
+    workflows the model can justify. Claims that cite anything not observed,
+    or state numbers of their own, are rejected; with none left the answer is
+    a refusal. Needs the model gateway; without it this is a 503."""
+    from .chat import ChatUnavailable, ask
+    try:
+        return ask(request)
+    except ChatUnavailable as exc:
+        return error_response(exc.code, str(exc), retryable=True)
 
 
 @app.post('/api/profile/propose', tags=['evidence'],
