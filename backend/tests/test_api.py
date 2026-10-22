@@ -25,6 +25,13 @@ def test_the_health_alias_works(client):
     assert client.get('/health').status_code == 200
 
 
+def test_authorized_partner_cors_preflight_is_allowed(client):
+    response = client.options('/api/health', headers={'Origin': 'http://localhost:5173',
+        'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'Authorization'})
+    assert response.status_code == 200
+    assert 'authorization' in response.headers['access-control-allow-headers'].lower()
+
+
 def test_validation_errors_are_readable(client):
     """The UI renders `detail` directly, so it must be a string, not a list."""
     response = client.post('/api/projects/generate', json={'businessType': 'Nope', 'audience': 'x'})

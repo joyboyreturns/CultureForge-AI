@@ -109,6 +109,8 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
               <VerdictBadge verdict={entry.verdict} />
             </button>
             <p className="challenge-reason">{entry.reason}</p>
+            {entry.completion && <p className="challenge-coverage"><b>{entry.completion.completedChecks} / {entry.completion.totalChecks} checks completed.</b> Ranking: {entry.completion.rank.replace(/_/g, ' ')} · Tag comparison: {entry.completion.compare.replace(/_/g, ' ')}. Missing or failed checks leave the verdict unproven.</p>}
+            {entry.problems?.map(problem => <p className="challenge-coverage" key={`${problem.check}-${problem.code}`}><b>{problem.check}: {problem.code}.</b> {problem.message}{problem.retryable ? ' This check can be tried again after the service recovers; held checks will be reused.' : ''}</p>)}
             {entry.isCounterfactual && (
               <p className="challenge-counterfactual">
                 Alternative anchor tested: <b>{entry.anchor?.label}</b>. Original concept reference:{' '}

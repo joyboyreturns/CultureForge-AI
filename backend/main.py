@@ -69,7 +69,7 @@ app.add_middleware(
     allow_origin_regex=r'http://(localhost|127\.0\.0\.1)(:\d+)?',
     allow_credentials=False,
     allow_methods=['GET', 'POST'],
-    allow_headers=['Content-Type'],
+    allow_headers=['Content-Type', 'Authorization'],
 )
 
 
@@ -126,7 +126,10 @@ async def http_error_handler(request: Request, exc: HTTPException):
     code = {400: 'INVALID_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN',
             404: 'NOT_FOUND', 405: 'METHOD_NOT_ALLOWED', 409: 'CONFLICT',
             429: 'RATE_LIMITED', 503: 'UNAVAILABLE'}.get(exc.status_code, 'REQUEST_FAILED')
-    return error_response(code, message, status=exc.status_code)
+    response = error_response(code, message, status=exc.status_code)
+    if exc.headers:
+        response.headers.update(exc.headers)
+    return response
 
 
 @app.exception_handler(Exception)
@@ -898,6 +901,8 @@ def recompose_route(request: RecomposeRequest) -> dict:
         request.project,
         exclude_entity_ids=request.excludeEntityIds,
         exclude_tag_ids=request.excludeTagIds,
+        seed_tag_ids=request.seedTagIds or None,
+        retain_entity_ids=request.retainEntityIds,
     )
 
 

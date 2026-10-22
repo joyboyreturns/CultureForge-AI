@@ -85,11 +85,11 @@ def main() -> int:
     held = [row for row in examples if row.get('held')]
     check('At least one prepared brief is held', bool(held), f'{len(held)} of {len(examples)} held')
 
-    first = examples[0] if examples else None
+    first = held[0] if held else (examples[0] if examples else None)
     if first and first.get('held'):
         status, answer = post(base, '/api/projects/generate', first['project'])
         cost = (answer.get('delivery') or {}).get('transportRequests')
-        check('The landing-page brief answers from held evidence', status == 200 and bool(answer.get('concepts')),
+        check('A prepared brief answers from held evidence', status == 200 and bool(answer.get('concepts')),
               f'{status}, {len(answer.get("concepts") or [])} directions')
         check('...and it cost no upstream request', cost == 0, f'transportRequests={cost}')
     elif first:

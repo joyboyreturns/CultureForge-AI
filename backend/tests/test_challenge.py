@@ -340,10 +340,11 @@ def test_a_re_anchored_direction_is_labelled_as_a_counterfactual(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# anchor-fit-4: the written rule, its confidence and its sensitivity
+# anchor-fit-5: the written rule, its confidence and its sensitivity
 # ---------------------------------------------------------------------------
 
 def test_the_rank_rule_is_thirds_and_reduces_to_first_and_last_on_small_samples():
+    assert [challenge.rank_band(p, 2) for p in (1, 2)] == ['mixed', 'mixed']
     assert [challenge.rank_band(p, 3) for p in (1, 2, 3)] == ['pass', 'mixed', 'fail']
     assert [challenge.rank_band(p, 5) for p in (1, 2, 4, 5)] == ['pass', 'mixed', 'mixed', 'fail']
     assert [challenge.rank_band(p, 10) for p in range(1, 11)] == (
@@ -376,7 +377,7 @@ def test_a_top_third_anchor_with_a_cultural_tag_is_supported_with_moderate_confi
     entry = result['directions'][0]
     assert entry['verdict'] == challenge.SUPPORTED
     index = entry['index']
-    assert index['policy'] == 'anchor-fit-4' == result['policyVersion']
+    assert index['policy'] == 'anchor-fit-5' == result['policyVersion']
     assert (index['rankCheck'], index['tagCheck'], index['sampleSize']) == ('pass', 'pass', 10)
     assert index['confidence'] == 'moderate'
     assert index['sensitivity']['stable'] is True
@@ -483,7 +484,10 @@ def test_a_rate_limited_ranking_leaves_the_tag_check_and_the_direction_unproven(
     result = challenge.challenge_directions(response.project, response)
     entry = result['directions'][0]
     assert entry['verdict'] == challenge.UNPROVEN
-    assert entry['problems'] == [{'check': 'rank', 'code': 'RATE_LIMITED', 'message': 'Qloo rate limited this key.'}]
+    assert entry['problems'] == [{'check': 'rank', 'code': 'RATE_LIMITED',
+                                  'message': 'Qloo rate limited this key.', 'retryable': True}]
+    assert entry['completion'] == {'rank': 'failed', 'compare': 'complete',
+                                   'completedChecks': 1, 'totalChecks': 2}
     assert 'could not be run (RATE_LIMITED)' in entry['checks'][0]['detail']
     assert entry['checks'][1]['result'] == 'pass'   # the tag check still ran
     assert result['summary'].startswith('Qloo could not answer 1 of the checks (RATE_LIMITED)')
@@ -504,3 +508,62 @@ def test_when_qloo_answers_nothing_at_all_it_is_the_stated_error_not_a_screen_of
     with pytest.raises(challenge.QlooHarnessError) as caught:
         challenge.challenge_directions(response.project, response)
     assert caught.value.code == 'RATE_LIMITED'
+
+
+@pytest.mark.parametrize('anchor_index', [0, 1])
+def test_two_ranked_places_cannot_settle_a_larger_retrieved_sample(monkeypatch, anchor_index):
+    evidence = _evidence([('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')])
+    response = _response(evidence, [_concept('d', 'Direction', [f'ev-entity-{anchor_index}'])])
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': 'id-1'}, {'entity_id': 'id-2'}],
+        compare={'a': [{'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}]})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+
+    entry = challenge.challenge_directions(response.project, response)['directions'][0]
+    assert entry['verdict'] == challenge.UNPROVEN
+    assert entry['index']['rankCheck'] == 'mixed'
+    assert entry['index']['confidence'] == 'none'
+    assert 'Fewer than 3 places were ranked' in entry['reason']
+    assert entry['completion'] == {'rank': 'insufficient_sample', 'compare': 'complete',
+                                   'completedChecks': 1, 'totalChecks': 2}
+
+
+def test_duplicate_and_unrequested_rank_rows_do_not_inflate_the_sample(monkeypatch):
+    evidence = _evidence([('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')])
+    response = _response(evidence, [_concept('d', 'Direction', ['ev-entity-0'])])
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': 'outside'}, {'entity_id': 'id-1'},
+                   {'entity_id': 'id-1'}, {'entity_id': 'id-2'}],
+        compare={'a': [{'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}]})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+
+    entry = challenge.challenge_directions(response.project, response)['directions'][0]
+    assert entry['verdict'] == challenge.UNPROVEN
+    assert entry['index']['sampleSize'] == 2
+    assert entry['checks'][0]['metric']['position'] == 1
+
+
+def test_one_rate_limited_anchor_does_not_block_another_anchor_comparison(monkeypatch):
+    evidence = _evidence([('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')])
+    response = _response(evidence, [_concept('a', 'A direction', ['ev-entity-0']),
+                                    _concept('b', 'B direction', ['ev-entity-1'])])
+
+    class OneFailedAnchor(FakeProvider):
+        def run_workflow_cached(self, operation, payload):
+            if operation == 'compare_audiences' and payload['group_a'] == ['id-1']:
+                self.calls.append((operation, payload))
+                raise challenge.QlooHarnessError('Rate limited A.', code='RATE_LIMITED', retryable=True)
+            return super().run_workflow_cached(operation, payload)
+
+    provider = OneFailedAnchor(
+        rank_rows=[{'entity_id': 'id-2'}, {'entity_id': 'id-1'}, {'entity_id': 'id-3'}],
+        compare={'a': [{'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}]})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+    result = challenge.challenge_directions(response.project, response)
+    by_id = {entry['directionId']: entry for entry in result['directions']}
+    assert by_id['a']['verdict'] == challenge.UNPROVEN
+    assert by_id['a']['completion']['compare'] == 'failed'
+    assert by_id['b']['verdict'] == challenge.SUPPORTED
+    assert by_id['b']['completion']['completedChecks'] == 2
+    assert [payload['group_a'] for op, payload in provider.calls if op == 'compare_audiences'] == [
+        ['id-1'], ['id-2']]

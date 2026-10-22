@@ -1,5 +1,5 @@
 export type BusinessType = 'Food & beverage' | 'Retail' | 'Hospitality' | 'Wellness' | 'Entertainment'
-export interface ProjectRequest { businessType: BusinessType; audience: string; location: string; budget: string; objectives: string[] }
+export interface ProjectRequest { businessType: BusinessType; businessIdea?: string; audience: string; location: string; budget: string; objectives: string[] }
 export interface CulturalSignal { label: string; detail: string; score?: number | null; affinity?: number | null; category: string; provenance_id?: string | null }
 export interface ExperienceMoment { title: string; description: string }
 
@@ -23,6 +23,7 @@ export interface Evidence {
   /** How this piece of evidence should be presented, derived from it by rule.
    *  It changes nothing about the evidence itself. */
   presentation?: EvidencePresentation | null
+  relevance?: { version: string; relationship: 'direct' | 'indirect' | 'unknown' | 'excluded'; category: string; anchorEligible: boolean; geography: string; audience: string; confidence: string; reasons: string[] } | null
 }
 
 /** The tidied view of one piece of evidence. Every string in it is either

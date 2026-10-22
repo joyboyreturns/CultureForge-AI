@@ -83,6 +83,18 @@ def test_a_new_version_is_added_when_an_exploration_is_saved_again(platform):
     assert second['versions'][0]['version'] == 2
 
 
+def test_changed_evidence_values_and_validated_analysis_create_replay_versions(platform):
+    workspace = platform.create_workspace('Replay')
+    payload = {'evidence': [{'entityId': 'one', 'rating': 4}], 'concepts': []}
+    first = platform.save_exploration(workspace['id'], payload, 'Test', {'audience': 'a'})
+    changed = {**payload, 'evidence': [{'entityId': 'one', 'rating': 3}]}
+    second = platform.save_exploration(workspace['id'], changed, 'Test', {'audience': 'a'})
+    assert second['id'] == first['id'] and len(second['versions']) == 2
+    third = platform.save_exploration(workspace['id'], {**changed, 'agent': {'mode': 'frontier_ai',
+        'analysis': {'summary': 'Comparison unavailable; no preferred direction.'}}}, 'Test', {'audience': 'a'})
+    assert len(third['versions']) == 3
+
+
 def test_one_workspace_cannot_see_another_workspaces_explorations(platform):
     mine = platform.create_workspace('Mine')
     theirs = platform.create_workspace('Theirs')

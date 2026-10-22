@@ -26,8 +26,8 @@ from . import config
 from .evidence_store import known_location
 from .agent import run_agent
 from .models import ProjectRequest, TraceEvent
-from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_payload,
-                        brief_tags_payload, mark_reused)
+from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_retrieval_payload,
+                        brief_tags_payload, brief_category_payload, select_category_tag, mark_reused)
 
 # How many Qloo workflows a cold research run may spend is set by the run
 # profile (RESEARCH_RUN_MAX_WORKFLOWS): a count in dev, and none in judging,
@@ -55,6 +55,8 @@ class ResearchRun:
         self.status = STATUS_RUNNING
         self.events: list[dict] = []
         self.result: Optional[dict] = None
+        self.partial_result: Optional[dict] = None
+        self.timings: dict[str, int] = {}
         self.clarification: Optional[dict] = None
         self.error: Optional[str] = None
         self.error_code: Optional[str] = None
@@ -89,6 +91,8 @@ class ResearchRun:
                 'audience': self.audience,
                 'events': list(self.events),
                 'result': self.result,
+                'partialResult': self.partial_result,
+                'timings': dict(self.timings),
                 'clarification': self.clarification,
                 'error': self.error,
                 'errorCode': self.error_code,
@@ -184,6 +188,7 @@ def _save_exploration(run: ResearchRun, response) -> None:
 def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
     provider = QlooHarnessProvider()
     started = time.time()
+    clock_started = time.monotonic()
 
     try:
         if time.time() - started > DEFAULT_RUN_TIMEOUT_SECONDS:
@@ -207,7 +212,8 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             tag_envelope, cached, requests = provider.run_workflow_cached(
                 'find_tags', brief_tags_payload(run.project.businessType, run.audience))
             run.transport_requests += requests
-            tag_event = _event(run, 'resolve-audience', tag_envelope, result_count=3)
+            tag_event = _event(run, 'resolve-audience', tag_envelope,
+                               result_count=min(3, len(provider.rows(tag_envelope))))
             if cached:
                 mark_reused(tag_event, detail='Reused cached Qloo find_tags.')
             run.add_event(tag_event)
@@ -232,24 +238,43 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             return
 
         # ---- step 2: retrieve the local evidence ----
+        category_payload = brief_category_payload(run.project.businessIdea)
+        if category_payload:
+            if allowance is not None and run.workflow_calls >= allowance:
+                raise QlooHarnessError('The run reached its allowance before category resolution.', code='ALLOWANCE_EXHAUSTED')
+            run.workflow_calls += 1
+            category_result, cached, requests = provider.run_workflow_cached('find_tags', category_payload)
+            run.transport_requests += requests
+            category_event = _event(run, 'resolve-business-category', category_result,
+                                    result_count=len(provider.rows(category_result)))
+            if cached:
+                mark_reused(category_event)
+            run.add_event(category_event)
+            if not select_category_tag(category_result, category_payload['query']):
+                run.status = STATUS_CLARIFY
+                run.clarification = {'reason': 'Qloo returned no exact category tag for the business idea.',
+                                     'question': 'Use a clearer category, such as bakery or record store.',
+                                     'field': 'businessIdea'}
+                return
         if allowance is not None and run.workflow_calls >= allowance:
             raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.', code='ALLOWANCE_EXHAUSTED')
         run.workflow_calls += 1
         rec_envelope, cached, requests = provider.run_workflow_cached(
-            'recommend', brief_places_payload(tags, run.project.location))
+            'recommend', brief_places_retrieval_payload(tags, run.project.location, run.project.businessIdea))
         run.transport_requests += requests
         rec_event = _event(run, 'retrieve-evidence', rec_envelope,
                            result_count=len(provider.rows(rec_envelope)))
         if cached:
             mark_reused(rec_event, detail='Reused cached Qloo recommend.')
         run.add_event(rec_event)
+        run.timings['firstEvidenceMs'] = round((time.monotonic() - clock_started) * 1000)
 
         if rec_envelope.get('status') == 'needs_input':
             run.status = STATUS_CLARIFY
             run.clarification = {
-                'reason': 'Qloo needs a clearer location for this audience.',
-                'question': 'Which neighbourhood or city should we look in?',
-                'field': 'location',
+                'reason': 'Qloo could not resolve a category, location or audience constraint.',
+                'question': 'Review the business idea and confirmed audience seeds, or try a clearer city.',
+                'field': 'businessIdea' if run.project.businessIdea else 'location',
                 'suggestion': None,
             }
             return
@@ -268,6 +293,26 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
                 'suggestion': suggestion,
             }
             return
+
+        # Publish a real deterministic answer before bridges, naming or the
+        # bounded controller. Explicit envelopes avoid even cache lookups and
+        # cannot spend an upstream request. A partial answer is labelled as such.
+        initial = provider.generate(
+            run.project, tag_result=tag_envelope, recommendations=rec_envelope,
+            allow_naming=False, domains=[])
+        if initial.delivery:
+            initial.delivery.transportRequests = run.transport_requests
+            if run.transport_requests:
+                initial.delivery.kind = 'fresh'
+                initial.delivery.cachedIn = None
+        run.partial_result = initial.model_dump()
+        if initial.concepts:
+            run.timings['firstConceptMs'] = round((time.monotonic() - clock_started) * 1000)
+        run.add_event(TraceEvent(
+            id='trace-initial-answer', step='initial-answer-ready', status='ok',
+            resultCount=len(initial.concepts),
+            detail='Initial rule composition is available. Bridge retrieval and model analysis are still pending.',
+            acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())))
 
         # ---- step 3: compose, using the evidence just cached ----
         # generate() reuses the two cached envelopes, so this costs no new call.
@@ -331,15 +376,6 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         ))
 
-        if not response.concepts:
-            run.status = STATUS_CLARIFY
-            run.clarification = {
-                'reason': 'The evidence did not support three distinct business directions.',
-                'question': 'Try a different audience description, or a location with more local data.',
-                'field': 'audience',
-            }
-            return
-
         # The bounded agent loop becomes part of the research run itself:
         # up to eight plan-act-observe steps over allowlisted Qloo workflows,
         # then a cited analysis. In dev it spends only what is left of this
@@ -367,6 +403,7 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
                 response.delivery.cachedIn = None
 
         run.result = response.model_dump()
+        run.timings['completeMs'] = round((time.monotonic() - clock_started) * 1000)
         run.status = STATUS_COMPLETE
         _save_exploration(run, response)
 

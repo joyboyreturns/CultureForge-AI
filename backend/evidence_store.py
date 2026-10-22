@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import threading
 import time
@@ -55,6 +56,7 @@ class EvidenceStore:
         self._inflight: dict[str, threading.Event] = {}
         self._cache: dict[str, dict] = {}
         self._snapshots: dict[str, dict] = {}
+        self._persistence_error: Optional[str] = None
         self._load()
 
     # ------------------------------------------------------------------ io
@@ -75,8 +77,10 @@ class EvidenceStore:
             tmp = self.cache_file.with_suffix('.tmp')
             tmp.write_text(json.dumps(self._cache, default=str), encoding='utf-8')
             os.replace(tmp, self.cache_file)
-        except OSError:
-            pass
+            self._persistence_error = None
+        except OSError as exc:
+            self._persistence_error = 'Evidence is held in memory only; the disk write failed.'
+            logging.getLogger(__name__).warning('Evidence cache persistence failed (%s).', type(exc).__name__)
 
     def _persist_snapshots(self) -> None:
         try:
@@ -212,6 +216,7 @@ class EvidenceStore:
             'bytes': self.cache_file.stat().st_size if self.cache_file.is_file() else 0,
             'transportRequestsCached': sum(int(e.get('transportRequests', 0)) for e in entries),
             'snapshots': len(self._snapshots),
+            'persistenceWarning': self._persistence_error,
         }
 
 
@@ -263,20 +268,22 @@ def cached_call(key: str, run: Callable[[], dict], ttl_seconds: Optional[int] = 
     if cached is not None:
         return cached, True, 0
 
-    if not store.acquire(key):
+    while not store.acquire(key):
         # Another request is already making this exact call; wait for it.
         envelope = store.wait_for(key)
         if envelope is not None:
             # This caller did not make the upstream request, so it spent nothing.
             return envelope, True, 0
-        # The other call failed; fall through and try it ourselves.
-        store.acquire(key)
+        # A failed owner leaves no cached answer. Only one waiting caller
+        # may acquire the next flight; others continue waiting.
 
     try:
         envelope = run()
+        requests = transport_request_count(envelope)
+        if envelope.get('status', 'ok') == 'ok':
+            store.put(key, envelope, requests)
+        return envelope, False, requests
     finally:
+        # Publish the held answer before waking followers. Waking them first
+        # made a concurrent request miss the cache and spend quota again.
         store.release(key)
-
-    requests = transport_request_count(envelope)
-    store.put(key, envelope, requests)
-    return envelope, False, requests

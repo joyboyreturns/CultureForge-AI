@@ -37,6 +37,52 @@ def test_snapshots_round_trip(store):
     assert store.get_snapshot('snap-missing') is None
 
 
+def test_a_clarification_is_not_cached_as_a_success(store):
+    from backend.evidence_store import cached_call
+    key = canonical_key('recommend', {'ambiguous': True})
+    envelope, cached, _ = cached_call(key, lambda: {'status': 'needs_input', 'results': []})
+    assert envelope['status'] == 'needs_input'
+    assert not cached
+    assert store.get(key) is None
+
+
+def test_disk_failure_is_reported_but_memory_evidence_survives(store, monkeypatch):
+    import os
+    def failed_replace(*_):
+        raise OSError('disk full')
+    monkeypatch.setattr(os, 'replace', failed_replace)
+    store.put('one', {'status': 'ok'})
+    assert store.get('one') == {'status': 'ok'}
+    assert 'memory only' in store.stats()['persistenceWarning']
+
+
+def test_a_follower_is_woken_only_after_the_answer_is_published(store, monkeypatch):
+    from backend.evidence_store import cached_call
+    original = store.put
+    entered = threading.Event()
+    finish = threading.Event()
+    calls = []
+    results = []
+    def delayed_put(*args, **kwargs):
+        entered.set()
+        assert finish.wait(3)
+        original(*args, **kwargs)
+    monkeypatch.setattr(store, 'put', delayed_put)
+    def upstream():
+        calls.append(1)
+        return {'status': 'ok', 'results': []}
+    first = threading.Thread(target=lambda: results.append(cached_call('flight', upstream)))
+    first.start()
+    assert entered.wait(3)
+    second = threading.Thread(target=lambda: results.append(cached_call('flight', upstream)))
+    second.start()
+    finish.set()
+    first.join(3)
+    second.join(3)
+    assert len(calls) == 1
+    assert len(results) == 2
+
+
 def test_concurrent_callers_collapse_into_one(store):
     """Two threads asking for the same evidence must produce one upstream call."""
     from backend.evidence_store import cached_call

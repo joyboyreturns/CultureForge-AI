@@ -93,8 +93,8 @@ async function main() {
 
   // -------------------------------------------------------------- generate
   const generated = await api('/api/projects/generate', { method: 'POST', body: BRIEF });
-  check('POST /api/projects/generate -> 200 with three directions',
-    generated.status === 200 && Array.isArray(generated.body?.concepts) && generated.body.concepts.length === 3,
+  check('POST /api/projects/generate -> 200 with one to three relevant directions',
+    generated.status === 200 && Array.isArray(generated.body?.concepts) && generated.body.concepts.length >= 1 && generated.body.concepts.length <= 3,
     `${generated.status} ${generated.body?.concepts?.length ?? 0} directions`);
   check('POST /api/projects/generate -> the evidence is attached',
     Array.isArray(generated.body?.evidence) && generated.body.evidence.length > 0,
@@ -152,7 +152,7 @@ async function main() {
   check('GET /api/research/runs/{id} -> the run finishes',
     run?.status === 'complete', `status ${run?.status}`);
   check('GET /api/research/runs/{id} -> it carries the directions',
-    Array.isArray(run?.result?.concepts) && run.result.concepts.length === 3,
+    Array.isArray(run?.result?.concepts) && run.result.concepts.length >= 1 && run.result.concepts.length <= 3,
     `${run?.result?.concepts?.length ?? 0} directions`);
   seen.add('GET /api/research/runs/{id}');
 

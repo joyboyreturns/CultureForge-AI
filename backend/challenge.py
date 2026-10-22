@@ -30,8 +30,8 @@ The verdicts are deliberately narrow. These checks assess a **scoped anchor
 hypothesis within the retrieved sample**, not demand, competition, rent or
 willingness to pay — and the reason each one is reported says exactly that:
 
-- ``supported`` — it passes the checks that could be run, within the
-  evidence that was retrieved.
+- ``supported`` — both the rank and tag checks pass, within the evidence
+  that was retrieved.
 - ``contested`` — the evidence contradicts a specific premise, and the
   premise is named.
 - ``unproven`` — there was not enough retrieved evidence to say either way.
@@ -39,7 +39,7 @@ willingness to pay — and the reason each one is reported says exactly that:
 A direction is never called a good business. It is called supported,
 contested, or unproven, by the evidence.
 
-Policy anchor-fit-4 is written out in docs/EVIDENCE_POLICY.md: the rule,
+Policy anchor-fit-5 is written out in docs/EVIDENCE_POLICY.md: the rule,
 its inputs, the minimum sample, the confidence label and the sensitivity
 checks. It produces no score. Every number it reports is a position, a count
 or a value Qloo returned.
@@ -70,7 +70,7 @@ VERDICT_SCOPE = 'Anchor fit within the retrieved sample'
 
 #: The version of the decision policy. A verdict that cannot be traced to the
 #: policy that produced it is not a verdict, it is an opinion.
-POLICY_VERSION = 'anchor-fit-4'
+POLICY_VERSION = 'anchor-fit-5'
 
 #: Below this many retrieved venues, a check is reported as inconclusive
 #: rather than as a verdict. Two places are not a market.
@@ -94,9 +94,9 @@ def rank_band(position: int, total: int) -> str:
 
     The band is ``k = max(1, total // 3)`` places at each end. With three to
     five places that is first and last only; with ten it is positions 1-3
-    and 8-10. A single ranked place has no one to be compared with.
+    and 8-10. Fewer than three ranked places leave the check unresolved.
     """
-    if total < 2:
+    if total < MINIMUM_VENUES:
         return 'mixed'
     k = max(1, total // 3)
     if position <= k:
@@ -269,12 +269,13 @@ def _rank_venues(provider: QlooHarnessProvider, project: ProjectRequest,
         'demographic': demographic,
     })
     ranked: dict[str, dict] = {}
-    for index, row in enumerate(provider.rows(envelope)):
+    requested = {venue.entityId for venue in venues if venue.entityId}
+    for row in provider.rows(envelope):
         entity_id = row.get('entity_id') or row.get('id')
-        if not isinstance(entity_id, str):
+        if not isinstance(entity_id, str) or entity_id not in requested or entity_id in ranked:
             continue
         ranked[entity_id] = {
-            'position': index + 1,
+            'position': len(ranked) + 1,
             'total': 0,
             'affinity': provider._affinity(row),
             'name': row.get('name') or '',
@@ -414,6 +415,8 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         # Checks Qloo could not answer, with the real code. A direction with a
         # problem is unproven, never passed or failed on a guess.
         'problems': [],
+        'completion': {'rank': 'not_run', 'compare': 'not_run',
+                       'completedChecks': 0, 'totalChecks': 2},
         'coverage': {
             'venuesRetrieved': len(venues),
             'venuesCited': len(concept_venues),
@@ -454,11 +457,16 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         position, total = rank_entry['position'], rank_entry['total']
         affinity = rank_entry['affinity']
         outcome = rank_band(position, total)
+        result['completion']['rank'] = 'complete' if total >= MINIMUM_VENUES else 'insufficient_sample'
         where = {'pass': 'in the top band', 'fail': 'in the bottom band', 'mixed': 'between the bands'}[outcome]
         detail = (f'Qloo ranks {primary.label} {position} of the {total} places it returned for '
                   f'{profile}: {where} ({band_words(total)}).')
         detail += (' It ranks low within this retrieved set.' if outcome == 'fail'
                    else ' This ranking does not use the audience signals you selected.')
+        if total < MINIMUM_VENUES:
+            detail = (f'Qloo ranked {primary.label} {position} of {total} returned places for '
+                      f'{profile}. Fewer than {MINIMUM_VENUES} places were ranked, so the '
+                      'minimum sample is not met and the rank check remains unresolved.')
         result['checks'].append({
             'name': 'Where does this place sit for that profile?',
             'result': outcome,
@@ -469,7 +477,9 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     elif rank_problem is not None:
         # A check that could not run is unproven, not passed and not failed,
         # and the reason is the real one.
-        result['problems'].append({'check': 'rank', 'code': rank_problem.code, 'message': str(rank_problem)})
+        result['completion']['rank'] = 'failed'
+        result['problems'].append({'check': 'rank', 'code': rank_problem.code,
+                                   'message': str(rank_problem), 'retryable': rank_problem.retryable})
         result['checks'].append({
             'name': 'Where does this place sit for that profile?',
             'result': 'mixed',
@@ -477,6 +487,7 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
             'metric': {'demographic': demographic},
         })
     else:
+        result['completion']['rank'] = 'no_result'
         result['checks'].append({
             'name': 'Where does this place sit for that profile?',
             'result': 'mixed',
@@ -490,8 +501,10 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         comparison = _compare_with_other_places(provider, primary, other_venues) if primary else {}
     except QlooHarnessError as exc:
         comparison, compare_problem = {}, exc
-        result['problems'].append({'check': 'compare', 'code': exc.code, 'message': str(exc)})
+        result['problems'].append({'check': 'compare', 'code': exc.code,
+                                   'message': str(exc), 'retryable': exc.retryable})
     if compare_problem is not None:
+        result['completion']['compare'] = 'failed'
         result['checks'].append({
             'name': 'What cultural tags were returned for this anchor?',
             'result': 'mixed',
@@ -499,6 +512,7 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
             'metric': {},
         })
     elif comparison:
+        result['completion']['compare'] = 'complete'
         result['coverage']['venuesCompared'] = comparison['compared']
         result['coverage']['comparedWith'] = comparison['comparedWith']
         signals, types = comparison['ownSignals'], comparison['ownTypes']
@@ -548,12 +562,16 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
                 'metric': {'signals': 0, 'shared': len(shared)},
             })
     else:
+        result['completion']['compare'] = 'no_result'
         result['checks'].append({
             'name': 'What cultural tags were returned for this anchor?',
             'result': 'mixed',
             'detail': 'There was no second group of places to compare these with.',
             'metric': {},
         })
+
+    result['completion']['completedChecks'] = sum(
+        result['completion'][check] == 'complete' for check in ('rank', 'compare'))
 
     # ---- the verdict ------------------------------------------------------
     failures = [check for check in result['checks'] if check['result'] == 'fail']

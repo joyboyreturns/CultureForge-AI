@@ -34,6 +34,7 @@ const BUSINESS_TYPES = ['Food & beverage', 'Retail', 'Hospitality', 'Wellness', 
 const CONTRACT = {
   ProjectRequest: {
     businessType: { type: 'string', oneOf: BUSINESS_TYPES },
+    businessIdea: { type: 'string' },
     audience: { type: 'string', minLength: 2 },
     location: { type: 'string', minLength: 2 },
     budget: { type: 'string' },
@@ -77,6 +78,8 @@ const CONTRACT = {
   Evidence: {
     id: { type: 'string', required: true },
     kind: { type: 'string', oneOf: ['entity', 'tag', 'crossdomain'], required: true },
+    presentation: { type: 'object', nullable: true },
+    relevance: { type: 'object', nullable: true },
     label: { type: 'string', required: true },
     entityId: { type: 'string', nullable: true },
     entityType: { type: 'string', nullable: true },
