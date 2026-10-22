@@ -37,10 +37,29 @@ POLL_SECONDS = 3
 
 
 class RouteError(RuntimeError):
-    def __init__(self, status: int, code: str, message: str):
+    def __init__(self, status: int, code: str, message: str, details: dict | None = None):
         super().__init__(message)
         self.status = status
         self.code = code
+        self.details = details or {}
+
+
+def patiently(step):
+    """Run one step; if Qloo rate-limits, wait out the stated pause once and try once more.
+
+    Qloo's own limit is unpublished and a brief costs about nine workflows, so
+    a burst can hit it. One bounded wait is not a retry loop: a second limit
+    stops the run.
+    """
+    try:
+        return step()
+    except RouteError as exc:
+        if exc.code != 'RATE_LIMITED':
+            raise
+        wait = min(150, int(exc.details.get('resetsInSeconds') or 60) + 3)
+        print(f'   Qloo rate-limited the key; waiting {wait}s once, then trying this step again…')
+        time.sleep(wait)
+        return step()
 
 
 def call(base: str, method: str, path: str, body: dict | None = None, timeout: int = 240) -> dict:
@@ -57,7 +76,7 @@ def call(base: str, method: str, path: str, body: dict | None = None, timeout: i
             payload = {}
         error = payload.get('error') or {}
         raise RouteError(exc.code, error.get('code', 'HTTP_ERROR'),
-                         payload.get('detail') or f'HTTP {exc.code}') from exc
+                         payload.get('detail') or f'HTTP {exc.code}', error.get('details')) from exc
     except (urllib.error.URLError, TimeoutError) as exc:
         raise RouteError(0, 'UNREACHABLE', f'{base} did not answer ({exc}).') from exc
 
@@ -84,6 +103,8 @@ def main() -> int:
     parser.add_argument('--base-url', default='http://127.0.0.1:8000')
     parser.add_argument('--live', action='store_true', help='fetch evidence (spends Qloo quota for briefs not held)')
     parser.add_argument('--only', default='', help='comma-separated brief ids')
+    parser.add_argument('--pause', type=int, default=20, help='seconds to rest between briefs, to stay under Qloo\'s own rate limit')
+    parser.add_argument('--skip-held', action='store_true', help='skip briefs whose seeds, places and bridge domains are already held (their evidence test may still be cold)')
     parser.add_argument('--skip-research', action='store_true', help='skip the studio research-run path')
     parser.add_argument('--skip-challenge', action='store_true', help='skip the evidence test')
     args = parser.parse_args()
@@ -122,13 +143,18 @@ def main() -> int:
         print('\n[note] the server is in the dev profile, so its local budget still applies.')
 
     failures: list[str] = []
-    for row in chosen:
+    for position, row in enumerate(chosen):
         project = row['project']
+        if args.skip_held and row['held']:
+            print(f"\n== {row['id']}: held, skipped")
+            continue
+        if position and args.pause:
+            time.sleep(args.pause)
         print(f"\n== {row['id']} ({project['businessType']} · {project['location']})")
         try:
             if not args.skip_research:
-                print(f"   research : {research(base, project)}")
-            answer = call(base, 'POST', '/api/projects/generate', project)
+                print(f"   research : {patiently(lambda: research(base, project))}")
+            answer = patiently(lambda: call(base, 'POST', '/api/projects/generate', project))
             places = sum(1 for item in answer.get('evidence', []) if item.get('kind') == 'entity')
             delivery = answer.get('delivery') or {}
             print(f"   generate : {len(answer.get('concepts', []))} direction(s), {places} place(s), "
@@ -137,7 +163,7 @@ def main() -> int:
                 failures.append(f"{row['id']}: no direction was supported; consider replacing this brief")
                 continue
             if not args.skip_challenge:
-                tested = call(base, 'POST', '/api/projects/challenge', {'project': project})
+                tested = patiently(lambda: call(base, 'POST', '/api/projects/challenge', {'project': project}))
                 verdicts = ', '.join(item.get('verdict', '?') for item in tested.get('directions', []))
                 print(f"   challenge: {verdicts or 'no verdicts'}")
         except RouteError as exc:

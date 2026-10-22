@@ -162,7 +162,10 @@ def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
         assert remaining_allowance == 1
         event = TraceEvent(id='agent-test', step='agent-plan', status='ok', detail='Selected a bounded test.')
         on_event(event)
-        return AgentReport(mode='frontier_ai', status='complete', stoppingReason='One action completed.', modelCalls=2)
+        from backend.models import AgentStep
+        live = AgentStep(index=1, tool='rank', status='ok', detail='Fetched rank.', upstreamRequests=2)
+        return AgentReport(mode='frontier_ai', status='complete', stoppingReason='One action completed.',
+                           modelCalls=2, steps=[live])
 
     monkeypatch.setattr(research, 'run_agent', execute_agent)
     run = research.ResearchRun(PROJECT)
@@ -172,3 +175,8 @@ def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
     assert run.result['agent']['mode'] == 'frontier_ai'
     assert 'agent-plan' in [event['step'] for event in run.result['trace']]
     assert 'agent-plan' in [event['step'] for event in run.events]
+    # The answer states the whole run's cost: what the run fetched, what
+    # generate() fetched, and the agent's live workflows. Here the stub run
+    # fetched 2 and the agent 2; the stub generate() fetched nothing more.
+    assert run.result['delivery']['transportRequests'] == run.transport_requests
+    assert run.transport_requests >= 2 and run.result['delivery']['kind'] == 'fresh'

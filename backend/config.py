@@ -49,7 +49,7 @@ DEV_CEILINGS: dict[str, int] = {
 #: How long held evidence answers before it is fetched again. Judging holds it
 #: longer, so evidence prewarmed before judging opens is still there when a
 #: judge clicks a week later. `CULTUREFORGE_EVIDENCE_TTL_HOURS` overrides both.
-EVIDENCE_TTL_HOURS = {PROFILE_DEV: 24, PROFILE_JUDGING: 14 * 24}
+EVIDENCE_TTL_HOURS = {PROFILE_DEV: 24, PROFILE_JUDGING: 30 * 24}
 
 #: How long live Qloo calls pause after Qloo rate-limits the key. Held
 #: evidence is still served while it lasts.

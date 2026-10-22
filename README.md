@@ -113,7 +113,7 @@ from `backend/config.py`.
 | `LLM_MAX_CALLS_PER_DAY` | 50 | unlimited | Model naming calls per day | `config.py` |
 | `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited | Agent, analysis and chat model calls per day | `config.py` |
 | `RESEARCH_RUN_MAX_WORKFLOWS` | 8 | unlimited | Qloo workflows per research run (judging is bounded by the 240 s deadline) | `config.py` |
-| `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 336 | How long held evidence answers | `config.py` |
+| `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 720 | How long held evidence answers | `config.py` |
 | `QLOO_LIVE_ENABLED` | true | true | `false` serves held evidence only | `config.py` |
 | `QLOO_RATE_LIMIT_COOLDOWN_SECONDS` | 60 | 60 | Pause after a Qloo 429 | `config.py` |
 | `CULTUREFORGE_BRIDGE_DOMAINS` | artist,movie,brand | same | Audience-bridge domains; `off` disables | `config.py` |

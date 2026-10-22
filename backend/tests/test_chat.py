@@ -27,8 +27,12 @@ def _request(question='Which place carries the arts signal?') -> ChatRequest:
 def script(monkeypatch, *answers):
     queue = list(answers)
     monkeypatch.setattr(reasoning, 'configured', lambda: True)
-    monkeypatch.setattr(reasoning, 'call_structured',
-                        lambda prompt, payload, model, **kw: queue.pop(0))
+    def next_answer(prompt, payload, model, **kw):
+        answer = queue.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+    monkeypatch.setattr(reasoning, 'call_structured', next_answer)
 
 
 class FakeQloo:
@@ -121,3 +125,20 @@ def test_a_repeated_question_is_held(monkeypatch, store):
     script(monkeypatch)  # any model call now would fail the test
     again = chat.ask(_request(), provider=FakeQloo())
     assert again['cached'] is True and again['claims'] == first['claims']
+
+
+def test_a_failed_planning_step_still_answers_from_the_held_evidence(monkeypatch, store):
+    script(monkeypatch, reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.'),
+           chat.ChatAnswer(answerable=True, answer='North Room anchors the direction.',
+                           claims=[AgentClaim(statement='North Room is the direction’s anchor.', citations=[PLACE_A])]))
+    qloo = FakeQloo()
+    result = chat.ask(_request(), provider=qloo)
+    assert result['refused'] is False and result['claims']
+    assert result['steps'][0]['status'] == 'error' and qloo.calls == []
+    assert result['modelCalls'] == 2
+
+
+def test_a_failed_answer_is_a_stated_unavailable_never_a_guess(monkeypatch, store):
+    script(monkeypatch, finish(), reasoning.AnalysisUnavailable('The analysis model could not return a valid structured answer.'))
+    with pytest.raises(chat.ChatUnavailable):
+        chat.ask(_request(), provider=FakeQloo())

@@ -1,12 +1,15 @@
 # One service: the built studio and the API on one origin, with durable /data.
-#   docker compose up --build
+#   docker compose up -d --build
+# The port is bound to this machine only (127.0.0.1). Put a reverse proxy with
+# HTTPS in front of it for a public demo (docs/DEPLOY.md, Ubuntu server);
+# CULTUREFORGE_BIND=0.0.0.0 exposes it directly, over plain HTTP.
 # Secrets come from .env (never baked into the image). RUN_PROFILE=judging
 # lifts the call-count budgets; see docs/DEPLOY.md.
 services:
   cultureforge:
     build: .
     ports:
-      - "8000:8000"
+      - "${CULTUREFORGE_BIND:-127.0.0.1}:8000:8000"
     env_file: .env
     environment:
       RUN_PROFILE: ${RUN_PROFILE:-dev}
