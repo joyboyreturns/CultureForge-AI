@@ -1,6 +1,7 @@
 import type { Concept, GenerateResponse } from './contracts'
 import type { ChallengeResult } from './api'
 import { citationCoverage } from './evidenceSummary'
+import { intentLines } from './intentView'
 
 /** A portable decision record. Facts and interpretations keep their labels. */
 export function renderBrief(result: GenerateResponse, entries: Concept[], challenge?: ChallengeResult | null): string {
@@ -18,6 +19,7 @@ export function renderBrief(result: GenerateResponse, entries: Concept[], challe
     `Delivery: ${result.delivery?.kind ?? 'not recorded'}${result.delivery?.cachedIn ? ` (${result.delivery.cachedIn})` : ''}`,
     `Evidence acquired: ${result.delivery?.acquiredAt ?? 'not recorded'}`,
     `New upstream requests for this delivery: ${result.delivery?.transportRequests ?? 'not recorded'}`, '',
+    ...intentLines(result.intent),
   ]
   for (const concept of entries) {
     const verdict = verdicts.get(concept.id)

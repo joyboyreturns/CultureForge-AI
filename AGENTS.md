@@ -39,6 +39,7 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 | Module | What it owns |
 |---|---|
 | `backend/main.py` | The HTTP surface. Typed requests, one error envelope, status codes that mean something. |
+| `backend/intent.py` / `backend/intent_report.py` | The idea read into typed components (hybrids, specialisations, disclosed simplifications) and the per-business evidence found for each. Tags still come only from returned `find_tags` envelopes. |
 | `backend/providers.py` | The Qloo provider. One request builder per workflow, because Qloo rejects fields it does not know. |
 | `backend/investigation.py` | The decision loop: the questions a direction has not answered, each one a named workflow. |
 | `backend/agent.py` | The bounded agent loop inside a research run: up to eight plan-act-observe steps over allowlisted Qloo workflows (server-built requests, observed IDs only), then an analysis whose every claim must cite an entity ID or tag URN from the run's envelopes. Falls back to the rule composer, and says so. |

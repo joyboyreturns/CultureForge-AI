@@ -16,6 +16,7 @@ import re
 from dataclasses import dataclass
 
 from . import category as taxonomy
+from . import intent as business_intent
 
 VERSION = 'relevance-3'
 
@@ -100,7 +101,8 @@ class BriefCategory:
 
 
 def matches(text: str, terms) -> list[str]:
-    return [term for term in terms if re.search(r'\b' + re.escape(term) + r'\b', text, re.I)]
+    # A trailing plural is the same word: "sneakers" names a sneaker shop's stock.
+    return [term for term in terms if re.search(r'\b' + re.escape(term) + r'(?:s|es)?\b', text, re.I)]
 
 
 def _normalise(idea: str) -> list[str]:
@@ -125,11 +127,15 @@ def _brief_terms(family: str) -> tuple[str, ...]:
 
 
 def classify_brief(business_type: str, idea: str, audience: str) -> BriefCategory:
-    """The curated rules first; the category table (synonyms, languages, open vocabulary) for the rest."""
+    """The curated rules first; the category table (synonyms, languages, open vocabulary) for the rest.
+
+    A hybrid idea is read for its first business here; every other component is assessed on its own."""
+    original = idea
+    idea = business_intent.primary_phrase(idea)
     result = _classify_curated(business_type, taxonomy.head_phrase(idea) or idea, audience)
     if result.family or not (idea or '').strip():
         return result
-    resolved = taxonomy.resolve(idea)
+    resolved = business_intent.primary_resolution(original)
     if resolved.status == 'canonical':
         return BriefCategory(resolved.id, 'idea', 'specific', resolved.matched, resolved.reason, resolved.terms)
     if resolved.status == 'open_vocabulary':
@@ -243,6 +249,12 @@ def assess(*, business_type: str, idea: str, audience: str, location: str,
     text = f'{name} {description}'
     terms = FAMILIES.get(family) or category.terms or taxonomy.terms_for(family)
     hits = matches(text, terms)
+    if family.startswith('open:') and terms:
+        # An unfamiliar business is matched on all of its product words (all but one when there
+        # are three or more), so a "vintage" cinema is not a vintage sneaker shop.
+        needed = len(set(terms)) if len(set(terms)) < 3 else len(set(terms)) - 1
+        if len(set(hits)) < needed:
+            hits = []
     reasons = [category.reason]
     if not has_identifier:
         relation = 'excluded'

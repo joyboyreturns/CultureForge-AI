@@ -25,6 +25,7 @@ class StubProvider:
         return envelope.get('results', []) or []
 
     recommend_places = QlooHarnessProvider.recommend_places
+    interpret_idea = QlooHarnessProvider.interpret_idea
 
     def tag_id(self, row):
         return row.get('id')
@@ -190,3 +191,42 @@ def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
     # fetched 2 and the agent 2; the stub generate() fetched nothing more.
     assert run.result['delivery']['transportRequests'] == run.transport_requests
     assert run.transport_requests >= 2 and run.result['delivery']['kind'] == 'fresh'
+
+
+# --- how an idea that cannot be resolved ends: a typed question with working ways out ---------------------------
+def _idea_project(idea):
+    return ProjectRequest(businessType='Retail', businessIdea=idea, audience='Design-conscious Gen Z',
+                          location='Tokyo, Japan', budget='$25k – $50k', objectives=['x'])
+
+
+def test_an_unsupported_category_asks_instead_of_substituting(monkeypatch):
+    # the same envelope answers every find_tags: an audience seed, and a category tag that is not a sneaker store
+    envelope = {'status': 'ok', 'results': [{'id': 'urn:tag:interests:qloo:design', 'name': 'Design'},
+                                            {'id': 'urn:tag:category:place:shoe_store', 'name': 'Shoe Store'}]}
+    provider = _install(monkeypatch, StubProvider(envelope, {'status': 'ok', 'results': [{'name': 'x'}]}))
+    run = research.ResearchRun(_idea_project('Vintage sneaker store'))
+    research._execute(run, allowance=8)
+    assert run.status == research.STATUS_CLARIFY and run.clarification['code'] == 'UNSUPPORTED_CATEGORY'
+    assert run.clarification['field'] == 'businessIdea'
+    assert run.clarification['actions'] == [], 'a rewrite that was already searched and failed is not offered again'
+    assert provider.workflow_calls == 3, 'audience, the specific search and its one broader search; no places requested'
+
+
+def test_an_idea_that_names_no_business_asks_before_spending_a_category_or_places_request(monkeypatch):
+    envelope = {'status': 'ok', 'results': [{'id': 'urn:tag:interests:qloo:design', 'name': 'Design'}]}
+    provider = _install(monkeypatch, StubProvider(envelope, {'status': 'ok', 'results': [{'name': 'x'}]}))
+    run = research.ResearchRun(_idea_project('a place for stuff'))
+    research._execute(run, allowance=8)
+    assert run.clarification['code'] == 'AMBIGUOUS_IDEA' and provider.workflow_calls == 1
+
+
+def test_a_category_without_local_places_is_not_called_an_unsupported_category(monkeypatch):
+    envelope = {'status': 'ok', 'results': [{'id': 'urn:tag:interests:qloo:design', 'name': 'Design'},
+                                            {'id': 'urn:tag:category:place:bakery', 'name': 'Bakery'}]}
+    _install(monkeypatch, StubProvider(envelope, {'status': 'ok', 'results': []}))
+    run = research.ResearchRun(ProjectRequest(businessType='Food & beverage', businessIdea='Bakery',
+                                              audience='Design-conscious Gen Z', location='Tokyo, Japan',
+                                              budget='$25k – $50k', objectives=['x']))
+    research._execute(run, allowance=8)
+    assert run.clarification['code'] == 'CATEGORY_NO_PLACES' and run.clarification['field'] == 'location'
+    assert 'gap in Qloo' in run.clarification['reason']

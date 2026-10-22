@@ -13,11 +13,32 @@ import { EvidenceDecisionGraph } from './EvidenceDecisionGraph'
  */
 const SLOW_RUN_MS = 30_000
 
-export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress }: {
+/**
+ * A failed run says what kind of failure it was, because the right next step differs: a rate limit or a
+ * timeout is the provider being unavailable (the idea and the place are not at fault), a configuration
+ * error is not the founder's to fix, and none of them is a statement that a category is unsupported.
+ */
+const FAILURE: Record<string, { title: string; body: string; retry: boolean }> = {
+  RATE_LIMITED: { title: 'Qloo is rate-limiting this key for a moment.', body: 'This is a temporary provider limit, not a finding about your idea or the city. Held evidence is unaffected; a retry after a short wait usually works.', retry: true },
+  ALLOWANCE_EXHAUSTED: { title: 'This run used up its request allowance.', body: 'The studio caps how many Qloo requests one run may spend. Nothing was lost; try again or simplify the idea.', retry: true },
+  QUOTA_EXHAUSTED: { title: 'The local Qloo allowance is used up for now.', body: 'Ideas whose evidence is already held still open instantly. Others can be tried again when the allowance resets.', retry: true },
+  UPSTREAM_TIMEOUT: { title: 'Qloo did not answer in time.', body: 'A timeout says nothing about whether Qloo covers this business or place. Trying again may work.', retry: true },
+  RUN_TIMEOUT: { title: 'The run took too long and was stopped.', body: 'Nothing was concluded. Trying again reuses whatever was already fetched.', retry: true },
+  PROVIDER_UNAVAILABLE: { title: 'Qloo is not reachable right now.', body: 'Nothing was concluded about your idea. Held evidence is still available; trying again may work.', retry: true },
+  UPSTREAM_MALFORMED: { title: 'Qloo sent an answer the studio could not read.', body: 'Nothing was invented to fill the gap. Trying again may work.', retry: true },
+  UPSTREAM_UNAUTHENTICATED: { title: 'The studio could not authenticate with Qloo.', body: 'This is a service configuration problem on the server, not something about your idea. It needs the operator.', retry: false },
+  UPSTREAM_REJECTED: { title: 'Qloo refused the request.', body: 'This is a service problem rather than a finding about your idea.', retry: false },
+  LIVE_DISABLED: { title: 'Live Qloo requests are switched off on this server.', body: 'Only ideas whose evidence is already held can be opened.', retry: false },
+  BUDGET_UNAVAILABLE: { title: 'The request allowance could not be read.', body: 'No Qloo request was sent. This is a server problem.', retry: true },
+}
+
+export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress, onRetry, onChangeLocation }: {
   runId: string
   onComplete: (result: NonNullable<ResearchRun['result']>) => void
   onClarify: (clarification: NonNullable<ResearchRun['clarification']>) => void
   onGiveUp?: () => void
+  onRetry?: () => void
+  onChangeLocation?: () => void
   /** How many real steps the agent has taken, so the workspace can show them. */
   onProgress?: (steps: number) => void
 }) {
@@ -112,16 +133,19 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
         </div>
       )}
 
-      {error && (
-        <div className="agent-trace-error" role="alert">
-          <strong>{run?.status === 'failed' ? 'The research run could not finish.' : 'The connection was interrupted.'}</strong>
-          <span>{error}</span>
+      {error && (() => {
+        const kind = run?.status === 'failed' ? FAILURE[run.errorCode ?? ''] : undefined
+        return <div className="agent-trace-error" role="alert" data-code={run?.errorCode ?? ''}>
+          <strong>{kind?.title ?? (run?.status === 'failed' ? 'The research run could not finish.' : 'The connection was interrupted.')}</strong>
+          <span>{kind?.body ?? error}</span>
           {run?.status !== 'failed' && <button className="text-link" onClick={() => { setError(''); setAttempt(value => value + 1) }}>Reconnect to this run</button>}
+          {run?.status === 'failed' && (kind?.retry ?? true) && onRetry && <button className="text-link" onClick={onRetry}>Try again <ArrowRight size={13}/></button>}
+          {run?.status === 'failed' && onChangeLocation && <button className="text-link" onClick={onChangeLocation}>Change the location <ArrowRight size={13}/></button>}
           {onGiveUp && (
-            <button className="text-link" onClick={onGiveUp}>Back to the brief <ArrowRight size={13}/></button>
+            <button className="text-link" onClick={onGiveUp}>Edit the brief <ArrowRight size={13}/></button>
           )}
         </div>
-      )}
+      })()}
 
       {run && !error && (
         <div className="agent-trace-foot">
