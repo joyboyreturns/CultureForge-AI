@@ -16,6 +16,7 @@ from typing import Optional
 
 from pydantic import ValidationError
 
+from . import config
 from .evidence_store import canonical_key, get_store
 from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
                      EvidenceAnalysisResult)
@@ -23,7 +24,6 @@ from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 PROMPT_VERSION = 'qloo-evidence-analysis-5'
 DISPLAY_MODEL = 'Frontier AI'
-DAILY_LIMIT = 10
 TIMEOUT_SECONDS = 60
 MAX_OUTPUT_TOKENS = 8192
 BUDGET_FILE = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_analysis_calls.json'
@@ -52,19 +52,31 @@ def _calls() -> list[float]:
         raise AnalysisUnavailable('The analysis budget could not be read, so no model request was sent.') from exc
 
 
-def _daily_limit() -> int:
+def _daily_limit() -> Optional[int]:
+    # In dev the environment can lower the cap but cannot raise the cost
+    # ceiling this integration is designed for (config.DEV_CEILINGS). The
+    # judging profile lifts it; the timeout and output caps stay.
+    return config.limit('AI_GATEWAY_ANALYSIS_DAILY_LIMIT')
+
+
+def budget_state() -> dict:
     try:
-        # Environment can lower the cap for judging or local rehearsal, but
-        # cannot raise the cost ceiling this integration is designed for.
-        return max(1, min(DAILY_LIMIT, int(os.getenv('AI_GATEWAY_ANALYSIS_DAILY_LIMIT', DAILY_LIMIT))))
-    except ValueError:
-        return DAILY_LIMIT
+        used = len(_calls())
+    except AnalysisUnavailable:
+        used = None
+    return {'callsToday': used, 'dayLimit': config.describe_limit(_daily_limit())}
 
 
 def _reserve() -> None:
+    limit = _daily_limit()
     with _budget_lock:
-        calls = _calls()
-        if len(calls) >= _daily_limit():
+        try:
+            calls = _calls()
+        except AnalysisUnavailable:
+            if limit is not None:
+                raise
+            calls = []
+        if limit is not None and len(calls) >= limit:
             raise AnalysisUnavailable('The daily analysis allowance is used up. Your Qloo evidence and deterministic verdict remain available.')
         calls.append(time.time())
         try:
@@ -72,8 +84,10 @@ def _reserve() -> None:
             BUDGET_FILE.write_text(json.dumps({'calls': calls}), encoding='utf-8')
             os.chmod(BUDGET_FILE, 0o600)
         except OSError:
-            # Fail closed: a missing durable budget must not permit unbounded spend.
-            raise AnalysisUnavailable('The analysis budget could not be recorded, so no model request was sent.')
+            # Fail closed: a missing durable budget must not permit unbounded
+            # spend. Without a limit there is nothing for it to protect.
+            if limit is not None:
+                raise AnalysisUnavailable('The analysis budget could not be recorded, so no model request was sent.')
 
 
 def _cache_key(request: EvidenceAnalysisRequest) -> str:

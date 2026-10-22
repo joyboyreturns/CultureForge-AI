@@ -5,6 +5,7 @@ RUN npm ci
 COPY studio/ ./studio/
 COPY index.html main.js styles.css vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
 COPY src/ ./src/
+COPY shared/ ./shared/
 COPY assets/ ./assets/
 COPY fonts/ ./fonts/
 RUN npm run build
@@ -31,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-c
     useradd --create-home --uid 10001 cultureforge && \
     mkdir -p /data/cache && chown -R cultureforge:cultureforge /data
 COPY backend/ ./backend/
+COPY shared/ ./shared/
 COPY scripts/qloo_exec.mjs ./scripts/qloo_exec.mjs
 COPY --from=web /app/dist ./dist
 USER cultureforge

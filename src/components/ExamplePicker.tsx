@@ -1,0 +1,41 @@
+import { useEffect, useState } from 'react'
+import { ArrowUpRight, MapPin } from 'lucide-react'
+import type { ProjectRequest } from '../contracts'
+import { fetchExamples } from '../api'
+import type { ExampleBrief } from '../api'
+import demoBriefs from '../../shared/demoBriefs.json'
+
+/** The prepared briefs, before the server has said which of them it holds. */
+const PREPARED: ExampleBrief[] = demoBriefs.briefs.map((brief) => ({ ...brief, project: brief.project as ProjectRequest, held: false }))
+
+/**
+ * The prepared example briefs.
+ *
+ * These are the briefs `scripts/prewarm.py` fetches ahead of time, so a held
+ * one opens from the evidence store without waiting on Qloo. The label says
+ * which are held, because a cold one is a real live lookup and can take
+ * half a minute or meet a rate limit.
+ */
+export function ExamplePicker({ onRun }: { onRun: (project: ProjectRequest) => void }) {
+  const [examples, setExamples] = useState<ExampleBrief[]>(PREPARED)
+  const [known, setKnown] = useState(false)
+  useEffect(() => {
+    let live = true
+    fetchExamples().then((rows) => { if (live && rows.length) { setExamples(rows); setKnown(true) } }).catch(() => { /* The list still works; it just cannot say what is held. */ })
+    return () => { live = false }
+  }, [])
+  return <div className="example-picker panel">
+    <span className="small-cap"><span className="orange-dot"/> PREPARED EXAMPLES</span>
+    <p className="example-picker-note">Run one as it is. {known ? 'Held briefs open from stored Qloo evidence.' : 'Checking which are held…'}</p>
+    <ul>
+      {examples.map((example) => <li key={example.id}>
+        <button type="button" onClick={() => onRun(example.project)} aria-label={`Run the example: ${example.label}, ${example.project.location}`}>
+          <span className="example-picker-title">{example.label}</span>
+          <span className="example-picker-meta"><MapPin size={11}/>{example.project.location} · {example.project.businessType}</span>
+          <span className={`example-picker-state${example.held ? ' is-held' : ''}`}>{!known ? 'Not checked' : example.held ? 'Evidence held' : 'Live lookup'}</span>
+          <ArrowUpRight size={14} aria-hidden="true"/>
+        </button>
+      </li>)}
+    </ul>
+  </div>
+}

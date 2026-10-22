@@ -22,13 +22,17 @@ import time
 import uuid
 from typing import Optional
 
+from . import config
 from .evidence_store import known_location
 from .agent import run_agent
 from .models import ProjectRequest, TraceEvent
-from .providers import QlooHarnessError, QlooHarnessProvider, mark_reused
+from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_payload,
+                        brief_tags_payload, mark_reused)
 
-# A cold research run may not spend more than this many Qloo workflows.
-DEFAULT_RUN_ALLOWANCE = 3
+# How many Qloo workflows a cold research run may spend is set by the run
+# profile (RESEARCH_RUN_MAX_WORKFLOWS): a count in dev, and none in judging,
+# where the timeout below is what bounds a run.
+_FROM_PROFILE = object()
 # A run is abandoned if it takes longer than this.
 DEFAULT_RUN_TIMEOUT_SECONDS = 240
 
@@ -53,6 +57,7 @@ class ResearchRun:
         self.result: Optional[dict] = None
         self.clarification: Optional[dict] = None
         self.error: Optional[str] = None
+        self.error_code: Optional[str] = None
         self.transport_requests = 0
         self.workflow_calls = 0
         self.seed_tag_ids: list[str] = []
@@ -86,6 +91,7 @@ class ResearchRun:
                 'result': self.result,
                 'clarification': self.clarification,
                 'error': self.error,
+                'errorCode': self.error_code,
                 'transportRequests': self.transport_requests,
                 'workflowCalls': self.workflow_calls,
             }
@@ -141,9 +147,11 @@ def _event(run: ResearchRun, step: str, envelope: dict, *, status: str = 'ok',
 
 def start_research(project: ProjectRequest, audience: Optional[str] = None,
                    seed_tag_ids: Optional[list[str]] = None,
-                   allowance: int = DEFAULT_RUN_ALLOWANCE,
+                   allowance=_FROM_PROFILE,
                    workspace_id: Optional[str] = None) -> ResearchRun:
     """Start a run in the background and return it immediately."""
+    if allowance is _FROM_PROFILE:
+        allowance = config.limit('RESEARCH_RUN_MAX_WORKFLOWS')
     run = ResearchRun(project, audience, workspace_id)
     run.seed_tag_ids = list(seed_tag_ids or [])
     registry.add(run)
@@ -173,7 +181,7 @@ def _save_exploration(run: ResearchRun, response) -> None:
         pass
 
 
-def _execute(run: ResearchRun, allowance: int) -> None:
+def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
     provider = QlooHarnessProvider()
     started = time.time()
 
@@ -196,9 +204,8 @@ def _execute(run: ResearchRun, allowance: int) -> None:
                                  detail='Used the audience seeds the founder confirmed.'))
         else:
             run.workflow_calls += 1
-            tag_envelope, cached, requests = provider.run_workflow_cached('find_tags', {
-                'query': f'{run.project.businessType} {run.audience}'.strip(), 'limit': 3,
-            })
+            tag_envelope, cached, requests = provider.run_workflow_cached(
+                'find_tags', brief_tags_payload(run.project.businessType, run.audience))
             run.transport_requests += requests
             tag_event = _event(run, 'resolve-audience', tag_envelope, result_count=3)
             if cached:
@@ -225,13 +232,11 @@ def _execute(run: ResearchRun, allowance: int) -> None:
             return
 
         # ---- step 2: retrieve the local evidence ----
-        if run.workflow_calls >= allowance:
+        if allowance is not None and run.workflow_calls >= allowance:
             raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.', code='ALLOWANCE_EXHAUSTED')
         run.workflow_calls += 1
-        rec_envelope, cached, requests = provider.run_workflow_cached('recommend', {
-            'target_type': 'place', 'signal_tags': tags,
-            'signal_location': run.project.location, 'limit': 5,
-        })
+        rec_envelope, cached, requests = provider.run_workflow_cached(
+            'recommend', brief_places_payload(tags, run.project.location))
         run.transport_requests += requests
         rec_event = _event(run, 'retrieve-evidence', rec_envelope,
                            result_count=len(provider.rows(rec_envelope)))
@@ -324,7 +329,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
 
         response.agent = run_agent(
             response, tag_envelope, rec_envelope,
-            remaining_allowance=max(0, allowance - run.workflow_calls),
+            remaining_allowance=None if allowance is None else max(0, allowance - run.workflow_calls),
             deadline=started + DEFAULT_RUN_TIMEOUT_SECONDS,
             on_event=record_agent_event,
         )
@@ -336,6 +341,7 @@ def _execute(run: ResearchRun, allowance: int) -> None:
     except QlooHarnessError as exc:
         run.status = STATUS_FAILED
         run.error = str(exc)
+        run.error_code = exc.code
     except Exception:  # noqa: BLE001 - a run must never take the process down
         run.status = STATUS_FAILED
         run.error = 'The research run could not be completed.'

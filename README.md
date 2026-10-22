@@ -65,9 +65,25 @@ Exact workflow contracts are exposed at `/api/qloo/workflows`; API documentation
 
 Every displayed Qloo measurement is returned by Qloo. CultureForge does not invent fit percentages. Citation counts measure attachment, not correctness. The demographic profile used by the ranking workflow is proposed by CultureForge from the brief; it is not Qloo-inferred, and is not the audience's complete cultural profile.
 
-The server caches successful evidence for 24 hours. The browser holds composed live answers for 12 hours. Both are labelled, and a reused answer reports zero new upstream requests. Failures are not cached as successful evidence. Opening the landing page does not run a lookup; the example is explicit.
+The server caches successful evidence for 24 hours in the dev profile and 14 days in judging. The browser holds composed live answers for 12 hours. Both are labelled, and a reused answer reports zero new upstream requests. Failures are not cached as successful evidence. Opening the landing page does not run a lookup; the example is explicit.
 
-Local provider caps default to **20 Qloo calls/hour and 100/day**, with optional naming/selection capped at **20/hour and 50/day**. Evidence analysis has its own capped allowance. Do not raise limits to work around errors. A basic brief typically needs two Qloo workflows; a three-direction challenge can add one ranking and three comparisons. Optional investigation/model-selected tests can add calls. Held evidence is reused.
+A basic brief typically needs two Qloo workflows; a three-direction challenge can add one ranking and three comparisons. Optional investigation/model-selected tests can add calls. Held evidence is reused.
+
+### Run profiles
+
+`RUN_PROFILE` (in [backend/config.py](backend/config.py)) is the one switch. `dev`, the default, enforces the local call budgets below. `judging` turns every call-count budget off, for Qloo and the model gateway alike. Both profiles keep the per-request timeouts, the stated handling of 429/401/5xx, a pause after a 429 instead of a retry, single-flight de-duplication and the evidence cache. Qloo's own server-side quota still applies, so run `python3 scripts/prewarm.py --live` against the serving instance before judging. `QLOO_LIVE_ENABLED=false` serves held evidence only. `GET /api/health` reports the active profile, each budget (or `unlimited`), and the cache size.
+
+| Variable | dev | judging |
+| --- | --- | --- |
+| `QLOO_MAX_CALLS_PER_HOUR` | 20 | unlimited |
+| `QLOO_MAX_CALLS_PER_DAY` | 100 | unlimited |
+| `LLM_MAX_CALLS_PER_HOUR` | 20 | unlimited |
+| `LLM_MAX_CALLS_PER_DAY` | 50 | unlimited |
+| `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited |
+| `RESEARCH_RUN_MAX_WORKFLOWS` | 3 | unlimited |
+| `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 336 |
+
+In dev, the environment can change a budget but not switch it off: a value below one becomes one, and the analysis allowance cannot be raised above 10. Do not raise limits to work around errors. `backend/tests/test_config.py` fails if this table or `.env.example` drifts from `config.py`.
 
 ## Run locally
 

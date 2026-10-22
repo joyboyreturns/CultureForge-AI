@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass
 
-from . import metering
+from . import config, metering
 from .concept_composer import compose
 from .evidence_store import cached_call, canonical_key, get_store, known_location
 
@@ -178,6 +178,23 @@ def capabilities() -> list[dict]:
     return published
 
 
+#: How many audience seeds a brief resolves to, and how many places it retrieves.
+BRIEF_TAG_LIMIT = 3
+BRIEF_PLACE_LIMIT = 5
+
+
+def brief_tags_payload(business_type: str, audience: str) -> dict:
+    """The find_tags request for a brief. Every path that resolves a brief's
+    audience builds it here, so they all share one cache entry."""
+    return {'query': f'{business_type} {audience}'.strip(), 'limit': BRIEF_TAG_LIMIT}
+
+
+def brief_places_payload(tags: list[str], location: str) -> dict:
+    """The recommend request for a brief's local places."""
+    return {'target_type': 'place', 'signal_tags': list(tags),
+            'signal_location': location, 'limit': BRIEF_PLACE_LIMIT}
+
+
 def describe_payload(entity: str, entity_type: Optional[str] = None) -> dict:
     payload: dict = {'entity': entity}
     if entity_type:
@@ -263,13 +280,16 @@ class QlooHarnessProvider(CultureProvider):
     - `scripts/qloo_exec.mjs` raises the per-request timeout. The stock `qloo exec`
       client caps each attempt at 20s while /v2/insights needs ~25s, so every live
       request would otherwise time out, retry, and burn three calls for nothing.
-    - A local call budget caps how many workflows this provider may issue per hour
-      and per day, so a runaway demo cannot exhaust the hackathon quota.
+    - In the dev profile, a local call budget caps how many workflows this
+      provider may issue per hour and per day, so a runaway demo cannot exhaust
+      the hackathon quota. The judging profile lifts the count (see config.py).
+
+    Whatever the profile, a 429 from Qloo pauses live calls for a cool-down
+    instead of letting the next click hit the same wall, and the
+    QLOO_LIVE_ENABLED kill switch serves held evidence only.
     """
     CACHE_TTL_SECONDS = 24 * 60 * 60
     CACHE_MAX_ENTRIES = 128
-    DEFAULT_MAX_CALLS_PER_HOUR = 20
-    DEFAULT_MAX_CALLS_PER_DAY = 100
     BUDGET_LOG_PATH = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'qloo_calls.json'
 
     def __init__(self, command: str = 'qloo', timeout_seconds: int = 90):
@@ -277,6 +297,8 @@ class QlooHarnessProvider(CultureProvider):
         self.timeout_seconds = timeout_seconds
         self._cache: dict[str, tuple[float, GenerateResponse]] = {}
         self._lock = threading.Lock()
+        # When Qloo last rate-limited this key, live calls wait until here.
+        self._rate_limited_until = 0.0
 
     def _resolve_command(self) -> list[str]:
         """Resolve the argv prefix used to run a Qloo workflow.
@@ -298,15 +320,20 @@ class QlooHarnessProvider(CultureProvider):
         return [executable]
 
     def _consume_call_budget(self) -> None:
-        """Count this call against the local quota guard before it is made."""
-        hour_limit = int(os.getenv('QLOO_MAX_CALLS_PER_HOUR', self.DEFAULT_MAX_CALLS_PER_HOUR))
-        day_limit = int(os.getenv('QLOO_MAX_CALLS_PER_DAY', self.DEFAULT_MAX_CALLS_PER_DAY))
+        """Count this call against the local quota guard before it is made.
+
+        The call is always recorded, so /api/health can say what was spent;
+        it is refused only when the profile enforces a limit.
+        """
+        hour_limit = config.limit('QLOO_MAX_CALLS_PER_HOUR')
+        day_limit = config.limit('QLOO_MAX_CALLS_PER_DAY')
         now = time.time()
         with self._lock:
             calls = self._read_call_log()
             calls = [stamp for stamp in calls if now - stamp < 86400]
             calls_in_hour = sum(1 for stamp in calls if now - stamp < 3600)
-            if calls_in_hour >= hour_limit or len(calls) >= day_limit:
+            if ((hour_limit is not None and calls_in_hour >= hour_limit)
+                    or (day_limit is not None and len(calls) >= day_limit)):
                 raise QlooHarnessError(
                     'Qloo call budget reached for this period. Live signals are paused to protect the '
                     'hackathon API quota. Wait for the budget to reset, or open a saved exploration.',
@@ -316,9 +343,43 @@ class QlooHarnessProvider(CultureProvider):
             calls.append(now)
             self._write_call_log(calls)
 
+    @classmethod
+    def budget_state(cls) -> dict:
+        """What this server has spent, against the limits its profile sets."""
+        now = time.time()
+        calls = [stamp for stamp in cls._read_call_log_at(cls.BUDGET_LOG_PATH) if now - stamp < 86400]
+        return {
+            'callsLastHour': sum(1 for stamp in calls if now - stamp < 3600),
+            'callsToday': len(calls),
+            'hourLimit': config.describe_limit(config.limit('QLOO_MAX_CALLS_PER_HOUR')),
+            'dayLimit': config.describe_limit(config.limit('QLOO_MAX_CALLS_PER_DAY')),
+        }
+
+    def _check_live_allowed(self) -> None:
+        """Refuse a live call, before it is counted, when one must not be made."""
+        if not config.qloo_live_enabled():
+            raise QlooHarnessError(
+                'Live Qloo retrieval is switched off on this server, so only evidence it already '
+                'holds can be shown. Try one of the prepared example briefs.',
+                code='LIVE_DISABLED')
+        remaining = self._rate_limited_until - time.time()
+        if remaining > 0:
+            raise QlooHarnessError(
+                'Qloo rate limited this key a moment ago, so live lookups are paused. Held evidence '
+                'is still available; try a prepared example brief or wait before retrying.',
+                code='RATE_LIMITED', retryable=True,
+                details={'resetsInSeconds': int(remaining) + 1})
+
+    def _note_rate_limited(self) -> None:
+        self._rate_limited_until = time.time() + config.rate_limit_cooldown_seconds()
+
     def _read_call_log(self) -> list[float]:
+        return self._read_call_log_at(self.BUDGET_LOG_PATH)
+
+    @staticmethod
+    def _read_call_log_at(path: Path) -> list[float]:
         try:
-            data = json.loads(self.BUDGET_LOG_PATH.read_text(encoding='utf-8'))
+            data = json.loads(path.read_text(encoding='utf-8'))
             return [float(stamp) for stamp in data.get('calls', []) if isinstance(stamp, (int, float))]
         except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
             return []
@@ -332,6 +393,7 @@ class QlooHarnessProvider(CultureProvider):
             pass
 
     def _run_workflow(self, operation: str, payload: dict) -> dict:
+        self._check_live_allowed()
         command = self._resolve_command()
         self._consume_call_budget()
         # The CLI accepts a request file; using a mode-0600 temporary file avoids putting
@@ -369,9 +431,13 @@ class QlooHarnessProvider(CultureProvider):
             except (json.JSONDecodeError, AttributeError):
                 code = ''
             if code in ('QLOO_RATE_LIMIT', 'QLOO_RATE_LIMITED') or status == 429:
-                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.', code='RATE_LIMITED', retryable=True)
+                self._note_rate_limited()
+                raise QlooHarnessError('Qloo rate limited this key. Wait before retrying; live signals are temporarily unavailable.', code='RATE_LIMITED', retryable=True,
+                                       details={'resetsInSeconds': config.rate_limit_cooldown_seconds()})
             if code == 'QLOO_AUTH' or status == 401:
                 raise QlooHarnessError('Qloo rejected the credential. Check the API key and the base URL.', code='UPSTREAM_UNAUTHENTICATED')
+            if isinstance(status, int) and status >= 500:
+                raise QlooHarnessError('Qloo is having trouble answering right now. Nothing was retried; held evidence is still available.', code='PROVIDER_UNAVAILABLE', retryable=True, details={'upstreamStatus': status})
             if status == 400:
                 raise QlooHarnessError('Qloo rejected the probe parameters. The direction and existing evidence are unchanged.', code='INVALID_UPSTREAM_REQUEST')
             if code == 'TOOL_INPUT':
@@ -569,7 +635,8 @@ class QlooHarnessProvider(CultureProvider):
         # label follows this, not whether one part happened to be cached.
         live = False
         if tag_result is None:
-            tag_result, was_cached, requests = self.run_workflow_cached('find_tags', {'query': query, 'limit': 3})
+            tag_result, was_cached, requests = self.run_workflow_cached(
+                'find_tags', brief_tags_payload(project.businessType, project.audience))
             spent += requests
             live = live or not was_cached
             tags_reused = was_cached
@@ -580,10 +647,8 @@ class QlooHarnessProvider(CultureProvider):
             raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.', code='NO_EVIDENCE')
 
         if recommendations is None:
-            recommendations, was_cached, requests = self.run_workflow_cached('recommend', {
-                'target_type': 'place', 'signal_tags': matched_tags,
-                'signal_location': project.location, 'limit': 5,
-            })
+            recommendations, was_cached, requests = self.run_workflow_cached(
+                'recommend', brief_places_payload(matched_tags, project.location))
             spent += requests
             live = live or not was_cached
             places_reused = was_cached
@@ -845,7 +910,7 @@ class QlooHarnessProvider(CultureProvider):
     @staticmethod
     def _cached_tag_rows(query: str) -> list[dict]:
         """The rows of an already-resolved audience, if it is still held."""
-        key = canonical_key('find_tags', {'query': query, 'limit': 3})
+        key = canonical_key('find_tags', {'query': query, 'limit': BRIEF_TAG_LIMIT})
         envelope = get_store().get(key)
         if not isinstance(envelope, dict):
             return []

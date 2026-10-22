@@ -15,6 +15,12 @@ def isolated_runtime(tmp_path, monkeypatch):
     from backend import evidence_store, platform, providers
 
     monkeypatch.setenv('CULTUREFORGE_PROVIDER', 'mock')
+    # A developer's .env may hold RUN_PROFILE=judging or the kill switch; the
+    # suite runs in the dev profile unless a test says otherwise.
+    monkeypatch.setenv('RUN_PROFILE', 'dev')
+    monkeypatch.setenv('QLOO_LIVE_ENABLED', 'true')
+    for name in ('CULTUREFORGE_EVIDENCE_TTL_HOURS', 'QLOO_RATE_LIMIT_COOLDOWN_SECONDS'):
+        monkeypatch.setenv(name, '')
     monkeypatch.setattr(platform, 'DEFAULT_DB_PATH', tmp_path / 'platform.db')
     monkeypatch.setattr(platform, '_platform', None)
     monkeypatch.setattr(evidence_store, 'STORE_DIR', tmp_path / 'cache')

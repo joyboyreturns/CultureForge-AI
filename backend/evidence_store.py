@@ -26,13 +26,15 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
+from . import config
+
 ADAPTER_VERSION = '2'  # bump when the shape of a stored envelope changes
 
 STORE_DIR = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge'))
 CACHE_FILE = STORE_DIR / 'evidence_cache.json'
 SNAPSHOT_FILE = STORE_DIR / 'snapshots.json'
 
-DEFAULT_TTL_SECONDS = 24 * 60 * 60
+# How long held evidence answers is set by the run profile: config.evidence_ttl_seconds().
 
 
 def canonical_key(workflow: str, payload: dict) -> str:
@@ -86,7 +88,9 @@ class EvidenceStore:
             pass
 
     # --------------------------------------------------------------- cache
-    def get(self, key: str, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> Optional[dict]:
+    def get(self, key: str, ttl_seconds: Optional[int] = None) -> Optional[dict]:
+        if ttl_seconds is None:
+            ttl_seconds = config.evidence_ttl_seconds()
         with self._lock:
             entry = self._cache.get(key)
             if not entry:
@@ -199,6 +203,7 @@ class EvidenceStore:
             entries = list(self._cache.values())
         return {
             'entries': len(entries),
+            'bytes': self.cache_file.stat().st_size if self.cache_file.is_file() else 0,
             'transportRequestsCached': sum(int(e.get('transportRequests', 0)) for e in entries),
             'snapshots': len(self._snapshots),
         }
@@ -239,7 +244,7 @@ def transport_request_count(envelope: dict) -> int:
     return 1
 
 
-def cached_call(key: str, run: Callable[[], dict], ttl_seconds: int = DEFAULT_TTL_SECONDS) -> tuple[dict, bool, int]:
+def cached_call(key: str, run: Callable[[], dict], ttl_seconds: Optional[int] = None) -> tuple[dict, bool, int]:
     """Run a workflow through the cache, collapsing concurrent duplicates.
 
     Returns (envelope, was_cached, transport_requests). The count is what

@@ -181,6 +181,23 @@ export async function fetchHealth(): Promise<BackendStatus> {
   }
 }
 
+/** A prepared example brief, and whether the server already holds its evidence. */
+export interface ExampleBrief {
+  id: string
+  label: string
+  project: ProjectRequest
+  /** True when running it costs no upstream request. */
+  held: boolean
+}
+
+/** The prepared example briefs. Asking costs no Qloo request. */
+export async function fetchExamples(): Promise<ExampleBrief[]> {
+  const response = await fetch('/api/examples')
+  if (!response.ok) throw new Error(`The example briefs could not be listed (the backend answered ${response.status}).`)
+  const body = await response.json() as { examples?: ExampleBrief[] }
+  return body.examples ?? []
+}
+
 /** The payload the scenario lab needs to re-research a brief for another audience. */
 export interface AudienceComparison {
   audience: string

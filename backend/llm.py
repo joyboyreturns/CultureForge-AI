@@ -16,13 +16,13 @@ import urllib.request
 from pathlib import Path
 from typing import Optional
 
+from . import config
+
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 DISPLAY_MODEL = 'Frontier AI'
 PROMPT_VERSION = 'naming-vercel-1'
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_TOKENS = 2048
-DEFAULT_MAX_CALLS_PER_HOUR = 20
-DEFAULT_MAX_CALLS_PER_DAY = 50
 BUDGET_LOG_PATH = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_naming_calls.json'
 _env_loaded = False
 _budget_lock = threading.Lock()
@@ -98,12 +98,16 @@ def _write_calls(calls: list[float]) -> None:
 
 
 def _check_budget() -> None:
-    hour_limit = max(1, int(os.getenv('LLM_MAX_CALLS_PER_HOUR', DEFAULT_MAX_CALLS_PER_HOUR)))
-    day_limit = max(1, int(os.getenv('LLM_MAX_CALLS_PER_DAY', DEFAULT_MAX_CALLS_PER_DAY)))
+    # The judging profile lifts the count; the timeout and the validator stay.
+    hour_limit = config.limit('LLM_MAX_CALLS_PER_HOUR')
+    day_limit = config.limit('LLM_MAX_CALLS_PER_DAY')
+    if hour_limit is None and day_limit is None:
+        return
     now = time.time()
     with _budget_lock:
         calls = _read_calls()
-        if sum(now - stamp < 3600 for stamp in calls) >= hour_limit or len(calls) >= day_limit:
+        if ((hour_limit is not None and sum(now - stamp < 3600 for stamp in calls) >= hour_limit)
+                or (day_limit is not None and len(calls) >= day_limit)):
             raise LlmUnavailable(
                 'The Frontier AI naming allowance is used up for now. The rule-based names remain available.',
                 code='LLM_QUOTA_EXHAUSTED', retryable=True,
@@ -123,8 +127,8 @@ def budget_state() -> dict:
     return {
         'callsLastHour': sum(now - stamp < 3600 for stamp in calls),
         'callsToday': len(calls),
-        'hourLimit': max(1, int(os.getenv('LLM_MAX_CALLS_PER_HOUR', DEFAULT_MAX_CALLS_PER_HOUR))),
-        'dayLimit': max(1, int(os.getenv('LLM_MAX_CALLS_PER_DAY', DEFAULT_MAX_CALLS_PER_DAY))),
+        'hourLimit': config.describe_limit(config.limit('LLM_MAX_CALLS_PER_HOUR')),
+        'dayLimit': config.describe_limit(config.limit('LLM_MAX_CALLS_PER_DAY')),
     }
 
 

@@ -1,0 +1,45 @@
+{
+  "note": "The prepared example briefs. scripts/prewarm.py fetches their evidence ahead of time, the studio's example picker offers them, and the landing page runs the first one. Locations are city-level: neighbourhood names such as 'Greenpoint, Brooklyn' have returned no places from Qloo.",
+  "briefs": [
+    {
+      "id": "brooklyn-gen-z-cafe",
+      "label": "A café for design-conscious Gen Z",
+      "project": {"businessType": "Food & beverage", "audience": "Design-conscious Gen Z & young professionals", "location": "Brooklyn, New York", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
+    },
+    {
+      "id": "london-mindful-wellness",
+      "label": "A wellness room for mindful professionals",
+      "project": {"businessType": "Wellness", "audience": "Mindful professionals who want a slow afternoon", "location": "London, United Kingdom", "budget": "$50k – $100k", "objectives": ["Create a memorable experience"]}
+    },
+    {
+      "id": "chicago-vinyl-retail",
+      "label": "A record shop for vinyl collectors",
+      "project": {"businessType": "Retail", "audience": "Independent vinyl collectors and record-store regulars", "location": "Chicago, Illinois", "budget": "Under $25k", "objectives": ["Build a loyal community"]}
+    },
+    {
+      "id": "austin-live-music",
+      "label": "A venue for live-music regulars",
+      "project": {"businessType": "Entertainment", "audience": "Live-music fans who want to be part of something", "location": "Austin, Texas", "budget": "$50k – $100k", "objectives": ["Create a memorable experience"]}
+    },
+    {
+      "id": "los-angeles-slow-fashion",
+      "label": "A store for slow-fashion loyalists",
+      "project": {"businessType": "Retail", "audience": "Sustainable fashion subscribers and slow-fashion loyalists", "location": "Los Angeles, California", "budget": "$25k – $50k", "objectives": ["Stand out in a crowded market"]}
+    },
+    {
+      "id": "lisbon-local-stay",
+      "label": "A stay for travellers who want the local city",
+      "project": {"businessType": "Hospitality", "audience": "Tourists who want the city to feel local", "location": "Lisbon, Portugal", "budget": "$100k+", "objectives": ["Attract a new audience"]}
+    },
+    {
+      "id": "seattle-family-cafe",
+      "label": "A café for young families",
+      "project": {"businessType": "Food & beverage", "audience": "Young families looking for a slow afternoon", "location": "Seattle, Washington", "budget": "Under $25k", "objectives": ["Build a loyal community"]}
+    },
+    {
+      "id": "tokyo-ceramics-studio",
+      "label": "A shop for studio potters",
+      "project": {"businessType": "Retail", "audience": "Independent ceramics makers and studio potters", "location": "Tokyo, Japan", "budget": "$25k – $50k", "objectives": ["Stand out in a crowded market"]}
+    }
+  ]
+}

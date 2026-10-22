@@ -1293,3 +1293,23 @@
 .notebook-evidence { padding:20px; border-radius:13px; background:var(--surface-raised); align-self:start; }.notebook-evidence h3 { font-size:19px; margin:14px 0; }.notebook-evidence>div { border-bottom:1px solid var(--line); padding:13px 0; }.notebook-evidence small { display:block; overflow-wrap:anywhere; font-size:11px; margin-top:5px; }.notebook-evidence p { font-size:13px; }
 .decision-notebook>footer { margin-top:28px; padding-top:20px; border-top:1px solid var(--line); }.decision-notebook>footer>div { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }.decision-notebook>footer>p { font-size:12px; max-width:85ch; }.notebook-status { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; }.notebook-status.is-ready { color:var(--accent); }
 @media(max-width:720px) { .tour-welcome { align-items:flex-start; flex-direction:column; gap:12px; }.guided-tour { bottom:12px; right:12px; padding:18px; width:calc(100vw - 24px); }.tour-highlight { display:none; }.notebook-backdrop { padding:10px; }.decision-notebook { padding:20px; max-height:calc(100dvh - 20px); }.notebook-layout { grid-template-columns:1fr; }.notebook-evidence { order:2; }.decision-notebook>footer>div .button { width:100%; }.topbar-right .prototype-badge { display:none; } }
+
+/* --- Prepared example briefs ---------------------------------------------- */
+.example-picker{padding:18px;margin-top:14px}
+.example-picker-note{font-size:12px;line-height:1.6;color:var(--muted);margin:8px 0 10px}
+.example-picker ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.example-picker button{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;text-align:left;border:1px solid var(--line);border-radius:5px;padding:9px 10px;color:var(--text)}
+.example-picker button:hover,.example-picker button:focus-visible{border-color:var(--accent)}
+.example-picker button>svg{grid-column:2;grid-row:1;color:var(--muted)}
+.example-picker-title{font-size:13px;line-height:1.4;grid-column:1}
+.example-picker-meta{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);grid-column:1;overflow-wrap:anywhere}
+.example-picker-state{font:10px 'DM Mono',monospace;letter-spacing:.4px;color:var(--subtle);grid-column:1}
+.example-picker-state.is-held{color:var(--sage)}
+/* Below 1200px the aside is hidden, but the prepared briefs are the fastest way
+   in, so they stay: above the form, with the rest of the aside still hidden. */
+@media (max-width:1200px){
+  .create-layout>.creation-aside{display:block!important;order:-1}
+  .creation-aside>:not(.example-picker){display:none!important}
+  .example-picker{margin-top:0}
+  .example-picker ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+}

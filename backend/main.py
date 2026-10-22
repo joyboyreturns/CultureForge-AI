@@ -14,8 +14,10 @@ from .comparison import compare_audiences as compare_audiences_native
 from .comparison import rank_entities, recompose
 from .challenge import challenge_directions
 from .challenge_probe import challenge_probe
+from . import config, examples
 from .evidence_store import get_store
 from .reasoning import AnalysisUnavailable, analyze as analyze_evidence
+from .reasoning import budget_state as analysis_budget_state
 from .llm import status as llm_status
 from .presentation import presentation_key
 from .selector import select as select_evidence
@@ -31,7 +33,7 @@ from . import metering
 from .investigation import FACET_QUESTIONS, FACETS, _bounds, _demographics, _geography_points, _workflow_for, investigate
 from .providers import (COMPOSER_VERSION, QLOO_ENTITY_TYPES, QLOO_WORKFLOWS, QlooHarnessError,
                         capabilities,
-                        audience_demographics_payload, describe_payload, entity_tags_payload,
+                        audience_demographics_payload, brief_tags_payload, describe_payload, entity_tags_payload,
                         trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
 from .research import registry as research_registry, start_research
@@ -84,6 +86,7 @@ ERROR_STATUS = {
     'RATE_LIMITED': 429,
     'ALLOWANCE_EXHAUSTED': 429,
     'QUOTA_EXHAUSTED': 503,
+    'LIVE_DISABLED': 503,
     'PROVIDER_UNAVAILABLE': 503,
     'UPSTREAM_TIMEOUT': 504,
     'RUN_TIMEOUT': 504,
@@ -141,7 +144,9 @@ def health():
 
     It never raises. A missing Qloo key is a state the studio has to be able
     to read and show, so it is reported as `providerReady: false` with the
-    reason, rather than as a failed request.
+    reason, rather than as a failed request. It also says which run profile
+    is active, what each budget allows (or `unlimited`), and how much
+    evidence is held. It makes no upstream request.
     """
     try:
         current_provider = get_provider()
@@ -155,6 +160,7 @@ def health():
             'workflows': [],
             'composerVersion': COMPOSER_VERSION,
             'llm': llm_status(),
+            **_operating_state(),
         }
     live = current_provider.__class__.__name__ == 'QlooHarnessProvider'
     return {
@@ -166,7 +172,35 @@ def health():
         'workflows': list(QLOO_WORKFLOWS) if live else [],
         'composerVersion': COMPOSER_VERSION,
         'llm': llm_status(),
+        **_operating_state(),
     }
+
+
+def _operating_state() -> dict:
+    """The run profile, the budgets it sets, and the evidence already held."""
+    state: dict = {**config.summary()}
+    state['budgets'] = {
+        'qloo': QlooHarnessProvider.budget_state(),
+        'llm': llm_status()['budget'],
+        'analysis': analysis_budget_state(),
+        'researchRunWorkflows': config.describe_limit(config.limit('RESEARCH_RUN_MAX_WORKFLOWS')),
+    }
+    try:
+        state['cache'] = get_store().stats()
+    except Exception:  # pragma: no cover - health must never raise
+        state['cache'] = None
+    return state
+
+
+@app.get('/api/examples', tags=['brief'],
+         summary='The prepared example briefs, and whether their evidence is held')
+def list_examples() -> dict:
+    """The briefs the studio offers as examples.
+
+    `held` means the evidence store already has this brief's audience seeds
+    and places, so running it costs no upstream request. Asking costs none.
+    """
+    return {'examples': examples.listing()}
 
 
 @app.get('/health', include_in_schema=False)
@@ -621,9 +655,8 @@ def resolve_taste(request: CompareRequest) -> dict:
         raise HTTPException(status_code=409, detail='Resolving taste seeds needs the Qloo provider.')
     # The same limit the provider uses, so this shares one cache entry and
     # costs no upstream call when the audience has been resolved before.
-    envelope, cached, _requests = provider.run_workflow_cached('find_tags', {
-        'query': f'{request.project.businessType} {request.audience}'.strip(), 'limit': 3,
-    })
+    envelope, cached, _requests = provider.run_workflow_cached(
+        'find_tags', brief_tags_payload(request.project.businessType, request.audience))
     candidates = []
     for row in provider.rows(envelope):
         tag_id = provider.tag_id(row)

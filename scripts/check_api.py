@@ -113,14 +113,20 @@ def main() -> int:
         print("[ok]   base URL is trusted by the CLI")
 
     # 4. Quota guard state
-    hour_limit = int(os.getenv("QLOO_MAX_CALLS_PER_HOUR", "20"))
-    day_limit = int(os.getenv("QLOO_MAX_CALLS_PER_DAY", "100"))
+    sys.path.insert(0, str(ROOT))
+    from backend import config as run_config
+    hour_limit = run_config.limit("QLOO_MAX_CALLS_PER_HOUR")
+    day_limit = run_config.limit("QLOO_MAX_CALLS_PER_DAY")
     calls = read_budget_log()
     now = time.time()
     in_hour = sum(1 for stamp in calls if now - stamp < 3600)
     in_day = sum(1 for stamp in calls if now - stamp < 86400)
-    print(f"[ok]   quota guard: {in_hour}/{hour_limit} this hour, {in_day}/{day_limit} today")
-    if in_hour >= hour_limit or in_day >= day_limit:
+    print(f"[ok]   run profile: {run_config.run_profile()}"
+          f"{'' if run_config.qloo_live_enabled() else ' (QLOO_LIVE_ENABLED=false: held evidence only)'}")
+    print(f"[ok]   quota guard: {in_hour}/{run_config.describe_limit(hour_limit)} this hour, "
+          f"{in_day}/{run_config.describe_limit(day_limit)} today")
+    if ((hour_limit is not None and in_hour >= hour_limit)
+            or (day_limit is not None and in_day >= day_limit)):
         print("[warn] quota guard is exhausted — live signals are paused")
         ok = False
 
