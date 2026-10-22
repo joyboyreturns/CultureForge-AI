@@ -617,7 +617,7 @@ class QlooHarnessProvider(CultureProvider):
                     'status': 'ok',
                     'results': cached_rows,
                     'execution': {'duration_ms': 0},
-                    'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+                    'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
                 }
             else:
                 tag_result = {
@@ -625,7 +625,7 @@ class QlooHarnessProvider(CultureProvider):
                     'status': 'ok',
                     'results': [{'id': tag_id} for tag_id in seed_tag_ids],
                     'execution': {'duration_ms': 0},
-                    'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+                    'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
                 }
             tags_reused = True
         spent = 0
@@ -721,7 +721,7 @@ class QlooHarnessProvider(CultureProvider):
                 label=name if isinstance(name, str) and name.strip() else self._tag_label(tag),
                 tagId=tag,
                 popularity=popularity if isinstance(popularity, (int, float)) else None,
-                traceId=tag_trace.id, description='Audience seed resolved by Qloo from the founder’s audience description.',
+                traceId=tag_trace.id, description='Audience seed resolved by Qloo from the audience description in the brief.',
             ))
 
         entity_trace = self._trace_event('retrieve-local-evidence', 'recommend', recommendations, len(rows))

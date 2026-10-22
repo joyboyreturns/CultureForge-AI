@@ -44,7 +44,7 @@ export function PlaceStrip({ evidence, onInspect }: {
               <b>{place.label}</b>
               {place.location && <span>{place.location}</span>}
               {place.presentation?.identity === 'organisation' && (
-                <span className="place-strip-kind">ORGANISATION</span>
+                <span className="place-strip-kind">ORGANIZATION</span>
               )}
             </figcaption>
           </figure>

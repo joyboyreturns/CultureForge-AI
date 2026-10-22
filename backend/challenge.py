@@ -645,7 +645,7 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
             'proposed': proposed,
             'choices': list(DEMOGRAPHIC_CHOICES),
             'proposedBy': ('you, before the test ran' if inferred == 'chosen'
-                           else 'CultureForge, from the founder’s own words'),
+                           else 'CultureForge, from the brief’s own words'),
             'location': project.location,
             'signals': tags,
         },

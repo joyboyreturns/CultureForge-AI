@@ -14,7 +14,8 @@ services:
       sizeGB: 1
     envVars:
       - key: RUN_PROFILE
-        value: dev           # switch to judging when judging opens (docs/JUDGING_DAY.md)
+        value: judging       # the public demo runs with every call-count budget off.
+                             # Qloo's own quota still applies: prewarm first (docs/JUDGING_DAY.md).
       - key: QLOO_LIVE_ENABLED
         value: "true"
       - key: QLOO_API_KEY

@@ -59,7 +59,7 @@ example). Set the same environment variables, mount storage at `/data`
 | Variable | Value |
 | --- | --- |
 | `QLOO_API_KEY` | Your private hackathon key (secret) |
-| `RUN_PROFILE` | `dev` while rehearsing; `judging` lifts every call-count budget ([JUDGING_DAY.md](JUDGING_DAY.md)) |
+| `RUN_PROFILE` | `judging` in `render.yaml`: the public demo runs with every call-count budget off. Use `dev` (the default everywhere else) while testing, to keep the caps ([JUDGING_DAY.md](JUDGING_DAY.md)) |
 | `QLOO_LIVE_ENABLED` | `true`; `false` serves held evidence only |
 | `QLOO_MAX_CALLS_PER_HOUR` / `_PER_DAY` | 20 / 100 (dev profile only) |
 | `AI_GATEWAY_ENABLED` | `false`, or `true` to turn on naming, the agent loop and *Ask the evidence* |

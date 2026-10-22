@@ -123,7 +123,7 @@ export function Investigation({
     {!facets.length && !report && entityIds.length > 0 && (
       <div className="investigation-intro">
         <p>
-          This direction rests on the venues Qloo returned. Three things about it
+          This direction rests on the venues Qloo returned. Several things about it
           have not been checked yet. Open the ones you want answered.
         </p>
         <button className="button button-primary" onClick={openFacets}>Show the open questions</button>
@@ -177,7 +177,7 @@ export function Investigation({
               {tag.affinity != null && <i>affinity {tag.affinity.toFixed(3)}</i>}
             </span>)}
           </div>
-          <p className="investigation-note">These concepts characterise the venues Qloo returned for this direction.</p>
+          <p className="investigation-note">These concepts characterize the venues Qloo returned for this direction.</p>
         </section>
       )}
 

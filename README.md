@@ -117,7 +117,10 @@ from `backend/config.py`.
 | `QLOO_LIVE_ENABLED` | true | true | `false` serves held evidence only | `config.py` |
 | `QLOO_RATE_LIMIT_COOLDOWN_SECONDS` | 60 | 60 | Pause after a Qloo 429 | `config.py` |
 | `CULTUREFORGE_BRIDGE_DOMAINS` | artist,movie,brand | same | Audience-bridge domains; `off` disables | `config.py` |
-| `QLOO_API_KEY` | — | — | Hackathon key (secret, server only) | harness |
+| `QLOO_API_KEY` | — | — | Hackathon key (secret, server only) | `providers.py`, `qloo_exec.mjs` |
+| `QLOO_BASE_URL`, `QLOO_TRUSTED_BASE_URL` | hackathon host | same | Set by the Dockerfile; hackathon keys work only against `https://hackathon.api.qloo.com` | Dockerfile, `check_api.py` |
+| `PORT` | 8000 | same | Port the container listens on | Dockerfile |
+| `BASE_URL`, `DEV_URL` | local | — | Targets of the `verify_*` scripts | `scripts/verify_*.mjs` |
 | `QLOO_REQUEST_TIMEOUT_MS` | 60000 | same | Per-request Qloo timeout | `scripts/qloo_exec.mjs` |
 | `QLOO_MAX_ATTEMPTS` | 1 | same | HTTP attempts per request (no blind retries) | `scripts/qloo_exec.mjs` |
 | `QLOO_CLI`, `QLOO_HARNESS_PATH` | — | — | Override the harness command or package path | `providers.py`, `qloo_exec.mjs` |
@@ -154,7 +157,7 @@ The full table and the error envelope are in [docs/API.md](docs/API.md).
 
 ```bash
 npm run lint && npm run build
-python -m pytest backend/tests -q        # 237 tests; none can reach Qloo or a model
+python -m pytest backend/tests -q        # none of these tests can reach Qloo or a model
 npm run test:unit && npm run check:submission
 python3 scripts/smoke_test.py <url>      # a running deployment, no quota spent
 ```

@@ -6,10 +6,12 @@ import type { ProfileProposal } from '../api'
  * says so; either way it can be changed. A silent default is a hidden
  * assumption, and the verdict depends on it.
  */
-export function ProfileChooser({ proposal, chosen, onChoose }: {
+export function ProfileChooser({ proposal, chosen, onChoose, testedWith }: {
   proposal: ProfileProposal | null
   chosen: string
   onChoose: (demographic: string) => void
+  /** The profile the verdicts on screen were produced for, if a test has run. */
+  testedWith?: string | null
 }) {
   if (!proposal) return null
   const note = chosen !== proposal.demographic
@@ -25,5 +27,6 @@ export function ProfileChooser({ proposal, chosen, onChoose }: {
       </select>
     </label>
     <p>{note} Qloo ranks the retrieved places against this demographic, not against the audience’s cultural tags. Policy {proposal.policyVersion}.</p>
+    {testedWith && testedWith !== chosen && <p className="profile-stale" role="status">The verdicts below were produced for “{testedWith}”, not “{chosen}”. Choose <b>Test the evidence</b> again to rank for “{chosen}”.</p>}
   </div>
 }
