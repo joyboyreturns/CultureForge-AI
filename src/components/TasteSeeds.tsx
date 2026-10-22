@@ -1,3 +1,4 @@
+import { RUN_TIME_NOTE } from './RunExpectation'
 import type { TasteSeed } from '../api'
 
 /**
@@ -67,6 +68,7 @@ export function TasteSeeds({
         })}
       </ul>
 
+      <p className="taste-seed-time">{RUN_TIME_NOTE}</p>
       <div className="taste-seed-actions">
         <button className="button button-secondary" onClick={onCancel} disabled={busy}>Back</button>
         <button

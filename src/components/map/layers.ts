@@ -25,7 +25,7 @@ export const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', fea
 
 export const LAYER_GROUPS: Record<keyof OverlayVisibility, string[]> = {
   heat: ['cells-heat', 'cells-dot'],
-  venues: ['venue-clusters', 'venue-cluster-count', 'venue-points'],
+  venues: ['venue-clusters', 'venue-cluster-count', 'venue-points', 'venue-labels'],
   context: ['context-halo'],
 }
 
@@ -73,7 +73,7 @@ export function overlayLayers(c: OverlayColors, visible: OverlayVisibility, labe
       'circle-color': c.cellHigh, 'circle-opacity': 0.55, 'circle-stroke-color': c.surface, 'circle-stroke-width': 1,
     } },
     { id: 'context-halo', type: 'circle', source: 'context', layout: show(visible.context), paint: {
-      'circle-radius': 14, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': c.context, 'circle-stroke-width': 1.6, 'circle-stroke-opacity': 0.85,
+      'circle-radius': 19, 'circle-color': c.context, 'circle-opacity': 0.14, 'circle-stroke-color': c.context, 'circle-stroke-width': 2, 'circle-stroke-opacity': 0.9,
     } },
     { id: 'venue-clusters', type: 'circle', source: 'venues', filter: ['has', 'point_count'], layout: show(visible.venues), paint: {
       'circle-radius': ['step', ['get', 'point_count'], 14, 4, 18, 8, 22] as never,
@@ -82,17 +82,21 @@ export function overlayLayers(c: OverlayColors, visible: OverlayVisibility, labe
       'circle-stroke-width': ['case', ['>', ['get', 'cited'], 0], 2.2, 1.2] as never,
     } },
     { id: 'venue-points', type: 'circle', source: 'venues', filter: ['!', ['has', 'point_count']], layout: show(visible.venues), paint: {
-      'circle-radius': ['match', ['get', 'kind'], 'indirect', 6, 'attraction', 6.5, 7] as never,
+      'circle-radius': ['match', ['get', 'kind'], 'indirect', 8, 'attraction', 8.5, 9] as never,
       'circle-color': ['match', ['get', 'kind'], 'indirect', c.surface, kindColor] as never,
-      'circle-stroke-color': ['match', ['get', 'kind'], 'indirect', c.indirect, 'attraction', c.ink, c.surface] as never,
-      'circle-stroke-width': ['match', ['get', 'kind'], 'indirect', 3, 'attraction', 2.2, 1.6] as never,
+      'circle-stroke-color': ['match', ['get', 'kind'], 'indirect', c.indirect, 'attraction', c.surface, c.surface] as never,
+      'circle-stroke-width': ['match', ['get', 'kind'], 'indirect', 3.5, 'attraction', 2.6, 2.6] as never,
       'circle-opacity': dimmed(1, 0.28), 'circle-stroke-opacity': dimmed(1, 0.28),
     } },
     { id: 'selected-ring', type: 'circle', source: 'selected', paint: {
-      'circle-radius': 18, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': c.ink, 'circle-stroke-width': 2.4,
+      'circle-radius': 22, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': c.ink, 'circle-stroke-width': 2.4,
     } },
   ]
   if (labels) {
+    // Names beside the pins, so a reader never has to hover to learn what a dot is.
+    layers.splice(layers.findIndex((l) => l.id === 'venue-points') + 1, 0, { id: 'venue-labels', type: 'symbol', source: 'venues', filter: ['!', ['has', 'point_count']], minzoom: 11.5, layout: {
+      ...show(visible.venues), 'text-field': ['get', 'label'] as never, 'text-font': ['Noto Sans Regular'], 'text-size': 12.5, 'text-anchor': 'top', 'text-offset': [0, 1.15], 'text-max-width': 9, 'text-optional': true,
+    }, paint: { 'text-color': c.ink, 'text-halo-color': c.surface, 'text-halo-width': 2, 'text-opacity': dimmed(1, 0.35) } })
     layers.splice(4, 0, { id: 'venue-cluster-count', type: 'symbol', source: 'venues', filter: ['has', 'point_count'], layout: {
       ...show(visible.venues), 'text-field': ['get', 'point_count_abbreviated'] as never, 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-allow-overlap': true,
     }, paint: { 'text-color': c.ink } })
