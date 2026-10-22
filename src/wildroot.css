@@ -1800,3 +1800,23 @@ body { background-attachment: fixed; }
 /* The dock steps aside while the guided tour is open, so neither hides the other. */
 body:has(.guided-tour) .run-dock { right: auto; left: 250px; }
 @media (max-width: 900px) { body:has(.guided-tour) .run-dock { left: 16px; bottom: auto; top: 76px; } }
+
+/* --- Executive decision brief ------------------------------------------------ */
+.mode-toggle { display: inline-flex; border: 1.5px solid var(--card-edge); margin: 0 0 18px; }
+.mode-toggle button { cursor: pointer; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; padding: 9px 16px; }
+.mode-toggle button.is-active { background: var(--accent); color: var(--accent-ink, #111); font-weight: 600; }
+.exec-brief { padding: 26px 28px; display: grid; gap: 22px; margin-bottom: 24px; }
+.exec-lead h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 10px 0 8px; letter-spacing: -.03em; }
+.exec-lead p { color: var(--muted); font-size: 16px; line-height: 1.6; margin: 0 0 14px; max-width: 62ch; }
+.exec-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 14px; }
+.exec-untested, .exec-cover { font-size: 13px; color: var(--muted); }
+.exec-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+.exec-anchors { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.exec-anchors li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.exec-anchors small, .exec-brief footer small, .exec-grid small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.exec-fact { margin: 6px 0 4px; font-size: 16px; }
+.exec-grid .tiny-cap { display: block; margin-top: 8px; }
+.evidence-chip { cursor: pointer; border: 1px solid var(--line); background: var(--surface-raised, transparent); color: inherit; font: 11px 'DM Mono', monospace; padding: 2px 7px; border-radius: 999px; }
+.evidence-chip:hover { border-color: var(--accent); color: var(--accent); }
+.exec-brief footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 720px) { .exec-brief { padding: 20px 18px; } .exec-grid { grid-template-columns: 1fr; } }

@@ -13,9 +13,105 @@ follow-up questions are answered from the evidence or refused. Every number
 shown is one Qloo returned. Nothing claims demand, rent, footfall or
 willingness to pay.
 
-![The source-to-decision graph after an actual evidence removal](artifacts/validation/studio-evidence-graph.png)
+![The landing page: put the idea on trial](docs/screenshots/landing.jpg)
 
-The studio now assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [verified implementation review](docs/IMPLEMENTATION_REVIEW.md) and [demo journey](docs/DEMO.md).
+## What it does, at a glance
+
+| | |
+| --- | --- |
+| **Executive decision brief** | The studio opens on the answer: the lead direction, its verdict, the top cultural anchors with `[evidence id]` chips, who it is for, and the lead place Qloo returned. One tap opens the full evidence workbench. There is deliberately **no 0-100 fit score**: Qloo returns none, so the brief shows citation coverage and the evidence test instead. |
+| **Evidence that can say no** | Directions are tested against the places Qloo returned. A direction can come out *supported*, *unproven* or *contested*, and the order can change. |
+| **Runs that never stall the reader** | Research keeps going when you open another demo or screen. A card follows you with the agent's real latest step and offers the results when they are ready. |
+| **Always a way out** | Back, Switch idea and Try another example in the Concept studio and Scenario lab. |
+| **A tour that keeps up** | The guided tour moves to the right screen for each step, opens the workbench when a step needs it, and highlights the target. |
+
+## See it in 60 seconds
+
+1. Open the landing page and press **Run the example and evidence test**, or pick any prepared brief. One marked **Evidence held** costs no Qloo request.
+2. Watch the **Agent workspace**. Leave whenever you like: the run **keeps going in the background**.
+3. Read the **Executive brief**, then open the **Evidence workbench**. Open any source to see Qloo's own request and excerpt, run the **evidence test**, and **remove a place** to watch the answer rebuild from what is left.
+4. Use **Switch idea**, **Try another example** or the back button to move between ideas. **Scenario lab** re-researches the same idea for another audience or city.
+5. New here? Press **Guided tour**.
+
+### The studio
+
+![Executive decision brief: the answer first, with evidence chips](docs/screenshots/executive-brief.jpg)
+
+*The executive brief. Every anchor carries an evidence chip that opens Qloo's own record.*
+
+![Source, proposal and direction: what the answer is built on](docs/screenshots/evidence-graph.jpg)
+
+*The evidence workbench. Qloo returned the sources; CultureForge proposed the decisions; the lines show attached citations, not proof.*
+
+![Guided tour highlighting the evidence test](docs/screenshots/guided-tour.jpg)
+
+*The guided tour follows the reader to each step and highlights what it describes.*
+
+![Scenario lab: same vision, a different audience](docs/screenshots/scenario-lab.jpg)
+
+*Scenario lab. Change the audience or the place and let Qloo measure what changes.*
+
+![The agent workspace while a run is in progress](docs/screenshots/agent-workspace.jpg)
+
+*The agent workspace, showing the steps of a real research run.*
+
+<img src="docs/screenshots/mobile-brief.jpg" alt="The studio on a phone" width="260"/>
+
+*It works on a phone.*
+
+The studio assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [verified implementation review](docs/IMPLEMENTATION_REVIEW.md) and [demo journey](docs/DEMO.md).
+
+## How a brief becomes a verdict
+
+```mermaid
+flowchart TB
+  A([Brief: category, idea, audience, place]) --> R[Read the idea into typed components<br/>hybrids, specialisations, disclosed simplifications]
+  R --> T[find_tags: resolve audience and category<br/>tags come only from returned envelopes]
+  T --> H{Evidence held?}
+  H -- yes --> K[Serve from the evidence store<br/>zero upstream requests]
+  H -- no --> Q[Qloo workflows<br/>recommend, where_popular, entity_tags ...]
+  Q --> K
+  K --> C[Rule composer: directions,<br/>every decision cites its evidence]
+  C --> I[Initial answer on screen]
+  I --> G[Bounded agent: up to 8 plan-act-observe steps]
+  G --> V[Citation validator:<br/>claims need an observed ID or tag URN]
+  C --> X[Evidence test<br/>supported, contested or unproven]
+  X --> O[Studio, PDF, share link]
+  V --> O
+```
+
+### What the reader sees while it runs
+
+```mermaid
+sequenceDiagram
+  participant J as Judge
+  participant UI as Studio
+  participant API as Backend run
+  J->>UI: Start an exploration or open a demo
+  UI->>API: Start research run
+  loop every ~1 s
+    UI->>API: Fetch run state and real steps
+    API-->>UI: steps, timings, partial answer
+  end
+  J->>UI: Opens another demo or screen
+  Note over UI,API: The run is not cancelled. A floating card keeps following it.
+  API-->>UI: Complete
+  UI-->>J: "Your exploration is ready" - Open the results
+```
+
+### How the test can say no
+
+```mermaid
+flowchart LR
+  D[Direction + anchor place] --> P1[rank: anchor vs places returned for the profile]
+  D --> P2[compare_audiences: anchor tags vs every other place]
+  P1 & P2 --> POL{Policy<br/>anchor-fit-4}
+  POL -- both pass --> S[supported]
+  POL -- one check missing --> U[unproven]
+  POL -- a check fails --> N[contested]
+  N --> RE[Re-anchor to another place and re-test]
+  S --> RE
+```
 
 ## Architecture
 
