@@ -66,6 +66,20 @@ def _save(cache: dict) -> None:
         pass
 
 
+def seed(entries: dict) -> int:
+    """Add shipped, verified geocodes that are not held yet. Only definitive answers are accepted."""
+    cache = _load()
+    added = 0
+    for key, verdict in entries.items():
+        if key not in cache and isinstance(verdict, dict) and verdict.get('status') in (
+                'plotted', 'not_found', 'outside_city', 'area_only', 'ambiguous'):
+            cache[key] = verdict
+            added += 1
+    if added:
+        _save(cache)
+    return added
+
+
 def _key(address: str, city: str) -> str:
     return f'v3|{address.strip().casefold()}|{city.strip().casefold()}'
 

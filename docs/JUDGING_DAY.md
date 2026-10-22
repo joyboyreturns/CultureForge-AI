@@ -81,3 +81,38 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
 
 Set `RUN_PROFILE=dev` again, so a link that is still circulating cannot spend
 an unbounded amount.
+
+## The three shipped demos (added 22 Oct 2026)
+
+`shared/demoPack.json` ships real Qloo answers for three briefs, with their original acquisition times, plus the
+verified venue geocodes. `backend/demo_pack.py` places them in the evidence store at start-up as pinned entries
+(they do not expire), so a fresh clone, or a server with `QLOO_LIVE_ENABLED=false`, opens them with no Qloo request:
+
+1. **Artisan bakery for morning commuters, Tokyo** (9 of 10 venues on the map, 20 interest cells)
+2. **Ice cream parlour, Paris** (5 of 9 on the map; the rest were returned for other cities and are not plotted)
+3. **Specialty coffee shop, Melbourne** (9 of 10 on the map, 20 interest cells)
+
+Rebuild the pack (reads held evidence; `--live` fetches any gap once; `--allow-gaps` writes what is held):
+
+```bash
+python3 scripts/export_demo_pack.py --live --allow-gaps
+```
+
+What is not in the pack: model-written direction names and the optional agent analysis (they run per server, within
+the model budget), and venue geocodes for any brief other than the three.
+
+## When a judge types their own brief
+
+| Input | What happens |
+| --- | --- |
+| A known business ("flower shop", "pizza", "gym") | Resolved from a category table, then to Qloo's own place category tag |
+| An unfamiliar one ("bubble tea shop") | Looked up in Qloo's taxonomy; a place counts only if its text matches the distinctive word |
+| Two businesses ("bakery and bookstore") or no business | Asks the founder to name one; nothing is guessed |
+| A city Qloo will not search ("Narnia") | "Use a city and country" with a way back to the brief |
+| A category with places but no audience overlap in that city | One extra request for the category's places without the audience tags, stated in the answer |
+| Real references but no cultural signature that fits a recipe | One narrow "Local Reference Study" direction, labelled promising but unverified |
+| Qloo timeout or rate limit | A stated, retryable failure; held evidence still opens |
+
+Live checks on 22 Oct 2026: bubble tea in Los Angeles returned 9 direct businesses (it returned none before the
+place-category fix); Narnia gave the friendly location message; vegan restaurant in Berlin timed out at Qloo
+(a heavy category filter) and is reported as a retryable failure, not as an answer.

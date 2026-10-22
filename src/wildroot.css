@@ -1730,3 +1730,9 @@ body { background-attachment: fixed; }
 :root[data-theme='light'] .demo-promo .button, :root[data-theme='light'] .demo-promo button { color: #f6efe1; border-color: rgba(246, 239, 225, .5); }
 :root[data-theme='light'] .decision-card { background: linear-gradient(165deg, var(--beet) 0%, var(--beet-deep) 100%) !important; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--beet-deep); }
 :root[data-theme='light'] .decision-card .button { color: #f6efe1; border-color: rgba(246, 239, 225, .5); background: rgba(246, 239, 225, .08); }
+
+.example-picker-featured{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.example-picker-kicker{font:600 10px 'DM Mono',monospace;letter-spacing:.16em;color:var(--accent)}
+.example-picker-more{margin-top:14px}
+.example-picker-more summary{cursor:pointer;color:var(--muted)}
+.outcome-chip{margin:0 0 8px;padding:8px 12px;border-left:3px solid var(--map-indirect, #a87412);background:var(--accent-wash)}

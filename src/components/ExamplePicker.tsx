@@ -5,6 +5,8 @@ import { fetchExamples } from '../api'
 import type { ExampleBrief } from '../api'
 import demoBriefs from '../../shared/demoBriefs.json'
 
+const FEATURED = ['tokyo-morning-bakery', 'paris-ice-cream', 'melbourne-specialty-coffee']
+
 /** The prepared briefs, before the server has said which of them it holds. */
 const PREPARED: ExampleBrief[] = demoBriefs.briefs.map((brief) => ({ ...brief, project: brief.project as ProjectRequest, held: false }))
 
@@ -27,18 +29,23 @@ export function ExamplePicker({ onRun }: { onRun: (project: ProjectRequest) => v
       .catch(() => { if (live) setUnchecked(true) })
     return () => { live = false }
   }, [])
+  const featured = FEATURED.map((id) => examples.find((example) => example.id === id)).filter((example): example is ExampleBrief => Boolean(example))
+  const others = examples.filter((example) => !FEATURED.includes(example.id))
+  const row = (example: ExampleBrief, index?: number) => <li key={example.id}>
+    <button type="button" onClick={() => onRun(example.project)} aria-label={`Run the example: ${example.label}, ${example.project.location}`}>
+      {index !== undefined && <span className="example-picker-kicker">DEMO {index + 1}</span>}
+      <span className="example-picker-title">{example.label}</span>
+      <span className="example-picker-meta"><MapPin size={11}/>{example.project.location} · {example.project.businessType}</span>
+      <span className={`example-picker-state${example.held ? ' is-held' : ''}`}>{!known ? 'Not checked' : example.held ? 'Evidence held · opens instantly' : 'Live lookup'}</span>
+      <ArrowUpRight size={14} aria-hidden="true"/>
+    </button>
+  </li>
   return <div className="example-picker panel">
-    <span className="small-cap"><span className="orange-dot"/> PREPARED EXAMPLES</span>
-    <p className="example-picker-note">Run one as it is. {known ? 'Held briefs open from stored Qloo evidence.' : unchecked ? 'The service could not be reached, so which briefs are held is unknown.' : 'Checking which are held…'}</p>
-    <ul>
-      {examples.map((example) => <li key={example.id}>
-        <button type="button" onClick={() => onRun(example.project)} aria-label={`Run the example: ${example.label}, ${example.project.location}`}>
-          <span className="example-picker-title">{example.label}</span>
-          <span className="example-picker-meta"><MapPin size={11}/>{example.project.location} · {example.project.businessType}</span>
-          <span className={`example-picker-state${example.held ? ' is-held' : ''}`}>{!known ? 'Not checked' : example.held ? 'Evidence held' : 'Live lookup'}</span>
-          <ArrowUpRight size={14} aria-hidden="true"/>
-        </button>
-      </li>)}
-    </ul>
+    <span className="small-cap"><span className="orange-dot"/> THREE DEMOS · REAL QLOO EVIDENCE, HELD</span>
+    <p className="example-picker-note">Open one to see what Qloo returned, where the places are on the map, and what each direction rests on. {known ? '' : unchecked ? 'The service could not be reached, so which are held is unknown.' : 'Checking which are held…'}</p>
+    <ul className="example-picker-featured">{featured.map((example, index) => row(example, index))}</ul>
+    {others.length > 0 && <details className="example-picker-more"><summary>More prepared briefs ({others.length})</summary>
+      <p className="example-picker-note">These open from held evidence only where the server already holds it; otherwise they run a live Qloo lookup, which can take half a minute or meet a rate limit.</p>
+      <ul>{others.map((example) => row(example))}</ul></details>}
   </div>
 }

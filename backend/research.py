@@ -259,8 +259,7 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
         if allowance is not None and run.workflow_calls >= allowance:
             raise QlooHarnessError('The research run reached its call allowance before it could retrieve evidence.', code='ALLOWANCE_EXHAUSTED')
         run.workflow_calls += 1
-        rec_envelope, cached, requests = provider.run_workflow_cached(
-            'recommend', brief_places_retrieval_payload(tags, run.project.location, run.project.businessIdea))
+        rec_envelope, cached, requests = provider.recommend_places(tags, run.project.location, run.project.businessIdea)
         run.transport_requests += requests
         rec_event = _event(run, 'retrieve-evidence', rec_envelope,
                            result_count=len(provider.rows(rec_envelope)))

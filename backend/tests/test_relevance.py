@@ -168,13 +168,11 @@ def test_a_specific_idea_is_never_widened_to_a_broader_category():
 
 
 def test_an_idea_the_rules_do_not_recognise_stays_unknown_and_says_why():
-    for idea in ('Yoga cafe', 'Shop'):
+    for idea in ('Shop', 'Bakery and bookstore'):
         category = classify_brief('Food & beverage', idea, 'Local regulars')
         assert category.family == '' and category.specificity == 'unknown', idea
         assert idea in category.reason
         assert 'not widened' in category.reason
-    # A conflicting head does not borrow the business type's category either.
-    assert family('Wellness', 'Yoga cafe') == ''
 
 
 def test_a_head_noun_resolves_only_with_neutral_modifiers():
@@ -214,7 +212,7 @@ def test_assessment_states_how_the_category_was_read():
 
 
 def test_an_unrecognised_idea_gives_no_anchor_even_next_to_café_text():
-    result = assess(business_type='Food & beverage', idea='Yoga cafe', audience='Food explorers',
+    result = assess(business_type='Food & beverage', idea='Shop', audience='Food explorers',
                     location='Tokyo', name='Café de Flore', description='A historic café, restaurant and bar.')
     assert result['category'] == 'unknown'
     assert result['categorySpecificity'] == 'unknown'
@@ -230,6 +228,7 @@ def test_the_prepared_briefs_keep_the_category_they_were_written_for():
         'austin-live-music': ('music', 'business_type'), 'chicago-vinyl-retail': ('records', 'audience'),
         'los-angeles-slow-fashion': ('fashion', 'audience'), 'tokyo-ceramics-studio': ('ceramics', 'audience'),
         'tokyo-morning-bakery': ('bakery', 'idea'), 'paris-ice-cream': ('frozen_dessert', 'idea'),
+        'melbourne-specialty-coffee': ('coffee', 'idea'),
     }
     seen = {}
     for brief in briefs:
@@ -244,7 +243,7 @@ def test_the_category_version_is_bumped_for_the_new_rules():
 
 
 def test_a_category_with_no_label_sends_no_category_filter_to_qloo():
-    assert brief_category_payload('Yoga cafe') is None
+    assert brief_category_payload('Bakery and bookstore') is None
     assert brief_category_payload('Shop') is None
     assert brief_category_payload('Ice cream parlour')['query'] == 'ice cream'
     assert brief_category_payload('Where should I open an ice cream parlour in Paris?')['query'] == 'ice cream'

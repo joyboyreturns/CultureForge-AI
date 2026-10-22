@@ -421,6 +421,21 @@ def compose(
                 positioning='A proposed craft-discovery occasion, with products and process as the focus.',
                 personality='Precise, tactile, curious', signals=['Bread craft', 'Process discovery hypothesis'],
                 matchers=(), facet=FACET_RATING), bread_tags))
+    if not scored and len(eligible) >= 2:
+        # No recipe's cultural signature matched, but the category itself is well referenced. A narrower,
+        # plainly labelled starting point is more useful than nothing, and it claims nothing the
+        # evidence does not hold: no audience occasion, only that these places were returned.
+        kind = business_idea.strip() or business_type
+        scored.append((1, Recipe(
+            rule_id='category-reference-study', name='The Local Reference Study',
+            tagline='A cautious first hypothesis: start from the places Qloo returned for this category.',
+            offering=f'A {kind.lower()} informed by the {len(eligible)} same-category places Qloo returned for '
+                     f'{location}. What makes it distinct is not established by this evidence: that is yours to propose and test.',
+            ritual='Visit two or three of the cited references, then pilot one distinctive offer before committing.',
+            positioning='A proposed way into a category where Qloo returned local references. No audience occasion '
+                        'was found in the returned tags, so none is claimed.',
+            personality='Cautious, evidence-led', signals=['Category references', 'Hypothesis to test'],
+            matchers=(), facet=FACET_POPULARITY), []))
     if not scored:
         return []
     scored.sort(key=lambda item: -item[0])

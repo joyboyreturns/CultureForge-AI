@@ -4,7 +4,7 @@ from __future__ import annotations
 from backend import research
 from backend.models import (AgentReport, Concept, Delivery, Evidence, GenerateResponse,
                             ProjectRequest, TraceEvent)
-from backend.providers import QlooHarnessError
+from backend.providers import QlooHarnessError, QlooHarnessProvider
 
 PROJECT = ProjectRequest(
     businessType='Food & beverage', audience='Design-conscious Gen Z',
@@ -23,6 +23,8 @@ class StubProvider:
 
     def rows(self, envelope):
         return envelope.get('results', []) or []
+
+    recommend_places = QlooHarnessProvider.recommend_places
 
     def tag_id(self, row):
         return row.get('id')

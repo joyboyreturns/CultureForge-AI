@@ -27,3 +27,12 @@ latitude/longitude grid of interest cells with no streets. Text matching can mis
 
 **Skeptical judge view.** Strong: inspectable evidence, removal/recomposition, refusal to invent. Weak: one direction on a
 cold brief, no real map of venues, features still numerous behind "More". Risk: live latency and the Qloo quota.
+
+
+## Addendum (22 Oct 2026, later)
+Fixed after live runs: pizza category; Qloo `specialty_dish` tags; other-city venues can no longer anchor; Qloo's `metro`
+field now counts as the place (Melbourne suburbs were wrongly "another location"); place-namespaced category tags
+(`category:place:…`, `genre:place:…`) are preferred because Qloo-namespace tags returned no places; two businesses in one
+idea are ambiguous; "yoga cafe"-style phrases are looked up whole and match on the distinctive word; a narrow
+"Local Reference Study" direction when real references exist but no recipe fits; unknown locations give a friendly
+message. Not verified: Bengaluru, Berlin (Qloo timed out), the removal "unchanged/unresolved" outcomes.

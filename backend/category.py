@@ -165,6 +165,13 @@ def resolve(idea: str) -> CategoryResolution:
             if _contains(term.casefold(), text):
                 hits.append((len(term), cid, term))
     if hits:
+        # A term inside a longer matched term is the same mention ("cafe" in "gaming cafe").
+        distinct = [h for h in hits if not any(h[2] != o[2] and h[2].casefold() in o[2].casefold() for o in hits)]
+        categories = {cid for _, cid, _ in distinct}
+        if len(categories) > 1:
+            return CategoryResolution('', phrase, '', 'unresolved', alternatives=tuple(sorted(categories)),
+                                      reason=f'"{phrase}" names more than one business ({", ".join(sorted(categories))}); '
+                                             'name the main one.')
         top = max(length for length, _, _ in hits)
         best = sorted({(cid, term) for length, cid, term in hits if length == top})
         ids = {cid for cid, _ in best}
@@ -176,6 +183,16 @@ def resolve(idea: str) -> CategoryResolution:
         leftover = [w for w in re.findall(r"[\w'’]+", text)
                     if w not in NEUTRAL and not _contains(w, term.casefold())]
         if term.casefold() in GENERIC_HEADS and leftover:
+            words = re.findall(r"[\w'’]+", phrase)
+            distinctive = tuple(w.casefold() for w in words if len(w) > 2 and w.casefold() not in
+                                GENERIC_HEADS | GENERIC_ONLY | NEUTRAL)
+            if distinctive and len(words) <= 4:
+                return CategoryResolution('', phrase, phrase.casefold(), 'open_vocabulary', phrase.casefold(),
+                                          distinctive, (cid,),
+                                          f'"{phrase}" is more specific than "{term}", so Qloo\'s own taxonomy is '
+                                          'asked about the whole phrase. It counts as resolved only if a returned '
+                                          'category tag matches it; a place matches on the distinctive word '
+                                          f'("{distinctive[0]}"), not on "{term}" alone.')
             return CategoryResolution('', phrase, '', 'unresolved', alternatives=(cid,),
                                       reason=f'The modifier "{leftover[0]}" is not one CultureForge recognises, '
                                              f'so "{term}" was not read as {spec["label"].lower()}.')
@@ -185,7 +202,8 @@ def resolve(idea: str) -> CategoryResolution:
     words = re.findall(r"[\w'’]+", phrase)
     if 1 <= len(words) <= 4 and not all(w.casefold() in GENERIC_ONLY | NEUTRAL for w in words):
         return CategoryResolution('', phrase, phrase.casefold(), 'open_vocabulary', phrase.casefold(),
-                                  tuple(w.casefold() for w in words if len(w) > 2), (),
+                                  tuple(w.casefold() for w in words if len(w) > 2 and w.casefold() not in
+                                        GENERIC_HEADS | GENERIC_ONLY | NEUTRAL) or tuple(w.casefold() for w in words if len(w) > 2), (),
                                   f'"{phrase}" is not a category CultureForge knows in advance, so Qloo\'s own '
                                   'taxonomy is asked what it is. It counts as resolved only if a returned '
                                   'category tag matches the phrase.')
