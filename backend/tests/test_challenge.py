@@ -337,3 +337,114 @@ def test_a_re_anchored_direction_is_labelled_as_a_counterfactual(monkeypatch):
         response.project, response, anchor_entity_id='id-2')['directions'][0]
     assert reanchored['isCounterfactual'] is True
     assert reanchored['originalAnchor']['entityId'] == 'id-1'
+
+
+# ---------------------------------------------------------------------------
+# anchor-fit-4: the written rule, its confidence and its sensitivity
+# ---------------------------------------------------------------------------
+
+def test_the_rank_rule_is_thirds_and_reduces_to_first_and_last_on_small_samples():
+    assert [challenge.rank_band(p, 3) for p in (1, 2, 3)] == ['pass', 'mixed', 'fail']
+    assert [challenge.rank_band(p, 5) for p in (1, 2, 4, 5)] == ['pass', 'mixed', 'mixed', 'fail']
+    assert [challenge.rank_band(p, 10) for p in range(1, 11)] == (
+        ['pass'] * 3 + ['mixed'] * 4 + ['fail'] * 3)
+    assert challenge.rank_band(1, 1) == 'mixed'
+
+
+def test_confidence_follows_sample_size_and_stability_and_is_never_high():
+    assert challenge.confidence_label(2, True)[0] == 'none'
+    assert challenge.confidence_label(5, True)[0] == 'low'
+    assert challenge.confidence_label(10, True)[0] == 'moderate'
+    assert challenge.confidence_label(10, False)[0] == 'low'
+    assert all(challenge.confidence_label(n, s)[0] != 'high' for n in range(12) for s in (True, False))
+
+
+def _ten(monkeypatch, anchor_index: int, demographic: str = ''):
+    places = [(f'id-{n}', f'Place {n}') for n in range(1, 11)]
+    evidence = _evidence(places)
+    concept = _concept('d-1', 'Direction', [f'ev-entity-{anchor_index}'])
+    response = _response(evidence, [concept])
+    provider = FakeProvider(
+        rank_rows=[{'entity_id': f'id-{n}', 'name': f'Place {n}', 'affinity': 1 - n / 20} for n in range(1, 11)],
+        compare={'tags': [], 'a': [{'name': 'Nightlife', 'tag_id': 'urn:tag:good_for:qloo:nightlife'}], 'b': []})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+    return challenge.challenge_directions(response.project, response, demographic_override=demographic or None), provider
+
+
+def test_a_top_third_anchor_with_a_cultural_tag_is_supported_with_moderate_confidence(monkeypatch):
+    result, _provider = _ten(monkeypatch, anchor_index=1)  # Place 2 ranks 2 of 10
+    entry = result['directions'][0]
+    assert entry['verdict'] == challenge.SUPPORTED
+    index = entry['index']
+    assert index['policy'] == 'anchor-fit-4' == result['policyVersion']
+    assert (index['rankCheck'], index['tagCheck'], index['sampleSize']) == ('pass', 'pass', 10)
+    assert index['confidence'] == 'moderate'
+    assert index['sensitivity']['stable'] is True
+    assert 'positions 1-3' in entry['checks'][0]['detail']
+
+
+def test_a_borderline_anchor_is_low_confidence_because_one_removal_changes_it(monkeypatch):
+    result, _provider = _ten(monkeypatch, anchor_index=3)  # Place 4 ranks 4 of 10: mixed
+    index = result['directions'][0]['index']
+    assert index['rankCheck'] == 'mixed'
+    # Removing any place above it moves it to 3 of 9: the top band.
+    assert index['sensitivity']['stable'] is False
+    assert {change['rankCheck'] for change in index['sensitivity']['changesWhenRemoved']} == {'pass'}
+    assert index['confidence'] == 'low'
+    assert result['directions'][0]['verdict'] == challenge.UNPROVEN
+
+
+def test_a_bottom_third_anchor_is_contested_and_the_alternatives_are_listed(monkeypatch):
+    result, provider = _ten(monkeypatch, anchor_index=8)  # Place 9 ranks 9 of 10
+    entry = result['directions'][0]
+    assert entry['verdict'] == challenge.CONTESTED
+    alternatives = entry['index']['sensitivity']['alternativeAnchors']
+    assert len(alternatives) == 9
+    assert [alt['rankCheck'] for alt in alternatives[:3]] == ['pass'] * 3
+    # The sensitivity is computed from the one ranking: no extra rank call.
+    assert [operation for operation, _ in provider.calls].count('rank') == 1
+
+
+def test_a_chosen_profile_is_sent_and_reported_as_chosen(monkeypatch):
+    result, provider = _ten(monkeypatch, anchor_index=1, demographic='seniors')
+    rank_payload = next(payload for operation, payload in provider.calls if operation == 'rank')
+    assert rank_payload['demographic'] == 'seniors'
+    assert result['profile']['source'] == 'chosen'
+    assert result['profile']['proposed'] == 'gen z'
+    assert 'you chose' in result['directions'][0]['checks'][0]['detail']
+
+
+def test_an_unknown_profile_is_refused_before_any_request(monkeypatch):
+    provider = FakeProvider(rank_rows=[], compare={})
+    monkeypatch.setattr(challenge, 'QlooHarnessProvider', lambda: provider)
+    response = _response(_evidence([('id-1', 'A'), ('id-2', 'B'), ('id-3', 'C')]),
+                         [_concept('d', 'D', ['ev-entity-0'])])
+    with pytest.raises(challenge.QlooHarnessError):
+        challenge.challenge_directions(response.project, response, demographic_override='everyone')
+    assert provider.calls == []
+
+
+def test_the_profile_is_proposed_before_the_test_and_costs_nothing():
+    from fastapi.testclient import TestClient
+
+    import backend.main as main
+
+    client = TestClient(main.app)
+    named = client.post('/api/profile/propose', json={'audience': 'Design-conscious Gen Z'}).json()
+    assert (named['demographic'], named['named']) == ('gen z', True)
+    default = client.post('/api/profile/propose', json={'audience': 'Bicycle couriers'}).json()
+    assert (default['demographic'], default['named']) == ('millennials', False)
+    assert 'seniors' in default['choices']
+    bad = client.post('/api/projects/challenge', json={
+        'project': {'businessType': 'Retail', 'audience': 'x y', 'location': 'Paris', 'budget': 'b'},
+        'demographic': 'everyone'})
+    assert bad.status_code == 422
+
+
+def test_the_evidence_policy_document_states_this_policy():
+    from pathlib import Path
+
+    text = (Path(__file__).resolve().parents[2] / 'docs' / 'EVIDENCE_POLICY.md').read_text(encoding='utf-8')
+    assert challenge.POLICY_VERSION in text
+    for phrase in ('total // 3', 'MINIMUM_VENUES', 'leave-one-out', 'not demand'):
+        assert phrase in text, phrase

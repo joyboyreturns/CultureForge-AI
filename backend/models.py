@@ -240,6 +240,11 @@ class ChallengeRevision(BaseModel):
     resolvedTags: list[str] = Field(default_factory=list, max_length=10)
 
 
+class ProfileRequest(BaseModel):
+    """Ask which demographic profile the evidence test would use."""
+    audience: str = Field(min_length=2, max_length=240)
+
+
 class ChallengeRequest(BaseModel):
     """Test a direction against the local evidence."""
     project: ProjectRequest
@@ -248,6 +253,10 @@ class ChallengeRequest(BaseModel):
     #: Hold the claim to a different anchor: the same direction, built around
     #: a different place. The verdict then answers for that one.
     anchorEntityId: str = ''
+    #: The demographic profile to rank against, chosen before the test runs.
+    #: Empty uses the profile CultureForge proposes from the brief.
+    demographic: Literal['', 'gen z', 'millennials', 'young adults', 'women 25-34', 'women 35-44',
+                         'men 25-34', 'men 35-44', 'seniors'] = ''
     #: The exploration as it stands. When it is sent, the test is about this
     #: evidence and not a fresh generation from the brief.
     revision: Optional[ChallengeRevision] = None

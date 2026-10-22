@@ -12,7 +12,8 @@ from uuid import uuid4
 
 from .comparison import compare_audiences as compare_audiences_native
 from .comparison import rank_entities, recompose
-from .challenge import challenge_directions
+from .challenge import DEMOGRAPHIC_CHOICES, challenge_directions, guess_demographic
+from .challenge import POLICY_VERSION as CHALLENGE_POLICY_VERSION
 from .challenge_probe import challenge_probe
 from . import config, examples
 from .evidence_store import get_store
@@ -25,7 +26,7 @@ from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequ
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
-                     InvestigationRequest, ProjectRequest, ProvenanceMetadata,
+                     InvestigationRequest, ProfileRequest, ProjectRequest, ProvenanceMetadata,
                      RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
                      WherePopularRequest)
 from .platform import get_platform
@@ -785,7 +786,20 @@ def challenge_directions_route(request: ChallengeRequest) -> dict:
         # brief is composed from the evidence already held.
         response = provider.generate(request.project)
     return challenge_directions(request.project, response, request.directionId or None,
-                                request.anchorEntityId or None)
+                                request.anchorEntityId or None, request.demographic or None)
+
+
+@app.post('/api/profile/propose', tags=['evidence'],
+          summary='The demographic profile the evidence test would rank against')
+def propose_profile(request: ProfileRequest) -> dict:
+    """Shown before the test runs, so a default is never applied silently.
+
+    `named` says whether the brief named this demographic; when it did not,
+    the profile is a default and the screen says so. Costs no Qloo request.
+    """
+    demographic, named = guess_demographic(request.audience)
+    return {'demographic': demographic, 'named': named, 'choices': list(DEMOGRAPHIC_CHOICES),
+            'policyVersion': CHALLENGE_POLICY_VERSION}
 
 
 @app.post('/api/projects/challenge-probe', tags=['evidence'],

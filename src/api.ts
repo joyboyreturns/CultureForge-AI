@@ -421,6 +421,26 @@ export interface ChallengedDirection {
   /** The other places it could have been held to. */
   alternatives: { entityId: string | null; label: string | null }[]
   checks: ChallengeCheck[]
+  /** The anchor-fit-4 index: the rule's inputs and outcome, its confidence
+   *  and its sensitivity. It holds positions and counts, never a score. */
+  index?: {
+    policy: string
+    rule: string
+    rankCheck: 'pass' | 'fail' | 'mixed' | null
+    tagCheck: 'pass' | 'fail' | 'mixed' | null
+    qualifyingTags?: number | null
+    sampleSize: number
+    minimumSample: number
+    confidence: 'none' | 'low' | 'moderate'
+    confidenceReason: string
+    sensitivity: {
+      stable: boolean
+      checked: boolean
+      rankCheck?: string
+      changesWhenRemoved: { removed: string; rankCheck: string }[]
+      alternativeAnchors: { entityId: string; label: string; position: number; rankCheck: 'pass' | 'fail' | 'mixed' }[]
+    }
+  }
   coverage: {
     venuesRetrieved: number
     venuesCited: number
@@ -449,6 +469,10 @@ export interface ChallengeResult {
     /** Who proposed the profile — CultureForge read it from the brief; Qloo
      *  converted it into the request signals it ranked against. */
     proposedBy?: string
+    /** named: the brief named it. default: it did not. chosen: picked before the test. */
+    source?: 'named' | 'default' | 'chosen'
+    proposed?: string
+    choices?: string[]
   }
   /** The order the directions arrived in, before the test. */
   arrivalOrder?: string[]
@@ -480,11 +504,18 @@ export interface ReplacementProbeResult {
  */
 export async function challengeDirections(
   project: ProjectRequest, directionId = '', anchorEntityId = '',
-  revision?: { evidence: Evidence[]; concepts: Concept[]; resolvedTags: string[] }
+  revision?: { evidence: Evidence[]; concepts: Concept[]; resolvedTags: string[] },
+  demographic = '',
 ): Promise<ChallengeResult> {
   return postJson<ChallengeResult>('/api/projects/challenge', {
-    project, directionId, anchorEntityId, revision,
+    project, directionId, anchorEntityId, revision, demographic,
   })
+}
+
+/** The demographic profile the evidence test would use, before it runs. Costs no Qloo request. */
+export interface ProfileProposal { demographic: string; named: boolean; choices: string[]; policyVersion: string }
+export async function proposeProfile(audience: string): Promise<ProfileProposal> {
+  return postJson<ProfileProposal>('/api/profile/propose', { audience })
 }
 
 export interface EvidenceAnalysisDirection {

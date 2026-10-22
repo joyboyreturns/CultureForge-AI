@@ -1321,3 +1321,11 @@
 .audience-bridge button:hover,.audience-bridge button:focus-visible{border-color:var(--accent)}
 .audience-bridge button i{font:10px 'DM Mono',monospace;color:var(--muted);font-style:normal;margin-left:auto}
 .audience-bridge-gap{font-size:12px;line-height:1.6;color:var(--muted);border-left:2px solid var(--accent);padding-left:10px;margin-top:12px}
+
+/* --- Evidence test profile, chosen before the test runs ------------------- */
+.profile-chooser{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:0 0 16px}
+.profile-chooser label{display:flex;align-items:center;gap:10px}
+.profile-chooser select{background:var(--surface-raised);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:13px;padding:6px 8px}
+.profile-chooser p{font-size:12px;line-height:1.6;color:var(--muted);margin:0;flex:1 1 280px}
+.challenge-index{font-size:12px;line-height:1.7;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.challenge-index b{color:var(--text);font-weight:500}

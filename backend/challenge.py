@@ -7,12 +7,13 @@ it* — and, more importantly, it is built so that the answer can be **no**.
 Two checks, each one a Qloo workflow, each one able to fail:
 
 1. **Where does this place sit for that profile?** (`rank`) The retrieved
-   places are ranked against a demographic profile CultureForge proposed
-   from the founder's own words — because Qloo's ``rank`` workflow returns
-   nothing when it is given a location and a tag list alone. The request
-   carries a profile and a location, **not** the audience's own cultural
-   tags, and the wording says so. An anchor that ranks *last* within the
-   retrieved set fails this policy's relative-ranking check.
+   places are ranked against a demographic profile — proposed by
+   CultureForge from the founder's own words, shown before the test runs,
+   and changeable — because Qloo's ``rank`` workflow returns nothing when it
+   is given a location and a tag list alone. The request carries a profile
+   and a location, **not** the audience's own cultural tags, and the wording
+   says so. The anchor passes in the top third of the ranked places, fails
+   in the bottom third, and is mixed in between (``rank_band``).
 2. **What cultural tags were returned for this anchor?**
    (``compare_audiences``) The anchor is compared with **every other place
    that was returned**, cited or not, so that changing the anchor changes
@@ -37,6 +38,11 @@ willingness to pay — and the reason each one is reported says exactly that:
 
 A direction is never called a good business. It is called supported,
 contested, or unproven, by the evidence.
+
+Policy anchor-fit-4 is written out in docs/EVIDENCE_POLICY.md: the rule,
+its inputs, the minimum sample, the confidence label and the sensitivity
+checks. It produces no score. Every number it reports is a position, a count
+or a value Qloo returned.
 """
 from __future__ import annotations
 
@@ -64,11 +70,93 @@ VERDICT_SCOPE = 'Anchor fit within the retrieved sample'
 
 #: The version of the decision policy. A verdict that cannot be traced to the
 #: policy that produced it is not a verdict, it is an opinion.
-POLICY_VERSION = 'anchor-fit-3'
+POLICY_VERSION = 'anchor-fit-4'
 
 #: Below this many retrieved venues, a check is reported as inconclusive
 #: rather than as a verdict. Two places are not a market.
 MINIMUM_VENUES = 3
+
+#: From this many ranked places, the confidence label is "moderate"; below
+#: it, "low". It is never "high": the sample is at most ten places, ranked
+#: against one demographic profile.
+MODERATE_SAMPLE = 6
+
+#: The demographic phrases this policy will send to Qloo's rank workflow.
+#: These are the phrases Qloo's documented mapping converts into age and
+#: gender signals; anything else is refused before a request is made.
+DEMOGRAPHIC_CHOICES = ('gen z', 'millennials', 'young adults', 'women 25-34', 'women 35-44',
+                       'men 25-34', 'men 35-44', 'seniors')
+DEFAULT_DEMOGRAPHIC = 'millennials'
+
+
+def rank_band(position: int, total: int) -> str:
+    """The rank check, as a rule: top third passes, bottom third fails.
+
+    The band is ``k = max(1, total // 3)`` places at each end. With three to
+    five places that is first and last only; with ten it is positions 1-3
+    and 8-10. A single ranked place has no one to be compared with.
+    """
+    if total < 2:
+        return 'mixed'
+    k = max(1, total // 3)
+    if position <= k:
+        return 'pass'
+    if position > total - k:
+        return 'fail'
+    return 'mixed'
+
+
+def band_words(total: int) -> str:
+    k = max(1, total // 3)
+    top = 'first' if k == 1 else f'positions 1-{k}'
+    bottom = 'last' if k == 1 else f'positions {total - k + 1}-{total}'
+    return f'the top band is {top} and the bottom band is {bottom} of {total}'
+
+
+def confidence_label(sample: int, stable: bool) -> tuple[str, str]:
+    """How much weight the verdict can bear, from the sample and its stability."""
+    if sample < MINIMUM_VENUES:
+        return 'none', f'Fewer than {MINIMUM_VENUES} places were ranked, so there is no verdict to weigh.'
+    if not stable:
+        return 'low', ('Removing a single other place changes the rank check, so the verdict '
+                       'depends on which places happened to be returned.')
+    if sample < MODERATE_SAMPLE:
+        return 'low', f'Only {sample} places were ranked.'
+    return 'moderate', (f'{sample} places were ranked and no single removal changes the rank check. '
+                        'It is not "high": the sample is at most ten places and one demographic profile.')
+
+
+def _sensitivity(ranking: dict[str, dict], anchor_id: Optional[str],
+                 labels: dict[str, str]) -> dict:
+    """Leave-one-out and alternative anchors, from the same ranking: no new call.
+
+    Leave-one-out removes each other ranked place in turn and re-applies the
+    band rule to the anchor's new position. Alternative anchors apply the
+    rule to every other ranked place. Only the rank check is recomputed; the
+    tag check needs its own Qloo comparison, which the re-test runs.
+    """
+    order = sorted(ranking.items(), key=lambda item: item[1]['position'])
+    ids = [entity_id for entity_id, _ in order]
+    total = len(ids)
+    if not anchor_id or anchor_id not in ids or total < MINIMUM_VENUES:
+        return {'stable': False, 'checked': False, 'changesWhenRemoved': [], 'alternativeAnchors': []}
+    original = rank_band(ids.index(anchor_id) + 1, total)
+    changes = []
+    for removed in ids:
+        if removed == anchor_id:
+            continue
+        remaining = [entity_id for entity_id in ids if entity_id != removed]
+        result = rank_band(remaining.index(anchor_id) + 1, total - 1)
+        if result != original:
+            changes.append({'removed': labels.get(removed, removed), 'rankCheck': result})
+    alternatives = [{
+        'entityId': entity_id,
+        'label': labels.get(entity_id, entity_id),
+        'position': index + 1,
+        'rankCheck': rank_band(index + 1, total),
+    } for index, entity_id in enumerate(ids) if entity_id != anchor_id]
+    return {'stable': not changes, 'checked': True, 'rankCheck': original,
+            'changesWhenRemoved': changes, 'alternativeAnchors': alternatives}
 
 #: The tag families that say what a place **is** — or how it runs. Every
 #: place has these, so they cannot tell one place from another: a place is a
@@ -128,7 +216,7 @@ def guess_demographic(audience: str) -> tuple[str, bool]:
             band = '35-44' if older else '25-34'
             return f'{phrase} {band}', True
         return phrase, True
-    return 'millennials', False
+    return DEFAULT_DEMOGRAPHIC, False
 
 
 def _tag_family(tag_id: Optional[str]) -> str:
@@ -292,14 +380,14 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
         'scope': VERDICT_SCOPE,
         'reason': '',
         'claim': (
-            f'Within the places Qloo returned, {primary.label} ranks well for the demographic '
-            'CultureForge proposed from the brief, and Qloo returned a qualifying cultural tag '
+            f'Within the places Qloo returned, {primary.label} ranks in the top third for the '
+            'demographic profile, and Qloo returned a qualifying cultural tag '
             'for it in the comparison against the other retrieved places.'
             if primary else 'This direction names no place, so it makes no claim to check.'
         ),
         'falsifier': (
-            f'Qloo ranks {primary.label} last among the places it returned for that demographic, '
-            'or no qualifying cultural tag was returned for it in the comparison.'
+            f'Qloo ranks {primary.label} in the bottom third of the places it returned for that '
+            'demographic. (No qualifying cultural tag leaves it unproven, not contradicted.)'
             if primary else 'There is nothing to falsify.'
         ),
         'unprovenIf': (
@@ -351,7 +439,9 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     rank_entry = ranking.get(primary.entityId) if primary else None
     # CultureForge proposes the profile; Qloo converts it into the request
     # signals it actually ranks against. The screen says which is which.
-    if inferred:
+    if inferred == 'chosen':
+        profile = f'the “{demographic}” demographic you chose, near {project.location}'
+    elif inferred:
         profile = f'the “{demographic}” demographic CultureForge proposed from the brief, near {project.location}'
     else:
         profile = (f'the default “{demographic}” demographic — no demographic was named in the '
@@ -359,39 +449,19 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     if rank_entry:
         position, total = rank_entry['position'], rank_entry['total']
         affinity = rank_entry['affinity']
-        if position == 1:
-            result['checks'].append({
-                'name': 'Where does this place sit for that profile?',
-                'result': 'pass',
-                'detail': (
-                    f'Qloo ranks {primary.label} first of the {total} places it returned for '
-                    f'{profile}. This ranking does not use the audience signals you selected.'
-                ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total,
-                           'demographic': demographic},
-            })
-        elif position == total and total > 1:
-            result['checks'].append({
-                'name': 'Where does this place sit for that profile?',
-                'result': 'fail',
-                'detail': (
-                    f'Qloo ranks {primary.label} last of the {total} places it returned for '
-                    f'{profile}. It ranks last within this retrieved set.'
-                ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total,
-                           'demographic': demographic},
-            })
-        else:
-            result['checks'].append({
-                'name': 'Where does this place sit for that profile?',
-                'result': 'mixed',
-                'detail': (
-                    f'Qloo ranks {primary.label} {position} of the {total} places it returned for '
-                    f'{profile}. This ranking does not use the audience signals you selected.'
-                ),
-                'metric': {'affinity': affinity, 'position': position, 'of': total,
-                           'demographic': demographic},
-            })
+        outcome = rank_band(position, total)
+        where = {'pass': 'in the top band', 'fail': 'in the bottom band', 'mixed': 'between the bands'}[outcome]
+        detail = (f'Qloo ranks {primary.label} {position} of the {total} places it returned for '
+                  f'{profile}: {where} ({band_words(total)}).')
+        detail += (' It ranks low within this retrieved set.' if outcome == 'fail'
+                   else ' This ranking does not use the audience signals you selected.')
+        result['checks'].append({
+            'name': 'Where does this place sit for that profile?',
+            'result': outcome,
+            'detail': detail,
+            'metric': {'affinity': affinity, 'position': position, 'of': total,
+                       'demographic': demographic},
+        })
     else:
         result['checks'].append({
             'name': 'Where does this place sit for that profile?',
@@ -477,6 +547,27 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
     else:
         result['verdict'] = UNPROVEN
         result['reason'] = 'The retrieved evidence did not settle this direction either way.'
+    rank_check = next((check for check in result['checks']
+                       if check['name'] == 'Where does this place sit for that profile?'), None)
+    tag_check = next((check for check in result['checks']
+                      if check['name'] == 'What cultural tags were returned for this anchor?'), None)
+    sample = max((entry['total'] for entry in ranking.values()), default=0)
+    sensitivity = _sensitivity(ranking, primary.entityId if primary else None,
+                               {venue.entityId: venue.label for venue in venues if venue.entityId})
+    confidence, confidence_reason = confidence_label(sample, sensitivity['stable'])
+    result['index'] = {
+        'policy': POLICY_VERSION,
+        'rule': ('Contested if the rank check fails; supported only if the rank check and the '
+                 'tag check both pass; otherwise unproven.'),
+        'rankCheck': rank_check['result'] if rank_check else None,
+        'tagCheck': tag_check['result'] if tag_check else None,
+        'qualifyingTags': (tag_check or {}).get('metric', {}).get('signals'),
+        'sampleSize': sample,
+        'minimumSample': MINIMUM_VENUES,
+        'confidence': confidence,
+        'confidenceReason': confidence_reason,
+        'sensitivity': sensitivity,
+    }
     result['coverage']['note'] = (
         f'Judged on {len(venues)} places Qloo returned for this brief, '
         f'{len(concept_venues)} of which this direction cites. '
@@ -494,7 +585,8 @@ def _challenge_one(provider: QlooHarnessProvider, project: ProjectRequest,
 
 def challenge_directions(project: ProjectRequest, response: GenerateResponse,
                           direction_id: Optional[str] = None,
-                          anchor_entity_id: Optional[str] = None) -> dict:
+                          anchor_entity_id: Optional[str] = None,
+                          demographic_override: Optional[str] = None) -> dict:
     """Run the checks, and put the directions back in the order the evidence leaves them."""
     provider = QlooHarnessProvider()
     venues = _venues(response.evidence)
@@ -508,7 +600,14 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
             'The audience did not resolve into cultural signals, so there is nothing to test against.',
             code='NO_EVIDENCE')
 
-    demographic, inferred = guess_demographic(project.audience)
+    proposed, named = guess_demographic(project.audience)
+    if demographic_override:
+        if demographic_override not in DEMOGRAPHIC_CHOICES:
+            raise QlooHarnessError('That demographic profile is not one this policy can send to Qloo.',
+                                   code='INVALID_REQUEST')
+        demographic, inferred = demographic_override, 'chosen'
+    else:
+        demographic, inferred = proposed, named
     ranking = _rank_venues(provider, project, venues, demographic)
     results = []
     for concept in response.concepts:
@@ -541,8 +640,12 @@ def challenge_directions(project: ProjectRequest, response: GenerateResponse,
             # Whether the brief actually named this demographic. When it did
             # not, the screen says the profile is a default that can be
             # changed, rather than passing a guess off as an inference.
-            'inferred': inferred,
-            'proposedBy': 'CultureForge, from the founder’s own words',
+            'inferred': inferred is True,
+            'source': ('chosen' if inferred == 'chosen' else 'named' if inferred else 'default'),
+            'proposed': proposed,
+            'choices': list(DEMOGRAPHIC_CHOICES),
+            'proposedBy': ('you, before the test ran' if inferred == 'chosen'
+                           else 'CultureForge, from the founder’s own words'),
             'location': project.location,
             'signals': tags,
         },
