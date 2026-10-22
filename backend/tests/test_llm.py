@@ -177,9 +177,7 @@ def test_gateway_failure_is_not_retried(monkeypatch):
     assert len(calls) == 1
 
 
-def test_the_budget_guard_stops_calls(monkeypatch, tmp_path):
-    log = tmp_path / 'gateway_calls.json'
-    monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', log)
+def test_the_budget_guard_stops_calls(monkeypatch):
     monkeypatch.setenv('LLM_MAX_CALLS_PER_HOUR', '1')
     monkeypatch.setenv('LLM_MAX_CALLS_PER_DAY', '1')
     llm._check_budget()
@@ -189,12 +187,12 @@ def test_the_budget_guard_stops_calls(monkeypatch, tmp_path):
     assert caught.value.code == 'LLM_QUOTA_EXHAUSTED'
 
 
-def test_gateway_budget_ledger_is_private(monkeypatch, tmp_path):
-    log = tmp_path / 'gateway_calls.json'
-    monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', log)
+def test_gateway_budget_ledger_is_private():
+    from backend import ledger
+
     llm._record_call()
-    assert len(llm._read_calls()) == 1
-    assert log.stat().st_mode & 0o777 == 0o600
+    assert llm.budget_state()['callsToday'] == 1
+    assert ledger.DB_PATH.stat().st_mode & 0o777 == 0o600
 
 
 def test_the_model_is_never_shown_a_number():

@@ -90,24 +90,22 @@ def test_analysis_is_opt_in(analysis_request, monkeypatch):
         reasoning.analyze(analysis_request)
 
 
-def test_analysis_daily_budget_stops_before_the_next_gateway_call(tmp_path, monkeypatch):
-    monkeypatch.setattr(reasoning, 'BUDGET_FILE', tmp_path / 'calls.json')
+def test_analysis_daily_budget_stops_before_the_next_gateway_call(monkeypatch):
     monkeypatch.setenv('AI_GATEWAY_ANALYSIS_DAILY_LIMIT', '1')
     reasoning._reserve()
     with pytest.raises(reasoning.AnalysisUnavailable, match='daily analysis allowance'):
         reasoning._reserve()
 
 
-def test_analysis_budget_ledger_corruption_fails_closed(tmp_path, monkeypatch):
-    ledger = tmp_path / 'calls.json'
-    ledger.write_text('{broken', encoding='utf-8')
-    monkeypatch.setattr(reasoning, 'BUDGET_FILE', ledger)
+def test_analysis_budget_ledger_corruption_fails_closed():
+    from backend import ledger
+
+    ledger.DB_PATH.write_bytes(b'this is not a database' * 100)
     with pytest.raises(reasoning.AnalysisUnavailable, match='budget could not be read'):
         reasoning._reserve()
 
 
 def test_unavailable_gateway_is_reported_and_never_cached(analysis_request, tmp_path, monkeypatch, store):
-    monkeypatch.setattr(reasoning, 'BUDGET_FILE', tmp_path / 'calls.json')
     monkeypatch.setenv('AI_GATEWAY_ENABLED', 'true')
     monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-placeholder')
     monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')

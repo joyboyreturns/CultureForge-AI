@@ -12,7 +12,7 @@ FIXTURES = Path(__file__).resolve().parent.parent / 'fixtures'
 @pytest.fixture(autouse=True)
 def isolated_runtime(tmp_path, monkeypatch):
     """Tests must not depend on credentials or modify the owner's saved work."""
-    from backend import evidence_store, platform, providers
+    from backend import evidence_store, ledger, platform, providers
 
     monkeypatch.setenv('CULTUREFORGE_PROVIDER', 'mock')
     # A developer's .env may hold RUN_PROFILE=judging or the kill switch; the
@@ -26,7 +26,7 @@ def isolated_runtime(tmp_path, monkeypatch):
     monkeypatch.setattr(evidence_store, 'STORE_DIR', tmp_path / 'cache')
     monkeypatch.setattr(evidence_store, '_store', None)
     monkeypatch.setattr(providers, '_cached_providers', {})
-    monkeypatch.setattr(providers.QlooHarnessProvider, 'BUDGET_LOG_PATH', tmp_path / 'qloo_calls.json')
+    monkeypatch.setattr(ledger, 'DB_PATH', tmp_path / 'budget.db')
     yield
     if platform._platform is not None:
         platform._platform._connection.close()

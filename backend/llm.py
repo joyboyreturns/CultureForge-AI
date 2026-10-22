@@ -9,22 +9,19 @@ from __future__ import annotations
 import json
 import os
 import re
-import threading
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Optional
 
-from . import config
+from . import config, ledger
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 PROMPT_VERSION = 'naming-vercel-1'
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_TOKENS = 2048
-BUDGET_LOG_PATH = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_naming_calls.json'
 _env_loaded = False
-_budget_lock = threading.Lock()
 _NUMBER = re.compile(r'\d+(?:[.,]\d+)*')
 _CITATION = re.compile(r'https?://|www\.|\[\d+\]|\bsources?:', re.IGNORECASE)
 _WORD = re.compile(r"[A-Za-z][A-Za-z'’-]*")
@@ -89,54 +86,42 @@ def _timeout() -> int:
         return DEFAULT_TIMEOUT_SECONDS
 
 
-def _read_calls() -> list[float]:
-    try:
-        data = json.loads(BUDGET_LOG_PATH.read_text(encoding='utf-8'))
-        return [float(stamp) for stamp in data.get('calls', [])
-                if isinstance(stamp, (int, float)) and time.time() - float(stamp) < 86400]
-    except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
-        return []
-
-
-def _write_calls(calls: list[float]) -> None:
-    try:
-        BUDGET_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        BUDGET_LOG_PATH.write_text(json.dumps({'calls': calls}), encoding='utf-8')
-        os.chmod(BUDGET_LOG_PATH, 0o600)
-    except OSError:
-        pass
-
-
 def _check_budget() -> None:
     # The judging profile lifts the count; the timeout and the validator stay.
     hour_limit = config.limit('LLM_MAX_CALLS_PER_HOUR')
     day_limit = config.limit('LLM_MAX_CALLS_PER_DAY')
-    if hour_limit is None and day_limit is None:
-        return
-    now = time.time()
-    with _budget_lock:
-        calls = _read_calls()
-        if ((hour_limit is not None and sum(now - stamp < 3600 for stamp in calls) >= hour_limit)
-                or (day_limit is not None and len(calls) >= day_limit)):
-            raise LlmUnavailable(
-                'The model naming allowance is used up for now. The rule-based names remain available.',
-                code='LLM_QUOTA_EXHAUSTED', retryable=True,
-                details={'resetsInSeconds': 3600 - int(now % 3600)})
+    try:
+        ledger.check(ledger.LLM_NAMING, hour_limit, day_limit)
+    except ledger.BudgetExceeded as exc:
+        raise LlmUnavailable(
+            'The model naming allowance is used up for now. The rule-based names remain available.',
+            code='LLM_QUOTA_EXHAUSTED', retryable=True,
+            details={'resetsInSeconds': exc.resets_in_seconds}) from exc
+    except ledger.LedgerError as exc:
+        raise LlmUnavailable(
+            'The model naming allowance could not be read, so no model request was sent. '
+            'The rule-based names remain available.',
+            code='LLM_BUDGET_UNAVAILABLE', retryable=True) from exc
 
 
 def _record_call() -> None:
-    with _budget_lock:
-        calls = _read_calls()
-        calls.append(time.time())
-        _write_calls(calls)
+    # Successful and malformed Gateway answers count; an unreachable Gateway
+    # does not. The request was already made, so a ledger that cannot record
+    # it must not turn an answer into a failure.
+    try:
+        ledger.record(ledger.LLM_NAMING)
+    except ledger.LedgerError:
+        pass
 
 
 def budget_state() -> dict:
-    now = time.time()
-    calls = _read_calls()
+    try:
+        in_hour, in_day = ledger.counts(ledger.LLM_NAMING)
+    except ledger.LedgerError:
+        in_hour = in_day = None
     return {
-        'callsLastHour': sum(now - stamp < 3600 for stamp in calls),
-        'callsToday': len(calls),
+        'callsLastHour': in_hour,
+        'callsToday': in_day,
         'hourLimit': config.describe_limit(config.limit('LLM_MAX_CALLS_PER_HOUR')),
         'dayLimit': config.describe_limit(config.limit('LLM_MAX_CALLS_PER_DAY')),
     }

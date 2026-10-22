@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass
 
-from . import config, metering
+from . import config, ledger, metering
 from .concept_composer import compose
 from .evidence_store import cached_call, canonical_key, get_store, known_location
 
@@ -290,7 +290,6 @@ class QlooHarnessProvider(CultureProvider):
     """
     CACHE_TTL_SECONDS = 24 * 60 * 60
     CACHE_MAX_ENTRIES = 128
-    BUDGET_LOG_PATH = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'qloo_calls.json'
 
     def __init__(self, command: str = 'qloo', timeout_seconds: int = 90):
         self.command = command
@@ -323,34 +322,39 @@ class QlooHarnessProvider(CultureProvider):
         """Count this call against the local quota guard before it is made.
 
         The call is always recorded, so /api/health can say what was spent;
-        it is refused only when the profile enforces a limit.
+        it is refused only when the profile enforces a limit. The count and
+        the record are one SQLite transaction (backend/ledger.py), so two
+        workers cannot both take the last call.
         """
         hour_limit = config.limit('QLOO_MAX_CALLS_PER_HOUR')
         day_limit = config.limit('QLOO_MAX_CALLS_PER_DAY')
-        now = time.time()
-        with self._lock:
-            calls = self._read_call_log()
-            calls = [stamp for stamp in calls if now - stamp < 86400]
-            calls_in_hour = sum(1 for stamp in calls if now - stamp < 3600)
-            if ((hour_limit is not None and calls_in_hour >= hour_limit)
-                    or (day_limit is not None and len(calls) >= day_limit)):
+        try:
+            ledger.reserve(ledger.QLOO, hour_limit, day_limit)
+        except ledger.BudgetExceeded as exc:
+            raise QlooHarnessError(
+                'Qloo call budget reached for this period. Live signals are paused to protect the '
+                'hackathon API quota. Wait for the budget to reset, or open a saved exploration.',
+                code='QUOTA_EXHAUSTED', retryable=True,
+                details={'resetsInSeconds': exc.resets_in_seconds},
+            ) from exc
+        except ledger.LedgerError as exc:
+            # With a limit to enforce, an unreadable ledger must not become
+            # unlimited spend. Without one, it only costs the count.
+            if hour_limit is not None or day_limit is not None:
                 raise QlooHarnessError(
-                    'Qloo call budget reached for this period. Live signals are paused to protect the '
-                    'hackathon API quota. Wait for the budget to reset, or open a saved exploration.',
-                    code='QUOTA_EXHAUSTED', retryable=True,
-                    details={'resetsInSeconds': 3600 - int(now % 3600)},
-                )
-            calls.append(now)
-            self._write_call_log(calls)
+                    'The local Qloo budget could not be read, so no Qloo request was sent.',
+                    code='BUDGET_UNAVAILABLE', retryable=True) from exc
 
-    @classmethod
-    def budget_state(cls) -> dict:
+    @staticmethod
+    def budget_state() -> dict:
         """What this server has spent, against the limits its profile sets."""
-        now = time.time()
-        calls = [stamp for stamp in cls._read_call_log_at(cls.BUDGET_LOG_PATH) if now - stamp < 86400]
+        try:
+            in_hour, in_day = ledger.counts(ledger.QLOO)
+        except ledger.LedgerError:
+            in_hour = in_day = None
         return {
-            'callsLastHour': sum(1 for stamp in calls if now - stamp < 3600),
-            'callsToday': len(calls),
+            'callsLastHour': in_hour,
+            'callsToday': in_day,
             'hourLimit': config.describe_limit(config.limit('QLOO_MAX_CALLS_PER_HOUR')),
             'dayLimit': config.describe_limit(config.limit('QLOO_MAX_CALLS_PER_DAY')),
         }
@@ -372,25 +376,6 @@ class QlooHarnessProvider(CultureProvider):
 
     def _note_rate_limited(self) -> None:
         self._rate_limited_until = time.time() + config.rate_limit_cooldown_seconds()
-
-    def _read_call_log(self) -> list[float]:
-        return self._read_call_log_at(self.BUDGET_LOG_PATH)
-
-    @staticmethod
-    def _read_call_log_at(path: Path) -> list[float]:
-        try:
-            data = json.loads(path.read_text(encoding='utf-8'))
-            return [float(stamp) for stamp in data.get('calls', []) if isinstance(stamp, (int, float))]
-        except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
-            return []
-
-    def _write_call_log(self, calls: list[float]) -> None:
-        try:
-            self.BUDGET_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-            self.BUDGET_LOG_PATH.write_text(json.dumps({'calls': calls}), encoding='utf-8')
-            os.chmod(self.BUDGET_LOG_PATH, 0o600)
-        except OSError:
-            pass
 
     def _run_workflow(self, operation: str, payload: dict) -> dict:
         self._check_live_allowed()
