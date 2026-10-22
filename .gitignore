@@ -32,3 +32,5 @@ graphify-out/.graphify_labels.pending.json
 !/CultureForge AI/.obsidian/
 !/CultureForge AI/Welcome.md
 !/CultureForge AI/Graphify Workflow.md
+.coverage
+coverage.xml
