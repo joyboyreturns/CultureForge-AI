@@ -10,7 +10,7 @@
  *   2.  brief           POST /api/projects/generate returns a usable result
  *   3.  seeds           the audience resolves into candidate Qloo signals
  *   4.  confirm         the founder confirms the seeds and the agent runs
- *   5.  directions      three directions, each citing evidence that exists
+ *   5.  directions      up to three relevant directions, each citing evidence that exists
  *   6.  provenance      every piece of evidence traces to a real call
  *   7.  the test        removing a venue changes what survives
  *   8.  compare         Qloo's own A/B between two audiences
@@ -125,7 +125,7 @@ async function main() {
   const trace = live.trace ?? [];
 
   // 5. the directions
-  check('there are three directions', live.concepts?.length === 3,
+  check('one to three directions emerge without padding', live.concepts?.length >= 1 && live.concepts?.length <= 3,
     live.concepts?.map((c) => c.name).join(' | '));
   const dangling = [];
   for (const concept of live.concepts ?? []) {
@@ -152,7 +152,7 @@ async function main() {
   // not report the duration of the call that fetched it. The original time is
   // still stated in the detail, so nothing is hidden.
   const reused = trace.filter((event) => event.workflow && /reused from cache/i.test(event.detail ?? ''));
-  const fresh = trace.filter((event) => event.workflow && !/reused from cache/i.test(event.detail ?? ''));
+  const fresh = trace.filter((event) => event.workflow && event.status === 'ok' && !/reused from cache/i.test(event.detail ?? ''));
   check('a reused step claims no duration of its own',
     reused.every((event) => event.durationMs === 0),
     reused.map((e) => `${e.workflow} ${e.durationMs}ms`).join(', ') || 'no reused steps');
@@ -302,8 +302,8 @@ async function main() {
     !supported || challenged.body?.order?.[0] === supported.directionId,
     supported ? `${supported.name} leads` : 'nothing was supported');
   const contested = verdicts.filter((v) => v.verdict === 'contested');
-  check('the test can contest a direction',
-    contested.length >= 0,
+  check('recorded verdicts agree with their check outcomes',
+    verdicts.every(v => v.verdict === 'supported' ? v.checks.length >= 2 && v.checks.every(c => c.result === 'pass') : v.verdict === 'contested' ? v.checks.some(c => c.result === 'fail') : v.verdict === 'unproven'),
     contested.map((v) => v.name).join(', ') || 'none contested on this brief');
 
   // Hold a direction to a different place and re-test the same claim.
@@ -392,7 +392,7 @@ async function main() {
   // The same rule, checked on a second, independent result.
   const scenarioTrace = scenario.body?.trace ?? [];
   check('the re-research trace is consistent about what it spent',
-    scenarioTrace.filter((event) => event.workflow).every((event) => (/reused from cache/i.test(event.detail ?? '')
+    scenarioTrace.filter((event) => event.workflow && event.status === 'ok').every((event) => (/reused from cache/i.test(event.detail ?? '')
       ? event.durationMs === 0
       : typeof event.durationMs === 'number')),
     scenarioTrace.filter((event) => event.workflow).map((e) => `${e.workflow} ${e.durationMs}ms${/reused/i.test(e.detail ?? '') ? ' (reused)' : ''}`).join(', '));

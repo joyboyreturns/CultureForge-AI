@@ -157,6 +157,13 @@ def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
     _install(monkeypatch, provider)
 
     def execute_agent(answer, actual_tags, actual_places, remaining_allowance, deadline, on_event):
+        # The initial answer must be available while the slow controller is
+        # still running, with no completed analysis claimed in the preview.
+        snapshot = run.snapshot()
+        assert snapshot['status'] == 'running'
+        assert snapshot['partialResult']['concepts']
+        assert snapshot['result'] is None
+        assert snapshot['timings']['firstConceptMs'] >= snapshot['timings']['firstEvidenceMs']
         assert answer is generated
         assert actual_tags is tag_envelope and actual_places is rec_envelope
         assert remaining_allowance == 1
@@ -172,6 +179,7 @@ def test_bounded_agent_is_part_of_the_completed_research_run(monkeypatch):
     research._execute(run, allowance=3)
 
     assert run.status == research.STATUS_COMPLETE
+    assert run.timings['completeMs'] >= run.timings['firstConceptMs']
     assert run.result['agent']['mode'] == 'frontier_ai'
     assert 'agent-plan' in [event['step'] for event in run.result['trace']]
     assert 'agent-plan' in [event['step'] for event in run.events]

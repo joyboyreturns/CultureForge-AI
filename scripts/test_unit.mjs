@@ -48,6 +48,7 @@ const original = { ...concept, signals: [], image: '', imageAlt: '', evidenceIds
 const changed = { ...original, description: 'Rebuilt around another place', evidenceIds: ['other'] };
 const replacement = [{ id: 'other', entityId: 'other-qloo-id', kind: 'entity' }];
 assert.equal(dependence.compareDirection(original, { concepts: [changed], evidence: replacement }, evidence), 'changed', 'A source change must not conceal a changed answer');
+assert.equal(dependence.compareDirection(original, { concepts: [{ ...original, name: 'Rule name', tagline: 'Rule tagline' }], evidence }, evidence), 'unchanged', 'Omitting optional model naming is not evidence dependence');
 assert.equal(dependence.compareDirection(original, { concepts: [{ ...original, evidenceIds: ['other'] }], evidence: replacement }, evidence), 'sources');
 assert.equal(dependence.compareDirection(original, { concepts: [], evidence: [] }, evidence), 'disappeared');
 console.log('[ok] Notebook notes stay attached to their proposal and evidence; removal reports answer changes separately from source-only changes.');

@@ -42,6 +42,13 @@ def test_missing_api_paths_do_not_become_frontend_html(published):
     assert published.get('/../requirements.txt').status_code == 404
 
 
+def test_static_mount_preserves_wrong_api_method_status(published):
+    response = published.delete('/api/health')
+    assert response.status_code == 405
+    assert response.headers['allow'] == 'GET'
+    assert response.json()['detail']
+
+
 def test_an_incomplete_build_fails_before_deployment(tmp_path):
     with pytest.raises(RuntimeError, match='npm run build'):
         mount_frontend(FastAPI(), str(tmp_path))

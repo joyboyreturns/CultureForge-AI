@@ -400,10 +400,13 @@ def _answer_fingerprint(payload: dict) -> str:
     """What makes two answers to the same brief the same answer: the evidence
     and the directions, not the id, the timings or the trace."""
     payload = payload or {}
-    evidence = [(item.get('entityId') or item.get('tagId'), item.get('kind')) for item in payload.get('evidence') or []]
+    evidence = [{key: value for key, value in item.items() if key not in ('traceId', 'presentation')}
+                for item in payload.get('evidence') or []]
     concepts = [(item.get('name'), item.get('description'), tuple(item.get('evidenceIds') or []))
                 for item in payload.get('concepts') or []]
-    return json.dumps([evidence, concepts, payload.get('composerVersion')], sort_keys=True, default=str)
+    report = payload.get('agent') or {}
+    analysis = {key: report.get(key) for key in ('mode', 'status', 'model', 'analysis', 'rejectedClaims')}
+    return json.dumps([evidence, concepts, analysis, payload.get('composerVersion')], sort_keys=True, default=str)
 
 
 _platform: Optional[Platform] = None

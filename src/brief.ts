@@ -9,6 +9,7 @@ export function renderBrief(result: GenerateResponse, entries: Concept[], challe
   const lines = [
     '# CultureForge — Exploration brief', '',
     `Project: ${result.projectId}`, `Audience: ${result.project.audience}`,
+    `Business idea: ${result.project.businessIdea || result.project.businessType}`,
     `Location: ${result.project.location}`, `Planning budget: ${result.project.budget}`,
     `Objectives: ${result.project.objectives.join(', ') || 'None specified'}`, '',
     'Qloo supplies cultural evidence. CultureForge proposes business interpretations. The budget is a planning assumption; launch costs have not been estimated.',

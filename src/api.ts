@@ -49,7 +49,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
  * Only real answers are held. There is no mock fallback anywhere in this
  * module: if the backend cannot answer, the caller is told that.
  */
-const CACHE_STORAGE_KEY = 'cultureforge-live-results-v2'
+const CACHE_STORAGE_KEY = 'cultureforge-live-results-v4'
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000
 const CACHE_MAX_ENTRIES = 12
 
@@ -59,6 +59,7 @@ interface CacheEntry { storedAt: number; response: GenerateResponse }
 function briefKey(project: ProjectRequest): string {
   return [
     project.businessType,
+    project.businessIdea?.trim() ?? '',
     project.audience.trim(),
     project.location.trim(),
     project.budget,
@@ -269,6 +270,8 @@ export interface ResearchRun {
   audience: string
   events: TraceEvent[]
   result: GenerateResponse | null
+  partialResult?: GenerateResponse | null
+  timings?: { firstEvidenceMs?: number; firstConceptMs?: number; completeMs?: number }
   clarification: { reason: string; question: string; field: string; suggestion?: string | null } | null
   error: string | null
   transportRequests: number
@@ -341,10 +344,17 @@ export async function rankAnchors(
 }
 
 /** Rebuild the directions without a piece of evidence, using no new call. */
+export interface RecomposeResult {
+  concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string
+  trace?: TraceEvent[]; delivery?: Delivery | null; composerVersion?: string | null
+}
 export async function recompose(
-  project: ProjectRequest, excludeEntityIds: string[], excludeTagIds: string[] = []
-): Promise<{ concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string }> {
-  return postJson('/api/projects/recompose', { project, excludeEntityIds, excludeTagIds })
+  project: ProjectRequest, excludeEntityIds: string[], excludeTagIds: string[] = [],
+  basis?: { evidence: Evidence[] },
+): Promise<RecomposeResult> {
+  return postJson('/api/projects/recompose', { project, excludeEntityIds, excludeTagIds,
+    ...(basis ? { seedTagIds: basis.evidence.flatMap(e => e.kind === 'tag' && e.tagId ? [e.tagId] : []),
+      retainEntityIds: basis.evidence.flatMap(e => e.kind === 'entity' && e.entityId ? [e.entityId] : []) } : {}) })
 }
 
 // ---------------------------------------------------------------------------
@@ -421,9 +431,10 @@ export interface ChallengedDirection {
   /** The other places it could have been held to. */
   alternatives: { entityId: string | null; label: string | null }[]
   checks: ChallengeCheck[]
+  completion?: { rank: string; compare: string; completedChecks: number; totalChecks: number }
   /** Checks Qloo could not answer, with the real code; such a direction is unproven. */
-  problems?: { check: 'rank' | 'compare'; code: string; message: string }[]
-  /** The anchor-fit-4 index: the rule's inputs and outcome, its confidence
+  problems?: { check: 'rank' | 'compare'; code: string; message: string; retryable?: boolean }[]
+  /** The anchor-fit-5 index: the rule's inputs and outcome, its confidence
    *  and its sensitivity. It holds positions and counts, never a score. */
   index?: {
     policy: string

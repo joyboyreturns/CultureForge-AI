@@ -63,7 +63,7 @@ export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRe
     const completedRows: RemovalRow[] = []
     for (const venue of venues) {
       try {
-        const rebuild = await recompose(baseline.project, venue.entityId ? [venue.entityId] : [])
+        const rebuild = await recompose(baseline.project, venue.entityId ? [venue.entityId] : [], [], baseline)
         const row = { venue, state: 'ready' as const, rebuild }
         completedRows.push(row)
         setRows((current) => [...current, row])
@@ -95,7 +95,7 @@ export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRe
         <div><span className="small-cap"><span className="orange-dot"/> COMPOSITION DEPENDENCE TEST</span><h2 id="dependence-title">Which place is carrying this answer?</h2><p>Remove each returned venue once, from the same held evidence, and compare what CultureForge recomposes.</p></div>
         <button className="icon-button" onClick={onClose} aria-label="Close evidence dependence test"><X size={18}/></button>
       </header>
-      <div className="dependence-boundary"><Check size={15}/> One venue removed at a time · no new Qloo calls · no model naming call. An answer change includes wording or imagery; a source-only change alters citations. This tests dependence within this sample, not business viability.</div>
+      <div className="dependence-boundary"><Check size={15}/> One venue removed at a time · no new Qloo calls · no model naming call. Answer changes include descriptions, proposals, themes or imagery; optional model names and taglines are excluded. A source-only change alters citations. This tests dependence within this sample, not business viability.</div>
       <div className="dependence-actions">
         <button className="button button-primary" onClick={run} disabled={running || !venues.length}>{running ? <><LoaderCircle size={15} className="spin"/> Rebuilding {completed} / {venues.length}</> : rows.length ? 'Run again from original evidence' : 'Run the dependence test'} <ArrowRight size={15}/></button>
         <button className="button button-secondary" onClick={() => onRestoreBaseline(baseline)}><RotateCcw size={14}/> Restore original answer</button>

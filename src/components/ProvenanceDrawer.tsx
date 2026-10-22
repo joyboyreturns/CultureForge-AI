@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Concept, Evidence, ProjectRequest, TraceEvent } from '../contracts'
 import { evidenceKindLabel } from '../evidenceSummary'
+import type { RecomposeResult } from '../api'
 
 /**
  * The provenance inspector.
@@ -25,7 +26,7 @@ export function ProvenanceDrawer({
   /** Which of Qloo's own sentences the model chose to lead with, if it did. */
   selection?: Record<string, { sentences?: string[]; sentenceIds?: string[]; tagIds?: string[] }>
   onClose: () => void
-  onRecomposed?: (result: { concepts: Concept[]; evidence: Evidence[]; dropped: number; notice: string }) => void
+  onRecomposed?: (result: RecomposeResult) => void
 }) {
   const [removing, setRemoving] = useState(false)
   // A failure is a failure. It is kept in an error state and never reported
@@ -59,7 +60,7 @@ export function ProvenanceDrawer({
     setRemovalError('')
     try {
       const { recompose } = await import('../api')
-      const result = await recompose(project, item.entityId ? [item.entityId] : [])
+      const result = await recompose(project, item.entityId ? [item.entityId] : [], [], { evidence })
       setRecomposed(result)
       onRecomposed(result)
     } catch (error) {
@@ -94,6 +95,7 @@ export function ProvenanceDrawer({
           {item.location && <div><span>LOCATION</span><strong>{item.location}</strong></div>}
         </div>
 
+        {item.relevance && <div className="provenance-presentation"><span className="small-cap">REFERENCE RELEVANCE · CULTUREFORGE RULE</span><strong>{item.relevance.relationship}</strong>{item.relevance.reasons.map(reason => <p key={reason}>{reason}</p>)}</div>}
         {presentation && (
           <div className="provenance-presentation">
             <span className="small-cap">HOW IT IS PRESENTED</span>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import type { ResearchRun } from '../api'
+import { EvidenceDecisionGraph } from './EvidenceDecisionGraph'
 
 /**
  * The live research workspace.
@@ -23,6 +24,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
   const [run, setRun] = useState<ResearchRun | null>(null)
   const [error, setError] = useState('')
   const [slow, setSlow] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   const settled = useRef(false)
 
   // Fresh evidence and the model analysis can take a minute or more; say so
@@ -35,12 +37,15 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
   useEffect(() => {
     let cancelled = false
     let timer: number | undefined
+    let failures = 0
 
     async function poll() {
       try {
         const { fetchResearchRun } = await import('../api')
         const next = await fetchResearchRun(runId)
         if (cancelled) return
+        failures = 0
+        setError('')
         setRun(next)
         // The steps the agent has really taken, so the workspace above shows
         // the same thing the trace does.
@@ -62,6 +67,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
         }
       } catch (pollError) {
         if (!cancelled) setError(pollError instanceof Error ? pollError.message : 'The research run could not be reached.')
+        if (!cancelled && ++failures < 3) timer = window.setTimeout(poll, 2000 * failures)
         return
       }
       if (!cancelled) timer = window.setTimeout(poll, 700)
@@ -72,12 +78,13 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
       cancelled = true
       if (timer) window.clearTimeout(timer)
     }
-  }, [runId, onComplete, onClarify, onProgress])
+  }, [runId, onComplete, onClarify, onProgress, attempt])
 
   const events = run?.events ?? []
 
   return (
     <div className="agent-trace">
+      {run?.partialResult && <div className="research-partial"><span className="small-cap">INITIAL ANSWER · ANALYSIS PENDING</span><p>Real retrieved evidence and the initial rule composition. Optional bridge retrieval and model analysis have not finished.</p>{run.timings?.firstEvidenceMs != null && <p>First evidence: {(run.timings.firstEvidenceMs / 1000).toFixed(1)}s{run.timings.firstConceptMs != null ? ` · First concept: ${(run.timings.firstConceptMs / 1000).toFixed(1)}s` : ' · No category-relevant concept yet'}</p>}<EvidenceDecisionGraph result={run.partialResult}/></div>}
       {events.length === 0 && !error && (
         <div className="agent-trace-waiting">
           <span className="orange-dot" /> Starting the research run…
@@ -101,14 +108,15 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
 
       {slow && !error && run?.status === 'running' && (
         <div className="agent-trace-waiting" role="status">
-          <span className="orange-dot" /> Still processing. The answer is being cooked: new evidence and the AI analysis can take a few minutes: the model gateway paces its requests.
+          <span className="orange-dot" /> Research continues. New evidence and the optional model analysis can take a few minutes. You can inspect the initial answer above as soon as it is ready.
         </div>
       )}
 
       {error && (
         <div className="agent-trace-error" role="alert">
-          <strong>The research run could not finish.</strong>
+          <strong>{run?.status === 'failed' ? 'The research run could not finish.' : 'The connection was interrupted.'}</strong>
           <span>{error}</span>
+          {run?.status !== 'failed' && <button className="text-link" onClick={() => { setError(''); setAttempt(value => value + 1) }}>Reconnect to this run</button>}
           {onGiveUp && (
             <button className="text-link" onClick={onGiveUp}>Back to the brief <ArrowRight size={13}/></button>
           )}
@@ -123,7 +131,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress 
           </span>
           <em>
             {run.transportRequests === 0
-              ? 'Every piece of evidence was already held, so the quota was not touched.'
+              ? 'No upstream requests recorded so far. Pending steps may require calls.'
               : 'Only what was missing had to be fetched.'}
           </em>
         </div>

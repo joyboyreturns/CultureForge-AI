@@ -13,7 +13,10 @@ function sourceKey(concept: Concept, evidence: Evidence[]) {
   }).sort().join('|')
 }
 function compositionKey(concept: Concept) {
-  return JSON.stringify({ name: concept.name, tagline: concept.tagline, description: concept.description,
+  // Recomposition deliberately omits optional model naming. Comparing those
+  // names to the original model wording made every removal look consequential.
+  // Descriptions, proposals, themes and imagery still count as answer changes.
+  return JSON.stringify({ description: concept.description,
     signals: [...concept.signals].sort(),
     decisions: concept.decisions.map(({ field, proposal, ruleId }) => ({ field, proposal, ruleId })).sort((a, b) => a.field.localeCompare(b.field)),
     image: concept.image, imageAlt: concept.imageAlt })
