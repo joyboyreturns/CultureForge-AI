@@ -1,0 +1,4 @@
+# The local preview continues writing to this operational log.
+server.log
+# Portable delivery bundle is generated after the commits it contains.
+*.bundle

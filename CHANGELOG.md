@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — judging hardening, 2026-10-22
+
+- Resolve business categories from returned Qloo taxonomy IDs and expose
+  direct/indirect relevance decisions. Compose only relevant, differentiated
+  directions; abstain when the retrieved references do not support one.
+- Publish actual intermediate research results, reconnect after reload, and
+  show an interactive evidence graph with source removal and recomposition.
+- Withhold comparative model winners without completed comparison evidence;
+  expose partial challenge checks under policy `anchor-fit-5`.
+- Harden cache publication, persistence warnings, replay versions, API errors
+  and CORS. Fix Linux PDFs with a Latin primary font and CJK fallback.
+- Record real Tokyo Qloo/model observations, browser checks, container
+  execution, remaining release gates and a provider handoff in the review docs.
+
 ## 0.3.0 — 2026-10-22
 
 ### Added

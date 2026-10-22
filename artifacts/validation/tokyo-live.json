@@ -1,0 +1,1701 @@
+{
+  "scenario": "Tokyo artisan bakery; exact returned category tag; real Qloo and configured Vercel naming",
+  "elapsedSeconds": 11.102,
+  "recordedAt": "2026-10-22T05:13:31Z",
+  "result": {
+    "projectId": "cf-8fdab312ac",
+    "project": {
+      "businessType": "Food & beverage",
+      "businessIdea": "Artisan bakery",
+      "audience": "Early-morning commuters and neighborhood regulars who love artisan bread and pastries",
+      "location": "Tokyo, Japan",
+      "budget": "$25k – $50k",
+      "objectives": [
+        "Build a loyal community"
+      ]
+    },
+    "concepts": [
+      {
+        "id": "live-1-maple-morning-bakehouse",
+        "name": "Maple Morning Bakehouse",
+        "tagline": "Artisan bread and fresh-baked favorites for early-morning pickups, inspired by The Little BAKERY Tokyo and GARDEN HOUSE CRAFTS DAIKANYAMA.",
+        "description": "Proposed for Artisan bakery in Tokyo, Japan. An artisan bakery with a focused takeaway bread offer and preordered collection. The morning occasion comes from your brief; Qloo supplies category-relevant references, not commuter demand. The reference selected for this direction is The Little BAKERY Tokyo (rated 3.9 by Qloo and popularity 0.999), described by Qloo as \"Cozy Tokyo bakery and cafe in Jingumae offering artisan doughnuts like Maple Bacon and Crispy Chocolate, with dine-in, takeout, and same-day delivery.\". It was returned by Qloo for a Tokyo, Japan query; the location it belongs to was not verified.",
+        "audienceFit": null,
+        "culturalRelevance": null,
+        "feasibility": null,
+        "budget": "$25k – $50k",
+        "investment": "CultureForge planning assumption — not estimated by Qloo",
+        "signals": [
+          "Bread craft",
+          "Morning collection hypothesis"
+        ],
+        "accent": "#e69b73",
+        "image": "https://images.qloo.com/i/E73EFCF0-7BEA-496B-B1A8-60E0A5369A49-420x-auto.jpg",
+        "direction": "01",
+        "imageAlt": "The Little BAKERY Tokyo, returned by Qloo for this audience and location",
+        "personality": "Focused, practical, welcoming",
+        "audienceRationale": "Unlocked by fresh bread delivery, artisan bread service, croissant nyc; proposed for Early-morning commuters and neighborhood regulars who love artisan bread and pastries in Tokyo, Japan. The audience occasion is from the brief, not inferred behavior. A proposed quick-collection occasion for the commuters described in the brief.",
+        "implementationNote": "Pilot a collection window with the audience in the brief; measure repeat collection before expanding.",
+        "moments": [
+          {
+            "title": "Why this direction",
+            "description": "An artisan bakery with a focused takeaway bread offer and preordered collection. The morning occasion comes from your brief; Qloo supplies category-relevant references, not commuter demand."
+          },
+          {
+            "title": "Signature moment",
+            "description": "Pilot a collection window with the audience in the brief; measure repeat collection before expanding."
+          }
+        ],
+        "evidenceIds": [
+          "ev-entity-8",
+          "ev-entity-4",
+          "ev-entity-5"
+        ],
+        "decisions": [
+          {
+            "id": "bakery-morning-collection-offering",
+            "field": "offering",
+            "proposal": "An artisan bakery with a focused takeaway bread offer and preordered collection. The morning occasion comes from your brief; Qloo supplies category-relevant references, not commuter demand.",
+            "evidenceIds": [
+              "ev-entity-8",
+              "ev-entity-4",
+              "ev-entity-5"
+            ],
+            "ruleId": "bakery-morning-collection",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-morning-collection-ritual",
+            "field": "signature ritual",
+            "proposal": "Pilot a collection window with the audience in the brief; measure repeat collection before expanding.",
+            "evidenceIds": [
+              "ev-entity-8"
+            ],
+            "ruleId": "bakery-morning-collection",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-morning-collection-positioning",
+            "field": "positioning",
+            "proposal": "A proposed quick-collection occasion for the commuters described in the brief.",
+            "evidenceIds": [
+              "ev-entity-8",
+              "ev-tag-0",
+              "ev-tag-1",
+              "ev-tag-2"
+            ],
+            "ruleId": "bakery-morning-collection",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-morning-collection-cross-reference",
+            "field": "cultural cross-references",
+            "proposal": "Beyond places, the same audience tags also returned Peter Phillips: The Tallis Scholars (artist); A Nice Neighbor (movie); Politix Men's Fashion (brand); Bandai (artist); 7:11 PM (movie); Duncan Quinn (brand). These are audience-level Qloo references with no location, not specific to this direction: candidates for programming, partnerships or mood to test.",
+            "evidenceIds": [
+              "ev-bridge-13",
+              "ev-bridge-18",
+              "ev-bridge-23",
+              "ev-bridge-14",
+              "ev-bridge-19",
+              "ev-bridge-24"
+            ],
+            "ruleId": "audience-cross-reference",
+            "origin": "cultureforge_rule"
+          }
+        ],
+        "limitations": [
+          "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+          "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+          "The reference was chosen as the returned place with the lowest Qloo price level; places without a returned price level follow, most popular first. This ordering is restricted to category-relevant references."
+        ]
+      },
+      {
+        "id": "live-2-wood-fired-craft-bread-atelier",
+        "name": "Wood-Fired Craft Bread Atelier",
+        "tagline": "A craft-led bread offer with the making process in view.",
+        "description": "Proposed for Artisan bakery in Tokyo, Japan. An artisan bakery with a small bread range and a visible making process. Returned bakery references and bread-related audience seeds support exploring this category; enthusiasm for demonstrations is untested. The reference selected for this direction is GARDEN HOUSE CRAFTS DAIKANYAMA (rated 4.3 by Qloo and popularity 0.994), described by Qloo as \"Artisanal bakery-cafe at Log Road Daikanyama serving craft breads, sandwiches, coffee, seasonal plates, and wine in a garden-like setting.\". It was returned by Qloo for a Tokyo, Japan query; the location it belongs to was not verified.",
+        "audienceFit": null,
+        "culturalRelevance": null,
+        "feasibility": null,
+        "budget": "$25k – $50k",
+        "investment": "CultureForge planning assumption — not estimated by Qloo",
+        "signals": [
+          "Bread craft",
+          "Process discovery hypothesis"
+        ],
+        "accent": "#e69b73",
+        "image": "https://images.qloo.com/i/FB94161B-E320-401D-8151-FA8CC4B90D65-420x-auto.jpg",
+        "direction": "02",
+        "imageAlt": "GARDEN HOUSE CRAFTS DAIKANYAMA, returned by Qloo for this audience and location",
+        "personality": "Precise, tactile, curious",
+        "audienceRationale": "Unlocked by fresh bread delivery, artisan bread service, croissant nyc; proposed for Early-morning commuters and neighborhood regulars who love artisan bread and pastries in Tokyo, Japan. The audience occasion is from the brief, not inferred behavior. A proposed craft-discovery occasion, with products and process as the focus.",
+        "implementationNote": "Offer a small bread tasting and ask visitors whether the process adds value before building a programme.",
+        "moments": [
+          {
+            "title": "Why this direction",
+            "description": "An artisan bakery with a small bread range and a visible making process. Returned bakery references and bread-related audience seeds support exploring this category; enthusiasm for demonstrations is untested."
+          },
+          {
+            "title": "Signature moment",
+            "description": "Offer a small bread tasting and ask visitors whether the process adds value before building a programme."
+          }
+        ],
+        "evidenceIds": [
+          "ev-entity-4",
+          "ev-entity-5",
+          "ev-entity-7"
+        ],
+        "decisions": [
+          {
+            "id": "bakery-craft-counter-offering",
+            "field": "offering",
+            "proposal": "An artisan bakery with a small bread range and a visible making process. Returned bakery references and bread-related audience seeds support exploring this category; enthusiasm for demonstrations is untested.",
+            "evidenceIds": [
+              "ev-entity-4",
+              "ev-entity-5",
+              "ev-entity-7"
+            ],
+            "ruleId": "bakery-craft-counter",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-craft-counter-ritual",
+            "field": "signature ritual",
+            "proposal": "Offer a small bread tasting and ask visitors whether the process adds value before building a programme.",
+            "evidenceIds": [
+              "ev-entity-4"
+            ],
+            "ruleId": "bakery-craft-counter",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-craft-counter-positioning",
+            "field": "positioning",
+            "proposal": "A proposed craft-discovery occasion, with products and process as the focus.",
+            "evidenceIds": [
+              "ev-entity-4",
+              "ev-tag-0",
+              "ev-tag-1",
+              "ev-tag-2"
+            ],
+            "ruleId": "bakery-craft-counter",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "bakery-craft-counter-cross-reference",
+            "field": "cultural cross-references",
+            "proposal": "Beyond places, the same audience tags also returned Peter Phillips: The Tallis Scholars (artist); A Nice Neighbor (movie); Politix Men's Fashion (brand); Bandai (artist); 7:11 PM (movie); Duncan Quinn (brand). These are audience-level Qloo references with no location, not specific to this direction: candidates for programming, partnerships or mood to test.",
+            "evidenceIds": [
+              "ev-bridge-13",
+              "ev-bridge-18",
+              "ev-bridge-23",
+              "ev-bridge-14",
+              "ev-bridge-19",
+              "ev-bridge-24"
+            ],
+            "ruleId": "audience-cross-reference",
+            "origin": "cultureforge_rule"
+          }
+        ],
+        "limitations": [
+          "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+          "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+          "The reference was chosen as the returned place with the highest Qloo business rating, popularity breaking ties. This ordering is restricted to category-relevant references."
+        ]
+      },
+      {
+        "id": "live-3-garden-set-baking-salon",
+        "name": "Garden-Set Baking Salon",
+        "tagline": "A space that behaves like the thing it sells.",
+        "description": "Proposed for Artisan bakery in Tokyo, Japan. A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed. The reference selected for this direction is No.4 (rated 4.2 by Qloo and popularity 0.989), described by Qloo as \"Modern wood-fired pizza and bakery café with terrace seating, pastries, salads and coffee.\". It was returned by Qloo for a Tokyo, Japan query; the location it belongs to was not verified.",
+        "audienceFit": null,
+        "culturalRelevance": null,
+        "feasibility": null,
+        "budget": "$25k – $50k",
+        "investment": "CultureForge planning assumption — not estimated by Qloo",
+        "signals": [
+          "Design-led spaces",
+          "Independent discovery"
+        ],
+        "accent": "#e69b73",
+        "image": "https://images.qloo.com/i/22FE54D1-1F2A-426B-A354-5A14FD5100AB-420x-auto.jpg",
+        "direction": "03",
+        "imageAlt": "No.4, returned by Qloo for this audience and location",
+        "personality": "Precise, confident, curated",
+        "audienceRationale": "Unlocked by artisan bread service; proposed for Early-morning commuters and neighborhood regulars who love artisan bread and pastries in Tokyo, Japan. The audience occasion is from the brief, not inferred behavior. For an audience that treats taste as the primary signal of quality.",
+        "implementationNote": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+        "moments": [
+          {
+            "title": "Why this direction",
+            "description": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed."
+          },
+          {
+            "title": "Signature moment",
+            "description": "A monthly change of the room itself, announced the way a gallery announces a new show."
+          }
+        ],
+        "evidenceIds": [
+          "ev-entity-5",
+          "ev-entity-4"
+        ],
+        "decisions": [
+          {
+            "id": "design-led-offering",
+            "field": "offering",
+            "proposal": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed.",
+            "evidenceIds": [
+              "ev-entity-5",
+              "ev-entity-4"
+            ],
+            "ruleId": "design-led",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "design-led-ritual",
+            "field": "signature ritual",
+            "proposal": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+            "evidenceIds": [
+              "ev-entity-5"
+            ],
+            "ruleId": "design-led",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "design-led-positioning",
+            "field": "positioning",
+            "proposal": "For an audience that treats taste as the primary signal of quality.",
+            "evidenceIds": [
+              "ev-entity-5",
+              "ev-tag-1"
+            ],
+            "ruleId": "design-led",
+            "origin": "cultureforge_rule"
+          },
+          {
+            "id": "design-led-cross-reference",
+            "field": "cultural cross-references",
+            "proposal": "Beyond places, the same audience tags also returned Peter Phillips: The Tallis Scholars (artist); A Nice Neighbor (movie); Politix Men's Fashion (brand); Bandai (artist); 7:11 PM (movie); Duncan Quinn (brand). These are audience-level Qloo references with no location, not specific to this direction: candidates for programming, partnerships or mood to test.",
+            "evidenceIds": [
+              "ev-bridge-13",
+              "ev-bridge-18",
+              "ev-bridge-23",
+              "ev-bridge-14",
+              "ev-bridge-19",
+              "ev-bridge-24"
+            ],
+            "ruleId": "audience-cross-reference",
+            "origin": "cultureforge_rule"
+          }
+        ],
+        "limitations": [
+          "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+          "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+          "The reference was chosen as the returned place with the highest Qloo popularity, rating breaking ties. Popularity is general, not specific to this audience. This ordering is restricted to category-relevant references. The first such place already anchors another direction, so the next one was used."
+        ]
+      }
+    ],
+    "signals": [
+      {
+        "label": "Path",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887719.",
+        "score": null,
+        "affinity": 0.8877185619154077,
+        "category": "Qloo recommendation",
+        "provenance_id": "1D14B4C1-8090-4625-976E-C0E1159FB2A4"
+      },
+      {
+        "label": "GARDEN HOUSE CRAFTS DAIKANYAMA",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887677.",
+        "score": null,
+        "affinity": 0.8876773032444492,
+        "category": "Qloo recommendation",
+        "provenance_id": "FB94161B-E320-401D-8151-FA8CC4B90D65"
+      },
+      {
+        "label": "No.4",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.88767.",
+        "score": null,
+        "affinity": 0.8876699944307239,
+        "category": "Qloo recommendation",
+        "provenance_id": "22FE54D1-1F2A-426B-A354-5A14FD5100AB"
+      },
+      {
+        "label": "THE CITY BAKERY Tokyo Garden Terrace Kioicho",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887665.",
+        "score": null,
+        "affinity": 0.8876652790454891,
+        "category": "Qloo recommendation",
+        "provenance_id": "CED250B1-411C-4AF6-A2E3-EFAABC1F6CAB"
+      },
+      {
+        "label": "Sawamura Bakery & Restaurant",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887662.",
+        "score": null,
+        "affinity": 0.8876615067251367,
+        "category": "Qloo recommendation",
+        "provenance_id": "30121EA6-0745-4D45-8464-2CEA438444E4"
+      },
+      {
+        "label": "The Little BAKERY Tokyo",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887645.",
+        "score": null,
+        "affinity": 0.8876447669231249,
+        "category": "Qloo recommendation",
+        "provenance_id": "E73EFCF0-7BEA-496B-B1A8-60E0A5369A49"
+      },
+      {
+        "label": "FUGLEN ASAKUSA",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887601.",
+        "score": null,
+        "affinity": 0.8876009123478299,
+        "category": "Qloo recommendation",
+        "provenance_id": "BD612F0E-DB84-49B6-8A11-358BC0484CF0"
+      },
+      {
+        "label": "Commissary Nihonbashi",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887554.",
+        "score": null,
+        "affinity": 0.8875542268395911,
+        "category": "Qloo recommendation",
+        "provenance_id": "07F821B8-54A1-444A-971B-792330F638E9"
+      },
+      {
+        "label": "THINK OF THINGS",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887498.",
+        "score": null,
+        "affinity": 0.8874981077245578,
+        "category": "Qloo recommendation",
+        "provenance_id": "0842C54D-14F1-42E9-8B00-BB94B819440E"
+      },
+      {
+        "label": "THE CITY BAKERY Hiroo",
+        "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887472.",
+        "score": null,
+        "affinity": 0.8874719337059661,
+        "category": "Qloo recommendation",
+        "provenance_id": "96AA79A9-5C22-4485-8A0E-C0DF991CC939"
+      }
+    ],
+    "dataMode": "live",
+    "conceptMode": "evidence_composed",
+    "notice": "Qloo supplied the audience tags and the local venues below. The 3 business directions are CultureForge’s interpretation of that evidence, and each one names the returned venue it was built from. Fit scores are omitted because affinity does not measure business fit. The same audience tags also returned 15 artist/brand/movie references with no location, cited as audience-level cross-references.",
+    "provenance": {
+      "source": "Qloo API",
+      "endpoint": "qloo exec find_tags → recommend",
+      "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+      "resolved_tags": [
+        "urn:tag:amenity:qloo:fresh_bread_delivery",
+        "urn:tag:amenity:qloo:artisan_bread_service",
+        "urn:tag:specialty_dish:place:croissant_nyc"
+      ]
+    },
+    "evidence": [
+      {
+        "id": "ev-tag-0",
+        "kind": "tag",
+        "label": "Fresh Bread Delivery",
+        "entityId": null,
+        "entityType": null,
+        "tagId": "urn:tag:amenity:qloo:fresh_bread_delivery",
+        "affinity": null,
+        "popularity": 0.9289123263832981,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+        "image": null,
+        "location": null,
+        "traceId": "trace-find_tags-resolve-audience-tags",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-tag-0",
+          "entityId": null,
+          "label": "Fresh Bread Delivery",
+          "identity": "seed",
+          "identityNote": "",
+          "tagFamily": "amenity",
+          "tagBucket": "cultural",
+          "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "hasMore": false,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": null,
+          "locationNote": "",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": null
+      },
+      {
+        "id": "ev-tag-1",
+        "kind": "tag",
+        "label": "Artisan Bread Service",
+        "entityId": null,
+        "entityType": null,
+        "tagId": "urn:tag:amenity:qloo:artisan_bread_service",
+        "affinity": null,
+        "popularity": 0.8150671783672007,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+        "image": null,
+        "location": null,
+        "traceId": "trace-find_tags-resolve-audience-tags",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-tag-1",
+          "entityId": null,
+          "label": "Artisan Bread Service",
+          "identity": "seed",
+          "identityNote": "",
+          "tagFamily": "amenity",
+          "tagBucket": "cultural",
+          "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "hasMore": false,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": null,
+          "locationNote": "",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": null
+      },
+      {
+        "id": "ev-tag-2",
+        "kind": "tag",
+        "label": "Croissant Nyc",
+        "entityId": null,
+        "entityType": null,
+        "tagId": "urn:tag:specialty_dish:place:croissant_nyc",
+        "affinity": null,
+        "popularity": 0.7936954707402478,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+        "image": null,
+        "location": null,
+        "traceId": "trace-find_tags-resolve-audience-tags",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-tag-2",
+          "entityId": null,
+          "label": "Croissant Nyc",
+          "identity": "seed",
+          "identityNote": "",
+          "tagFamily": "specialty_dish",
+          "tagBucket": "cultural",
+          "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "hasMore": false,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": null,
+          "locationNote": "",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": null
+      },
+      {
+        "id": "ev-entity-3",
+        "kind": "entity",
+        "label": "Path",
+        "entityId": "1D14B4C1-8090-4625-976E-C0E1159FB2A4",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8877185619154077,
+        "popularity": 0.9980303487870626,
+        "rating": 4.0,
+        "priceLevel": 2,
+        "description": "Industrial-chic French bistro cafe known for its signature Dutch pancake, offering breakfast, pastries, coffee by day and romantic dinners by night in a cozy atmosphere.",
+        "image": "https://images.qloo.com/i/1D14B4C1-8090-4625-976E-C0E1159FB2A4-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-3",
+          "entityId": "1D14B4C1-8090-4625-976E-C0E1159FB2A4",
+          "label": "Path",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Industrial-chic French bistro cafe known for its signature Dutch pancake, offering breakfast, pastries, coffee by day and romantic dinners by night in a cozy atmosphere.",
+          "hasMore": false,
+          "description": "Industrial-chic French bistro cafe known for its signature Dutch pancake, offering breakfast, pastries, coffee by day and romantic dinners by night in a cozy atmosphere.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text does not establish a bakery reference. Retained as a cultural association; excluded from concept anchors.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-4",
+        "kind": "entity",
+        "label": "GARDEN HOUSE CRAFTS DAIKANYAMA",
+        "entityId": "FB94161B-E320-401D-8151-FA8CC4B90D65",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876773032444492,
+        "popularity": 0.9938241544429425,
+        "rating": 4.300000190734863,
+        "priceLevel": 2,
+        "description": "Artisanal bakery-cafe at Log Road Daikanyama serving craft breads, sandwiches, coffee, seasonal plates, and wine in a garden-like setting.",
+        "image": "https://images.qloo.com/i/FB94161B-E320-401D-8151-FA8CC4B90D65-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-4",
+          "entityId": "FB94161B-E320-401D-8151-FA8CC4B90D65",
+          "label": "GARDEN HOUSE CRAFTS DAIKANYAMA",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Artisanal bakery-cafe at Log Road Daikanyama serving craft breads, sandwiches, coffee, seasonal plates, and wine in a garden-like setting.",
+          "hasMore": false,
+          "description": "Artisanal bakery-cafe at Log Road Daikanyama serving craft breads, sandwiches, coffee, seasonal plates, and wine in a garden-like setting.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-5",
+        "kind": "entity",
+        "label": "No.4",
+        "entityId": "22FE54D1-1F2A-426B-A354-5A14FD5100AB",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876699944307239,
+        "popularity": 0.9894231308557888,
+        "rating": 4.199999809265137,
+        "priceLevel": 2,
+        "description": "Modern wood-fired pizza and bakery café with terrace seating, pastries, salads and coffee.",
+        "image": "https://images.qloo.com/i/22FE54D1-1F2A-426B-A354-5A14FD5100AB-420x-auto.jpg",
+        "location": "Chiyoda, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-5",
+          "entityId": "22FE54D1-1F2A-426B-A354-5A14FD5100AB",
+          "label": "No.4",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Modern wood-fired pizza and bakery café with terrace seating, pastries, salads and coffee.",
+          "hasMore": false,
+          "description": "Modern wood-fired pizza and bakery café with terrace seating, pastries, salads and coffee.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Chiyoda, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Chiyoda, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-6",
+        "kind": "entity",
+        "label": "THE CITY BAKERY Tokyo Garden Terrace Kioicho",
+        "entityId": "CED250B1-411C-4AF6-A2E3-EFAABC1F6CAB",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876652790454891,
+        "popularity": 0.9805022174130911,
+        "rating": 3.5999999046325684,
+        "priceLevel": 2,
+        "description": "New York–inspired bakery and café in Tokyo Garden Terrace offering coffee, pastries, and casual dining in a moderately upscale setting.",
+        "image": "https://images.qloo.com/i/CED250B1-411C-4AF6-A2E3-EFAABC1F6CAB-420x-auto.jpg",
+        "location": "Chiyoda, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-6",
+          "entityId": "CED250B1-411C-4AF6-A2E3-EFAABC1F6CAB",
+          "label": "THE CITY BAKERY Tokyo Garden Terrace Kioicho",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "New York–inspired bakery and café in Tokyo Garden Terrace offering coffee, pastries, and casual dining in a moderately upscale setting.",
+          "hasMore": false,
+          "description": "New York–inspired bakery and café in Tokyo Garden Terrace offering coffee, pastries, and casual dining in a moderately upscale setting.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Chiyoda, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Chiyoda, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-7",
+        "kind": "entity",
+        "label": "Sawamura Bakery & Restaurant",
+        "entityId": "30121EA6-0745-4D45-8464-2CEA438444E4",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876615067251367,
+        "popularity": 0.9865380236477012,
+        "rating": 4.0,
+        "priceLevel": 2,
+        "description": "Bakery and restaurant in NEWoMan Shinjuku's EXiTo food hall offering artisanal breads, coffee, and all-day dining in a modern station-side setting.",
+        "image": "https://images.qloo.com/i/30121EA6-0745-4D45-8464-2CEA438444E4-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-7",
+          "entityId": "30121EA6-0745-4D45-8464-2CEA438444E4",
+          "label": "Sawamura Bakery & Restaurant",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Bakery and restaurant in NEWoMan Shinjuku's EXiTo food hall offering artisanal breads, coffee, and all-day dining in a modern station-side setting.",
+          "hasMore": false,
+          "description": "Bakery and restaurant in NEWoMan Shinjuku's EXiTo food hall offering artisanal breads, coffee, and all-day dining in a modern station-side setting.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-8",
+        "kind": "entity",
+        "label": "The Little BAKERY Tokyo",
+        "entityId": "E73EFCF0-7BEA-496B-B1A8-60E0A5369A49",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876447669231249,
+        "popularity": 0.9986939568760608,
+        "rating": 3.9000000953674316,
+        "priceLevel": 2,
+        "description": "Cozy Tokyo bakery and cafe in Jingumae offering artisan doughnuts like Maple Bacon and Crispy Chocolate, with dine-in, takeout, and same-day delivery.",
+        "image": "https://images.qloo.com/i/E73EFCF0-7BEA-496B-B1A8-60E0A5369A49-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-8",
+          "entityId": "E73EFCF0-7BEA-496B-B1A8-60E0A5369A49",
+          "label": "The Little BAKERY Tokyo",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Cozy Tokyo bakery and cafe in Jingumae offering artisan doughnuts like Maple Bacon and Crispy Chocolate, with dine-in, takeout, and same-day delivery.",
+          "hasMore": false,
+          "description": "Cozy Tokyo bakery and cafe in Jingumae offering artisan doughnuts like Maple Bacon and Crispy Chocolate, with dine-in, takeout, and same-day delivery.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-9",
+        "kind": "entity",
+        "label": "FUGLEN ASAKUSA",
+        "entityId": "BD612F0E-DB84-49B6-8A11-358BC0484CF0",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8876009123478299,
+        "popularity": 0.9934365389708633,
+        "rating": 4.099999904632568,
+        "priceLevel": 2,
+        "description": "Chill Asakusa café offering single-origin coffee, Norwegian heart-shaped waffles, cocktails and baked goods in an architect-designed two-story space near Sensoji Temple.",
+        "image": "https://images.qloo.com/i/BD612F0E-DB84-49B6-8A11-358BC0484CF0-420x-auto.jpg",
+        "location": "Taito, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-9",
+          "entityId": "BD612F0E-DB84-49B6-8A11-358BC0484CF0",
+          "label": "FUGLEN ASAKUSA",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Chill Asakusa café offering single-origin coffee, Norwegian heart-shaped waffles, cocktails and baked goods in an architect-designed two-story space near Sensoji Temple.",
+          "hasMore": false,
+          "description": "Chill Asakusa café offering single-origin coffee, Norwegian heart-shaped waffles, cocktails and baked goods in an architect-designed two-story space near Sensoji Temple.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Taito, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Taito, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text does not establish a bakery reference. Retained as a cultural association; excluded from concept anchors.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-10",
+        "kind": "entity",
+        "label": "Commissary Nihonbashi",
+        "entityId": "07F821B8-54A1-444A-971B-792330F638E9",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8875542268395911,
+        "popularity": 0.9917122351650254,
+        "rating": 3.9000000953674316,
+        "priceLevel": 2,
+        "description": "Eclectic casual food hall offering coffee, donuts, pizza, tacos and beer on the first floor of a Nihonbashi life-sciences building with dine-in and takeaway.",
+        "image": "https://images.qloo.com/i/07F821B8-54A1-444A-971B-792330F638E9-420x-auto.jpg",
+        "location": "Chūō, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-10",
+          "entityId": "07F821B8-54A1-444A-971B-792330F638E9",
+          "label": "Commissary Nihonbashi",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Eclectic casual food hall offering coffee, donuts, pizza, tacos and beer on the first floor of a Nihonbashi life-sciences building with dine-in and takeaway.",
+          "hasMore": false,
+          "description": "Eclectic casual food hall offering coffee, donuts, pizza, tacos and beer on the first floor of a Nihonbashi life-sciences building with dine-in and takeaway.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Chūō, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Chūō, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text does not establish a bakery reference. Retained as a cultural association; excluded from concept anchors.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-11",
+        "kind": "entity",
+        "label": "THINK OF THINGS",
+        "entityId": "0842C54D-14F1-42E9-8B00-BB94B819440E",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8874981077245578,
+        "popularity": 0.9889051339455689,
+        "rating": 4.400000095367432,
+        "priceLevel": null,
+        "description": "Curated design and lifestyle store with café serving coffee and snacks, featuring stationery, home goods and limited-edition collaborations.",
+        "image": "https://images.qloo.com/i/0842C54D-14F1-42E9-8B00-BB94B819440E-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-11",
+          "entityId": "0842C54D-14F1-42E9-8B00-BB94B819440E",
+          "label": "THINK OF THINGS",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "Curated design and lifestyle store with café serving coffee and snacks, featuring stationery, home goods and limited-edition collaborations.",
+          "hasMore": false,
+          "description": "Curated design and lifestyle store with café serving coffee and snacks, featuring stationery, home goods and limited-edition collaborations.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text does not establish a bakery reference. Retained as a cultural association; excluded from concept anchors.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-entity-12",
+        "kind": "entity",
+        "label": "THE CITY BAKERY Hiroo",
+        "entityId": "96AA79A9-5C22-4485-8A0E-C0DF991CC939",
+        "entityType": "urn:entity:place",
+        "tagId": null,
+        "affinity": 0.8874719337059661,
+        "popularity": 0.883415963962719,
+        "rating": 4.0,
+        "priceLevel": 2,
+        "description": "New York–style bakery and cafe in Hiroo serving coffee, baked goods, and sit-down dining with takeout, delivery, and drive-through options.",
+        "image": "https://images.qloo.com/i/96AA79A9-5C22-4485-8A0E-C0DF991CC939-420x-auto.jpg",
+        "location": "Shibuya, Tokyo",
+        "traceId": "trace-recommend-retrieve-local-evidence",
+        "presentation": {
+          "version": "presentation-1",
+          "id": "ev-entity-12",
+          "entityId": "96AA79A9-5C22-4485-8A0E-C0DF991CC939",
+          "label": "THE CITY BAKERY Hiroo",
+          "identity": "place",
+          "identityNote": "",
+          "tagFamily": "",
+          "tagBucket": "other",
+          "excerpt": "New York–style bakery and cafe in Hiroo serving coffee, baked goods, and sit-down dining with takeout, delivery, and drive-through options.",
+          "hasMore": false,
+          "description": "New York–style bakery and cafe in Hiroo serving coffee, baked goods, and sit-down dining with takeout, delivery, and drive-through options.",
+          "requestedLocation": "Tokyo, Japan",
+          "returnedLocation": "Shibuya, Tokyo",
+          "locationNote": "Returned for a Tokyo, Japan query. Qloo returned the location “Shibuya, Tokyo”, so borough membership is not established by this field.",
+          "metrics": {},
+          "notes": []
+        },
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "direct",
+          "category": "bakery",
+          "anchorEligible": true,
+          "geography": "text_match",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Returned text matches the bakery brief: bakery. This is a text match, not verified operating suitability.",
+            "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-13",
+        "kind": "crossdomain",
+        "label": "Peter Phillips: The Tallis Scholars",
+        "entityId": "CC2602AC-E805-47E4-A86A-6F7C3E2BD70E",
+        "entityType": "urn:entity:artist",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.7951195695626815,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Peter Phillips is the founder and director of The Tallis Scholars, a British choral ensemble established in 1973 that specializes in Renaissance sacred music, particularly polyphony. The group is acclaimed for its pure vocal tone and historically informed performances, focusing on composers such as Thomas Tallis, William Byrd, and Palestrina. Under Phillips' direction, The Tallis Scholars have significantly contributed to the revival and appreciation of early choral music worldwide.",
+        "image": "https://images.qloo.com/i/CC2602AC-E805-47E4-A86A-6F7C3E2BD70E-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-artist",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-14",
+        "kind": "crossdomain",
+        "label": "Bandai",
+        "entityId": "994B02EC-0D76-4DF0-9B2F-5838132C8A29",
+        "entityType": "urn:entity:artist",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.594951143267208,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Bandai is a Japanese toy and video game company, famous for producing action figures, model kits, and video games. It is not a music artist or group.",
+        "image": "https://images.qloo.com/i/994B02EC-0D76-4DF0-9B2F-5838132C8A29-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-artist",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-15",
+        "kind": "crossdomain",
+        "label": "Mathématiques Modernes",
+        "entityId": "B14CF636-7F6E-4B18-AEEB-9420B4A6DA49",
+        "entityType": "urn:entity:artist",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.6594348216450727,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Mathématiques Modernes is a French synthpop and new wave band known for their electronic sound and experimental approach during the early 1980s. They contributed to the French electronic music scene with a blend of synth-driven melodies and post-punk influences.",
+        "image": "https://images.qloo.com/i/B14CF636-7F6E-4B18-AEEB-9420B4A6DA49-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-artist",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-16",
+        "kind": "crossdomain",
+        "label": "Warbreed",
+        "entityId": "613D23BA-E73A-4EAF-BEB4-B6740D3F971B",
+        "entityType": "urn:entity:artist",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.7094417028750434,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Warbreed is a metalcore band that blends elements of hardcore punk and heavy metal, known for their aggressive sound, heavy riffs, and intense live performances. They have contributed to the metalcore scene with their energetic music and passionate fanbase.",
+        "image": "https://images.qloo.com/i/613D23BA-E73A-4EAF-BEB4-B6740D3F971B-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-artist",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-17",
+        "kind": "crossdomain",
+        "label": "MOOSE HILL",
+        "entityId": "EBD11EAA-F163-4487-B65D-3AC6CC69720B",
+        "entityType": "urn:entity:artist",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.5295237533505036,
+        "rating": null,
+        "priceLevel": null,
+        "description": "",
+        "image": "https://images.qloo.com/i/EBD11EAA-F163-4487-B65D-3AC6CC69720B-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-artist",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-18",
+        "kind": "crossdomain",
+        "label": "A Nice Neighbor",
+        "entityId": "48F3193E-9F20-4FB7-8965-C413D3294912",
+        "entityType": "urn:entity:movie",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": null,
+        "rating": null,
+        "priceLevel": null,
+        "description": "A Nice Neighbor (1979) is a Hungarian drama film directed by Zsolt Kézdi-Kovács. It stars László Szabó, Margit Dajka, and Lajos Szabó. The film premiered on 20 September 1979 in Hungary and is presented in Hungarian with a mono sound mix.",
+        "image": "https://images.qloo.com/i/48F3193E-9F20-4FB7-8965-C413D3294912-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-movie",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-19",
+        "kind": "crossdomain",
+        "label": "7:11 PM",
+        "entityId": "E3E947F9-3E44-42F5-B8EE-5F3BAD7125B4",
+        "entityType": "urn:entity:movie",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.4316831897017214,
+        "rating": null,
+        "priceLevel": null,
+        "description": "7:11 PM (2023), directed by Chaitu Madala and starring Saahas Pagadala, Tess Walsh and Deepika Reddy, is an action‑driven science fiction thriller that centers on an event at 7:11 PM which jeopardizes a rural town and a distant planet. The protagonist, Ravi, travels through time to confront a criminal mastermind, aiming to save his loved ones and his community. The film mixes small‑town emotional stakes with ambitious visual effects and time‑travel mystery, examining sacrifice, fate, and responsibility in high‑stakes circumstances.",
+        "image": "https://images.qloo.com/i/E3E947F9-3E44-42F5-B8EE-5F3BAD7125B4-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-movie",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-20",
+        "kind": "crossdomain",
+        "label": "Come on Children",
+        "entityId": "1C4C0421-4AAE-473C-9994-6784E7A9462F",
+        "entityType": "urn:entity:movie",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.19812522948659797,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Come on Children (1973), directed by Allan King and filmed in Canada, is an observational documentary that follows ten teenagers living together on a farmhouse as they adjust to communal life. Featuring Alan Dunikowsky, Ken Gibbs, and John Hamilton, the film records their music, conversations, minor conflicts, drug use, and encounters with family visitors. More portrait than plot-driven narrative, it examines adolescence, alienation, and identity through quiet, candid scenes that emphasize authenticity over dramatization. The emotional tone is reflective and gently probing, offering a nostalgic yet unsentimental snapshot of youth.",
+        "image": "https://images.qloo.com/i/1C4C0421-4AAE-473C-9994-6784E7A9462F-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-movie",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-21",
+        "kind": "crossdomain",
+        "label": "Always Audacious",
+        "entityId": "DFB7E774-B8E0-497A-A4B1-001AE2D61A33",
+        "entityType": "urn:entity:movie",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": null,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Always Audacious (1920), directed by James Cruze and starring Wallace Reid, Margaret Loomis and Clarence Geldert, is a silent crime-drama-romance that follows a reckless heir whose life is usurped by a criminal double. The impostor seizes the heir’s job and fiancée and arranges for the real man to be shanghaied, leaving him to prove his identity and reclaim his fortune. The film explores themes of deception, identity, loyalty, and justice through melodramatic silent-era storytelling, and delivers a tense, emotionally charged tone culminating in vindication.",
+        "image": "https://images.qloo.com/i/DFB7E774-B8E0-497A-A4B1-001AE2D61A33-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-movie",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-22",
+        "kind": "crossdomain",
+        "label": "El enemigo",
+        "entityId": "1EB1BEE2-BF0F-48A2-8788-64FD3C50C1E7",
+        "entityType": "urn:entity:movie",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": null,
+        "rating": null,
+        "priceLevel": null,
+        "description": null,
+        "image": "https://images.qloo.com/i/1EB1BEE2-BF0F-48A2-8788-64FD3C50C1E7-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-movie",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-23",
+        "kind": "crossdomain",
+        "label": "Politix Men's Fashion",
+        "entityId": "4B84CEE5-59EA-43E1-9000-27C66D684CFA",
+        "entityType": "urn:entity:brand",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.6002610567713719,
+        "rating": null,
+        "priceLevel": null,
+        "description": "POLITIX is a premium Australian menswear brand specializing in stylish, tailored clothing for every occasion, including suits, casual wear, and formal attire.",
+        "image": "https://images.qloo.com/i/4B84CEE5-59EA-43E1-9000-27C66D684CFA-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-brand",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-24",
+        "kind": "crossdomain",
+        "label": "Duncan Quinn",
+        "entityId": "4E179884-8BA7-4391-A2F3-B65D7114A15C",
+        "entityType": "urn:entity:brand",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.5456256039056805,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Duncan Quinn is a luxury menswear brand specializing in handmade bespoke suits, shirts, ties, cufflinks, and accessories known for high quality and unique designs.",
+        "image": "https://images.qloo.com/i/4E179884-8BA7-4391-A2F3-B65D7114A15C-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-brand",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-25",
+        "kind": "crossdomain",
+        "label": "Binance",
+        "entityId": "5024DC4A-0125-469D-B07E-879C5104D291",
+        "entityType": "urn:entity:brand",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.993685477445712,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Binance is the world's largest cryptocurrency exchange by trading volume, offering trading in over 350 cryptocurrencies to more than 250 million users globally.",
+        "image": "https://images.qloo.com/i/5024DC4A-0125-469D-B07E-879C5104D291-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-brand",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-26",
+        "kind": "crossdomain",
+        "label": "Orfeu Cafés e Azeites",
+        "entityId": "4E8D1362-6673-4BAE-B143-AE3101AA63B5",
+        "entityType": "urn:entity:brand",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.8272448339577224,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Orfeu Cafés e Azeites is a Brazilian brand known for its award-winning specialty coffee and olive oils, produced in Minas Gerais.",
+        "image": "https://images.qloo.com/i/4E8D1362-6673-4BAE-B143-AE3101AA63B5-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-brand",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      },
+      {
+        "id": "ev-bridge-27",
+        "kind": "crossdomain",
+        "label": "Goldilocks Bakeshop",
+        "entityId": "4AB0CE8F-E57A-4BC3-A89C-F2C6C67FEBDF",
+        "entityType": "urn:entity:brand",
+        "tagId": null,
+        "affinity": 0.7649962877984056,
+        "popularity": 0.8559526029394314,
+        "rating": null,
+        "priceLevel": null,
+        "description": "Goldilocks Bakeshop is a popular Filipino bakery brand known for its cakes, pastries, and traditional Filipino baked goods.",
+        "image": "https://images.qloo.com/i/4AB0CE8F-E57A-4BC3-A89C-F2C6C67FEBDF-420x-auto.jpg",
+        "location": null,
+        "traceId": "trace-bridge-brand",
+        "presentation": null,
+        "relevance": {
+          "version": "relevance-1",
+          "relationship": "indirect",
+          "category": "bakery",
+          "anchorEligible": false,
+          "geography": "unknown",
+          "audience": "returned_for_seeds",
+          "confidence": "rule_assessment_only",
+          "reasons": [
+            "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+            "No location metadata returned. The query location is not the place location."
+          ]
+        }
+      }
+    ],
+    "trace": [
+      {
+        "id": "trace-find_tags-resolve-audience-tags",
+        "step": "resolve-audience-tags",
+        "workflow": "find_tags",
+        "status": "ok",
+        "durationMs": 0,
+        "correlationId": "exec-9fee9a90-aa30-4fd8-b65c-9ad3ccda2563",
+        "resultCount": 3,
+        "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 3.6s, this run spent no time waiting)",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.846181+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/tags",
+          "query": {
+            "filter.query": "Food & beverage Early-morning commuters and neighborhood regulars who love artisan bread and pastries",
+            "feature.semantic_search": true,
+            "take": 3
+          },
+          "endpoint": "/v2/tags",
+          "documentation": "https://docs.qloo.com/reference/get-tags"
+        },
+        "resultExcerpt": [
+          "Fresh Bread Delivery · popularity 0.9289",
+          "Artisan Bread Service · popularity 0.8151",
+          "Croissant Nyc · popularity 0.7937"
+        ]
+      },
+      {
+        "id": "trace-find_tags-resolve-business-category",
+        "step": "resolve-business-category",
+        "workflow": "find_tags",
+        "status": "ok",
+        "durationMs": 0,
+        "correlationId": "exec-8696ed58-0411-4115-824c-a8951d47159c",
+        "resultCount": 10,
+        "detail": "Resolved business category to a returned Qloo tag; this is a category filter, not an audience seed. (reused from cache — the original call took 0.8s, this run spent no time waiting)",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.846259+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/tags",
+          "query": {
+            "filter.query": "bakery",
+            "feature.semantic_search": true,
+            "take": 10
+          },
+          "endpoint": "/v2/tags",
+          "documentation": "https://docs.qloo.com/reference/get-tags"
+        },
+        "resultExcerpt": [
+          "Bakery · popularity 0.9999",
+          "Bakery · popularity 0.9968",
+          "Bakery · popularity 0.9829",
+          "Bakery · popularity 0.9998",
+          "Bakery · popularity 0.9991"
+        ]
+      },
+      {
+        "id": "trace-recommend-retrieve-local-evidence",
+        "step": "retrieve-local-evidence",
+        "workflow": "recommend",
+        "status": "ok",
+        "durationMs": 2132,
+        "correlationId": "exec-b510ea24-3700-48dc-a0f5-4e17affe431b",
+        "resultCount": 10,
+        "detail": "Qloo recommend → /v2/insights",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.846292+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/insights",
+          "query": {
+            "filter.type": "urn:entity:place",
+            "take": 10,
+            "signal.interests.tags": [
+              "urn:tag:amenity:qloo:fresh_bread_delivery",
+              "urn:tag:amenity:qloo:artisan_bread_service",
+              "urn:tag:specialty_dish:place:croissant_nyc"
+            ],
+            "operator.signal.interests.tags": "intersection",
+            "signal.location.query": "Tokyo, Japan",
+            "filter.tags": [
+              "urn:tag:cuisine:qloo:bakery"
+            ],
+            "operator.filter.tags": "intersection",
+            "feature.explainability": true
+          },
+          "endpoint": "/v2/insights",
+          "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+        },
+        "resultExcerpt": [
+          "Path · affinity 0.888 · popularity 0.9980",
+          "GARDEN HOUSE CRAFTS DAIKANYAMA · affinity 0.888 · popularity 0.9938",
+          "No.4 · affinity 0.888 · popularity 0.9894",
+          "THE CITY BAKERY Tokyo Garden Terrace Kioicho · affinity 0.888 · popularity 0.9805",
+          "Sawamura Bakery & Restaurant · affinity 0.888 · popularity 0.9865"
+        ]
+      },
+      {
+        "id": "trace-relevance",
+        "step": "assess-reference-relevance",
+        "workflow": null,
+        "status": "ok",
+        "durationMs": null,
+        "correlationId": null,
+        "resultCount": 6,
+        "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+        "evidenceIds": [
+          "ev-entity-3",
+          "ev-entity-4",
+          "ev-entity-5",
+          "ev-entity-6",
+          "ev-entity-7",
+          "ev-entity-8",
+          "ev-entity-9",
+          "ev-entity-10",
+          "ev-entity-11",
+          "ev-entity-12"
+        ],
+        "acquiredAt": null,
+        "request": null,
+        "resultExcerpt": null
+      },
+      {
+        "id": "trace-bridge-artist",
+        "step": "bridge-artist",
+        "workflow": "recommend",
+        "status": "ok",
+        "durationMs": 0,
+        "correlationId": "exec-12186e3d-cd53-455f-91cb-29bdf24cfcaa",
+        "resultCount": 5,
+        "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 2.5s, this run spent no time waiting)",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.847154+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/insights",
+          "query": {
+            "filter.type": "urn:entity:artist",
+            "take": 5,
+            "signal.interests.tags": [
+              "urn:tag:amenity:qloo:fresh_bread_delivery",
+              "urn:tag:amenity:qloo:artisan_bread_service",
+              "urn:tag:specialty_dish:place:croissant_nyc"
+            ],
+            "operator.signal.interests.tags": "intersection",
+            "feature.explainability": true
+          },
+          "endpoint": "/v2/insights",
+          "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+        },
+        "resultExcerpt": [
+          "Peter Phillips: The Tallis Scholars · affinity 0.765 · popularity 0.7951",
+          "Bandai · affinity 0.765 · popularity 0.5950",
+          "Mathématiques Modernes · affinity 0.765 · popularity 0.6594",
+          "Warbreed · affinity 0.765 · popularity 0.7094",
+          "MOOSE HILL · affinity 0.765 · popularity 0.5295"
+        ]
+      },
+      {
+        "id": "trace-bridge-movie",
+        "step": "bridge-movie",
+        "workflow": "recommend",
+        "status": "ok",
+        "durationMs": 0,
+        "correlationId": "exec-3c056fbb-9b9b-4480-9fd1-b9b51b6f44be",
+        "resultCount": 5,
+        "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 2.9s, this run spent no time waiting)",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.847345+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/insights",
+          "query": {
+            "filter.type": "urn:entity:movie",
+            "take": 5,
+            "signal.interests.tags": [
+              "urn:tag:amenity:qloo:fresh_bread_delivery",
+              "urn:tag:amenity:qloo:artisan_bread_service",
+              "urn:tag:specialty_dish:place:croissant_nyc"
+            ],
+            "operator.signal.interests.tags": "intersection",
+            "feature.explainability": true
+          },
+          "endpoint": "/v2/insights",
+          "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+        },
+        "resultExcerpt": [
+          "A Nice Neighbor · affinity 0.765",
+          "7:11 PM · affinity 0.765 · popularity 0.4317",
+          "Come on Children · affinity 0.765 · popularity 0.1981",
+          "Always Audacious · affinity 0.765",
+          "El enemigo · affinity 0.765"
+        ]
+      },
+      {
+        "id": "trace-bridge-brand",
+        "step": "bridge-brand",
+        "workflow": "recommend",
+        "status": "ok",
+        "durationMs": 0,
+        "correlationId": "exec-37f4f5cb-1c6a-4efb-a44e-05e734c89b64",
+        "resultCount": 5,
+        "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 5.5s, this run spent no time waiting)",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:22.847583+00:00",
+        "request": {
+          "method": "GET",
+          "path": "/v2/insights",
+          "query": {
+            "filter.type": "urn:entity:brand",
+            "take": 5,
+            "signal.interests.tags": [
+              "urn:tag:amenity:qloo:fresh_bread_delivery",
+              "urn:tag:amenity:qloo:artisan_bread_service",
+              "urn:tag:specialty_dish:place:croissant_nyc"
+            ],
+            "operator.signal.interests.tags": "intersection",
+            "feature.explainability": true
+          },
+          "endpoint": "/v2/insights",
+          "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+        },
+        "resultExcerpt": [
+          "Politix Men's Fashion · affinity 0.765 · popularity 0.6003",
+          "Duncan Quinn · affinity 0.765 · popularity 0.5456",
+          "Binance · affinity 0.765 · popularity 0.9937",
+          "Orfeu Cafés e Azeites · affinity 0.765 · popularity 0.8272",
+          "Goldilocks Bakeshop · affinity 0.765 · popularity 0.8560"
+        ]
+      },
+      {
+        "id": "ev-compose",
+        "step": "compose-directions",
+        "workflow": null,
+        "status": "ok",
+        "durationMs": null,
+        "correlationId": null,
+        "resultCount": 3,
+        "detail": "Composed 3 direction(s) from the returned evidence.",
+        "evidenceIds": [
+          "ev-entity-8",
+          "ev-entity-4",
+          "ev-entity-5",
+          "ev-entity-4",
+          "ev-entity-5",
+          "ev-entity-7",
+          "ev-entity-5",
+          "ev-entity-4"
+        ],
+        "acquiredAt": null,
+        "request": null,
+        "resultExcerpt": null
+      },
+      {
+        "id": "ev-name-directions",
+        "step": "name-the-directions",
+        "workflow": null,
+        "status": "ok",
+        "durationMs": 8550,
+        "correlationId": null,
+        "resultCount": 3,
+        "detail": "Named by minimax/minimax-m3.1-flash. direction 1: the tagline carried a number Qloo did not return for it; direction 2: the tagline carried a number Qloo did not return for it.",
+        "evidenceIds": [],
+        "acquiredAt": "2026-10-22T05:13:31Z",
+        "request": null,
+        "resultExcerpt": null
+      }
+    ],
+    "delivery": {
+      "kind": "fresh",
+      "acquiredAt": "2026-10-22T03:58:35.787605+00:00",
+      "servedAt": "2026-10-22T05:13:31.419213+00:00",
+      "expiresAt": "2026-11-21T03:58:35.787605+00:00",
+      "transportRequests": 1,
+      "cachedIn": null
+    },
+    "agent": null,
+    "composerVersion": "4"
+  }
+}

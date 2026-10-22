@@ -56,6 +56,14 @@ UNICODE_FONT_PATHS = (
     '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
 )
 
+LATIN_FONT_PATHS = (
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+    '/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf',
+    '/Library/Fonts/Arial Unicode.ttf',
+    '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+)
+PRINTABLE_ASCII = set(range(32, 127))
+
 
 def unicode_font_path() -> Optional[str]:
     """A font file that can print text outside Latin-1, or None."""
@@ -78,15 +86,29 @@ def needs_unicode(*parts) -> bool:
 class Report(FPDF):
     def __init__(self, title: str, font_path: Optional[str] = None):
         super().__init__(format='A4')
-        # With a Unicode font the whole document uses it, so Tokyo prints as
-        # Tokyo. Without one the built-in Latin-1 font is used and anything
-        # outside it prints as "?", which the limitations page states.
-        self.unicode_font = bool(font_path)
+        # Droid's CJK fallback has no Latin glyphs. It must never become the
+        # sole document font: a PDF can extract perfectly while rendering blank.
+        self.unicode_font = False
         self.family = 'Helvetica'
         if font_path:
+            from pathlib import Path
+
             self.add_font('CFUnicode', '', font_path)
-            self.add_font('CFUnicode', 'B', font_path)   # one weight: headings are not bolder
-            self.family = 'CFUnicode'
+            self.add_font('CFUnicode', 'B', font_path)
+            if PRINTABLE_ASCII.issubset(self.fonts['cfunicode'].cmap):
+                self.family = 'CFUnicode'
+                self.unicode_font = True
+            else:
+                for candidate in LATIN_FONT_PATHS:
+                    if not Path(candidate).is_file():
+                        continue
+                    self.add_font('CFText', '', candidate)
+                    if PRINTABLE_ASCII.issubset(self.fonts['cftext'].cmap):
+                        self.add_font('CFText', 'B', candidate)
+                        self.family = 'CFText'
+                        self.set_fallback_fonts(['CFUnicode'], exact_match=False)
+                        self.unicode_font = True
+                        break
         self.title_text = title
         self.set_auto_page_break(auto=True, margin=18)
         self.set_margins(18, 18, 18)
@@ -105,6 +127,8 @@ class Report(FPDF):
                   align='C')
 
     def heading(self, text: str, size: float = 15):
+        if self.will_page_break(size * 0.5 + 20):
+            self.add_page()
         self.ln(3)
         self.set_font(self.family, 'B', size)
         self.set_text_color(*INK)
@@ -187,6 +211,8 @@ def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, comp
     # ---- cover ------------------------------------------------------------
     pdf.label('Location and concept strategy - evidence brief')
     pdf.heading(f'{response.project.businessType} for {response.project.audience}', 20)
+    if response.project.businessIdea:
+        pdf.body(f'Business idea: {response.project.businessIdea}', 11)
     pdf.body(f'Location: {response.project.location}')
     pdf.body(f'Planning budget (a CultureForge planning assumption, not a cost estimate): {response.project.budget}')
     if response.project.objectives:
@@ -217,6 +243,8 @@ def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, comp
     if not response.concepts:
         pdf.body('The evidence did not support a distinct business direction, so none is proposed.')
     for index, concept in enumerate(response.concepts, start=1):
+        if pdf.will_page_break(40):
+            pdf.add_page()
         pdf.label(f'Direction {index:02d}')
         pdf.heading(concept.name, 13)
         if concept.tagline:
@@ -260,8 +288,26 @@ def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, comp
     pdf.body('Values are as Qloo returned them. Affinity and popularity are Qloo aggregate signals, not '
              'measures of business fit or demand.', 7.5, MUTED)
 
+    assessed = [item for item in response.evidence if item.relevance]
+    if assessed:
+        pdf.heading('Reference relevance')
+        pdf.body('CultureForge rule assessments of returned text, separate from Qloo affinity. '
+                 'An eligible reference is not proof of demand or operating suitability. '
+                 'Indirect sources remain inspectable but cannot anchor a direction.', 8.5, MUTED)
+        for item in assessed:
+            assessment = item.relevance
+            pdf.body(f'{item.label}: {assessment.get("relationship", "unknown")} '
+                     f'({assessment.get("version", "version not recorded")}); '
+                     f'anchor eligible: {"yes" if assessment.get("anchorEligible") else "no"}; '
+                     f'geography: {assessment.get("geography", "unknown")}.', 8.5)
+            reasons = assessment.get('reasons') or []
+            if reasons:
+                pdf.body(' '.join(str(reason) for reason in reasons), 7.5, MUTED)
+
     # ---- interest cells ---------------------------------------------------
     anchor_label, points = _held_interest_cells(response)
+    if pdf.will_page_break(36):
+        pdf.add_page()
     pdf.heading('Interest cells')
     if points:
         pdf.body(f'Where Qloo reports strong affinity for {anchor_label}, the lead direction\'s anchor, '
@@ -281,7 +327,7 @@ def build_pdf(response: GenerateResponse, challenge: Optional[dict] = None, comp
         'demand validation or competitive advantage is claimed.',
         'The demographic profile used by the evidence test is proposed by CultureForge from the brief; it is not '
         'Qloo-inferred and is not the audience\'s full cultural profile.',
-        ('This PDF uses a Unicode font, so place names in any script are printed as Qloo returned them.'
+        ('This PDF embeds a Unicode font to preserve returned place names; character coverage depends on the installed font.'
          if pdf.unicode_font else
          'No Unicode font was available on the server, so characters outside Latin-1 (for example Japanese place '
          'names) are shown as "?" in this PDF; the JSON export keeps them.'),

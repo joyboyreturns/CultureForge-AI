@@ -1,0 +1,7 @@
+
+> cultureforge-ai@0.3.0 test:unit
+> node scripts/test_unit.mjs
+
+[ok] Citation coverage rejects missing sources; export preserves zero-cost delivery, uncertainty and counterfactual anchors.
+[ok] Notebook notes stay attached to their proposal and evidence; removal reports answer changes separately from source-only changes.
+[ok] Guided tour supports the brief before evidence exists and requires real evidence for the remaining interactions.

@@ -3,7 +3,7 @@
 **Concept directions that have to survive their Qloo evidence.** CultureForge
 is for location and concept strategists at hospitality and retail groups and
 brand agencies. They need to argue which concept fits which neighbourhood,
-and defend it. From a brief (business type, audience, location),
+and defend it. From a brief (business category, specific idea, audience, location),
 CultureForge retrieves the audience's Qloo tags, local places and what the
 same audience gravitates to beyond places. It composes directions in which
 every decision cites its evidence, and then lets the evidence push back: a
@@ -13,7 +13,9 @@ follow-up questions are answered from the evidence or refused. Every number
 shown is one Qloo returned. Nothing claims demand, rent, footfall or
 willingness to pay.
 
-![The studio: three directions from held Qloo evidence, the evidence-test profile chosen before the test, and the verdicts](artifacts/studio-results.png)
+![The source-to-decision graph after an actual evidence removal](artifacts/validation/studio-evidence-graph.png)
+
+The studio now assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [verified implementation review](docs/IMPLEMENTATION_REVIEW.md) and [demo journey](docs/DEMO.md).
 
 ## Architecture
 
@@ -40,9 +42,9 @@ query keys.
 
 | Workflow | Used for | Returns | Carried forward |
 | --- | --- | --- | --- |
-| `find_tags` | Resolve the audience | Up to 3 tags | Tag URNs (`urn:tag:…`) become the audience seeds |
+| `find_tags` | Resolve the audience | Up to 3 tags | Tag URNs (`urn:tag:…`) become the audience seeds; a separate exact category tag filters explicit business ideas |
 | `recommend` (place) | Local evidence | Up to 10 places with affinity, popularity, rating, price, description, image | Entity IDs; each direction's anchor and citations |
-| `recommend` (artist, movie, brand) | The audience bridge: same tags, no location | Up to 5 per domain | Entity IDs, cited as audience-level cross-references |
+| `recommend` (artist, movie, brand) | The audience bridge: same tags, no location | Up to 5 per domain | Entity IDs, shown as audience-level cross-references |
 | `rank` | The evidence test | The places ranked for a demographic profile | Rank position of each anchor |
 | `compare_audiences` | The evidence test | Tags for the anchor against every other place | Qualifying cultural tag URNs |
 | `where_popular` | Interest map, investigation | Lat/lon interest cells | Drawn as cells, never as venue pins |

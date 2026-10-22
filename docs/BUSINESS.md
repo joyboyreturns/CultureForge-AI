@@ -21,7 +21,7 @@ committee or a client.
 | They need | CultureForge does |
 | --- | --- |
 | A concept grounded in what a local audience is drawn to | Directions composed from Qloo places and audience tags, with every decision citing the evidence behind it |
-| To know when the argument is weak | An evidence test (policy anchor-fit-4) that can return *contested*, with a stated confidence and sensitivity |
+| To know when the argument is weak | An evidence test (policy anchor-fit-5) that can return *contested*, with a stated confidence and sensitivity |
 | Something that can't be argued away as invention | Provenance for every Qloo request, no invented scores, and claims from the model rejected unless they cite observed Qloo IDs |
 | A deliverable for a committee or client | A PDF with seeds, directions, verdicts, an evidence table with Qloo IDs, and stated limits |
 | Follow-up questions without a new brief | *Ask the evidence*, which answers from the held evidence or refuses |
