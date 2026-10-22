@@ -135,7 +135,7 @@ export async function generateConcepts(project: ProjectRequest): Promise<Generat
   try {
     response = await fetch('/api/projects/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(project) })
   } catch {
-    throw new Error('The CultureForge backend could not be reached. It runs on port 8000 — start it, then try again.')
+    throw new Error('The CultureForge service could not be reached. Try again in a moment. (Running it yourself? Start the API on port 8000.)')
   }
   // A provider error, including a rejected Qloo call, stays visible. The
   // backend's own message says what went wrong.

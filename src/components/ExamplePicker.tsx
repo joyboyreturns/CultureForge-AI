@@ -19,14 +19,17 @@ const PREPARED: ExampleBrief[] = demoBriefs.briefs.map((brief) => ({ ...brief, p
 export function ExamplePicker({ onRun }: { onRun: (project: ProjectRequest) => void }) {
   const [examples, setExamples] = useState<ExampleBrief[]>(PREPARED)
   const [known, setKnown] = useState(false)
+  const [unchecked, setUnchecked] = useState(false)
   useEffect(() => {
     let live = true
-    fetchExamples().then((rows) => { if (live && rows.length) { setExamples(rows); setKnown(true) } }).catch(() => { /* The list still works; it just cannot say what is held. */ })
+    fetchExamples().then((rows) => { if (live && rows.length) { setExamples(rows); setKnown(true) } })
+      // The list still works; it just cannot say what is held, and says so.
+      .catch(() => { if (live) setUnchecked(true) })
     return () => { live = false }
   }, [])
   return <div className="example-picker panel">
     <span className="small-cap"><span className="orange-dot"/> PREPARED EXAMPLES</span>
-    <p className="example-picker-note">Run one as it is. {known ? 'Held briefs open from stored Qloo evidence.' : 'Checking which are held…'}</p>
+    <p className="example-picker-note">Run one as it is. {known ? 'Held briefs open from stored Qloo evidence.' : unchecked ? 'The service could not be reached, so which briefs are held is unknown.' : 'Checking which are held…'}</p>
     <ul>
       {examples.map((example) => <li key={example.id}>
         <button type="button" onClick={() => onRun(example.project)} aria-label={`Run the example: ${example.label}, ${example.project.location}`}>
