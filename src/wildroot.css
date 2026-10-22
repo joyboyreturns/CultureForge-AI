@@ -1364,3 +1364,7 @@
 .evidence-chat-starters button:hover{border-color:var(--accent);color:var(--text)}
 .evidence-chat form{display:flex;gap:8px;margin-top:10px}
 .evidence-chat input{flex:1;min-width:0;background:var(--surface-raised);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:13px;padding:9px 10px}
+
+/* Eight result actions do not fit one row inside the hero; let them wrap
+   rather than run past the card's edge. */
+.results-title-row .heading-actions{flex-wrap:wrap;flex-shrink:1;min-width:0;max-width:100%}
