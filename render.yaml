@@ -1,0 +1,29 @@
+# Render Blueprint: one Docker web service with a persistent disk.
+# Secrets marked `sync: false` are entered in the Render dashboard, never here.
+services:
+  - type: web
+    name: cultureforge
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # a persistent disk needs a paid instance
+    numInstances: 1          # research runs and in-flight dedupe live in memory
+    healthCheckPath: /health
+    disk:
+      name: cultureforge-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: RUN_PROFILE
+        value: dev           # switch to judging when judging opens (docs/JUDGING_DAY.md)
+      - key: QLOO_LIVE_ENABLED
+        value: "true"
+      - key: QLOO_API_KEY
+        sync: false
+      - key: AI_GATEWAY_ENABLED
+        value: "false"
+      - key: AI_GATEWAY_API_KEY
+        sync: false
+      - key: AI_GATEWAY_MODEL
+        sync: false
+      - key: CULTUREFORGE_ALLOWED_ORIGINS
+        sync: false

@@ -13,7 +13,8 @@ from pathlib import Path
 
 from .evidence_store import canonical_key, get_store
 from .models import ProjectRequest
-from .providers import QlooHarnessProvider, brief_places_payload, brief_tags_payload
+from . import config
+from .providers import QlooHarnessProvider, bridge_payload, brief_places_payload, brief_tags_payload
 
 BRIEFS_FILE = Path(__file__).resolve().parent.parent / 'shared' / 'demoBriefs.json'
 
@@ -30,7 +31,8 @@ def briefs() -> tuple[dict, ...]:
 
 
 def held(project: dict) -> bool:
-    """Whether the store holds both the audience seeds and the places for this brief."""
+    """Whether the store holds the seeds, the places and every bridge domain,
+    so answering this brief costs no upstream Qloo request."""
     store = get_store()
     tag_envelope = store.get(canonical_key(
         'find_tags', brief_tags_payload(project['businessType'], project['audience'])))
@@ -40,8 +42,10 @@ def held(project: dict) -> bool:
             if (tag := QlooHarnessProvider.tag_id(row))][:3]
     if not tags:
         return False
-    return store.get(canonical_key(
-        'recommend', brief_places_payload(tags, project['location']))) is not None
+    if store.get(canonical_key('recommend', brief_places_payload(tags, project['location']))) is None:
+        return False
+    return all(store.get(canonical_key('recommend', bridge_payload(tags, domain))) is not None
+               for domain in config.bridge_domains())
 
 
 def listing() -> list[dict]:

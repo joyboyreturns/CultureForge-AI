@@ -56,12 +56,16 @@ app = FastAPI(
     ],
 )
 
-# The frontend is served from a different port than the API whenever it is
-# hosted as static files, so allow the usual local development origins. The
-# Qloo credential never leaves the backend, so this exposes only the read-only
-# project API.
+# The deployed studio is served from the same origin as the API and needs no
+# CORS. Local development serves it from another port, so local origins are
+# allowed; a deployment that hosts the studio elsewhere names its origins in
+# CULTUREFORGE_ALLOWED_ORIGINS (comma-separated, exact). The Qloo credential
+# never leaves the backend.
+ALLOWED_ORIGINS = [origin.strip().rstrip('/') for origin in
+                   os.getenv('CULTUREFORGE_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
     allow_origin_regex=r'http://(localhost|127\.0\.0\.1)(:\d+)?',
     allow_credentials=False,
     allow_methods=['GET', 'POST'],
