@@ -65,6 +65,7 @@ example). Set the same environment variables, mount storage at `/data`
 | `AI_GATEWAY_ENABLED` | `false`, or `true` to turn on naming, the agent loop and *Ask the evidence* |
 | `AI_GATEWAY_API_KEY`, `AI_GATEWAY_MODEL` | Vercel AI Gateway key (secret) and model id, if enabled |
 | `CULTUREFORGE_ALLOWED_ORIGINS` | Empty for same-origin; otherwise the exact studio origins, comma-separated |
+| `CULTUREFORGE_KEY_SALT` | A long random string (the Render blueprint generates one). It salts the hashes of issued workspace API keys; the built-in default is for development only |
 | `CULTUREFORGE_OPERATOR_TOKEN` | Unset unless operator administration is deliberately enabled |
 | `PORT` | Set by most hosts; the container listens on it (default 8000) |
 

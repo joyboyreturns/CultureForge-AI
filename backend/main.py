@@ -26,7 +26,7 @@ from .models import (CompareAudiencesRequest, CompareRequest, ChallengeProbeRequ
                      EntityListRequest, EntityRequest, ErrorBody, ErrorResponse,
                      EvidenceAnalysisRequest,
                      EvidencePresentationRequest, GenerateResponse,
-                     ChatRequest, InvestigationRequest, ProfileRequest, ReportRequest, ProjectRequest, ProvenanceMetadata,
+                     ChatRequest, InvestigationRequest, KeyRequest, ProfileRequest, ReportRequest, WorkspaceRequest, ProjectRequest, ProvenanceMetadata,
                      RankRequest, RecomposeRequest, ShareRequest, TrendsRequest,
                      WherePopularRequest)
 from .platform import get_platform
@@ -351,26 +351,23 @@ def _require_operator(request: Request) -> None:
 
 @app.post('/api/workspaces', status_code=201, tags=['platform'],
           summary='Provision a workspace for a partner')
-def create_workspace(request: Request, payload: dict) -> dict:
+def create_workspace(request: Request, payload: WorkspaceRequest) -> dict:
     """Provision a workspace. The operator does this; there is no self-service
     signup, because there is no billing behind it yet."""
     _require_operator(request)
-    name = str(payload.get('name') or '').strip()
+    name = payload.name.strip()
     if not name:
         raise HTTPException(status_code=422, detail='A workspace needs a name.')
-    return get_platform().create_workspace(name, plan=str(payload.get('plan') or 'partner'))
+    return get_platform().create_workspace(name, plan=payload.plan or 'partner')
 
 
 @app.post('/api/workspaces/{workspace_id}/keys', status_code=201, tags=['platform'],
           summary='Issue an API key for a workspace')
-def issue_key(request: Request, workspace_id: str, payload: dict) -> dict:
+def issue_key(request: Request, workspace_id: str, payload: KeyRequest) -> dict:
     """Issue an API key. The key is shown once, here, and never again."""
     _require_operator(request)
     try:
-        return get_platform().issue_key(
-            workspace_id,
-            [str(scope) for scope in (payload.get('scopes') or ['read'])],
-            expires_at=payload.get('expiresAt'))
+        return get_platform().issue_key(workspace_id, list(payload.scopes), expires_at=payload.expiresAt)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

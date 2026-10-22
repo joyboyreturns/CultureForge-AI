@@ -11,9 +11,10 @@ function check(label, condition) {
 }
 function read(path) { return readFileSync(new URL(path, root), 'utf8'); }
 
-for (const path of ['LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md', 'Dockerfile',
-  'docs/DEPLOY.md', 'docs/SUBMISSION.md', 'docs/JUDGE_WALKTHROUGH.md',
-  'docs/COMPETITIVE_REVIEW.md', 'docs/JUDGE_ASSESSMENT.md', 'fonts/OFL.txt', 'dist/index.html', 'dist/studio/index.html']) {
+for (const path of ['LICENSE', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES.md', 'Dockerfile',
+  'docker-compose.yml', 'render.yaml', 'docs/DEPLOY.md', 'docs/SUBMISSION.md', 'docs/DEMO.md',
+  'docs/JUDGING_DAY.md', 'docs/BUSINESS.md', 'docs/EVIDENCE_POLICY.md', 'docs/ARCHITECTURE.md',
+  'docs/API.md', 'docs/LIMITATIONS.md', 'fonts/OFL.txt', 'dist/index.html', 'dist/studio/index.html']) {
   check(`Packaged: ${path}`, existsSync(new URL(path, root)));
 }
 check('GitHub-detectable MIT license', /MIT License/.test(read('LICENSE')));
@@ -51,5 +52,5 @@ if (release) {
 } else {
   console.log('\nPackaging checks only. Public deployment and owner confirmations are still required.');
 }
-console.log('\nThis check sends no Qloo or model requests. Complete the manual judge walkthrough after publishing.');
+console.log('\nThis check sends no Qloo or model requests. After publishing, run scripts/smoke_test.py and click through docs/DEMO.md.');
 process.exitCode = failures ? 1 : 0;
