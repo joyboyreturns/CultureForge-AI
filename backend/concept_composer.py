@@ -39,7 +39,29 @@ AUDIENCE_TAG_HINTS = (
 FACET_POPULARITY = 'popularity'
 FACET_RATING = 'rating'
 FACET_ACCESSIBLE = 'accessible'
-FACET_DISTINCTIVE = 'distinctive'
+# The returned place with the *lowest* Qloo popularity: of the places Qloo
+# returned for this audience's signals, the least widely popular one. It is
+# named for what it measures. It is not distinctiveness, independence or
+# fit, none of which this ordering can see.
+FACET_LEAST_MAINSTREAM = 'least_mainstream'
+
+#: How each facet chose a direction's reference, as the direction states it.
+#: Each sentence describes only an ordering of values Qloo returned.
+FACET_BASIS = {
+    FACET_POPULARITY: (
+        'The reference was chosen as the returned place with the highest Qloo popularity, '
+        'rating breaking ties. Popularity is general, not specific to this audience.'),
+    FACET_RATING: (
+        'The reference was chosen as the returned place with the highest Qloo business rating, '
+        'popularity breaking ties.'),
+    FACET_ACCESSIBLE: (
+        'The reference was chosen as the returned place with the lowest Qloo price level; '
+        'places without a returned price level follow, most popular first.'),
+    FACET_LEAST_MAINSTREAM: (
+        'The reference was chosen as the returned place with the lowest Qloo popularity, '
+        'the least mainstream of the places returned for these audience signals. That is an '
+        'ordering, not a measure of distinctiveness or independence.'),
+}
 
 
 @dataclass
@@ -78,7 +100,7 @@ RECIPES: tuple[Recipe, ...] = (
         signals=['Independent discovery', 'Shared routines'],
         matchers=('independent', 'creator', 'maker', 'artist', 'design_conscious', 'design_focused', 'design_enthusiast', 'aspiring_designer'),
         type_matchers=('retail',),
-        facet=FACET_DISTINCTIVE,
+        facet=FACET_LEAST_MAINSTREAM,
         accent='#bac49c',
         weight=1.2,
     ),
@@ -145,7 +167,7 @@ RECIPES: tuple[Recipe, ...] = (
                  'energy', 'energetic'),
         type_matchers=('entertainment',),
         business_types=('Entertainment', 'Hospitality'),
-        facet=FACET_DISTINCTIVE,
+        facet=FACET_LEAST_MAINSTREAM,
         accent='#b6b2da',
         weight=0.95,
     ),
@@ -305,10 +327,14 @@ def _facet_rank(facet: str, entities: list[dict]) -> list[dict]:
         return by_organisation(sorted(
             priced, key=lambda e: (_number(e.get('price_level')), -_number(e.get('popularity')))) + sorted(
             rest, key=lambda e: _number(e.get('popularity')), reverse=True))
-    # There is no tag comparison at this point, so there is no measured notion
-    # of distinctiveness to rank by. The length of a marketing description is
-    # not one. This ordering says plainly what it can: the returned place with
-    # the strongest popularity and local rating.
+    if facet == FACET_LEAST_MAINSTREAM:
+        # Lowest returned popularity first. A place without a positive
+        # popularity value has none to order by, so it follows the others.
+        known = [e for e in entities if _number(e.get('popularity')) > 0]
+        unknown = [e for e in entities if _number(e.get('popularity')) <= 0]
+        return by_organisation(sorted(
+            known, key=lambda e: (_number(e.get('popularity')), -_number(e.get('business_rating'))))
+            + sorted(unknown, key=lambda e: _number(e.get('business_rating')), reverse=True))
     return by_organisation(sorted(
         entities, key=lambda e: (_number(e.get('popularity')), _number(e.get('business_rating'))),
         reverse=True))
@@ -470,8 +496,12 @@ def compose(
             )
         if not any(_number(e.get('affinity')) != _number(chosen[0].get('affinity')) for e in chosen):
             limitations.append(
-                'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues. Returned popularity and rating were used instead.'
+                'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues.'
             )
+        basis = FACET_BASIS[recipe.facet]
+        if (primary.get('entity_id') or primary.get('id')) != (places[0].get('entity_id') or places[0].get('id')):
+            basis += ' The first such place already anchors another direction, so the next one was used.'
+        limitations.append(basis)
 
         concepts.append(
             ComposedConcept(

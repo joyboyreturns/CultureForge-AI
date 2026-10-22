@@ -41,7 +41,7 @@ QLOO_WORKFLOWS = (
     'trends',
 )
 
-COMPOSER_VERSION = '2'
+COMPOSER_VERSION = '3'
 
 # The exact set of query parameters this app sends to Qloo. A provenance
 # panel may only show a parameter that appears here. Anything else is dropped

@@ -155,3 +155,57 @@ def test_an_organisation_is_not_the_place_a_direction_is_built_around():
         assert 'Brooklyn Bridge Park Corporation' not in concept.image_alt
     # And it is disclosed, not hidden.
     assert any('organisation' in line for concept in concepts for line in concept.limitations)
+
+
+# ---------------------------------------------------------------------------
+# The least-mainstream facet: named for what it measures
+# ---------------------------------------------------------------------------
+
+def test_no_facet_claims_distinctiveness_it_cannot_measure():
+    from backend import concept_composer
+
+    assert not hasattr(concept_composer, 'FACET_DISTINCTIVE')
+    assert {recipe.facet for recipe in concept_composer.RECIPES} <= set(concept_composer.FACET_BASIS)
+
+
+def test_least_mainstream_orders_the_fixture_by_ascending_popularity(entities):
+    """From the captured response: the least popular place first, the
+    organisation last, and the most popular place nowhere near the top."""
+    from backend.concept_composer import FACET_LEAST_MAINSTREAM, FACET_POPULARITY, _facet_rank
+
+    order = [e['name'] for e in _facet_rank(FACET_LEAST_MAINSTREAM, entities)]
+    assert order[0] == 'The Bell House'
+    assert order[-1] == 'Brooklyn Bridge Park Corporation'
+    places = [e for e in entities if e['name'] != 'Brooklyn Bridge Park Corporation']
+    assert [e['popularity'] for e in _facet_rank(FACET_LEAST_MAINSTREAM, places)] == sorted(
+        e['popularity'] for e in places)
+    assert _facet_rank(FACET_POPULARITY, entities)[0]['name'] != order[0]
+
+
+def test_a_place_without_popularity_follows_the_ones_that_have_it():
+    from backend.concept_composer import FACET_LEAST_MAINSTREAM, _facet_rank
+
+    rows = [{'entity_id': 'none', 'popularity': None, 'description': 'A room.'},
+            {'entity_id': 'zero', 'popularity': 0, 'description': 'A room.'},
+            {'entity_id': 'high', 'popularity': 0.99, 'description': 'A room.'},
+            {'entity_id': 'low', 'popularity': 0.4, 'description': 'A room.'}]
+    assert [e['entity_id'] for e in _facet_rank(FACET_LEAST_MAINSTREAM, rows)][:2] == ['low', 'high']
+
+
+def test_every_direction_states_how_its_reference_was_chosen(entities):
+    from backend.concept_composer import FACET_BASIS
+
+    for tags in (DESIGN_TAGS, MINDFUL_TAGS, INDEPENDENT_TAGS):
+        for concept in _compose(tags, entities):
+            stated = [line for line in concept.limitations
+                      if any(line.startswith(basis) for basis in FACET_BASIS.values())]
+            assert len(stated) == 1, concept.name
+
+
+def test_the_independent_direction_is_built_on_the_least_mainstream_place(entities):
+    from backend.concept_composer import FACET_BASIS, FACET_LEAST_MAINSTREAM
+
+    concept = next(c for c in _compose(INDEPENDENT_TAGS, entities) if c.name == 'Independent Makers Guild')
+    assert any(line.startswith(FACET_BASIS[FACET_LEAST_MAINSTREAM]) for line in concept.limitations)
+    assert 'The Bell House' in concept.description
+    assert 'distinctive' not in ' '.join(concept.limitations).lower().replace('not a measure of distinctiveness', '')
