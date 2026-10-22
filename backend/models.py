@@ -147,6 +147,8 @@ class GenerateResponse(BaseModel):
     # Which composer produced these directions, so an old snapshot is never
     # mistaken for a current one.
     composerVersion: Optional[str] = None
+    # Why there is, or is not, a supported direction; see backend/outcome.py.
+    outcome: Optional[dict] = None
 
 class CompareRequest(BaseModel):
     """Re-research a brief for a different audience."""

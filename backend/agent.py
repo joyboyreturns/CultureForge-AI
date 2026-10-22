@@ -297,7 +297,9 @@ def validate_analysis(analysis: AgentAnalysis, observed: Observed,
             rejected.append({'statement': claim.statement[:300],
                              'reason': 'No completed ranking or audience comparison supports this comparative claim.'})
             continue
-        kept.append({'statement': claim.statement, 'directionId': claim.directionId,
+        # Set by the server, never by the model: a sentence the model wrote is an interpretation
+        # of the cited observed evidence, so it can be labelled inferred and never observed.
+        kept.append({'statement': claim.statement, 'directionId': claim.directionId, 'basis': 'inferred',
                      'citations': [{'id': item, 'label': observed.label(item)} for item in claim.citations]})
     recommended = analysis.recommendedDirectionId if comparison_observed and analysis.recommendedDirectionId in directions else None
     summary_ok = not _DIGIT.search(analysis.summary)

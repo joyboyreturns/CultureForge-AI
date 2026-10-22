@@ -15,7 +15,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-VERSION = 'relevance-2'
+from . import category as taxonomy
+
+VERSION = 'relevance-3'
 
 #: Terms that identify a returned place. Used to judge whether a place's own
 #: text is a reference for a family.
@@ -28,7 +30,7 @@ FAMILIES = {
     'wellness': ('wellness', 'spa', 'yoga', 'meditation', 'fitness', 'pilates'),
     'hospitality': ('hotel', 'resort', 'hostel', 'guesthouse', 'lodging'),
     'music': ('concert', 'concerts', 'music', 'performance', 'comedy', 'theatre', 'theater'),
-    'frozen_dessert': ('ice cream', 'gelato', 'gelateria', 'frozen yogurt', 'frozen yoghurt', 'sorbet', 'creamery'),
+    'frozen_dessert': ('ice cream', 'gelato', 'gelateria', 'frozen yogurt', 'frozen yoghurt', 'sorbet', 'creamery', 'glace', 'glaces', 'glacerie', 'glacier', 'crème glacée'),
     'gaming': ('gaming', 'esports', 'arcade', 'video game', 'video games', 'board game', 'board games'),
     'pharmacy': ('pharmacy', 'pharmacies', 'chemist', 'drugstore', 'apothecary'),
     'clinic': ('hospital', 'clinic', 'dentist'),
@@ -94,6 +96,7 @@ class BriefCategory:
     specificity: str   # specific | broad | unknown
     matched: str
     reason: str
+    terms: tuple = ()
 
 
 def matches(text: str, terms) -> list[str]:
@@ -122,6 +125,20 @@ def _brief_terms(family: str) -> tuple[str, ...]:
 
 
 def classify_brief(business_type: str, idea: str, audience: str) -> BriefCategory:
+    """The curated rules first; the category table (synonyms, languages, open vocabulary) for the rest."""
+    result = _classify_curated(business_type, taxonomy.head_phrase(idea) or idea, audience)
+    if result.family or not (idea or '').strip():
+        return result
+    resolved = taxonomy.resolve(idea)
+    if resolved.status == 'canonical':
+        return BriefCategory(resolved.id, 'idea', 'specific', resolved.matched, resolved.reason, resolved.terms)
+    if resolved.status == 'open_vocabulary':
+        slug = re.sub(r'\W+', '_', resolved.query).strip('_')
+        return BriefCategory(f'open:{slug}', 'idea', 'specific', resolved.matched, resolved.reason, resolved.terms)
+    return result
+
+
+def _classify_curated(business_type: str, idea: str, audience: str) -> BriefCategory:
     words = _normalise(idea)
     text = ' '.join(words)
     if not text:
@@ -201,13 +218,31 @@ def brief_family(business_type: str, idea: str, audience: str) -> str:
     return classify_brief(business_type, idea, audience).family
 
 
+def _evidence_class(relation: str, kind: str, text: str, category: BriefCategory, geography: str,
+                    has_identifier: bool) -> str:
+    """Direct business, indirect business, cultural attraction, audience affinity, unverified geography or unrelated."""
+    if not has_identifier:
+        return 'unrelated'
+    if kind == 'crossdomain':
+        return 'audience_affinity'
+    if relation == 'direct':
+        return 'unverified_geography' if geography == 'unverified' else 'direct_business'
+    if taxonomy.attraction_hits(text):
+        return 'cultural_attraction'
+    adjacent = taxonomy.CATEGORIES.get(category.family, {}).get('adjacent', ())
+    if any(matches(text, taxonomy.terms_for(a)) for a in adjacent):
+        return 'indirect_business'
+    return 'unrelated' if relation == 'indirect' else 'audience_affinity'
+
+
 def assess(*, business_type: str, idea: str, audience: str, location: str,
            name: str, description: str, returned_location: str = '',
            kind: str = 'entity', has_identifier: bool = True) -> dict:
     category = classify_brief(business_type, idea, audience)
     family = category.family
     text = f'{name} {description}'
-    hits = matches(text, FAMILIES.get(family, ()))
+    terms = FAMILIES.get(family) or category.terms or taxonomy.terms_for(family)
+    hits = matches(text, terms)
     reasons = [category.reason]
     if not has_identifier:
         relation = 'excluded'
@@ -233,7 +268,10 @@ def assess(*, business_type: str, idea: str, audience: str, location: str,
     else:
         geography = 'unverified'
         reasons.append(f'Returned location is {returned_location}; it does not confirm the requested city {location}.')
-    return {'version': VERSION, 'relationship': relation, 'category': family or 'unknown',
+    evidence_class = _evidence_class(relation, kind, text, category, geography, has_identifier)
+    if evidence_class == 'cultural_attraction':
+        reasons.append('Returned text describes a cultural attraction. Kept as context; it is not a competitor or a reference for this business.')
+    return {'version': VERSION, 'evidenceClass': evidence_class, 'relationship': relation, 'category': family or 'unknown',
             'categorySource': category.source, 'categorySpecificity': category.specificity,
             'categoryMatched': category.matched,
             'anchorEligible': relation == 'direct', 'geography': geography,

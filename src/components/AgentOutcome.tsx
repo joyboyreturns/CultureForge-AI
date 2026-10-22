@@ -39,11 +39,11 @@ export function AgentOutcome({ report, concepts }: { report?: AgentReport | null
       <p><strong>{recommended ? `Most defensible to investigate: ${recommended}. ` : ''}</strong>{report.analysis.summary}</p>
       <ul className="agent-claims">
         {report.analysis.claims.map((claim, index) => <li key={index}>
-          {claim.statement}
+          <em className="claim-basis">Inferred from cited evidence</em> {claim.statement}
           <span className="agent-citations">{claim.citations.map((citation) => <code key={citation.id} title={citation.id}>{citation.label}</code>)}</span>
         </li>)}
       </ul>
-      <small>What could change this: {report.analysis.whatWouldChangeTheConclusion}</small>
+      <small>Unknown until tested — what could change this: {report.analysis.whatWouldChangeTheConclusion}</small>
     </div>}
     {(report.rejectedClaims?.length ?? 0) > 0 && <details className="agent-rejected">
       <summary>{report.rejectedClaims!.length} claim{report.rejectedClaims!.length === 1 ? '' : 's'} rejected by the citation check</summary>

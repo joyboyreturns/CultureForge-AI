@@ -10,8 +10,8 @@ import { GeoMap } from './GeoMap'
  *
  * Qloo's `where_popular` returns latitude/longitude cells where one entity
  * has strong query-relative affinity. They are **interest cells, not venue
- * pins**: Qloo's geocode for a place is an address, not a coordinate, so the
- * places themselves are never plotted. Drawing a cell costs one Qloo request
+ * pins**: Qloo's geocode for a place is an address, not a coordinate, so a
+ * place is plotted only when a verified coordinate came back with it. Drawing a cell costs one Qloo request
  * the first time and nothing after, and the button says which.
  */
 export function InterestMap({ evidence, concepts, selectedId, location }: {
@@ -43,7 +43,7 @@ export function InterestMap({ evidence, concepts, selectedId, location }: {
   if (!places.length) return <p className="source-panel-note">No returned place carries a Qloo entity ID, so there is nothing to map.</p>
   const place = places.find((item) => item.entityId === entityId)
   return <div className="interest-map">
-    <p className="source-panel-note">Interest cells, not venue pins: each dot is a geographic cell where Qloo reports strong affinity for the chosen place, inside {location}. Qloo gives places an address rather than a coordinate, so the places themselves are not plotted.</p>
+    <p className="source-panel-note">Interest cells, not venue pins: each dot is a geographic cell where Qloo reports strong affinity for the chosen place, inside {location}. Qloo gives places an address rather than a coordinate, and CultureForge does not geocode, so a place is drawn only when a verified coordinate came back with it.</p>
     <div className="interest-map-controls">
       <label><MapPin size={14}/><span>Place</span>
         <select value={entityId} onChange={(event) => { setEntityId(event.target.value); setLayer(null) }}>
@@ -57,7 +57,8 @@ export function InterestMap({ evidence, concepts, selectedId, location }: {
     {error && <div className="api-error" role="alert">{error}</div>}
     {layer && layer.entityId === entityId && <>
       <p className="interest-map-cost">{layer.cached ? 'Held Qloo evidence: no new request.' : `${layer.transportRequests} new Qloo request.`} {place?.label}, within {layer.within}.</p>
-      <GeoMap layer={{ entityId: layer.entityId, within: layer.within, points: layer.points, bounds: layer.bounds, note: layer.note }} label={`Where interest in ${place?.label ?? 'this place'} concentrates`}/>
+      <GeoMap layer={{ entityId: layer.entityId, within: layer.within, points: layer.points, bounds: layer.bounds, note: layer.note }} label={`Where interest in ${place?.label ?? 'this place'} concentrates`}
+        context={{ evidence, concepts, selectedId, entityId, anchorEntityId: anchorId || undefined }}/>
     </>}
   </div>
 }

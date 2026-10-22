@@ -137,6 +137,7 @@ const CONTRACT = {
     dataMode: { type: 'string', oneOf: ['mock', 'live'], required: true },
     conceptMode: { type: 'string', oneOf: ['sample', 'evidence_composed'], required: true },
     notice: { type: 'string', required: true },
+    outcome: { type: 'object', nullable: true },
     provenance: { type: 'object', nullable: true },
     evidence: { type: 'array', required: true },
     trace: { type: 'array', required: true },
