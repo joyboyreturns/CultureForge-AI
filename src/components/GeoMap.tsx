@@ -48,7 +48,7 @@ function project(point: GeoPoint, bounds: { west: number; south: number; east: n
 export function GeoMap({ layer, label = 'Geographic interest' }: { layer: GeoLayer | null | undefined; label?: string }) {
   const [hovered, setHovered] = useState<number | null>(null)
 
-  const points = layer?.points ?? []
+  const points = useMemo(() => layer?.points ?? [], [layer?.points])
   const bounds = useMemo(() => {
     if (points.length) {
       const lats = points.map((p) => p.lat)

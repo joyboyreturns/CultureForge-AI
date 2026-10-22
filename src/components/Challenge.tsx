@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ChallengeResult, ChallengedDirection, Verdict } from '../api'
+import type { ChallengeResult, Verdict } from '../api'
 
 /**
  * The verdict.
