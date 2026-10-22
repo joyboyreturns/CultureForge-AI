@@ -109,3 +109,80 @@ def test_with_a_unicode_font_the_pdf_embeds_it_and_drops_the_apology(store, reco
 def test_a_latin_only_brief_keeps_the_built_in_font(store, recommend_places):
     pdf = build_pdf(_answer(store, recommend_places), None, compress=False)
     assert b'CIDFontType2' not in pdf and b'FontFile2' not in pdf
+
+
+def test_pdf_preserves_the_specific_business_and_separates_relevance_from_qloo_values(store, recommend_places):
+    response = _answer(store, recommend_places)
+    project = response.project.model_copy(update={'businessIdea': 'Artisan bakery'})
+    place = next(item for item in response.evidence if item.kind == 'entity')
+    assessment = {'version': 'relevance-1', 'relationship': 'indirect', 'anchorEligible': False,
+                  'geography': 'unknown', 'reasons': ['Returned text does not establish a bakery reference.']}
+    evidence = [item.model_copy(update={'relevance': assessment}) if item.id == place.id else item
+                for item in response.evidence]
+    text = _text(build_pdf(response.model_copy(update={'project': project, 'evidence': evidence}),
+                           compress=False))
+    for needle in ('Business idea: Artisan bakery', 'Reference relevance',
+                   'CultureForge rule assessments', f'{place.label}: indirect', 'anchor eligible: no',
+                   'geography: unknown', 'Returned text does not establish a bakery reference.'):
+        assert needle in text
+
+
+def test_a_cjk_only_font_uses_a_latin_primary_instead_of_rendering_english_blank(tmp_path, monkeypatch):
+    import pytest
+    from pathlib import Path
+    from fontTools import subset
+    from fontTools.ttLib import TTFont
+    from backend import report_pdf
+
+    source = report_pdf.unicode_font_path()
+    if not source:
+        pytest.skip('no Unicode font available to build the CJK-only test font')
+    latin_source = None
+    for candidate in report_pdf.LATIN_FONT_PATHS:
+        if not Path(candidate).is_file():
+            continue
+        with TTFont(candidate) as candidate_font:
+            if report_pdf.PRINTABLE_ASCII.issubset(candidate_font.getBestCmap()):
+                latin_source = candidate
+                break
+    if latin_source is None:
+        pytest.skip('no Latin-complete font available for the primary font')
+    font = TTFont(source)
+    if not {ord('東'), ord('京')}.issubset(font.getBestCmap()):
+        pytest.skip('configured Unicode font does not cover the Japanese test characters')
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[ord('東'), ord('京'), 32])
+    subsetter.subset(font)
+    cjk_only = tmp_path / 'cjk-only.ttf'
+    font.save(cjk_only)
+    monkeypatch.setattr(report_pdf, 'LATIN_FONT_PATHS', (latin_source,))
+
+    pdf = report_pdf.Report('CultureForge Tokyo', str(cjk_only))
+    assert pdf.unicode_font and pdf.family == 'CFText'
+    assert report_pdf.PRINTABLE_ASCII.issubset(pdf.fonts['cftext'].cmap)
+    assert ord('A') not in pdf.fonts['cfunicode'].cmap
+    assert pdf.get_fallback_font('東') == 'cfunicode'
+    pdf.add_page()
+    pdf.body('Artisan bakery in Tokyo - 東京')
+    assert bytes(pdf.output()).startswith(b'%PDF')
+
+
+def test_missing_latin_primary_keeps_readable_english_and_declares_unicode_unavailable(tmp_path, monkeypatch):
+    import pytest
+    from fontTools import subset
+    from fontTools.ttLib import TTFont
+    from backend import report_pdf
+
+    source = report_pdf.unicode_font_path()
+    if not source:
+        pytest.skip('no Unicode font available to build the CJK-only test font')
+    font = TTFont(source)
+    subsetter = subset.Subsetter()
+    subsetter.populate(unicodes=[ord('東'), 32])
+    subsetter.subset(font)
+    cjk_only = tmp_path / 'cjk-only.ttf'
+    font.save(cjk_only)
+    monkeypatch.setattr(report_pdf, 'LATIN_FONT_PATHS', ())
+    pdf = report_pdf.Report('CultureForge Tokyo', str(cjk_only))
+    assert not pdf.unicode_font and pdf.family == 'Helvetica'
+    assert pdf.t('Artisan bakery 東京') == 'Artisan bakery ??'

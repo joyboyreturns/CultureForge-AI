@@ -38,21 +38,21 @@ flowchart LR
 
 1. **Seeds.** `find_tags` turns "business type + audience" into up to three
    Qloo tags (`brief_tags_payload`).
-2. **Places.** `recommend` with those tags and the location returns up to
+2. **Category and places.** An explicit recognized business idea resolves a separate category tag, then uses the documented `include_tags` filter. Ambiguous or missing category resolution fails visibly. `recommend` with those audience tags and the location returns up to
    ten places (`brief_places_payload`).
-3. **Audience bridge.** The same tags go to `recommend` for each bridge
+3. **Initial answer, then audience bridge.** The first deterministic answer is published before bridge retrieval or naming, through `partialResult` and measured milestone timings. The same tags go to `recommend` for each bridge
    domain (`bridge_payload`, no location), fetched in parallel.
 4. **Composition.** `concept_composer.compose` matches the tags against
-   eight recipes. Each recipe picks its reference place by a stated ordering
+   eight conditional recipes plus specific bakery occasion hypotheses. A relevance rule excludes indirect or unknown references from anchors. The broad business category alone cannot unlock a recipe. Each recipe picks its reference place by a stated ordering
    (popularity, rating, price level or least-mainstream), and every decision
    cites evidence IDs. Composition is deterministic.
 5. **Naming (optional).** The model may rename and retag the directions. It
    cannot change claims or evidence, and its wording is validated.
 6. **Agent loop (optional).** Up to eight steps, each choosing an
    allowlisted tool, with requests built and cached by the server. The
-   analysis is validated against the identifiers observed in this run.
+   analysis is validated against identifiers observed in this run. Query-resolved seeds are not measured preferences, and a run without a completed rank or audience comparison cannot declare a comparative model winner.
 7. **Evidence test (on request).** One `rank` call and one
-   `compare_audiences` call per direction, judged by policy anchor-fit-4
+   `compare_audiences` call per direction, judged by policy anchor-fit-5
    ([EVIDENCE_POLICY.md](EVIDENCE_POLICY.md)).
 
 Every Qloo workflow goes through `run_workflow_cached`:
@@ -80,7 +80,7 @@ Failures are never cached. A held envelope answers for 24 hours in dev and
 | `backend/research.py` | The observable run state machine |
 | `backend/agent.py` | The bounded agent loop and the citation validator |
 | `backend/chat.py` | *Ask the evidence* |
-| `backend/challenge.py` | Policy anchor-fit-4 |
+| `backend/challenge.py` | Policy anchor-fit-5 |
 | `backend/report_pdf.py` | The PDF |
 | `backend/llm.py`, `backend/reasoning.py` | The only model transport (Vercel AI Gateway), with schema-checked output |
 | `backend/examples.py`, `shared/demoBriefs.json` | The prepared briefs and their held state |
@@ -98,3 +98,5 @@ Failures are never cached. A held envelope answers for 24 hours in dev and
 - Payload builders are pinned to a snapshot, because a changed payload
   makes every held entry go cold.
 - The README and `.env.example` budget defaults must match `config.py`.
+
+Research polling resumes the same in-memory run across browser reloads. A restart still loses in-flight runs; completed explorations are durable. Failed/clarification envelopes are not cached. Cache followers are released only after publication, and disk-write degradation is surfaced in health and the answer notice. Earlier five-place samples may be reused under their exact original request and provenance; they are never relabelled as ten-place results.

@@ -1,0 +1,13 @@
+================================================================
+ CultureForge — backend / frontend contract verification
+================================================================
+[ok]   GET /api/health -> live, 9 workflows
+[ok]   GET /health alias -> 200
+[ok]   POST /api/projects/generate -> live, 1 concepts, 5 signals
+[ok]   the frontend has no mock fallback -> real data, or a stated error
+[ok]   422 detail is readable -> "businessType: Input should be 'Food & beverage', 'Retail', '..."
+----------------------------------------------------------------
+notes:
+  - POST /api/projects/generate: field "agent" is not in the contract (frontend ignores it)
+All contract checks passed.
+----------------------------------------------------------------

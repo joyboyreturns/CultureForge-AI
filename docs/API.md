@@ -36,7 +36,7 @@ than on the wording:
 | `GET` | `/api/research/runs/{run_id}` | A run's steps, result, clarification or error code. |
 | `GET` | `/api/research/runs` | Recent runs. |
 | `POST` | `/api/taste/resolve` | Resolve an audience into candidate Qloo tags to confirm. |
-| `POST` | `/api/projects/challenge` | The evidence test (policy anchor-fit-4). Optional `anchorEntityId` and `demographic`. |
+| `POST` | `/api/projects/challenge` | The evidence test (policy anchor-fit-5). Optional `anchorEntityId` and `demographic`. |
 | `POST` | `/api/profile/propose` | The demographic profile the test would use, before it runs. |
 | `POST` | `/api/projects/challenge-probe` | Exclude one cited place and retrieve bounded replacements. |
 | `POST` | `/api/projects/recompose` | Rebuild the directions without a place or tag. No new Qloo call. |

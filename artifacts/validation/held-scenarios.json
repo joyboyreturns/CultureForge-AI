@@ -1,0 +1,1860 @@
+[
+  {
+    "brief": {
+      "businessType": "Food & beverage",
+      "businessIdea": "",
+      "audience": "Design-conscious Gen Z & young professionals",
+      "location": "Brooklyn, New York",
+      "budget": "$25k – $50k",
+      "objectives": []
+    },
+    "elapsedSeconds": 0.0124,
+    "result": {
+      "projectId": "cf-596eb95d52",
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "",
+        "audience": "Design-conscious Gen Z & young professionals",
+        "location": "Brooklyn, New York",
+        "budget": "$25k – $50k",
+        "objectives": []
+      },
+      "concepts": [
+        {
+          "id": "live-1-the-design-floor",
+          "name": "The Design Floor",
+          "tagline": "A space that behaves like the thing it sells.",
+          "description": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed. The reference selected for this direction is The Bell House (rated 4.5 by Qloo and popularity 0.998), described by Qloo as \"Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.\". It was returned by Qloo for a Brooklyn, New York query; the location it belongs to was not verified.",
+          "audienceFit": null,
+          "culturalRelevance": null,
+          "feasibility": null,
+          "budget": "$25k – $50k",
+          "investment": "CultureForge planning assumption — not estimated by Qloo",
+          "signals": [
+            "Design-led spaces",
+            "Independent discovery"
+          ],
+          "accent": "#e69b73",
+          "image": "https://images.qloo.com/i/B249B97C-1B2C-4740-ADA2-199A2C7B59C3-420x-auto.jpg",
+          "direction": "01",
+          "imageAlt": "The Bell House, returned by Qloo for this audience and location",
+          "personality": "Precise, confident, curated",
+          "audienceRationale": "Unlocked by modern restaurant design, food design; proposed for Design-conscious Gen Z & young professionals in Brooklyn, New York. The audience occasion is from the brief, not inferred behavior. For an audience that treats taste as the primary signal of quality.",
+          "implementationNote": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+          "moments": [
+            {
+              "title": "Why this direction",
+              "description": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed."
+            },
+            {
+              "title": "Signature moment",
+              "description": "A monthly change of the room itself, announced the way a gallery announces a new show."
+            }
+          ],
+          "evidenceIds": [
+            "ev-entity-7"
+          ],
+          "decisions": [
+            {
+              "id": "design-led-offering",
+              "field": "offering",
+              "proposal": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed.",
+              "evidenceIds": [
+                "ev-entity-7"
+              ],
+              "ruleId": "design-led",
+              "origin": "cultureforge_rule"
+            },
+            {
+              "id": "design-led-ritual",
+              "field": "signature ritual",
+              "proposal": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+              "evidenceIds": [
+                "ev-entity-7"
+              ],
+              "ruleId": "design-led",
+              "origin": "cultureforge_rule"
+            },
+            {
+              "id": "design-led-positioning",
+              "field": "positioning",
+              "proposal": "For an audience that treats taste as the primary signal of quality.",
+              "evidenceIds": [
+                "ev-entity-7",
+                "ev-tag-1",
+                "ev-tag-2"
+              ],
+              "ruleId": "design-led",
+              "origin": "cultureforge_rule"
+            }
+          ],
+          "limitations": [
+            "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+            "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+            "Qloo also returned Brooklyn Bridge Park Corporation, which its own description calls an organisation rather than a place to go to. It is in the evidence and it was not used as the anchor here.",
+            "Qloo returned the same affinity for every candidate here, so affinity does not separate these venues.",
+            "The reference was chosen as the returned place with the highest Qloo popularity, rating breaking ties. Popularity is general, not specific to this audience. This ordering is restricted to category-relevant references."
+          ]
+        }
+      ],
+      "signals": [
+        {
+          "label": "Union Square Park",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877343577498428,
+          "category": "Qloo recommendation",
+          "provenance_id": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4"
+        },
+        {
+          "label": "Brooklyn Bridge Park Corporation",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877338862351427,
+          "category": "Qloo recommendation",
+          "provenance_id": "3A84C64B-3593-49C2-96E3-B84A81CF319A"
+        },
+        {
+          "label": "Whitney Museum of American Art",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877331789627756,
+          "category": "Qloo recommendation",
+          "provenance_id": "ABF5777A-1DE8-4F68-836C-147A63F0DA07"
+        },
+        {
+          "label": "Brooklyn Steel",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877327074476532,
+          "category": "Qloo recommendation",
+          "provenance_id": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467"
+        },
+        {
+          "label": "The Bell House",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887732.",
+          "score": null,
+          "affinity": 0.887732235932362,
+          "category": "Qloo recommendation",
+          "provenance_id": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3"
+        }
+      ],
+      "dataMode": "live",
+      "conceptMode": "evidence_composed",
+      "notice": "Qloo supplied the audience tags and the local venues below. The 1 business direction are CultureForge’s interpretation of that evidence, and each one names the returned venue it was built from. Fit scores are omitted because affinity does not measure business fit.",
+      "provenance": {
+        "source": "Qloo API",
+        "endpoint": "qloo exec find_tags → recommend",
+        "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+        "resolved_tags": [
+          "urn:tag:customer_segment:qloo:gen_z_foodies",
+          "urn:tag:interests:qloo:modern_restaurant_design",
+          "urn:tag:interests:qloo:food_design"
+        ]
+      },
+      "evidence": [
+        {
+          "id": "ev-tag-0",
+          "kind": "tag",
+          "label": "Gen Z Foodies",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:customer_segment:qloo:gen_z_foodies",
+          "affinity": null,
+          "popularity": 0.9697356864939366,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-0",
+            "entityId": null,
+            "label": "Gen Z Foodies",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "customer_segment",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-1",
+          "kind": "tag",
+          "label": "Modern Restaurant Design",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:interests:qloo:modern_restaurant_design",
+          "affinity": null,
+          "popularity": 0.9877472583488154,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-1",
+            "entityId": null,
+            "label": "Modern Restaurant Design",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "interests",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-2",
+          "kind": "tag",
+          "label": "Food Design",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:interests:qloo:food_design",
+          "affinity": null,
+          "popularity": 0.9289123263832981,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-2",
+            "entityId": null,
+            "label": "Food Design",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "interests",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-entity-3",
+          "kind": "entity",
+          "label": "Union Square Park",
+          "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877343577498428,
+          "popularity": 0.9999606255485957,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+          "image": "https://images.qloo.com/i/FFB22F52-72ED-4B6A-BDC7-1092ECF175B4-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-3",
+            "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+            "label": "Union Square Park",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "hasMore": false,
+            "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "food",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-4",
+          "kind": "entity",
+          "label": "Brooklyn Bridge Park Corporation",
+          "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877338862351427,
+          "popularity": 0.0,
+          "rating": 5.0,
+          "priceLevel": null,
+          "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+          "image": "https://images.qloo.com/i/3A84C64B-3593-49C2-96E3-B84A81CF319A-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-4",
+            "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+            "label": "Brooklyn Bridge Park Corporation",
+            "identity": "organisation",
+            "identityNote": "Qloo describes this entity as an organisation, not a place to go to. It is shown under its own name, with Qloo’s own description.",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "hasMore": false,
+            "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": [
+              "Qloo returned a popularity of 0.0000 for this place. That is the value it returned; it is not a measure of demand, and it is not a missing value."
+            ]
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "food",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-5",
+          "kind": "entity",
+          "label": "Whitney Museum of American Art",
+          "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877331789627756,
+          "popularity": 0.9999760410177776,
+          "rating": 4.5,
+          "priceLevel": null,
+          "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+          "image": "https://images.qloo.com/i/ABF5777A-1DE8-4F68-836C-147A63F0DA07-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-5",
+            "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+            "label": "Whitney Museum of American Art",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "hasMore": false,
+            "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "food",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-6",
+          "kind": "entity",
+          "label": "Brooklyn Steel",
+          "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877327074476532,
+          "popularity": 0.9996669887199626,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+          "image": "https://images.qloo.com/i/40D3CED6-20A6-4285-97E0-9C8EEA1EC467-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-6",
+            "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+            "label": "Brooklyn Steel",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "hasMore": false,
+            "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "food",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-7",
+          "kind": "entity",
+          "label": "The Bell House",
+          "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.887732235932362,
+          "popularity": 0.9980121473897153,
+          "rating": 4.5,
+          "priceLevel": 2,
+          "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+          "image": "https://images.qloo.com/i/B249B97C-1B2C-4740-ADA2-199A2C7B59C3-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-7",
+            "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+            "label": "The Bell House",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "hasMore": false,
+            "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "direct",
+            "category": "food",
+            "anchorEligible": true,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text matches the food brief: bar, pizza. This is a text match, not verified operating suitability.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        }
+      ],
+      "trace": [
+        {
+          "id": "trace-find_tags-resolve-audience-tags",
+          "step": "resolve-audience-tags",
+          "workflow": "find_tags",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-bdea5f18-a383-46fa-bebb-236fb2efbc6e",
+          "resultCount": 3,
+          "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 8.0s, this run spent no time waiting)",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.042089+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/tags",
+            "query": {
+              "filter.query": "Food & beverage Design-conscious Gen Z & young professionals",
+              "feature.semantic_search": true,
+              "take": 3
+            },
+            "endpoint": "/v2/tags",
+            "documentation": "https://docs.qloo.com/reference/get-tags"
+          },
+          "resultExcerpt": [
+            "Gen Z Foodies · popularity 0.9697",
+            "Modern Restaurant Design · popularity 0.9877",
+            "Food Design · popularity 0.9289"
+          ]
+        },
+        {
+          "id": "trace-recommend-retrieve-local-evidence",
+          "step": "retrieve-local-evidence",
+          "workflow": "recommend",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-5677c7e2-134e-408d-a333-f0e0c51f7d2e",
+          "resultCount": 5,
+          "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 23.7s, this run spent no time waiting) Held sample: 5 returned places; no call was spent to enlarge it.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.042143+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/insights",
+            "query": {
+              "filter.type": "urn:entity:place",
+              "take": 5,
+              "signal.interests.tags": [
+                "urn:tag:customer_segment:qloo:gen_z_foodies",
+                "urn:tag:interests:qloo:modern_restaurant_design",
+                "urn:tag:interests:qloo:food_design"
+              ],
+              "operator.signal.interests.tags": "intersection",
+              "signal.location.query": "Brooklyn, New York",
+              "feature.explainability": true
+            },
+            "endpoint": "/v2/insights",
+            "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+          },
+          "resultExcerpt": [
+            "Union Square Park · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Bridge Park Corporation · affinity 0.888 · popularity 0.0000",
+            "Whitney Museum of American Art · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Steel · affinity 0.888 · popularity 0.9997",
+            "The Bell House · affinity 0.888 · popularity 0.9980"
+          ]
+        },
+        {
+          "id": "trace-relevance",
+          "step": "assess-reference-relevance",
+          "workflow": null,
+          "status": "ok",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 1,
+          "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+          "evidenceIds": [
+            "ev-entity-3",
+            "ev-entity-4",
+            "ev-entity-5",
+            "ev-entity-6",
+            "ev-entity-7"
+          ],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-artist",
+          "step": "bridge-artist",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No artist references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-movie",
+          "step": "bridge-movie",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No movie references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-brand",
+          "step": "bridge-brand",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No brand references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-compose",
+          "step": "compose-directions",
+          "workflow": null,
+          "status": "ok",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 1,
+          "detail": "Composed 1 direction(s) from the returned evidence.",
+          "evidenceIds": [
+            "ev-entity-7"
+          ],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-name-directions",
+          "step": "name-the-directions",
+          "workflow": null,
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "Not asked: this answer was rebuilt from held evidence.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57Z",
+          "request": null,
+          "resultExcerpt": null
+        }
+      ],
+      "delivery": {
+        "kind": "cache",
+        "acquiredAt": "2026-10-21T19:12:53.635184+00:00",
+        "servedAt": "2026-10-22T05:21:57.046801+00:00",
+        "expiresAt": "2026-11-20T19:12:53.635184+00:00",
+        "transportRequests": 0,
+        "cachedIn": "server"
+      },
+      "agent": null,
+      "composerVersion": "4"
+    }
+  },
+  {
+    "brief": {
+      "businessType": "Retail",
+      "businessIdea": "",
+      "audience": "Independent vinyl collectors and record-store regulars",
+      "location": "Brooklyn, New York",
+      "budget": "$25k – $50k",
+      "objectives": []
+    },
+    "elapsedSeconds": 0.0008,
+    "result": {
+      "projectId": "cf-8d8bcd371d",
+      "project": {
+        "businessType": "Retail",
+        "businessIdea": "",
+        "audience": "Independent vinyl collectors and record-store regulars",
+        "location": "Brooklyn, New York",
+        "budget": "$25k – $50k",
+        "objectives": []
+      },
+      "concepts": [],
+      "signals": [
+        {
+          "label": "Union Square Park",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877343577498428,
+          "category": "Qloo recommendation",
+          "provenance_id": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4"
+        },
+        {
+          "label": "Brooklyn Bridge Park Corporation",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877338862351427,
+          "category": "Qloo recommendation",
+          "provenance_id": "3A84C64B-3593-49C2-96E3-B84A81CF319A"
+        },
+        {
+          "label": "Whitney Museum of American Art",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877331789627756,
+          "category": "Qloo recommendation",
+          "provenance_id": "ABF5777A-1DE8-4F68-836C-147A63F0DA07"
+        },
+        {
+          "label": "Brooklyn Steel",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877327074476532,
+          "category": "Qloo recommendation",
+          "provenance_id": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467"
+        },
+        {
+          "label": "The Bell House",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887732.",
+          "score": null,
+          "affinity": 0.887732235932362,
+          "category": "Qloo recommendation",
+          "provenance_id": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3"
+        }
+      ],
+      "dataMode": "live",
+      "conceptMode": "evidence_composed",
+      "notice": "Qloo returned live evidence for this audience and location, but it did not support a relevant business direction. Specify the business idea, refine the audience, or try another location.",
+      "provenance": {
+        "source": "Qloo API",
+        "endpoint": "qloo exec find_tags → recommend",
+        "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+        "resolved_tags": [
+          "urn:tag:customer_segment:qloo:vinyl_collectors",
+          "urn:tag:audience:qloo:vinyl_collectors",
+          "urn:tag:influencer_appeal:qloo:vinyl_collectors"
+        ]
+      },
+      "evidence": [
+        {
+          "id": "ev-tag-0",
+          "kind": "tag",
+          "label": "Vinyl Collectors",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:customer_segment:qloo:vinyl_collectors",
+          "affinity": null,
+          "popularity": 0.9951232829974035,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-0",
+            "entityId": null,
+            "label": "Vinyl Collectors",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "customer_segment",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-1",
+          "kind": "tag",
+          "label": "Vinyl Collectors",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:audience:qloo:vinyl_collectors",
+          "affinity": null,
+          "popularity": 0.9886883571268008,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-1",
+            "entityId": null,
+            "label": "Vinyl Collectors",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "audience",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-2",
+          "kind": "tag",
+          "label": "Vinyl Collectors",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:influencer_appeal:qloo:vinyl_collectors",
+          "affinity": null,
+          "popularity": 0.9918415328521388,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-2",
+            "entityId": null,
+            "label": "Vinyl Collectors",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "influencer_appeal",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-entity-3",
+          "kind": "entity",
+          "label": "Union Square Park",
+          "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877343577498428,
+          "popularity": 0.9999606255485957,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+          "image": "https://images.qloo.com/i/FFB22F52-72ED-4B6A-BDC7-1092ECF175B4-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-3",
+            "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+            "label": "Union Square Park",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "hasMore": false,
+            "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "records",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a records reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-4",
+          "kind": "entity",
+          "label": "Brooklyn Bridge Park Corporation",
+          "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877338862351427,
+          "popularity": 0.0,
+          "rating": 5.0,
+          "priceLevel": null,
+          "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+          "image": "https://images.qloo.com/i/3A84C64B-3593-49C2-96E3-B84A81CF319A-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-4",
+            "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+            "label": "Brooklyn Bridge Park Corporation",
+            "identity": "organisation",
+            "identityNote": "Qloo describes this entity as an organisation, not a place to go to. It is shown under its own name, with Qloo’s own description.",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "hasMore": false,
+            "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": [
+              "Qloo returned a popularity of 0.0000 for this place. That is the value it returned; it is not a measure of demand, and it is not a missing value."
+            ]
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "records",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a records reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-5",
+          "kind": "entity",
+          "label": "Whitney Museum of American Art",
+          "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877331789627756,
+          "popularity": 0.9999760410177776,
+          "rating": 4.5,
+          "priceLevel": null,
+          "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+          "image": "https://images.qloo.com/i/ABF5777A-1DE8-4F68-836C-147A63F0DA07-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-5",
+            "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+            "label": "Whitney Museum of American Art",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "hasMore": false,
+            "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "records",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a records reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-6",
+          "kind": "entity",
+          "label": "Brooklyn Steel",
+          "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877327074476532,
+          "popularity": 0.9996669887199626,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+          "image": "https://images.qloo.com/i/40D3CED6-20A6-4285-97E0-9C8EEA1EC467-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-6",
+            "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+            "label": "Brooklyn Steel",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "hasMore": false,
+            "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "records",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a records reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-7",
+          "kind": "entity",
+          "label": "The Bell House",
+          "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.887732235932362,
+          "popularity": 0.9980121473897153,
+          "rating": 4.5,
+          "priceLevel": 2,
+          "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+          "image": "https://images.qloo.com/i/B249B97C-1B2C-4740-ADA2-199A2C7B59C3-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-7",
+            "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+            "label": "The Bell House",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "hasMore": false,
+            "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "records",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a records reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        }
+      ],
+      "trace": [
+        {
+          "id": "trace-find_tags-resolve-audience-tags",
+          "step": "resolve-audience-tags",
+          "workflow": "find_tags",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-c838b8fb-65af-4a6c-8b12-a127bad68c66",
+          "resultCount": 3,
+          "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 2.5s, this run spent no time waiting)",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.047031+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/tags",
+            "query": {
+              "filter.query": "Retail Independent vinyl collectors and record-store regulars",
+              "feature.semantic_search": true,
+              "take": 3
+            },
+            "endpoint": "/v2/tags",
+            "documentation": "https://docs.qloo.com/reference/get-tags"
+          },
+          "resultExcerpt": [
+            "Vinyl Collectors · popularity 0.9951",
+            "Vinyl Collectors · popularity 0.9887",
+            "Vinyl Collectors · popularity 0.9918"
+          ]
+        },
+        {
+          "id": "trace-recommend-retrieve-local-evidence",
+          "step": "retrieve-local-evidence",
+          "workflow": "recommend",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-cdb56cd0-a11d-4d76-be36-6d0e542b0dbd",
+          "resultCount": 5,
+          "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 21.8s, this run spent no time waiting) Held sample: 5 returned places; no call was spent to enlarge it.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.047055+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/insights",
+            "query": {
+              "filter.type": "urn:entity:place",
+              "take": 5,
+              "signal.interests.tags": [
+                "urn:tag:customer_segment:qloo:vinyl_collectors",
+                "urn:tag:audience:qloo:vinyl_collectors",
+                "urn:tag:influencer_appeal:qloo:vinyl_collectors"
+              ],
+              "operator.signal.interests.tags": "intersection",
+              "signal.location.query": "Brooklyn, New York",
+              "feature.explainability": true
+            },
+            "endpoint": "/v2/insights",
+            "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+          },
+          "resultExcerpt": [
+            "Union Square Park · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Bridge Park Corporation · affinity 0.888 · popularity 0.0000",
+            "Whitney Museum of American Art · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Steel · affinity 0.888 · popularity 0.9997",
+            "The Bell House · affinity 0.888 · popularity 0.9980"
+          ]
+        },
+        {
+          "id": "trace-relevance",
+          "step": "assess-reference-relevance",
+          "workflow": null,
+          "status": "ok",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+          "evidenceIds": [
+            "ev-entity-3",
+            "ev-entity-4",
+            "ev-entity-5",
+            "ev-entity-6",
+            "ev-entity-7"
+          ],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-artist",
+          "step": "bridge-artist",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No artist references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-movie",
+          "step": "bridge-movie",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No movie references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-brand",
+          "step": "bridge-brand",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No brand references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-compose",
+          "step": "compose-directions",
+          "workflow": null,
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "The returned evidence did not support a distinct business direction.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-name-directions",
+          "step": "name-the-directions",
+          "workflow": null,
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "Not asked: this answer was rebuilt from held evidence.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57Z",
+          "request": null,
+          "resultExcerpt": null
+        }
+      ],
+      "delivery": {
+        "kind": "cache",
+        "acquiredAt": "2026-10-21T07:39:37.977470+00:00",
+        "servedAt": "2026-10-22T05:21:57.047682+00:00",
+        "expiresAt": "2026-11-20T07:39:37.977470+00:00",
+        "transportRequests": 0,
+        "cachedIn": "server"
+      },
+      "agent": null,
+      "composerVersion": "4"
+    }
+  },
+  {
+    "brief": {
+      "businessType": "Wellness",
+      "businessIdea": "",
+      "audience": "New parents who cannot sleep",
+      "location": "Brooklyn, New York",
+      "budget": "$25k – $50k",
+      "objectives": []
+    },
+    "elapsedSeconds": 0.001,
+    "result": {
+      "projectId": "cf-3b8359dc75",
+      "project": {
+        "businessType": "Wellness",
+        "businessIdea": "",
+        "audience": "New parents who cannot sleep",
+        "location": "Brooklyn, New York",
+        "budget": "$25k – $50k",
+        "objectives": []
+      },
+      "concepts": [],
+      "signals": [
+        {
+          "label": "Union Square Park",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877343577498428,
+          "category": "Qloo recommendation",
+          "provenance_id": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4"
+        },
+        {
+          "label": "Brooklyn Bridge Park Corporation",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887734.",
+          "score": null,
+          "affinity": 0.8877338862351427,
+          "category": "Qloo recommendation",
+          "provenance_id": "3A84C64B-3593-49C2-96E3-B84A81CF319A"
+        },
+        {
+          "label": "Whitney Museum of American Art",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877331789627756,
+          "category": "Qloo recommendation",
+          "provenance_id": "ABF5777A-1DE8-4F68-836C-147A63F0DA07"
+        },
+        {
+          "label": "Brooklyn Steel",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887733.",
+          "score": null,
+          "affinity": 0.8877327074476532,
+          "category": "Qloo recommendation",
+          "provenance_id": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467"
+        },
+        {
+          "label": "The Bell House",
+          "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.887732.",
+          "score": null,
+          "affinity": 0.887732235932362,
+          "category": "Qloo recommendation",
+          "provenance_id": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3"
+        }
+      ],
+      "dataMode": "live",
+      "conceptMode": "evidence_composed",
+      "notice": "Qloo returned live evidence for this audience and location, but it did not support a relevant business direction. Specify the business idea, refine the audience, or try another location.",
+      "provenance": {
+        "source": "Qloo API",
+        "endpoint": "qloo exec find_tags → recommend",
+        "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+        "resolved_tags": [
+          "urn:tag:target_audience:qloo:new_parents",
+          "urn:tag:lifestyle:qloo:newborn_care",
+          "urn:tag:interests:qloo:newborn_care"
+        ]
+      },
+      "evidence": [
+        {
+          "id": "ev-tag-0",
+          "kind": "tag",
+          "label": "New Parents",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:target_audience:qloo:new_parents",
+          "affinity": null,
+          "popularity": 0.9810921075796923,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-0",
+            "entityId": null,
+            "label": "New Parents",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "target_audience",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-1",
+          "kind": "tag",
+          "label": "Newborn Care",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:lifestyle:qloo:newborn_care",
+          "affinity": null,
+          "popularity": 0.9135098648861139,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-1",
+            "entityId": null,
+            "label": "Newborn Care",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "lifestyle",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-tag-2",
+          "kind": "tag",
+          "label": "Newborn Care",
+          "entityId": null,
+          "entityType": null,
+          "tagId": "urn:tag:interests:qloo:newborn_care",
+          "affinity": null,
+          "popularity": 0.9569943306299455,
+          "rating": null,
+          "priceLevel": null,
+          "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+          "image": null,
+          "location": null,
+          "traceId": "trace-find_tags-resolve-audience-tags",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-tag-2",
+            "entityId": null,
+            "label": "Newborn Care",
+            "identity": "seed",
+            "identityNote": "",
+            "tagFamily": "interests",
+            "tagBucket": "cultural",
+            "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "hasMore": false,
+            "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": null,
+            "locationNote": "",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": null
+        },
+        {
+          "id": "ev-entity-3",
+          "kind": "entity",
+          "label": "Union Square Park",
+          "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877343577498428,
+          "popularity": 0.9999606255485957,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+          "image": "https://images.qloo.com/i/FFB22F52-72ED-4B6A-BDC7-1092ECF175B4-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-3",
+            "entityId": "FFB22F52-72ED-4B6A-BDC7-1092ECF175B4",
+            "label": "Union Square Park",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "hasMore": false,
+            "description": "Large urban gathering space and transit hub featuring a year-round greenmarket, public art, outdoor seating, and frequent community events.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "wellness",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a wellness reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-4",
+          "kind": "entity",
+          "label": "Brooklyn Bridge Park Corporation",
+          "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877338862351427,
+          "popularity": 0.0,
+          "rating": 5.0,
+          "priceLevel": null,
+          "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+          "image": "https://images.qloo.com/i/3A84C64B-3593-49C2-96E3-B84A81CF319A-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-4",
+            "entityId": "3A84C64B-3593-49C2-96E3-B84A81CF319A",
+            "label": "Brooklyn Bridge Park Corporation",
+            "identity": "organisation",
+            "identityNote": "Qloo describes this entity as an organisation, not a place to go to. It is shown under its own name, with Qloo’s own description.",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "hasMore": false,
+            "description": "Nonprofit organization managing a waterfront park on Brooklyn's East River, overseeing operations, programs, and parkland maintenance.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": [
+              "Qloo returned a popularity of 0.0000 for this place. That is the value it returned; it is not a measure of demand, and it is not a missing value."
+            ]
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "wellness",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a wellness reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-5",
+          "kind": "entity",
+          "label": "Whitney Museum of American Art",
+          "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877331789627756,
+          "popularity": 0.9999760410177776,
+          "rating": 4.5,
+          "priceLevel": null,
+          "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+          "image": "https://images.qloo.com/i/ABF5777A-1DE8-4F68-836C-147A63F0DA07-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-5",
+            "entityId": "ABF5777A-1DE8-4F68-836C-147A63F0DA07",
+            "label": "Whitney Museum of American Art",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "hasMore": false,
+            "description": "Museum dedicated to 20th-century and contemporary American art, showcasing living artists and the biennial, with modern galleries and city views in the Meatpacking District.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "wellness",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a wellness reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-6",
+          "kind": "entity",
+          "label": "Brooklyn Steel",
+          "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.8877327074476532,
+          "popularity": 0.9996669887199626,
+          "rating": 4.599999904632568,
+          "priceLevel": null,
+          "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+          "image": "https://images.qloo.com/i/40D3CED6-20A6-4285-97E0-9C8EEA1EC467-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-6",
+            "entityId": "40D3CED6-20A6-4285-97E0-9C8EEA1EC467",
+            "label": "Brooklyn Steel",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "hasMore": false,
+            "description": "Converted Williamsburg warehouse hosting lively, large-capacity concerts and indie shows, operated by The Bowery Presents.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "wellness",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a wellness reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        },
+        {
+          "id": "ev-entity-7",
+          "kind": "entity",
+          "label": "The Bell House",
+          "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+          "entityType": "urn:entity:place",
+          "tagId": null,
+          "affinity": 0.887732235932362,
+          "popularity": 0.9980121473897153,
+          "rating": 4.5,
+          "priceLevel": 2,
+          "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+          "image": "https://images.qloo.com/i/B249B97C-1B2C-4740-ADA2-199A2C7B59C3-420x-auto.jpg",
+          "location": "New York, New York",
+          "traceId": "trace-recommend-retrieve-local-evidence",
+          "presentation": {
+            "version": "presentation-1",
+            "id": "ev-entity-7",
+            "entityId": "B249B97C-1B2C-4740-ADA2-199A2C7B59C3",
+            "label": "The Bell House",
+            "identity": "place",
+            "identityNote": "",
+            "tagFamily": "",
+            "tagBucket": "other",
+            "excerpt": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "hasMore": false,
+            "description": "Bar and performance venue in a former warehouse hosting comedy, music, and DJs, with two bars, pizza, and professional sound.",
+            "requestedLocation": "Brooklyn, New York",
+            "returnedLocation": "New York, New York",
+            "locationNote": "Returned for a Brooklyn, New York query. Qloo returned the location “New York, New York”, so borough membership is not established by this field.",
+            "metrics": {},
+            "notes": []
+          },
+          "relevance": {
+            "version": "relevance-1",
+            "relationship": "indirect",
+            "category": "wellness",
+            "anchorEligible": false,
+            "geography": "unverified",
+            "audience": "returned_for_seeds",
+            "confidence": "rule_assessment_only",
+            "reasons": [
+              "Returned text does not establish a wellness reference. Retained as a cultural association; excluded from concept anchors.",
+              "Returned location is New York, New York; it does not confirm the requested city Brooklyn, New York."
+            ]
+          }
+        }
+      ],
+      "trace": [
+        {
+          "id": "trace-find_tags-resolve-audience-tags",
+          "step": "resolve-audience-tags",
+          "workflow": "find_tags",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-961628e0-680d-4e47-b554-0a521b9c30e5",
+          "resultCount": 3,
+          "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 5.6s, this run spent no time waiting)",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.047861+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/tags",
+            "query": {
+              "filter.query": "Wellness New parents who cannot sleep",
+              "feature.semantic_search": true,
+              "take": 3
+            },
+            "endpoint": "/v2/tags",
+            "documentation": "https://docs.qloo.com/reference/get-tags"
+          },
+          "resultExcerpt": [
+            "New Parents · popularity 0.9811",
+            "Newborn Care · popularity 0.9135",
+            "Newborn Care · popularity 0.9570"
+          ]
+        },
+        {
+          "id": "trace-recommend-retrieve-local-evidence",
+          "step": "retrieve-local-evidence",
+          "workflow": "recommend",
+          "status": "ok",
+          "durationMs": 0,
+          "correlationId": "exec-73a3e260-5246-45c7-a45c-28bb88794eb9",
+          "resultCount": 5,
+          "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 25.9s, this run spent no time waiting) Held sample: 5 returned places; no call was spent to enlarge it.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57.047886+00:00",
+          "request": {
+            "method": "GET",
+            "path": "/v2/insights",
+            "query": {
+              "filter.type": "urn:entity:place",
+              "take": 5,
+              "signal.interests.tags": [
+                "urn:tag:target_audience:qloo:new_parents",
+                "urn:tag:lifestyle:qloo:newborn_care",
+                "urn:tag:interests:qloo:newborn_care"
+              ],
+              "operator.signal.interests.tags": "intersection",
+              "signal.location.query": "Brooklyn, New York",
+              "feature.explainability": true
+            },
+            "endpoint": "/v2/insights",
+            "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+          },
+          "resultExcerpt": [
+            "Union Square Park · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Bridge Park Corporation · affinity 0.888 · popularity 0.0000",
+            "Whitney Museum of American Art · affinity 0.888 · popularity 1.0000",
+            "Brooklyn Steel · affinity 0.888 · popularity 0.9997",
+            "The Bell House · affinity 0.888 · popularity 0.9980"
+          ]
+        },
+        {
+          "id": "trace-relevance",
+          "step": "assess-reference-relevance",
+          "workflow": null,
+          "status": "ok",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+          "evidenceIds": [
+            "ev-entity-3",
+            "ev-entity-4",
+            "ev-entity-5",
+            "ev-entity-6",
+            "ev-entity-7"
+          ],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-artist",
+          "step": "bridge-artist",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No artist references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-movie",
+          "step": "bridge-movie",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No movie references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "trace-bridge-brand",
+          "step": "bridge-brand",
+          "workflow": "recommend",
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "No brand references were held for this brief, and a rebuild does not call Qloo.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-compose",
+          "step": "compose-directions",
+          "workflow": null,
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "The returned evidence did not support a distinct business direction.",
+          "evidenceIds": [],
+          "acquiredAt": null,
+          "request": null,
+          "resultExcerpt": null
+        },
+        {
+          "id": "ev-name-directions",
+          "step": "name-the-directions",
+          "workflow": null,
+          "status": "skipped",
+          "durationMs": null,
+          "correlationId": null,
+          "resultCount": 0,
+          "detail": "Not asked: this answer was rebuilt from held evidence.",
+          "evidenceIds": [],
+          "acquiredAt": "2026-10-22T05:21:57Z",
+          "request": null,
+          "resultExcerpt": null
+        }
+      ],
+      "delivery": {
+        "kind": "cache",
+        "acquiredAt": "2026-10-21T04:28:05.501633+00:00",
+        "servedAt": "2026-10-22T05:21:57.048692+00:00",
+        "expiresAt": "2026-11-20T04:28:05.501633+00:00",
+        "transportRequests": 0,
+        "cachedIn": "server"
+      },
+      "agent": null,
+      "composerVersion": "4"
+    }
+  },
+  {
+    "brief": {
+      "businessType": "Wellness",
+      "businessIdea": "",
+      "audience": "Mindful professionals who want a slow afternoon",
+      "location": "London, United Kingdom",
+      "budget": "$25k – $50k",
+      "objectives": []
+    },
+    "error": "Live Qloo retrieval is switched off on this server, so only evidence it already holds can be shown. Try a prepared example marked “Evidence held”.",
+    "code": "LIVE_DISABLED"
+  }
+]

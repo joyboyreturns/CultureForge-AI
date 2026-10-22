@@ -25,7 +25,7 @@ volume, mounted at `/data`.
 
 The live demo runs from a server you control. You need: Ubuntu 22.04 or
 24.04 (x86_64 or arm64), a way for the public to reach it over HTTPS, and a
-machine that stays on until judging ends (16 November, per the audit in
+machine that stays on until judging ends (5 November under the rules checked on 22 October, per
 [SUBMISSION.md](SUBMISSION.md); recheck it).
 
 **1. Install Docker with the Compose plugin.** On 24.04:
@@ -166,7 +166,11 @@ example). Set the same environment variables, mount storage at `/data`
 | `CULTUREFORGE_OPERATOR_TOKEN` | Unset unless operator administration is deliberately enabled |
 | `PORT` | Set by most hosts; the container listens on it (default 8000) |
 
-The Dockerfile installs `fonts-droid-fallback` so the PDF can print Japanese and other non-Latin place names (outside Docker, set `CULTUREFORGE_PDF_FONT`).
+The Dockerfile installs `fonts-dejavu-core` for Latin text and
+`fonts-droid-fallback` for CJK characters. The PDF selects a Latin-capable
+primary font before registering a CJK fallback; a CJK-only font otherwise
+renders English blank. English and Japanese were visually verified together
+in the actual Linux container (outside Docker, set `CULTUREFORGE_PDF_FONT`).
 
 The Dockerfile sets `CULTUREFORGE_PROVIDER=qloo`, the trusted Qloo base URL,
 and the `/data` paths.

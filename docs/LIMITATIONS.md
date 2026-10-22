@@ -84,16 +84,8 @@
   unproven, with Qloo's code.
 - Held evidence expires (24 hours in dev, 30 days in judging), after which a
   brief is fetched again.
-- The PDF prints place names in any script when the server has a Unicode
-  font (the Docker image installs `fonts-droid-fallback`; elsewhere set
-  `CULTUREFORGE_PDF_FONT` to a `.ttf`). Without one, characters outside
-  Latin-1 print as "?", and the PDF says so; the JSON export keeps them. The
-  Docker font path is not yet verified, because the image has not been built.
-- The eight direction recipes are generic (for example "design-led" can fire
-  for a bakery brief), and which places Qloo returns depends on how it
-  resolves the audience's tags. A tag can name another city ("Croissant Nyc"
-  for a Tokyo brief); the seeds screen lets you drop it.
-- The Qloo transport is the official harness CLI, run per request. A native
-  HTTP client was not built.
-- The anonymous studio is one shared demo workspace. Use non-confidential
-  briefs.
+- PDF font coverage is bounded by installed fonts. The Docker image installs DejaVu for Latin and Droid as a CJK fallback; Ubuntu-hosted container rendering was checked with English and 東京 together. A CJK font that lacks Latin glyphs is never used as the sole font. Unsupported characters still require an appropriate font.
+- Reference relevance is a conservative text rule, not a calibrated semantic model. It can miss suitable references or misread a description. Its reasons are inspectable; geographic text matches are not a geofence.
+- The eight general recipes now require matching audience tags and relevant anchors. Two bakery hypotheses distinguish collection from craft discovery. Other domains still need richer, validated composition rules; abstention can be frequent.
+- A query-resolved audience tag is an interpretation of the brief, not independent preference evidence. Comparison guards withhold an unsupported winner, but citation and pattern checks do not establish general semantic entailment.
+- Default controller bounds remain eight steps and the run deadline. The recorded timing experiment narrowed the controller to two steps and served held evidence; it does not establish cold-run latency for arbitrary briefs.

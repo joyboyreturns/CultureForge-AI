@@ -1,0 +1,88 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  74.33MB
+Step 1/28 : FROM node:22-bookworm-slim AS web
+ ---> de170b39439e
+Step 2/28 : WORKDIR /app
+ ---> Using cache
+ ---> 977a41b8751d
+Step 3/28 : COPY package.json package-lock.json ./
+ ---> Using cache
+ ---> f8f33905284a
+Step 4/28 : RUN npm ci
+ ---> Using cache
+ ---> 87bdf5a768b4
+Step 5/28 : COPY studio/ ./studio/
+ ---> Using cache
+ ---> aa7d7dcb5b21
+Step 6/28 : COPY index.html main.js styles.css vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
+ ---> Using cache
+ ---> b2d60d35b103
+Step 7/28 : COPY src/ ./src/
+ ---> Using cache
+ ---> b87ee7c5b5f1
+Step 8/28 : COPY shared/ ./shared/
+ ---> Using cache
+ ---> 8cc1d5e9c0aa
+Step 9/28 : COPY assets/ ./assets/
+ ---> Using cache
+ ---> 916de8e076fc
+Step 10/28 : COPY fonts/ ./fonts/
+ ---> Using cache
+ ---> 1681b492abfe
+Step 11/28 : RUN npm run build
+ ---> Using cache
+ ---> afc698af57ea
+Step 12/28 : FROM node:22-bookworm-slim AS harness
+ ---> de170b39439e
+Step 13/28 : RUN npm install --global @qloo/qloo-harness@0.1.26
+ ---> Using cache
+ ---> 099b735ba39e
+Step 14/28 : FROM python:3.12-slim-bookworm AS runtime
+ ---> 6a0e06f5ba0b
+Step 15/28 : WORKDIR /app
+ ---> Using cache
+ ---> a9b61d5708d3
+Step 16/28 : COPY --from=harness /usr/local/bin/node /usr/local/bin/node
+ ---> Using cache
+ ---> 9564ce8227ec
+Step 17/28 : COPY --from=harness /usr/local/lib/node_modules/@qloo /usr/local/lib/node_modules/@qloo
+ ---> Using cache
+ ---> 768c2e2740c2
+Step 18/28 : ENV QLOO_HARNESS_PATH=/usr/local/lib/node_modules/@qloo/qloo-harness     QLOO_BASE_URL=https://hackathon.api.qloo.com     QLOO_TRUSTED_BASE_URL=https://hackathon.api.qloo.com     CULTUREFORGE_STATIC_DIR=/app/dist     CULTUREFORGE_CACHE_DIR=/data/cache     CULTUREFORGE_DB=/data/platform.db     CULTUREFORGE_PROVIDER=qloo     PYTHONUNBUFFERED=1
+ ---> Using cache
+ ---> 45115f2738f5
+Step 19/28 : COPY requirements.txt ./
+ ---> Using cache
+ ---> b3b17d68d818
+Step 20/28 : RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-certificates fonts-dejavu-core fonts-droid-fallback &&     rm -rf /var/lib/apt/lists/* &&     pip install --no-cache-dir -r requirements.txt &&     useradd --create-home --uid 10001 cultureforge &&     mkdir -p /data/cache && chown -R cultureforge:cultureforge /data
+ ---> Using cache
+ ---> 96558351a933
+Step 21/28 : COPY backend/ ./backend/
+ ---> b39b2cba287d
+Step 22/28 : COPY shared/ ./shared/
+ ---> 88f3dbe3a26b
+Step 23/28 : COPY scripts/qloo_exec.mjs ./scripts/qloo_exec.mjs
+ ---> 045b21ae79f8
+Step 24/28 : COPY --from=web /app/dist ./dist
+ ---> 4b1a5ff58c1c
+Step 25/28 : USER cultureforge
+ ---> Running in df7109bb2a75
+ ---> Removed intermediate container df7109bb2a75
+ ---> 37a607c4dd7b
+Step 26/28 : EXPOSE 8000
+ ---> Running in bf67ed1428cd
+ ---> Removed intermediate container bf67ed1428cd
+ ---> c9c719178202
+Step 27/28 : HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('PORT', '8000') + '/health', timeout=4)"
+ ---> Running in caeb5f71cb6a
+ ---> Removed intermediate container caeb5f71cb6a
+ ---> 93d98a2c6800
+Step 28/28 : CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+ ---> Running in cc87f360a9f1
+ ---> Removed intermediate container cc87f360a9f1
+ ---> 75cb5d3a0f66
+Successfully built 75cb5d3a0f66
+Successfully tagged cultureforge-validation:local

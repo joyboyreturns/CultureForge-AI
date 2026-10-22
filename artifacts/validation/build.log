@@ -1,0 +1,24 @@
+
+> cultureforge-ai@0.3.0 build
+> tsc -b && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 1618 modules transformed.
+rendering chunks...
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) /Users/vincent/Documents/CultureForge AI/src/api.ts is dynamically imported by /Users/vincent/Documents/CultureForge AI/src/App.tsx, /Users/vincent/Documents/CultureForge AI/src/components/AgentTrace.tsx, /Users/vincent/Documents/CultureForge AI/src/components/AnchorTournament.tsx, /Users/vincent/Documents/CultureForge AI/src/components/AudienceComparison.tsx, /Users/vincent/Documents/CultureForge AI/src/components/ProvenanceDrawer.tsx, /Users/vincent/Documents/CultureForge AI/src/components/ReplacementProbe.tsx but also statically imported by /Users/vincent/Documents/CultureForge AI/src/App.tsx, /Users/vincent/Documents/CultureForge AI/src/components/EvidenceChat.tsx, /Users/vincent/Documents/CultureForge AI/src/components/EvidenceDependenceMap.tsx, /Users/vincent/Documents/CultureForge AI/src/components/ExamplePicker.tsx, /Users/vincent/Documents/CultureForge AI/src/components/InterestMap.tsx, /Users/vincent/Documents/CultureForge AI/src/components/Investigation.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+dist/studio/index.html                                 0.88 kB │ gzip:  0.51 kB
+dist/assets/logo-BjtD7RYP.webp                        13.54 kB
+dist/index.html                                       13.93 kB │ gzip:  4.58 kB
+dist/assets/GeistPixel-Circle-oRhtFUcQ.woff2          28.04 kB
+dist/assets/cultureforge-poster-DCnaUxw9.jpg         280.20 kB
+dist/assets/cultureforge-background-Gtz0Pqad.mp4  13,856.78 kB
+dist/assets/index-CI3JwNIC.css                        28.50 kB │ gzip:  6.96 kB
+dist/assets/main-oKVBXYtV.css                        193.51 kB │ gzip: 36.82 kB
+dist/assets/demoBriefs-BErxOfZ8.js                     4.14 kB │ gzip:  1.73 kB
+dist/assets/index-CxOak6t1.js                         14.35 kB │ gzip:  4.99 kB
+dist/assets/main-CxdFf2v7.js                         328.19 kB │ gzip: 97.77 kB
+✓ built in 1.13s

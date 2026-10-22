@@ -19,20 +19,20 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
    reported as `"unlimited"`, `"providerReady": true`, and
    `"profileWarning": null`. A typo in the profile name falls back to `dev`
    and says so in `profileWarning`.
-3. **Prewarm** the eight prepared briefs into the service's own disk. This
+3. **Prewarm** selected prepared briefs into the service's own disk. This
    spends Qloo quota once per brief, and the model allowance if the gateway is
    on:
 
    ```bash
    python3 scripts/prewarm.py --base-url $HOST            # what is held (free)
-   python3 scripts/prewarm.py --live --base-url $HOST     # fetch what is not
+   python3 scripts/prewarm.py --live --only tokyo-morning-bakery --base-url $HOST  # deliberate bounded first example
    ```
 
    It rests 20 seconds between briefs (`--pause`), and if Qloo rate-limits it
    waits out the stated pause once and tries that step again; a second limit
    stops the run. A brief costs about nine Qloo workflows and Qloo's own limit
    is unpublished (see [LIMITATIONS.md](LIMITATIONS.md)), so expect to prewarm
-   a few briefs per hour rather than all eight at once. Start days early,
+   a few briefs per hour rather than all nine at once. Start days early,
    and rerun it with `--skip-held` to leave alone the briefs whose evidence is
    already held (their evidence test may still be cold, so run without it
    once at the end). Any brief it reports as *"no direction

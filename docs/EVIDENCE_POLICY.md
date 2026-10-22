@@ -1,4 +1,4 @@
-# Evidence policy: anchor-fit-4
+# Evidence policy: anchor-fit-5
 
 CultureForge's evidence test (`POST /api/projects/challenge`, implemented in
 [`backend/challenge.py`](../backend/challenge.py)) gives each business direction
@@ -32,8 +32,10 @@ a count of places or tags, or a value Qloo returned.
 Let `n` be the number of places Qloo ranked and `p` the anchor's position (1 is first).
 
 1. **Minimum sample.** If fewer than `MINIMUM_VENUES = 3` places were
-   retrieved, there is no verdict. The result is *unproven*, with confidence
-   `none`.
+   retrieved, there is no verdict. If fewer than three of the requested places
+   were ranked, the rank check is **mixed**, even when more places were retrieved.
+   Either case leaves the result *unproven*, with confidence `none`. Duplicate
+   rank rows and places outside the requested sample are not counted.
 2. **Rank check.** Let `k = max(1, total // 3)` with `total = n`.
    - `p ≤ k`: **pass** (top band)
    - `p > n − k`: **fail** (bottom band)
@@ -80,6 +82,15 @@ Each direction returns this as `index`:
 `confidence`, `confidenceReason` and `sensitivity` (`stable`,
 `changesWhenRemoved`, `alternativeAnchors`).
 
+Each direction also returns `completion`: separate `rank` and `compare`
+execution states (`complete`, `failed`, `no_result`, `insufficient_sample`,
+`not_run`), plus `completedChecks` and `totalChecks`. A completed check can
+return a negative or inconclusive outcome; completion does not mean support.
+Failed checks retain the upstream error code, message and `retryable` flag
+in `problems`. Independent anchor comparisons continue after one fails.
+Retrying uses the same workflow cache, reusing successful evidence without
+repeating paid requests. No automatic retry is added by this policy.
+
 ## Limits
 
 - The profile is a demographic phrase CultureForge proposed, not the
@@ -88,5 +99,5 @@ Each direction returns this as `index`:
   retrieved places. They are not observations of a market.
 - A verdict can change when the anchor, the profile, the location or the
   retrieved sample changes. That sensitivity is the point of showing it.
-- *Supported* means the two checks that could be run passed within this
+- *Supported* means both required checks completed and passed within this
   sample. It is a reason to run a field test, not a substitute for one.

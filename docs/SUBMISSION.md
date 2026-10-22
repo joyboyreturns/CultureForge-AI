@@ -1,12 +1,12 @@
 # Submission
 
-For the [Qloo Agentic Hackathon](https://qloo.devpost.com/). The dates below
-come from an audit of the [rules](https://qloo.devpost.com/rules) on 21 October
-2026. **Recheck them on the official site before submitting.** That audit read:
-submissions close **30 October 2026, 11:45 pm EDT** (31 October, 9:15 am IST),
-and judging access is needed until **16 November 2026, 11:45 pm EST**. It
-found no required demo video for this event; recording one is still advised
-(see [DEMO.md](DEMO.md)).
+For the [Qloo Agentic Hackathon](https://qloo.devpost.com/). The
+[official rules](https://qloo.devpost.com/rules), checked on 22 October 2026,
+set the deadline to **30 October 2026, 11:45 pm EDT** (31 October, 9:15 am IST).
+They currently state judging on **2–5 November**, with winners around
+5 November. Keep the service accessible through judging and recheck the rules
+before submission. A video is optional. A working public demo, public source
+and a detectable open-source license are required.
 
 ## Release checklist
 
@@ -34,8 +34,8 @@ that was never given the chance to be wrong.
 
 ### What it does
 
-A strategist enters a business type, an audience, a location and a budget, or
-picks one of eight prepared briefs. CultureForge:
+A strategist enters a business category, a specific business idea, an audience, a location and a planning budget, or
+picks one of nine prepared briefs. CultureForge:
 
 1. resolves the audience into Qloo tags, retrieves up to ten local places, and
    sends the same tags to other domains (artists, films, brands) with no
@@ -47,7 +47,7 @@ picks one of eight prepared briefs. CultureForge:
    already seen, the server builds every request, and every claim in its
    analysis must cite an observed Qloo entity ID or tag URN, or it is
    rejected;
-4. puts each direction on trial (policy *anchor-fit-4*). The verdict can be
+4. puts each direction on trial (policy *anchor-fit-5*). The verdict can be
    *contested*, and comes with a confidence label and a leave-one-out
    sensitivity check. The demographic profile it ranks against is shown, and
    can be changed, before the test runs;
@@ -71,13 +71,16 @@ and a kill switch either way.
 
 ### How it maps to the judging criteria
 
-| Criterion | What to look at |
-| --- | --- |
-| **Use of the LLM** | The agent loop (`backend/agent.py`) plans, chooses Qloo workflows, observes the results and writes cited claims. A validator rejects any claim that cites an unobserved ID or states a number of its own. The same validator guards *Ask the evidence* (`backend/chat.py`). If the model fails, the rule composer's answer stands, and the trace says so. |
-| **Qloo integration** | All nine harness workflows are used: find_tags, recommend (places and other domains), rank, compare_audiences, entity_tags, where_popular, audience_demographics, trends and describe. Each has its own payload builder, provenance with allowlisted query keys, and caching. |
-| **Engineering** | Typed requests (bad input is a 422), one error envelope, no mock path in the product, run profiles, a kill switch, prewarming, a multi-process-safe SQLite ledger, and 200+ backend tests that cannot reach Qloo or a model. CI runs lint, build and tests. |
-| **Originality** | The output is designed to be able to say no. A contested verdict reorders the directions, a removed venue rebuilds the answer without it, and a model claim without a Qloo citation is struck out on screen. |
-| **Defensibility** | Every number shown is one Qloo returned, every decision cites evidence, every verdict states its policy, scope, confidence and sensitivity, and the PDF carries the Qloo IDs. See [EVIDENCE_POLICY.md](EVIDENCE_POLICY.md) and [LIMITATIONS.md](LIMITATIONS.md). |
+| Official criterion | Weight | Evidence to inspect |
+| --- | --- | --- |
+| Technological Implementation | 25% | Cached Qloo workflows, category resolution, bounded controller, typed APIs, comparison guards and actual Linux container checks. |
+| Design | 25% | Progressive real results, source-to-decision graph, honest replay labels, recoverable failure and empty states. |
+| Potential Impact | 25% | A specific strategy workflow and useful exports; customer adoption and commercial value remain unvalidated. |
+| Quality of the Idea | 25% | A proposal that can be challenged and recomposed when evidence is removed, rather than another untraceable idea generator. |
+
+These weights come from the official rules. Estimated scores in
+[IMPLEMENTATION_REVIEW.md](IMPLEMENTATION_REVIEW.md) are internal estimates,
+not official judging results.
 
 ### Challenges
 
