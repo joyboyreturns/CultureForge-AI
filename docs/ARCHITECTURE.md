@@ -65,7 +65,7 @@ miss -> single-flight (concurrent duplicates wait) -> kill switch? -> 429 cool-d
 ```
 
 Failures are never cached. A held envelope answers for 24 hours in dev and
-14 days in judging.
+30 days in judging.
 
 ## Where things live
 

@@ -61,7 +61,7 @@ def test_judging_lifts_every_call_count_budget(judging, monkeypatch):
     assert config.run_profile() == 'judging'
     assert not config.budgets_enforced()
     assert all(config.limit(name) is None for name in config.DEV_LIMITS)
-    assert config.evidence_ttl_seconds() == 14 * 24 * 3600
+    assert config.evidence_ttl_seconds() == 30 * 24 * 3600
 
 
 def test_an_unknown_profile_falls_back_to_dev_and_says_so(monkeypatch):
@@ -286,7 +286,7 @@ def test_readme_states_the_dev_defaults_and_the_judging_profile():
 
 
 # ------------------------------------------------- what a held answer states
-@pytest.mark.parametrize('profile, hours', [('dev', 24), ('judging', 14 * 24)])
+@pytest.mark.parametrize('profile, hours', [('dev', 24), ('judging', 30 * 24)])
 def test_a_held_answer_states_when_it_was_fetched_and_when_it_expires(
         monkeypatch, store, recommend_places, profile, hours):
     from datetime import datetime, timezone
@@ -305,3 +305,16 @@ def test_a_held_answer_states_when_it_was_fetched_and_when_it_expires(
     assert delivery.transportRequests == 0
     assert datetime.fromisoformat(delivery.acquiredAt).timestamp() == fetched
     assert datetime.fromisoformat(delivery.expiresAt).timestamp() == fetched + hours * 3600
+
+
+def test_the_rate_limit_pause_is_shared_by_every_provider_instance(monkeypatch):
+    """Routes and runs each build their own provider; the pause must still hold for all of them."""
+    calls = _fake_cli(monkeypatch, {'error': {'code': 'QLOO_RATE_LIMITED', 'status': 429}}, returncode=1)
+    first, second = QlooHarnessProvider(), QlooHarnessProvider()
+    for instance in (first, second):
+        monkeypatch.setattr(instance, '_resolve_command', lambda: ['fake-qloo'])
+    with pytest.raises(QlooHarnessError):
+        first._run_workflow('find_tags', {'query': 'a', 'limit': 3})
+    with pytest.raises(QlooHarnessError) as caught:
+        second._run_workflow('find_tags', {'query': 'b', 'limit': 3})
+    assert caught.value.code == 'RATE_LIMITED' and len(calls) == 1

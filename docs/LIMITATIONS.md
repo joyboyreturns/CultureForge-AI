@@ -59,7 +59,15 @@
 - Removing the local budgets (`RUN_PROFILE=judging`) does not remove Qloo's
   own quota, which is unpublished. Prewarming and the kill switch are the
   mitigations.
-- Held evidence expires (24 hours in dev, 14 days in judging), after which a
+- **Observed, not confirmed:** on 22 October 2026, after about seven workflow
+  calls in roughly ninety seconds (a cold "bakery in Tokyo" brief), the
+  hackathon key answered `429` on `rank` and kept doing so for more than ten
+  minutes, while `find_tags` still worked. A cold brief costs about nine
+  workflows (seeds, places, three bridge domains, and the evidence test's
+  `rank` and three comparisons, plus any the agent chooses). So a judge's
+  first click on a brief that is not held can meet a stated rate-limit message,
+  and the prepared, held briefs are the dependable path.
+- Held evidence expires (24 hours in dev, 30 days in judging), after which a
   brief is fetched again.
 - The PDF's built-in fonts are Latin-1. Other characters print as "?"; the
   JSON export keeps them.

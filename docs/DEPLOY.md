@@ -21,7 +21,104 @@ Open `http://localhost:8000/studio/`. Evidence, the call ledgers
 (`budget.db`) and saved explorations persist in the `cultureforge-data`
 volume, mounted at `/data`.
 
-## 2. Deploy on Render (blueprint included)
+## 2. Run it on your own Ubuntu server
+
+The live demo runs from a server you control. You need: Ubuntu 22.04 or
+24.04 (x86_64 or arm64), a way for the public to reach it over HTTPS, and a
+machine that stays on until judging ends (16 November, per the audit in
+[SUBMISSION.md](SUBMISSION.md); recheck it).
+
+**1. Install Docker with the Compose plugin.** On 24.04:
+
+```bash
+sudo apt update && sudo apt install -y docker.io docker-compose-v2 git
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"     # log out and back in once
+```
+
+On other releases follow [Docker's Ubuntu instructions](https://docs.docker.com/engine/install/ubuntu/).
+
+**2. Get the code and set the secrets.**
+
+```bash
+git clone https://github.com/joyboyreturns/CultureForge-AI.git && cd CultureForge-AI
+cp .env.example .env && chmod 600 .env
+nano .env     # QLOO_API_KEY, RUN_PROFILE=judging, CULTUREFORGE_KEY_SALT=<long random>,
+              # and AI_GATEWAY_ENABLED / AI_GATEWAY_API_KEY / AI_GATEWAY_MODEL if you use the model
+```
+
+Generate a salt with `openssl rand -hex 32`. `.env` stays on the server; it is
+never committed or baked into the image.
+
+**3. Start it.**
+
+```bash
+docker compose up -d --build
+docker compose logs -f cultureforge         # Ctrl-C to leave
+curl -s localhost:8000/health
+```
+
+The container restarts after a reboot (`restart: unless-stopped`, and Docker
+is enabled at boot). The port is bound to `127.0.0.1`, so nothing is public yet.
+
+**4. Put HTTPS in front of it.** The simplest route is Caddy, which gets and
+renews a certificate by itself. You need a domain whose A record points at
+the server's public IP, and ports 80 and 443 reachable from the internet:
+
+```bash
+sudo apt install -y caddy
+printf 'demo.example.com {\n    reverse_proxy 127.0.0.1:8000\n}\n' | sudo tee /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+Replace `demo.example.com`. Research runs and cold lookups can take over a
+minute, so if you use nginx instead, set `proxy_read_timeout 180s;`. Caddy's
+default has no such limit.
+
+**5. Firewall.** Keep port 8000 private:
+
+```bash
+sudo ufw allow OpenSSH && sudo ufw allow 80,443/tcp && sudo ufw enable
+```
+
+**6. Keep it reachable and awake.**
+
+```bash
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
+- A home or office connection often has a changing IP, or sits behind
+  carrier-grade NAT, so ports 80/443 cannot be forwarded. In that case use a
+  tunnel with a stable name (for example a *named* Cloudflare Tunnel) instead
+  of Caddy. Temporary tunnel URLs change, so they are not suitable for a link
+  you submit.
+- Check from a phone on mobile data, not from the same network.
+- Power cuts and router restarts take the demo down. After one, confirm
+  `docker compose ps` and run the smoke test.
+
+**7. Smoke-test, then prewarm** from any machine:
+
+```bash
+python3 scripts/smoke_test.py https://demo.example.com
+python3 scripts/prewarm.py --live --base-url https://demo.example.com   # spends quota, once per brief
+```
+
+Then record the URL in [`submission.json`](../submission.json).
+
+**Update, back up, roll back:**
+
+```bash
+git pull && docker compose up -d --build                        # update
+VOL=$(docker volume ls -q | grep cultureforge-data)             # the project's data volume
+docker run --rm -v "$VOL":/data -v "$PWD":/backup busybox \
+  tar czf /backup/data.tgz /data                                # back up held evidence and ledgers
+git checkout <previous-commit> && docker compose up -d --build  # roll back
+```
+
+To change a setting, edit `.env` and run
+`docker compose up -d --force-recreate`.
+
+## 3. Alternative: deploy on Render (blueprint included)
 
 1. Push this repository to GitHub.
 2. In Render: **New → Blueprint**, then pick the repository. Render reads
@@ -87,7 +184,9 @@ and the `/data` paths.
 
 ## Status of these instructions
 
-Not yet verified end to end. The Dockerfile, `docker-compose.yml` and
-`render.yaml` were written and reviewed, but no image was built here, because
-no Docker daemon was available. The smoke test was run against a local
-server. Build the image and deploy once before relying on these steps.
+Not yet verified end to end. The Dockerfile, `docker-compose.yml`, the
+Ubuntu steps and `render.yaml` were written and reviewed, but no image was
+built and no Ubuntu machine was used, because the development machine had no
+Docker daemon. The smoke test was run against a local server. Build the image
+and run the Ubuntu steps once before the demo, and fix this page if a step
+differs on your machine.

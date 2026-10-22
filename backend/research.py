@@ -356,6 +356,16 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             on_event=record_agent_event,
         )
 
+        # The answer's stated cost is the whole run's: the seeds and places this
+        # run fetched, the bridge domains, and the agent's live workflows. Left
+        # to generate(), it would count only what generate() fetched itself.
+        run.transport_requests += sum(step.upstreamRequests for step in (response.agent.steps if response.agent else []))
+        if response.delivery:
+            response.delivery.transportRequests = run.transport_requests
+            if run.transport_requests:
+                response.delivery.kind = 'fresh'
+                response.delivery.cachedIn = None
+
         run.result = response.model_dump()
         run.status = STATUS_COMPLETE
         _save_exploration(run, response)

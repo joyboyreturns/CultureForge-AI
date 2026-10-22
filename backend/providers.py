@@ -278,6 +278,12 @@ def mark_reused(event: TraceEvent, detail: Optional[str] = None) -> TraceEvent:
     event.detail = f'{text} (reused from cache — the original call took {when}, this run spent no time waiting)'
     return event
 
+#: When Qloo last rate-limited this key, live calls wait until here. It is
+#: shared by every provider instance: routes and research runs each create
+#: their own, and a pause that lived on one instance paused nothing.
+_RATE_LIMIT = {'until': 0.0}
+
+
 class QlooHarnessProvider(CultureProvider):
     """Use the official qloo CLI to resolve tags and fetch bounded recommendations.
 
@@ -307,8 +313,6 @@ class QlooHarnessProvider(CultureProvider):
         self.timeout_seconds = timeout_seconds
         self._cache: dict[str, tuple[float, GenerateResponse]] = {}
         self._lock = threading.Lock()
-        # When Qloo last rate-limited this key, live calls wait until here.
-        self._rate_limited_until = 0.0
 
     def _resolve_command(self) -> list[str]:
         """Resolve the argv prefix used to run a Qloo workflow.
@@ -377,7 +381,7 @@ class QlooHarnessProvider(CultureProvider):
                 'Live Qloo retrieval is switched off on this server, so only evidence it already '
                 'holds can be shown. Try a prepared example marked “Evidence held”.',
                 code='LIVE_DISABLED')
-        remaining = self._rate_limited_until - time.time()
+        remaining = _RATE_LIMIT['until'] - time.time()
         if remaining > 0:
             raise QlooHarnessError(
                 'Qloo rate limited this key a moment ago, so live lookups are paused. Held evidence '
@@ -386,7 +390,7 @@ class QlooHarnessProvider(CultureProvider):
                 details={'resetsInSeconds': int(remaining) + 1})
 
     def _note_rate_limited(self) -> None:
-        self._rate_limited_until = time.time() + config.rate_limit_cooldown_seconds()
+        _RATE_LIMIT['until'] = time.time() + config.rate_limit_cooldown_seconds()
 
     def _run_workflow(self, operation: str, payload: dict) -> dict:
         self._check_live_allowed()

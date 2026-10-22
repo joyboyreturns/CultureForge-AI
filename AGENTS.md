@@ -129,7 +129,7 @@ thing.
 Two caches, both holding real answers:
 
 - **The server's evidence store** (`backend/evidence_store.py`) keeps every
-  workflow envelope on disk for 24 hours (14 days in the judging profile), keyed by the canonical workflow
+  workflow envelope on disk for 24 hours (30 days in the judging profile), keyed by the canonical workflow
   input. A repeated brief is served from it for zero upstream requests.
 - **The browser's copy** (`src/api.ts`) keeps the composed answer for 12
   hours, so a reload paints instantly. The UI says which one served it:

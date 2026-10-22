@@ -129,7 +129,11 @@ def ask(request: ChatRequest, provider: Optional[QlooHarnessProvider] = None) ->
             plan = reasoning.call_structured(PLAN_PROMPT, _payload(request, observed, steps, CHAT_MAX_STEPS - index + 1),
                                              AgentStepPlan, effort='low', max_tokens=1000, timeout=40)
         except reasoning.AnalysisUnavailable as exc:
-            raise ChatUnavailable(f'{exc} Nothing was guessed.') from exc
+            # A planning step the model got wrong is not a reason to refuse the
+            # question: answer from the evidence already held, and say that no
+            # further Qloo call was considered.
+            steps.append(AgentStep(index=index, tool='plan', status='error', detail=f'The planning step failed ({exc}); answering from the evidence already held.'))
+            break
         if plan.tool in ('finish', 'remove_anchor'):
             break
         step = AgentStep(index=index, tool=plan.tool, arguments=plan.arguments, question=plan.question,
