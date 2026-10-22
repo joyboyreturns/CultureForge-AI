@@ -268,3 +268,25 @@ def test_readme_states_the_dev_defaults_and_the_judging_profile():
     ttl = re.search(r'^\|\s*`CULTUREFORGE_EVIDENCE_TTL_HOURS`\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|', readme, re.MULTILINE)
     assert ttl and (int(ttl.group(1)), int(ttl.group(2))) == (
         config.EVIDENCE_TTL_HOURS['dev'], config.EVIDENCE_TTL_HOURS['judging'])
+
+
+# ------------------------------------------------- what a held answer states
+@pytest.mark.parametrize('profile, hours', [('dev', 24), ('judging', 14 * 24)])
+def test_a_held_answer_states_when_it_was_fetched_and_when_it_expires(
+        monkeypatch, store, recommend_places, profile, hours):
+    from datetime import datetime, timezone
+
+    monkeypatch.setenv('RUN_PROFILE', profile)
+    project = main.ProjectRequest(**examples.briefs()[0]['project'])
+    tags = ['urn:tag:customer_segment:qloo:gen_z_foodies', 'urn:tag:interests:qloo:food_design']
+    tag_key = canonical_key('find_tags', brief_tags_payload(project.businessType, project.audience))
+    place_key = canonical_key('recommend', brief_places_payload(tags, project.location))
+    store.put(tag_key, {'operation': 'find_tags', 'status': 'ok', 'results': [{'id': tag} for tag in tags]})
+    store.put(place_key, recommend_places)
+    fetched = datetime(2026, 10, 20, 9, 0, tzinfo=timezone.utc).timestamp()
+    monkeypatch.setattr(store, 'stored_at', lambda key: {tag_key: fetched + 60, place_key: fetched}[key])
+
+    delivery = QlooHarnessProvider().generate(project).delivery
+    assert delivery.transportRequests == 0
+    assert datetime.fromisoformat(delivery.acquiredAt).timestamp() == fetched
+    assert datetime.fromisoformat(delivery.expiresAt).timestamp() == fetched + hours * 3600
