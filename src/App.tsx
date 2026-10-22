@@ -16,6 +16,7 @@ import { ProvenanceDrawer } from './components/ProvenanceDrawer'
 import { Clarification } from './components/Clarification'
 import { IntentSummary } from './components/IntentSummary'
 import { AgentTrace } from './components/AgentTrace'
+import { RunMonitor } from './components/RunMonitor'
 import { TasteSeeds } from './components/TasteSeeds'
 import { AudienceComparison } from './components/AudienceComparison'
 import { AnchorTournament } from './components/AnchorTournament'
@@ -83,6 +84,9 @@ export default function App() {
   const [mapUndo, setMapUndo] = useState<{ original: GenerateResponse; label: string } | null>(null)
   const [investigating, setInvestigating] = useState<string | null>(null)
   const [researchRunId, setResearchRunId] = useState<string | null>(null)
+  // A run that was set aside because the reader started something else. It keeps
+  // being followed, so nothing they asked for is lost.
+  const [parked, setParked] = useState<{ runId: string; project: ProjectRequest } | null>(null)
   useEffect(() => {
     const active = readStored<{ runId: string; project: ProjectRequest } | null>('cultureforge-active-run', null)
     if (active?.runId && active.project) { setForm(active.project); setResearchRunId(active.runId); setScreen('progress') }
@@ -241,7 +245,7 @@ export default function App() {
     return () => { cancelled = true }
   }, [])
   // Leaving a screen closes the provenance drawer, so it never floats over a screen that has no such evidence.
-  function navigate(next: Screen) { if (screen === 'progress') runId.current++; setMenuOpen(false); setProvenanceId(null); setScreen(next) }
+  function navigate(next: Screen) { setMenuOpen(false); setProvenanceId(null); setScreen(next) }
   function closeTour() {
     setTourOpen(false)
     const url = new URL(window.location.href)
@@ -287,8 +291,12 @@ export default function App() {
    * with the same trace behind it. A brief that was researched before comes
    * straight back from the evidence store and costs nothing.
    */
+  function parkCurrentRun() {
+    if (researchRunId) setParked({ runId: researchRunId, project: form })
+  }
   async function create(project: ProjectRequest = form) {
     const id = ++runId.current
+    parkCurrentRun()
     setProviderError(''); setForm(project); setScreen('progress'); setSavedOnly(false)
     setClarification(null); setResearchRunId(null)
     try {
@@ -330,7 +338,7 @@ export default function App() {
   }
 
   async function confirmSeeds(tagIds: string[]) {
-    setSeedCandidates(null); setScreen('progress'); setClarification(null)
+    setSeedCandidates(null); parkCurrentRun(); setScreen('progress'); setClarification(null)
     try {
       const { runId: started } = await startResearch(form, form.audience, tagIds)
       writeStored('cultureforge-active-run', { runId: started, project: form })
@@ -347,6 +355,13 @@ export default function App() {
     // paints the same exploration without asking the backend again.
     rememberLiveResult(data.project, data)
     setResult(data); setSelected(data.concepts[0]?.id ?? '01'); setResearchRunId(null); setScreen('results')
+  }
+
+  // Opening a finished run that was followed from another screen. The run on
+  // the workspace, if any, keeps going where it was.
+  function openParked(data: GenerateResponse) {
+    rememberLiveResult(data.project, data)
+    setResult(data); setSelected(data.concepts[0]?.id ?? '01'); setParked(null); setScreen('results')
   }
 
   function onRunClarify(ask: ClarificationAsk) {
@@ -570,13 +585,18 @@ export default function App() {
         {screen === 'progress' && (researchRunId
           ? <Progress project={form} runId={researchRunId} onComplete={onRunComplete} onClarify={onRunClarify} onGiveUp={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create') }} onRetry={() => { writeStored('cultureforge-active-run', null); void confirmSeeds(seedSelection ?? []) }} onChangeLocation={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create'); window.setTimeout(() => document.getElementById('brief-location')?.focus(), 50) }}/>
           : <Progress project={form}/>)}
+        {(screen === 'results' || screen === 'compare') && <StudioNav
+          back={screen === 'compare' ? { label: 'Back to concept studio', go: () => navigate('results') } : { label: 'Back to overview', go: () => navigate('home') }}
+          overview={screen === 'compare' ? () => navigate('home') : undefined}
+          switchIdea={() => navigate('create')}
+          examples={() => document.getElementById('demo-showcase-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}/>}
         {screen === 'results' && (result
           ? <><Results result={result} selected={selected} select={setSelected} saved={saved} save={save} savedOnly={savedOnly} setSavedOnly={setSavedOnly} open={setModal} compare={() => navigate('compare')} exportBrief={exportBrief} onInspect={setProvenanceId} onShare={shareThisExploration} shareUrl={shareUrl} onNotebook={() => setNotebookOpen(true)} onInvestigate={setInvestigating} onEvidenceDependence={() => setDependenceOpen(true)} challenge={challenge} challenging={challenging} challengeError={challengeError} onChallenge={() => testDirections()} onReanchor={(directionId, anchorEntityId) => testDirections(directionId, anchorEntityId)} onCloseChallenge={() => setChallenge(null)} usage={usage} onNewBrief={() => navigate('create')} challengeHistory={challengeHistory} challengeSavedAt={challengeSavedAt} analysis={analysis} analysisBusy={analysisBusy} analysisError={analysisError} onAnalyze={analyzeCurrentEvidence} dependenceSummary={dependenceSummary} onExportPdf={exportPdf} onApplyRebuild={(next, label) => { if (result) setMapUndo({ original: result, label }); applyRebuild(next, label) }} mapUndo={mapUndo ? { label: mapUndo.label, run: () => { restoreBaseline(mapUndo.original); setMapUndo(null) } } : null} profileControl={<ProfileChooser proposal={profileProposal} chosen={profileChoice} onChoose={setProfileChoice} testedWith={challenge?.profile.demographic}/>}/><DemoShowcase onRun={(project) => create(project)} title="Explore another example"/></>
           : <NoExploration start={() => navigate('create')} runExample={(project) => create(project)}/>)}
         {result && investigating && (() => { const concept = result.concepts.find((c) => c.id === investigating); if (!concept) return null; const testedAnchor = challenge?.directions.find((entry) => entry.directionId === concept.id)?.anchor?.label ?? null; return <Investigation concept={concept} project={result.project} evidence={result.evidence} testedAnchorLabel={testedAnchor} onClose={() => setInvestigating(null)}/> })()}
         {result && <ProvenanceDrawer evidence={result.evidence} concepts={result.concepts} trace={result.trace} evidenceId={provenanceId} project={result.project} selection={presentation} onClose={() => setProvenanceId(null)} onRecomposed={(next)=>{ setResult({...result, concepts:next.concepts, evidence:next.evidence, trace:next.trace ?? result.trace, delivery:next.delivery ?? result.delivery, signals:result.signals.filter(signal => next.evidence.some(item => item.entityId === signal.provenance_id)), agent:null, notice:next.notice}); setSelected(next.concepts[0]?.id ?? ''); setToast(next.concepts.length ? 'Rebuilt without that venue. Qloo was not called again, and no model was asked to name anything.' : 'No direction remains supported after removing that venue.') }}/>}
         {screen === 'compare' && (result
-          ? <><Compare result={result} back={() => navigate('results')} apply={applyScenario} busy={scenarioBusy}/><DemoShowcase onRun={(project) => create(project)} title="Compare with another example"/></>
+          ? <><Compare result={result} apply={applyScenario} busy={scenarioBusy}/><DemoShowcase onRun={(project) => create(project)} title="Compare with another example"/></>
           : <NoExploration start={() => navigate('create')} runExample={(project) => create(project)}/>)}
       </div><footer className="page-footer"><span><Waves size={13}/> CultureForge AI <i/> Built for location and concept strategists.</span><span>Human ambition. Cultural intelligence.</span></footer>
     </main>
@@ -584,8 +604,32 @@ export default function App() {
     {tourOpen && <GuidedTour screen={screen} hasEvidence={Boolean(result?.evidence.length && result?.concepts.length)} onNavigate={navigate} onClose={closeTour} onInspect={() => setProvenanceId(result?.evidence.find((e) => e.kind === 'entity')?.id ?? result?.evidence[0]?.id ?? null)} onRemoval={() => setDependenceOpen(true)} onNotebook={() => setNotebookOpen(true)}/>}
     {dependenceOpen && result && <EvidenceDependenceMap baseline={result} onSummary={(summary) => { if (currentResult.current === result) setDependenceSummary(summary) }} onClose={() => setDependenceOpen(false)} onUseRebuild={applyRebuild} onRestoreBaseline={restoreBaseline}/ >}
     {modal && <ConceptModal concept={modal} saved={saved.includes(modal.id)} save={() => save(modal.id)} close={() => setModal(null)}/ >}
+    {(() => {
+      const foreground = researchRunId && screen !== 'progress' && !seedCandidates ? { runId: researchRunId, project: form } : null
+      if (!foreground && !parked) return null
+      return <div className="run-dock" data-tour-skip>
+        {parked && <RunMonitor key={parked.runId} runId={parked.runId} project={parked.project} earlier={Boolean(researchRunId)}
+          onOpen={openParked}
+          onClarify={(ask) => { setForm(parked.project); setClarification(ask); setParked(null); setScreen('create') }}
+          onWatch={() => setParked(null)}
+          onDismiss={() => setParked(null)}/>}
+        {foreground && <RunMonitor key={foreground.runId} runId={foreground.runId} project={foreground.project}
+          onOpen={onRunComplete} onClarify={onRunClarify}
+          onWatch={() => setScreen('progress')}
+          onDismiss={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null) }}/>}
+      </div>
+    })()}
     {toast && <div className="toast" role="status"><CheckCheck size={17}/>{toast}</div>}
   </div>
+}
+function StudioNav({ back, overview, switchIdea, examples }: { back: { label: string; go: () => void }; overview?: () => void; switchIdea: () => void; examples: () => void }) {
+  return <nav className="studio-nav" aria-label="Move between ideas">
+    <button className="studio-nav-back" onClick={back.go}><ArrowLeft size={14}/> {back.label}</button>
+    <span className="studio-nav-spacer"/>
+    {overview && <button className="studio-nav-link" onClick={overview}>Overview</button>}
+    <button className="studio-nav-link" onClick={examples}>Try another example</button>
+    <button className="studio-nav-link is-primary" onClick={switchIdea}>Switch idea <ArrowRight size={13}/></button>
+  </nav>
 }
 function NavItem({ icon, label, active, onClick, suffix }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; suffix?: string }) {
   return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick} aria-current={active ? 'page' : undefined}>{icon}<span>{label}</span>{suffix && <small>{suffix}</small>}</button>
@@ -826,14 +870,14 @@ function ResearchTrace({trace,delivery}:{trace:TraceEvent[];delivery?:Delivery|n
  */
 function SeedRow({seed,index}:{seed:Evidence;index:number}){return <div className="evidence-row"><span className="evidence-index">0{index+1}</span><div><strong>{seed.label}</strong><p>{seed.tagId}</p></div><span className="evidence-value">{seed.popularity!=null?<>{seed.popularity.toFixed(3)}<small>QLOO POPULARITY</small></>:<ArrowUpRight size={17}/>}</span></div>}
 
-function Compare({result,back,apply,busy}:{result:GenerateResponse;back:()=>void;apply:(audience:string, alternative?: never, location?: string)=>void;busy?:boolean}) {
+function Compare({result,apply,busy}:{result:GenerateResponse;apply:(audience:string, alternative?: never, location?: string)=>void;busy?:boolean}) {
   const startingProfile=result.project.audience==='Independent creatives'?'Mindful professionals':'Independent creatives'
   const [draft,setDraft]=useState(startingProfile)
   const [location,setLocation]=useState(result.project.location)
   const [preset,setPreset]=useState(startingProfile)
   const unchanged=draft.trim()===result.project.audience.trim() && location.trim()===result.project.location.trim()
   function chooseProfile(profile:string){setPreset(profile);setDraft(profile)}
-  return <div className="compare-page"><button className="back-link" onClick={back}><ArrowLeft size={14}/> Back to concept studio</button><div className="page-heading"><div><Eyebrow>A NEW LENS ON YOUR NEXT MOVE</Eyebrow><h1>Same vision.<br/><em>New possibilities.</em></h1><p>Change the audience or location, and let Qloo measure what actually changes.</p></div><span className="scenario-pill"><FlaskConical size={14}/> SCENARIO LAB <i/> LIVE QLOO COMPARISON</span></div><div className="scenario-layout"><aside className="scenario-controls panel"><label className="scenario-location">Research location<input value={location} onChange={(event)=>setLocation(event.target.value)} aria-label="Scenario location" placeholder="City, region"/></label><div className="controls-heading"><span className="feature-icon"><SlidersHorizontal size={19}/></span><h3>Shift your perspective.</h3></div><label className="field"><span>New target audience</span><textarea maxLength={240} rows={2} value={draft} onChange={event=>{setDraft(event.target.value);setPreset('')}} placeholder="Describe an audience to explore…"/></label><div className="scenario-presets">{audiencePresets.map(profile=><button className={preset===profile?'selected':''} aria-pressed={preset===profile} key={profile} onClick={()=>chooseProfile(profile)}>{profile}{preset===profile?<Check size={12}/>:<Plus size={12}/>}</button>)}</div><div className="controls-rule"/><span className="small-cap">WHAT QLOO WILL DO</span><ol className="scenario-steps"><li><span>01</span><p><strong>Research the new audience.</strong>Qloo resolves it into cultural signals and returns the venues that carry them.</p></li><li><span>02</span><p><strong>Compare the two groups.</strong>Qloo's own A/B reports the cultural tags the audiences share, and the ones that set them apart.</p></li><li><span>03</span><p><strong>Recompose the directions.</strong>The new evidence becomes the next set of directions. Valid held evidence is reused without another Qloo call.</p></li></ol><div className="sample-model-note"><CircleHelp size={14}/><p>Qloo supplies the venue comparison. CultureForge composes the proposed directions using rules.</p></div></aside><div className="scenario-output"><div className="scenario-audience-cards"><div><span className="small-cap">ORIGINAL AUDIENCE</span><h3>{result.project.audience}</h3><span><MapPin size={12}/>{result.project.location}</span></div><span className="scenario-flow-arrow"><ArrowRight size={17}/></span><div><span className="small-cap"><span className="orange-dot"/> YOUR NEW SCENARIO</span><h3>{draft||'Your next audience'}</h3><span><MapPin size={12}/>{location.trim()||'Location required'}</span><span>{unchanged?'Same scenario — change the audience or location':'Qloo will research this audience and location against your brief'}</span></div></div>{location.trim()===result.project.location.trim()?<AudienceComparison project={result.project} currentAudience={result.project.audience} alternativeAudience={draft.trim()||result.project.audience} currentEvidence={result.evidence} busy={busy} onApply={(audience)=>apply(audience, undefined, location.trim())}/>:<p className="audience-comparison-note">The current evidence belongs to {result.project.location}. Run the new-location scenario to retrieve a fresh evidence set; the audience-pair comparison will be available from that result.</p>}<div className="scenario-apply"><button className="text-link" onClick={()=>{setDraft(result.project.audience);setLocation(result.project.location);setPreset('')}}>Reset scenario</button><Button disabled={draft.trim().length<2||unchanged} onClick={()=>apply(draft.trim(), undefined, location.trim())}>Re-research this scenario <ArrowUpRight size={16}/></Button>{busy&&<span className="scenario-busy">Re-researching with Qloo… this may resolve audience tags and retrieve places; held evidence is reused.</span>}</div></div></div></div>
+  return <div className="compare-page"><div className="page-heading"><div><Eyebrow>A NEW LENS ON YOUR NEXT MOVE</Eyebrow><h1>Same vision.<br/><em>New possibilities.</em></h1><p>Change the audience or location, and let Qloo measure what actually changes.</p></div><span className="scenario-pill"><FlaskConical size={14}/> SCENARIO LAB <i/> LIVE QLOO COMPARISON</span></div><div className="scenario-layout"><aside className="scenario-controls panel"><label className="scenario-location">Research location<input value={location} onChange={(event)=>setLocation(event.target.value)} aria-label="Scenario location" placeholder="City, region"/></label><div className="controls-heading"><span className="feature-icon"><SlidersHorizontal size={19}/></span><h3>Shift your perspective.</h3></div><label className="field"><span>New target audience</span><textarea maxLength={240} rows={2} value={draft} onChange={event=>{setDraft(event.target.value);setPreset('')}} placeholder="Describe an audience to explore…"/></label><div className="scenario-presets">{audiencePresets.map(profile=><button className={preset===profile?'selected':''} aria-pressed={preset===profile} key={profile} onClick={()=>chooseProfile(profile)}>{profile}{preset===profile?<Check size={12}/>:<Plus size={12}/>}</button>)}</div><div className="controls-rule"/><span className="small-cap">WHAT QLOO WILL DO</span><ol className="scenario-steps"><li><span>01</span><p><strong>Research the new audience.</strong>Qloo resolves it into cultural signals and returns the venues that carry them.</p></li><li><span>02</span><p><strong>Compare the two groups.</strong>Qloo's own A/B reports the cultural tags the audiences share, and the ones that set them apart.</p></li><li><span>03</span><p><strong>Recompose the directions.</strong>The new evidence becomes the next set of directions. Valid held evidence is reused without another Qloo call.</p></li></ol><div className="sample-model-note"><CircleHelp size={14}/><p>Qloo supplies the venue comparison. CultureForge composes the proposed directions using rules.</p></div></aside><div className="scenario-output"><div className="scenario-audience-cards"><div><span className="small-cap">ORIGINAL AUDIENCE</span><h3>{result.project.audience}</h3><span><MapPin size={12}/>{result.project.location}</span></div><span className="scenario-flow-arrow"><ArrowRight size={17}/></span><div><span className="small-cap"><span className="orange-dot"/> YOUR NEW SCENARIO</span><h3>{draft||'Your next audience'}</h3><span><MapPin size={12}/>{location.trim()||'Location required'}</span><span>{unchanged?'Same scenario — change the audience or location':'Qloo will research this audience and location against your brief'}</span></div></div>{location.trim()===result.project.location.trim()?<AudienceComparison project={result.project} currentAudience={result.project.audience} alternativeAudience={draft.trim()||result.project.audience} currentEvidence={result.evidence} busy={busy} onApply={(audience)=>apply(audience, undefined, location.trim())}/>:<p className="audience-comparison-note">The current evidence belongs to {result.project.location}. Run the new-location scenario to retrieve a fresh evidence set; the audience-pair comparison will be available from that result.</p>}<div className="scenario-apply"><button className="text-link" onClick={()=>{setDraft(result.project.audience);setLocation(result.project.location);setPreset('')}}>Reset scenario</button><Button disabled={draft.trim().length<2||unchanged} onClick={()=>apply(draft.trim(), undefined, location.trim())}>Re-research this scenario <ArrowUpRight size={16}/></Button>{busy&&<span className="scenario-busy">Re-researching with Qloo… this may resolve audience tags and retrieve places; held evidence is reused.</span>}</div></div></div></div>
 }
 function ConceptModal({concept,saved,save,close}:{concept:Concept;saved:boolean;save:()=>void;close:()=>void}) {
   const dialogRef=useRef<HTMLDivElement>(null)
