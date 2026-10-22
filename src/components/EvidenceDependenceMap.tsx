@@ -2,19 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, LoaderCircle, RotateCcw, X } from 'lucide-react'
 import type { Evidence, GenerateResponse } from '../contracts'
 import { recompose } from '../api'
-import { compareDirection, recipeKey } from '../evidenceDependence'
+import { CELL_STATE_LABELS as labels, REMOVAL_BOUNDARY, compareDirection, recipeKey } from '../evidenceDependence'
 import type { CellState } from '../evidenceDependence'
 
 type Rebuild = Awaited<ReturnType<typeof recompose>>
 type RemovalRow = { venue: Evidence; state: 'ready' | 'error'; rebuild?: Rebuild; error?: string }
-
-const labels: Record<CellState, string> = {
-  unchanged: 'No composition change',
-  sources: 'Supporting sources changed',
-  changed: 'Answer changed',
-  disappeared: 'Direction disappeared',
-  unknown: 'Identity unavailable',
-}
 
 export type DependenceSummary = Record<string, Record<CellState, number>>
 
@@ -95,7 +87,7 @@ export function EvidenceDependenceMap({ baseline: baselineProp, onClose, onUseRe
         <div><span className="small-cap"><span className="orange-dot"/> COMPOSITION DEPENDENCE TEST</span><h2 id="dependence-title">Which place is carrying this answer?</h2><p>Remove each returned venue once, from the same held evidence, and compare what CultureForge recomposes.</p></div>
         <button className="icon-button" onClick={onClose} aria-label="Close evidence dependence test"><X size={18}/></button>
       </header>
-      <div className="dependence-boundary"><Check size={15}/> One venue removed at a time · no new Qloo calls · no model naming call. Answer changes include descriptions, proposals, themes or imagery; optional model names and taglines are excluded. A source-only change alters citations. This tests dependence within this sample, not business viability.</div>
+      <div className="dependence-boundary"><Check size={15}/> {REMOVAL_BOUNDARY}</div>
       <div className="dependence-actions">
         <button className="button button-primary" onClick={run} disabled={running || !venues.length}>{running ? <><LoaderCircle size={15} className="spin"/> Rebuilding {completed} / {venues.length}</> : rows.length ? 'Run again from original evidence' : 'Run the dependence test'} <ArrowRight size={15}/></button>
         <button className="button button-secondary" onClick={() => onRestoreBaseline(baseline)}><RotateCcw size={14}/> Restore original answer</button>

@@ -45,6 +45,11 @@
       "id": "tokyo-morning-bakery",
       "label": "An artisan bakery for morning commuters",
       "project": {"businessType": "Food & beverage", "businessIdea": "Artisan bakery", "audience": "Early-morning commuters and neighborhood regulars who love artisan bread and pastries", "location": "Tokyo, Japan", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
+    },
+    {
+      "id": "paris-ice-cream",
+      "label": "An ice cream parlour for design-conscious young professionals",
+      "project": {"businessType": "Food & beverage", "businessIdea": "Ice cream parlour", "audience": "Design-conscious young professionals who love desserts", "location": "Paris, France", "budget": "$25k – $50k", "objectives": ["Build a loyal local following"]}
     }
   ]
 }

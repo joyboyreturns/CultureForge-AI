@@ -46,6 +46,10 @@ class Evidence(BaseModel):
     description: Optional[str] = Field(default=None, max_length=3000)
     image: Optional[str] = Field(default=None, max_length=2000)
     location: Optional[str] = Field(default=None, max_length=250)
+    # The street address Qloo returned, verbatim. Qloo places carry no coordinates.
+    address: Optional[str] = Field(default=None, max_length=300)
+    # Set only from a verified geocode of that address; see backend/geocode.py.
+    coordinates: Optional[dict] = None
     traceId: Optional[str] = Field(default=None, max_length=180)
     #: How this piece of evidence should be presented, derived from it by
     #: rule. It changes nothing about the evidence itself.
@@ -519,3 +523,17 @@ class ErrorResponse(BaseModel):
     detail: str
     error: ErrorBody
     requestId: str
+
+
+class GeoVenue(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    id: str = Field(min_length=1, max_length=180)
+    address: str = Field(default='', max_length=300)
+    city: str = Field(default='', max_length=200)
+    name: str = Field(default='', max_length=400)
+
+
+class GeoVenuesRequest(BaseModel):
+    """Venues whose Qloo-returned address should be resolved to a coordinate."""
+    model_config = ConfigDict(extra='forbid')
+    venues: list[GeoVenue] = Field(min_length=1, max_length=12)
