@@ -288,3 +288,7 @@ The full list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md). Also see
 [JUDGING_DAY](docs/JUDGING_DAY.md), [DEMO](docs/DEMO.md),
 [SUBMISSION](docs/SUBMISSION.md), [CHANGELOG](CHANGELOG.md) and
 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). MIT licensed.
+
+## Thank you
+
+Thank you to **Qloo** for providing access to its API and for hosting this hackathon, and to everyone who made it possible. Thanks as well to the tools and services this project is built on: the Qloo harness, Vercel AI Gateway, FastAPI, React and Vite, MapLibre, and the open-source community behind them. Your support made CultureForge AI possible.
