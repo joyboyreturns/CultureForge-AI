@@ -1,7 +1,10 @@
 """Synthetic policy fixtures; these are never served as Qloo evidence."""
+import json
+from pathlib import Path
+
 from backend.concept_composer import compose
-from backend.providers import brief_places_payload
-from backend.relevance import assess
+from backend.providers import brief_category_payload, brief_places_payload
+from backend.relevance import VERSION, assess, classify_brief
 
 
 def assessment(name, description='', **kwargs):
@@ -144,3 +147,104 @@ def test_recomposition_keeps_the_founders_confirmed_seed_subset(store, recommend
     store.put(canonical_key('recommend', brief_places_payload(tags[:2], project.location)), recommend_places)
     answer = recompose(project, seed_tag_ids=tags[:2])
     assert {item['tagId'] for item in answer['evidence'] if item['kind'] == 'tag'} == set(tags[:2])
+
+
+def family(business_type, idea, audience='Local regulars'):
+    return classify_brief(business_type, idea, audience).family
+
+
+def test_a_specific_idea_is_never_widened_to_a_broader_category():
+    # Ice cream is its own category, not food.
+    for idea in ('Best ice cream parlour in Paris', 'Gelato shop', 'Frozen yogurt'):
+        assert family('Food & beverage', idea) == 'frozen_dessert'
+    # A gaming cafe is gaming, not coffee.
+    for idea in ('Gaming cafe', 'Board game cafe', 'Internet cafe'):
+        assert family('Entertainment', idea) == 'gaming'
+        assert family('Food & beverage', idea) == 'gaming'
+    # A medical store is pharmacy under every business type, never wellness or hospitality.
+    for business_type in ('Wellness', 'Hospitality', 'Retail', 'Food & beverage'):
+        assert family(business_type, 'Medical store') == 'pharmacy'
+    assert family('Retail', 'Hospital') == 'clinic'
+
+
+def test_an_idea_the_rules_do_not_recognise_stays_unknown_and_says_why():
+    for idea in ('Cat cafe', 'Yoga cafe', 'Kombucha taproom', 'Shop'):
+        category = classify_brief('Food & beverage', idea, 'Local regulars')
+        assert category.family == '' and category.specificity == 'unknown', idea
+        assert idea in category.reason
+        assert 'not widened' in category.reason
+    # A conflicting head does not borrow the business type's category either.
+    assert family('Wellness', 'Yoga cafe') == ''
+
+
+def test_a_head_noun_resolves_only_with_neutral_modifiers():
+    assert family('Food & beverage', 'Specialty coffee cafe') == 'coffee'
+    assert family('Food & beverage', 'Artisan bakery') == 'bakery'
+    assert family('Food & beverage', 'Artisan bread') == 'bakery'
+    assert family('Wellness', 'Yoga studio') == 'wellness'
+    assert family('Retail', 'Vinyl record shop') == 'records'
+    assert family('Retail', 'Ceramics studio') == 'ceramics'
+    assert family('Food & beverage', 'Vegan cafe') == 'coffee'
+
+
+def test_with_no_idea_the_audience_only_chooses_a_distinctive_compatible_family():
+    assert family('Retail', '', 'Independent vinyl collectors') == 'records'
+    assert family('Food & beverage', '', 'gamers who love coffee') == 'food'
+    assert family('Food & beverage', '', 'Design-conscious Gen Z & young professionals') == 'food'
+    assert family('Retail', '', 'ice cream lovers') == ''
+    assert family('Wellness', '', 'Mindful professionals') == 'wellness'
+
+
+def test_the_broad_business_type_is_a_labelled_fallback_only_when_the_idea_is_blank():
+    category = classify_brief('Food & beverage', '', 'Young families')
+    assert (category.family, category.source, category.specificity) == ('food', 'business_type', 'broad')
+    assert classify_brief('Food & beverage', 'Kombucha taproom', '').source == 'idea'
+
+
+def test_assessment_states_how_the_category_was_read():
+    result = assess(business_type='Food & beverage', idea='Best ice cream parlour in Paris', audience='Food explorers',
+                    location='Paris, France', name='Café de Flore', description='A historic café, restaurant and bar.')
+    assert result['category'] == 'frozen_dessert'
+    assert result['categorySource'] == 'idea'
+    assert result['categorySpecificity'] == 'specific'
+    assert result['categoryMatched'] == 'ice cream parlour'
+    assert 'ice cream' in result['reasons'][0]
+    assert result['relationship'] == 'indirect'
+    assert not result['anchorEligible']
+
+
+def test_an_unrecognised_idea_gives_no_anchor_even_next_to_café_text():
+    result = assess(business_type='Food & beverage', idea='Cat cafe', audience='Food explorers',
+                    location='Tokyo', name='Café de Flore', description='A historic café, restaurant and bar.')
+    assert result['category'] == 'unknown'
+    assert result['categorySpecificity'] == 'unknown'
+    assert result['relationship'] == 'unknown'
+    assert not result['anchorEligible']
+
+
+def test_the_prepared_briefs_keep_the_category_they_were_written_for():
+    briefs = json.loads((Path(__file__).resolve().parents[2] / 'shared' / 'demoBriefs.json').read_text())['briefs']
+    expected = {
+        'brooklyn-gen-z-cafe': ('food', 'business_type'), 'seattle-family-cafe': ('food', 'business_type'),
+        'london-mindful-wellness': ('wellness', 'business_type'), 'lisbon-local-stay': ('hospitality', 'business_type'),
+        'austin-live-music': ('music', 'business_type'), 'chicago-vinyl-retail': ('records', 'audience'),
+        'los-angeles-slow-fashion': ('fashion', 'audience'), 'tokyo-ceramics-studio': ('ceramics', 'audience'),
+        'tokyo-morning-bakery': ('bakery', 'idea'),
+    }
+    seen = {}
+    for brief in briefs:
+        project = brief['project']
+        category = classify_brief(project['businessType'], project.get('businessIdea', ''), project['audience'])
+        seen[brief['id']] = (category.family, category.source)
+    assert seen == expected
+
+
+def test_the_category_version_is_bumped_for_the_new_rules():
+    assert VERSION == 'relevance-2'
+
+
+def test_a_category_with_no_label_sends_no_category_filter_to_qloo():
+    assert brief_category_payload('Ice cream parlour') is None
+    assert brief_category_payload('Gaming cafe') is None
+    assert brief_category_payload('Medical store') is None
+    assert brief_category_payload('Artisan bakery')['query'] == 'bakery'
