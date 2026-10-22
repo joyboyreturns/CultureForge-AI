@@ -41,7 +41,7 @@ QLOO_WORKFLOWS = (
     'trends',
 )
 
-COMPOSER_VERSION = '4'
+COMPOSER_VERSION = '5'
 
 # The exact set of query parameters this app sends to Qloo. A provenance
 # panel may only show a parameter that appears here. Anything else is dropped
@@ -967,6 +967,13 @@ class QlooHarnessProvider(CultureProvider):
             trace_id=entity_trace.id,
             crossdomain=crossdomain,
         )
+        from .relevance import classify_brief
+        category = classify_brief(project.businessType, project.businessIdea, project.audience)
+        trace.append(TraceEvent(
+            id='ev-classify', step='classify-business-category',
+            status='ok' if category.family else 'skipped', resultCount=1 if category.family else 0,
+            detail=category.reason, evidenceIds=[],
+        ))
         trace.append(TraceEvent(
             id='ev-compose', step='compose-directions', status='ok' if composed else 'skipped',
             resultCount=len(composed),
@@ -1011,7 +1018,7 @@ class QlooHarnessProvider(CultureProvider):
                 'Qloo supplied the audience tags and the local venues below. The '
                 f'{len(concepts)} business direction'
                 f'{"s" if len(concepts) != 1 else ""} '
-                'are CultureForge’s interpretation of that evidence, and each one names the '
+                f'{"is" if len(concepts) == 1 else "are"} CultureForge’s interpretation of that evidence, and each one names the '
                 'returned venue it was built from. Fit scores are omitted because affinity does '
                 'not measure business fit.'
                 + (f' The same audience tags also returned {len(crossdomain)} '
@@ -1023,10 +1030,19 @@ class QlooHarnessProvider(CultureProvider):
             # Abstain rather than pad the answer with catalog concepts.
             concepts = []
             concept_mode = 'evidence_composed'
-            notice = (
-                'Qloo returned live evidence for this audience and location, but it did not support '
-                'a relevant business direction. Specify the business idea, refine the audience, or try another location.'
-            )
+            if category.specificity == 'unknown':
+                places = sum(1 for item in evidence if item.kind == 'entity')
+                notice = (
+                    f'CultureForge does not recognise "{project.businessIdea.strip()}" as a category it can match, '
+                    f'so none of the {places} returned places was treated as a reference. Qloo\'s places remain '
+                    'visible as associations. To get a direction, name the main kind of business (for example '
+                    '"ice cream shop"), or clear the idea to use the broad business type.'
+                )
+            else:
+                notice = (
+                    'Qloo returned live evidence for this audience and location, but it did not support '
+                    'a relevant business direction. Specify the business idea, refine the audience, or try another location.'
+                )
 
         response = GenerateResponse(
             projectId=f'cf-{uuid4().hex[:10]}', project=project,
