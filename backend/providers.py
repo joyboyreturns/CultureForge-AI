@@ -800,8 +800,9 @@ class QlooHarnessProvider(CultureProvider):
             # important. Whoever is watching is told it is happening, so the
             # wait is legible rather than a stall.
             if on_step is not None:
+                from . import llm
                 on_step('name-the-directions',
-                        'Naming the directions with Frontier AI. The rules already have a name '
+                        f'Naming the directions with {llm.display_model()}. The rules already have a name '
                         'for each one, so a model that cannot be reached changes nothing.')
             named, naming = self._name_directions(project, composed, evidence, matched_tags)
         else:
@@ -984,7 +985,7 @@ class QlooHarnessProvider(CultureProvider):
         """The step that says how the directions were named, and by what."""
         duration = naming.get('durationMs')
         if naming.get('used'):
-            model = naming.get('model') or 'Frontier AI'
+            model = naming.get('model') or 'the configured model'
             detail = f'Named by {model}.'
             if naming.get('cached'):
                 detail = (f'Names held from an earlier run (named by {model}). '
@@ -1011,7 +1012,7 @@ class QlooHarnessProvider(CultureProvider):
         )
 
     def _name_directions(self, project, composed, evidence, matched_tags) -> tuple[dict, dict]:
-        """Let Frontier AI name the directions, and keep the rules in charge.
+        """Let the configured model name the directions, and keep the rules in charge.
 
         The model is given the audience signals and the venues each direction
         is built from — and no numbers at all, so it cannot state one. Its
@@ -1022,7 +1023,7 @@ class QlooHarnessProvider(CultureProvider):
 
         report = {'used': False, 'attempted': False, 'model': None, 'reason': None, 'dropped': []}
         if not llm.is_configured():
-            report['reason'] = 'Frontier AI is not enabled or configured, so the rule engine named these directions.'
+            report['reason'] = 'The model gateway is not enabled or configured, so the rule engine named these directions.'
             return {}, report
         if not composed:
             return {}, report

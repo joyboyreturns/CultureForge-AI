@@ -150,7 +150,7 @@ be held and the next run will pay for it again.
 - Prefer the held evidence over a new call — that is what the store and the
   browser cache are for. The mock provider is the test fixture, not a way to
   avoid the quota.
-- Frontier AI via Vercel has a separate local budget (`LLM_MAX_CALLS_PER_HOUR`,
+- Model calls via Vercel have a separate local budget (`LLM_MAX_CALLS_PER_HOUR`,
   `LLM_MAX_CALLS_PER_DAY`). Do not raise those limits to work around a failure.
 - `scripts/qloo_exec.mjs` exists because the stock `qloo exec` client caps requests at 20s while `/v2/insights` needs ~25s, which turned every live request into three failed attempts. Keep using it rather than the raw `qloo` binary.
 

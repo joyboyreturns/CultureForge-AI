@@ -27,7 +27,7 @@ The result is a **presentation object** that sits beside the evidence. It
 changes no id, no metric, no policy input and no verdict. It is the same
 evidence, arranged so a reader is not misled by the shape of it.
 
-There is an optional second layer: Frontier AI may *choose* which of Qloo's
+There is an optional second layer: the configured model may *choose* which of Qloo's
 own sentences to lead with, by id. It cannot write a word — see
 `selector.py` — so it cannot invent a fact either.
 """

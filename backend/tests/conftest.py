@@ -82,3 +82,5 @@ def no_model_calls(monkeypatch):
     from backend import llm
 
     monkeypatch.setattr(llm, 'is_configured', lambda: False)
+    # Blank, so a display name in a developer's .env cannot leak into a test.
+    monkeypatch.setenv('AI_GATEWAY_DISPLAY_MODEL', '')

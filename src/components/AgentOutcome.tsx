@@ -11,9 +11,10 @@ export function AgentOutcome({ report, concepts }: { report?: AgentReport | null
   const result = report.observation?.result ?? {}
   const before = result.before as { name?: string } | undefined
   const after = result.after as { name?: string } | null | undefined
+  const model = report.model || 'the configured model'
   return <section className={`agent-outcome panel is-${report.status}`} aria-label="Research agent outcome">
     <header>
-      <span className="small-cap">{report.mode === 'frontier_ai' ? 'FRONTIER AI RESEARCH AGENT' : 'BOUNDED RESEARCH FALLBACK'}</span>
+      <span className="small-cap">{report.mode === 'frontier_ai' ? `RESEARCH AGENT · ${model}` : 'BOUNDED RESEARCH FALLBACK'}</span>
       <h2>{report.mode === 'frontier_ai'
         ? report.plan?.operation === 'finish' ? 'The agent chose to stop.' : 'The agent tested its own direction.'
         : 'The evidence run is ready.'}</h2>
@@ -35,7 +36,7 @@ export function AgentOutcome({ report, concepts }: { report?: AgentReport | null
       </small>}
     </div>}
     {report.reflection && <div className="agent-outcome-reflection">
-      <span className="small-cap">REFLECTION · {report.modelCalls} MODEL REQUEST{report.modelCalls === 1 ? '' : 'S'} · {report.reflection.cached ? 'HELD' : 'FRONTIER AI'}</span>
+      <span className="small-cap">REFLECTION · {report.modelCalls} MODEL REQUEST{report.modelCalls === 1 ? '' : 'S'} · {report.reflection.cached ? `HELD · ${model}` : model}</span>
       <p><strong>{recommendation ? `Most defensible to investigate: ${recommendation.name}. ` : ''}</strong>{report.reflection.recommendationRationale}</p>
       {report.reflection.whatWouldChangeTheConclusion && <small>What could change this: {report.reflection.whatWouldChangeTheConclusion}</small>}
     </div>}

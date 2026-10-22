@@ -68,13 +68,14 @@ def test_analysis_requires_exact_direction_set(analysis_request, monkeypatch, st
 def test_analysis_caches_only_valid_answer_and_reports_deterministic_coverage(analysis_request, monkeypatch, store):
     monkeypatch.setattr(reasoning, 'configured', lambda: True)
     monkeypatch.setattr(reasoning, '_reserve', lambda: None)
+    monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/analysis-model')
     calls = []
     monkeypatch.setattr(reasoning, '_call', lambda request: calls.append(request) or answer())
     first = reasoning.analyze(analysis_request)
     second = reasoning.analyze(analysis_request)
     assert len(calls) == 1
     assert first.cached is False and second.cached is True
-    assert first.model == 'Frontier AI'
+    assert first.model == second.model == 'test/analysis-model'
     assert first.coverage['direction-0']['numerator'] == 1
     assert first.coverage['direction-0']['denominator'] == 1
     assert first.confidence['direction-0'] == 'Supported'

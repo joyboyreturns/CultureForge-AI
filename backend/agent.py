@@ -12,6 +12,7 @@ import os
 from typing import Callable, Optional
 
 from . import reasoning
+from .llm import display_model
 from .comparison import recompose
 from .evidence_store import canonical_key, get_store
 from .models import (AgentAction, AgentObservation, AgentReport,
@@ -91,8 +92,9 @@ def run_agent(response: GenerateResponse, tag_envelope: dict, recommend_envelope
             on_event(event)
 
     if not reasoning.configured():
-        emit(_event('agent-plan', 'skipped', 'Frontier AI is not enabled; the bounded deterministic research result is ready.'))
-        return AgentReport(mode='rules', status='skipped', stoppingReason='Frontier AI is not configured; the deterministic research result was preserved.')
+        emit(_event('agent-plan', 'skipped', 'The model gateway is not enabled; the bounded deterministic research result is ready.'))
+        return AgentReport(mode='rules', status='skipped', stoppingReason='No model is configured; the deterministic research result was preserved.')
+    model_name = display_model()
 
     model_calls = 0
     action: Optional[AgentAction] = None
@@ -192,9 +194,9 @@ def run_agent(response: GenerateResponse, tag_envelope: dict, recommend_envelope
         if reflection.cached:
             model_calls -= 1
         emit(_event('agent-reflect-on-result', 'ok',
-                    f"Frontier AI reflected on the observed tool result. {reflection.recommendationRationale}"))
+                    f"{model_name} reflected on the observed tool result. {reflection.recommendationRationale}"))
         return AgentReport(
-            mode='frontier_ai', status='complete' if observation.status == 'ok' else 'limited',
+            model=model_name, mode='frontier_ai', status='complete' if observation.status == 'ok' else 'limited',
             plan=action, observation=observation,
             reflection=reflection.model_dump(), modelCalls=model_calls,
             stoppingReason=('One planned evidence test and one reflection completed; the agent loop limit was reached.'
@@ -203,21 +205,21 @@ def run_agent(response: GenerateResponse, tag_envelope: dict, recommend_envelope
     except reasoning.AnalysisUnavailable as exc:
         emit(_event('agent-stopped', 'skipped', str(exc)))
         return AgentReport(
-            mode='frontier_ai' if action_validated else 'rules', status='limited',
+            model=model_name, mode='frontier_ai' if action_validated else 'rules', status='limited',
             plan=action if action_validated else None, observation=observation,
             modelCalls=model_calls,
             stoppingReason=f'{exc} The deterministic research result remains available.')
     except (QlooHarnessError, ValueError, TypeError) as exc:
         emit(_event('agent-stopped', 'error', str(exc)))
         return AgentReport(
-            mode='frontier_ai' if action_validated else 'rules', status='limited',
+            model=model_name, mode='frontier_ai' if action_validated else 'rules', status='limited',
             plan=action if action_validated else None, observation=observation,
             modelCalls=model_calls,
             stoppingReason=f'The selected evidence test could not be completed. The deterministic research result remains available: {exc}')
     except Exception:  # noqa: BLE001 - the agent must never take down the underlying research answer
         emit(_event('agent-stopped', 'error', 'The bounded agent step failed; the deterministic research answer was preserved.'))
         return AgentReport(
-            mode='frontier_ai' if action_validated else 'rules', status='limited',
+            model=model_name, mode='frontier_ai' if action_validated else 'rules', status='limited',
             plan=action if action_validated else None, observation=observation,
             modelCalls=model_calls,
             stoppingReason='The bounded agent step failed. The deterministic research result remains available.')

@@ -17,13 +17,13 @@ from typing import Optional
 from pydantic import ValidationError
 
 from . import config
+from .llm import display_model
 from .evidence_store import canonical_key, get_store
 from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
                      EvidenceAnalysisResult)
 
 ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 PROMPT_VERSION = 'qloo-evidence-analysis-5'
-DISPLAY_MODEL = 'Frontier AI'
 TIMEOUT_SECONDS = 60
 MAX_OUTPUT_TOKENS = 8192
 BUDGET_FILE = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_analysis_calls.json'
@@ -137,7 +137,7 @@ def call_structured(system_prompt: str, payload: dict, output_model):
     _reserve()
     model = os.getenv('AI_GATEWAY_MODEL', '').strip()
     if not model:
-        raise AnalysisUnavailable('The Frontier AI model is not configured on this server. No model request was sent.')
+        raise AnalysisUnavailable('No model is configured on this server. No model request was sent.')
     schema = output_model.model_json_schema()
     body = {
         'model': model,
@@ -235,12 +235,12 @@ def analyze(request: EvidenceAnalysisRequest, agent_context: Optional[dict] = No
         try:
             cached = EvidenceAnalysisOutput.model_validate(held)
             _validate_citations(cached, request)
-            return EvidenceAnalysisResult(**cached.model_dump(), model=DISPLAY_MODEL, cached=True,
+            return EvidenceAnalysisResult(**cached.model_dump(), model=display_model() or 'unnamed model', cached=True,
                                           **_deterministic_fields(cached, request))
         except (ValidationError, AnalysisUnavailable):
             get_store().discard(key)
     result = _call(request) if agent_context is None else _call(request, agent_context)
     _validate_citations(result, request)
     get_store().put(key, result.model_dump(), transport_requests=0)
-    return EvidenceAnalysisResult(**result.model_dump(), model=DISPLAY_MODEL,
+    return EvidenceAnalysisResult(**result.model_dump(), model=display_model() or 'unnamed model',
                                   **_deterministic_fields(result, request))
