@@ -110,6 +110,12 @@ class EvidenceStore:
             }
             self._persist_cache()
 
+    def stored_at(self, key: str) -> Optional[float]:
+        """When the held entry was fetched from Qloo, or None if nothing is held."""
+        with self._lock:
+            entry = self._cache.get(key)
+            return float(entry['storedAt']) if entry and 'storedAt' in entry else None
+
     def transport_requests(self, key: str) -> int:
         with self._lock:
             entry = self._cache.get(key) or {}

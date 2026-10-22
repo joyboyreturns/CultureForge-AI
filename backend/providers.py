@@ -1,7 +1,7 @@
 """Culture data providers: transparent sample data or the official Qloo harness."""
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import os
@@ -582,7 +582,7 @@ class QlooHarnessProvider(CultureProvider):
                     kind='cache',
                     acquiredAt=cached[1].delivery.acquiredAt if cached[1].delivery else None,
                     servedAt=datetime.now(timezone.utc).isoformat(),
-                    expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+                    expiresAt=cached[1].delivery.expiresAt if cached[1].delivery else None,
                     # Replaying a held answer spends no upstream request, so the
                     # number says zero rather than leaving the cost unknown.
                     transportRequests=0,
@@ -685,7 +685,17 @@ class QlooHarnessProvider(CultureProvider):
         # Qloo supplies the audience lens (the tags) and the local evidence
         # (the entities). CultureForge supplies the business reading, and
         # names the evidence each proposal came from.
-        acquired_at = datetime.now(timezone.utc).isoformat()
+        # When the evidence was fetched, and when the store stops answering
+        # with it: the oldest held envelope decides both, so a held answer
+        # is never labelled as acquired just now.
+        store = get_store()
+        stamps = [stamp for key in (
+            canonical_key('find_tags', brief_tags_payload(project.businessType, project.audience)),
+            canonical_key('recommend', brief_places_payload(matched_tags, project.location)),
+        ) if (stamp := store.stored_at(key)) is not None]
+        acquired = min(stamps) if stamps else time.time()
+        acquired_at = datetime.fromtimestamp(acquired, timezone.utc).isoformat()
+        expires_at = datetime.fromtimestamp(acquired + config.evidence_ttl_seconds(), timezone.utc).isoformat()
         trace: list[TraceEvent] = []
         evidence: list[Evidence] = []
         tag_evidence_ids: dict[str, str] = {}
@@ -847,7 +857,7 @@ class QlooHarnessProvider(CultureProvider):
             evidence=evidence, trace=trace,
             composerVersion=COMPOSER_VERSION,
             delivery=Delivery(kind='fresh' if live else 'cache', acquiredAt=acquired_at, servedAt=datetime.now(timezone.utc).isoformat(), transportRequests=spent,
-                              expiresAt=(datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+                              expiresAt=expires_at,
                               cachedIn=None if live else 'server'),
         )
         with self._lock:
