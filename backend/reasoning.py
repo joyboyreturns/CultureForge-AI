@@ -7,16 +7,13 @@ from __future__ import annotations
 
 import json
 import os
-import threading
-import time
 import urllib.error
 import urllib.request
-from pathlib import Path
 from typing import Optional
 
 from pydantic import ValidationError
 
-from . import config
+from . import config, ledger
 from .llm import display_model
 from .evidence_store import canonical_key, get_store
 from .models import (EvidenceAnalysisOutput, EvidenceAnalysisRequest,
@@ -26,8 +23,6 @@ ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 PROMPT_VERSION = 'qloo-evidence-analysis-5'
 TIMEOUT_SECONDS = 60
 MAX_OUTPUT_TOKENS = 8192
-BUDGET_FILE = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'gateway_analysis_calls.json'
-_budget_lock = threading.Lock()
 
 
 class AnalysisUnavailable(RuntimeError):
@@ -40,18 +35,6 @@ def configured() -> bool:
             and bool(os.getenv('AI_GATEWAY_MODEL', '').strip()))
 
 
-def _calls() -> list[float]:
-    try:
-        data = json.loads(BUDGET_FILE.read_text(encoding='utf-8'))
-        return [float(x) for x in data.get('calls', []) if isinstance(x, (int, float))
-                and time.time() - float(x) < 86400]
-    except FileNotFoundError:
-        return []
-    except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
-        # A damaged or unreadable ledger must not reset the spend ceiling.
-        raise AnalysisUnavailable('The analysis budget could not be read, so no model request was sent.') from exc
-
-
 def _daily_limit() -> Optional[int]:
     # In dev the environment can lower the cap but cannot raise the cost
     # ceiling this integration is designed for (config.DEV_CEILINGS). The
@@ -61,33 +44,24 @@ def _daily_limit() -> Optional[int]:
 
 def budget_state() -> dict:
     try:
-        used = len(_calls())
-    except AnalysisUnavailable:
+        used = ledger.counts(ledger.ANALYSIS)[1]
+    except ledger.LedgerError:
         used = None
     return {'callsToday': used, 'dayLimit': config.describe_limit(_daily_limit())}
 
 
 def _reserve() -> None:
+    """Record one analysis request before it is sent, or refuse it."""
     limit = _daily_limit()
-    with _budget_lock:
-        try:
-            calls = _calls()
-        except AnalysisUnavailable:
-            if limit is not None:
-                raise
-            calls = []
-        if limit is not None and len(calls) >= limit:
-            raise AnalysisUnavailable('The daily analysis allowance is used up. Your Qloo evidence and deterministic verdict remain available.')
-        calls.append(time.time())
-        try:
-            BUDGET_FILE.parent.mkdir(parents=True, exist_ok=True)
-            BUDGET_FILE.write_text(json.dumps({'calls': calls}), encoding='utf-8')
-            os.chmod(BUDGET_FILE, 0o600)
-        except OSError:
-            # Fail closed: a missing durable budget must not permit unbounded
-            # spend. Without a limit there is nothing for it to protect.
-            if limit is not None:
-                raise AnalysisUnavailable('The analysis budget could not be recorded, so no model request was sent.')
+    try:
+        ledger.reserve(ledger.ANALYSIS, None, limit)
+    except ledger.BudgetExceeded as exc:
+        raise AnalysisUnavailable('The daily analysis allowance is used up. Your Qloo evidence and deterministic verdict remain available.') from exc
+    except ledger.LedgerError as exc:
+        # Fail closed: a damaged or unreadable ledger must not reset the
+        # spend ceiling. Without a limit there is nothing for it to protect.
+        if limit is not None:
+            raise AnalysisUnavailable('The analysis budget could not be read, so no model request was sent.') from exc
 
 
 def _cache_key(request: EvidenceAnalysisRequest) -> str:

@@ -33,7 +33,7 @@ Use a host that supports a long-running Docker web service, HTTPS, a persistent 
 
 The container listens on `PORT`, default 8000. Mount durable storage at `/data`, writable by UID 10001. Keep one process and one replica: research runs and request de-duplication are held in memory; this is not a multi-instance architecture. Do not add workers as a performance workaround.
 
-Evidence and all provider budget journals live under `/data/cache`; saved explorations and share links use `/data/platform.db`. Losing that volume loses saved links and quota history. A bind mount must be writable by the container user. The anonymous studio uses a shared demo workspace; use synthetic/non-confidential business briefs during public judging. Keep operator administration disabled unless you deliberately set a private `CULTUREFORGE_OPERATOR_TOKEN`.
+Evidence lives under `/data/cache`, and the Qloo, naming and analysis call ledgers share one SQLite file there (`budget.db`); saved explorations and share links use `/data/platform.db`. Losing that volume loses saved links and quota history. A bind mount must be writable by the container user. The anonymous studio uses a shared demo workspace; use synthetic/non-confidential business briefs during public judging. Keep operator administration disabled unless you deliberately set a private `CULTUREFORGE_OPERATOR_TOKEN`.
 
 After switching to `RUN_PROFILE=judging`, prewarm the prepared briefs into this instance's volume with `python3 scripts/prewarm.py --live --base-url https://<host>`, then confirm `/api/health` shows `"profile": "judging"` and a non-zero `cache.entries`.
 

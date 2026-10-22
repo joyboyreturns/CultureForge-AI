@@ -107,9 +107,7 @@ def test_judging_raises_no_qloo_budget_and_still_counts(provider, judging):
     assert state['hourLimit'] == state['dayLimit'] == 'unlimited'
 
 
-def test_judging_raises_no_model_budget(judging, monkeypatch, tmp_path):
-    monkeypatch.setattr(llm, 'BUDGET_LOG_PATH', tmp_path / 'naming.json')
-    monkeypatch.setattr(reasoning, 'BUDGET_FILE', tmp_path / 'analysis.json')
+def test_judging_raises_no_model_budget(judging):
     for _ in range(60):
         llm._record_call()
         llm._check_budget()
@@ -118,11 +116,28 @@ def test_judging_raises_no_model_budget(judging, monkeypatch, tmp_path):
     assert reasoning.budget_state() == {'callsToday': 60, 'dayLimit': 'unlimited'}
 
 
-def test_judging_tolerates_an_unreadable_analysis_ledger(judging, monkeypatch, tmp_path):
-    ledger = tmp_path / 'analysis.json'
-    ledger.write_text('{broken', encoding='utf-8')
-    monkeypatch.setattr(reasoning, 'BUDGET_FILE', ledger)
+def test_judging_tolerates_an_unreadable_ledger(judging, provider):
+    from backend import ledger
+
+    ledger.DB_PATH.write_bytes(b'this is not a database' * 100)
     reasoning._reserve()
+    llm._check_budget()
+    provider._consume_call_budget()
+
+
+def test_dev_refuses_upstream_calls_when_the_ledger_is_unreadable(provider):
+    from backend import ledger
+
+    ledger.DB_PATH.write_bytes(b'this is not a database' * 100)
+    with pytest.raises(QlooHarnessError) as caught:
+        provider._consume_call_budget()
+    assert caught.value.code == 'BUDGET_UNAVAILABLE'
+    with pytest.raises(llm.LlmUnavailable) as naming:
+        llm._check_budget()
+    assert naming.value.code == 'LLM_BUDGET_UNAVAILABLE'
+    with pytest.raises(reasoning.AnalysisUnavailable, match='could not be read'):
+        reasoning._reserve()
+    assert main.error_response('BUDGET_UNAVAILABLE', 'x').status_code == 503
 
 
 def test_a_research_run_is_bounded_by_its_deadline_in_judging(judging, monkeypatch):

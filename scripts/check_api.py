@@ -16,7 +16,6 @@ import os
 import shutil
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 try:
@@ -47,15 +46,6 @@ def load_qloo_config() -> dict:
 
 def mask(value: str) -> str:
     return f"{value[:4]}...{value[-4:]}" if len(value) > 8 else "***"
-
-
-def read_budget_log() -> list[float]:
-    path = Path(os.getenv('CULTUREFORGE_CACHE_DIR', Path.home() / '.cache' / 'cultureforge')) / 'qloo_calls.json'
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return [float(s) for s in data.get("calls", []) if isinstance(s, (int, float))]
-    except (OSError, json.JSONDecodeError, AttributeError, TypeError, ValueError):
-        return []
 
 
 def main() -> int:
@@ -115,12 +105,14 @@ def main() -> int:
     # 4. Quota guard state
     sys.path.insert(0, str(ROOT))
     from backend import config as run_config
+    from backend import ledger
     hour_limit = run_config.limit("QLOO_MAX_CALLS_PER_HOUR")
     day_limit = run_config.limit("QLOO_MAX_CALLS_PER_DAY")
-    calls = read_budget_log()
-    now = time.time()
-    in_hour = sum(1 for stamp in calls if now - stamp < 3600)
-    in_day = sum(1 for stamp in calls if now - stamp < 86400)
+    try:
+        in_hour, in_day = ledger.counts(ledger.QLOO)
+    except ledger.LedgerError as exc:
+        print(f"[fail] the Qloo call ledger ({ledger.DB_PATH}) could not be read: {exc}")
+        return 1
     print(f"[ok]   run profile: {run_config.run_profile()}"
           f"{'' if run_config.qloo_live_enabled() else ' (QLOO_LIVE_ENABLED=false: held evidence only)'}")
     print(f"[ok]   quota guard: {in_hour}/{run_config.describe_limit(hour_limit)} this hour, "
