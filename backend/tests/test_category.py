@@ -17,6 +17,8 @@ SCENARIOS = [
     ('Fitness studio in Singapore', 'wellness', 'gym'),
     ('Flower shop in Amsterdam', 'florist', 'florist'),
     ('Pet café in Seoul', 'pet_cafe', 'pet cafe'),
+    ('Neapolitan pizza restaurant in Toronto', 'pizza', 'pizza'),
+    ('A pizza store in Toronto', 'pizza', 'pizza'),
 ]
 
 
@@ -83,3 +85,16 @@ def test_insufficient_evidence_states_what_is_missing_and_a_way_forward():
     assert any('attractions' in m.lower() for m in out['missing']) and out['recovery']
     ok = build_outcome(category=cat, evidence=[_Item('entity', 'direct_business')], concepts=[object()])
     assert ok['state'] == SUPPORTED
+
+
+def test_a_dish_family_tag_is_accepted_when_it_is_the_only_exact_label():
+    env = {'results': [{'id': 'urn:tag:specialty_dish:place:pizza', 'name': 'Pizza'},
+                       {'id': 'urn:tag:specialty_dish:place:pizzas', 'name': 'Pizzas'}]}
+    assert select_category_tag(env, 'pizza') == 'urn:tag:specialty_dish:place:pizza'
+
+
+def test_a_matching_business_in_another_city_cannot_anchor():
+    out = assess(business_type='Food & beverage', idea='Pizza restaurant', audience='', location='Toronto, Canada',
+                 name="Pizza 4P's", description='Pizza restaurant', returned_location='Ho Chi Minh City, Vietnam')
+    assert out['relationship'] == 'direct' and out['evidenceClass'] == 'unverified_geography'
+    assert not out['anchorEligible']

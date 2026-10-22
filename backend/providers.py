@@ -213,7 +213,8 @@ def select_category_tag(envelope: dict, query: str) -> Optional[str]:
     A natural language label can resolve to many unrelated tag families. An
     exact returned identifier avoids that ambiguity without inventing a URN.
     """
-    families = ('category', 'cuisine', 'product_category', 'service_type', 'product_service', 'genre', 'setting')
+    families = ('category', 'cuisine', 'product_category', 'service_type', 'product_service', 'genre', 'setting',
+                'specialty_dish')
     candidates = [row for row in QlooHarnessProvider.rows(envelope)
                   if str(row.get('name', '')).casefold() == query.casefold()
                   and isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')]

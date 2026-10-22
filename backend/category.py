@@ -44,6 +44,11 @@ CATEGORIES: dict[str, dict] = {
         'label': 'Record store',
         'terms': ('record store', 'record shop', 'vinyl shop', 'vinyl store', 'records', 'disquaire', 'レコード店'),
         'query': 'record store', 'adjacent': ('music',)},
+    'pizza': {
+        'label': 'Pizzeria',
+        'terms': ('neapolitan pizza', 'pizza restaurant', 'pizza shop', 'pizza store', 'pizza place', 'pizza parlour',
+                  'pizza parlor', 'pizzeria', 'pizzería', 'pizza', 'ピザ', '披萨', '피자'),
+        'query': 'pizza', 'adjacent': ('restaurant',)},
     'restaurant': {
         'label': 'Restaurant',
         'terms': ('vegan restaurant', 'vegetarian restaurant', 'restaurant', 'bistro', 'eatery', 'trattoria',
