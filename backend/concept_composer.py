@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from itertools import zip_longest
 from typing import Callable, Optional
 
 # Tag families Qloo returns, keyed by the fragment that identifies them.
@@ -372,6 +373,7 @@ def compose(
     tag_evidence_ids: dict,
     entity_evidence_ids: dict,
     trace_id: str,
+    crossdomain: Optional[list[dict]] = None,
 ) -> list[ComposedConcept]:
     """Build up to three distinct, evidence-backed directions.
 
@@ -482,6 +484,27 @@ def compose(
                 'origin': 'cultureforge_rule',
             },
         ]
+        if crossdomain:
+            # The bridge is audience-level: the same references for every
+            # direction, listed in Qloo's returned order, and said to be so.
+            # Interleaved by domain, so the citation spans every domain that
+            # answered rather than six of the first.
+            by_domain: dict[str, list[dict]] = {}
+            for item in crossdomain:
+                by_domain.setdefault(item['domain'], []).append(item)
+            cited = [row for group in zip_longest(*by_domain.values()) for row in group if row][:6]
+            decisions.append({
+                'id': f'{recipe.rule_id}-cross-reference',
+                'field': 'cultural cross-references',
+                'proposal': (
+                    'Beyond places, the same audience tags also returned '
+                    + '; '.join(f"{item['name']} ({item['domain']})" for item in cited)
+                    + '. These are audience-level Qloo references with no location, not specific '
+                      'to this direction: candidates for programming, partnerships or mood to test.'),
+                'evidenceIds': [item['evidence_id'] for item in cited],
+                'ruleId': 'audience-cross-reference',
+                'origin': 'cultureforge_rule',
+            })
 
         limitations = [
             'Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.',

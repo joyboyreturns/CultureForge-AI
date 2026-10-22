@@ -6,7 +6,8 @@ export interface ExperienceMoment { title: string; description: string }
 /** A single piece of retrieved Qloo evidence. Every value here came from Qloo. */
 export interface Evidence {
   id: string
-  kind: 'entity' | 'tag'
+  /** entity: a returned place. tag: an audience seed. crossdomain: a non-place entity returned for the same tags, with no location. */
+  kind: 'entity' | 'tag' | 'crossdomain'
   label: string
   entityId?: string | null
   entityType?: string | null

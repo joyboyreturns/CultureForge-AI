@@ -178,9 +178,13 @@ def capabilities() -> list[dict]:
     return published
 
 
-#: How many audience seeds a brief resolves to, and how many places it retrieves.
+#: How many audience seeds a brief resolves to, and how many places it
+#: retrieves. Ten is the most the evidence test can use: Qloo's rank and
+#: compare_audiences accept at most ten entities per list.
 BRIEF_TAG_LIMIT = 3
-BRIEF_PLACE_LIMIT = 5
+BRIEF_PLACE_LIMIT = 10
+#: How many entities the audience bridge asks for in each other domain.
+BRIDGE_LIMIT = 5
 
 
 def brief_tags_payload(business_type: str, audience: str) -> dict:
@@ -193,6 +197,13 @@ def brief_places_payload(tags: list[str], location: str) -> dict:
     """The recommend request for a brief's local places."""
     return {'target_type': 'place', 'signal_tags': list(tags),
             'signal_location': location, 'limit': BRIEF_PLACE_LIMIT}
+
+
+def bridge_payload(tags: list[str], domain: str) -> dict:
+    """The recommend request for one other domain, from the audience tags
+    alone. The location is deliberately left out: this asks what the audience
+    gravitates to, not what is near the brief."""
+    return {'target_type': domain, 'signal_tags': list(tags), 'limit': BRIDGE_LIMIT}
 
 
 def describe_payload(entity: str, entity_type: Optional[str] = None) -> dict:
@@ -525,7 +536,9 @@ class QlooHarnessProvider(CultureProvider):
                  recommendations: Optional[dict] = None,
                  seed_tag_ids: Optional[list[str]] = None,
                  allow_naming: bool = True,
-                 on_step=None) -> GenerateResponse:
+                 on_step=None,
+                 domains: Optional[list[str]] = None,
+                 bridge_held_only: bool = False) -> GenerateResponse:
         """Compose the answer for a brief.
 
         `tag_result` and `recommendations` may be supplied to reuse envelopes
@@ -641,7 +654,7 @@ class QlooHarnessProvider(CultureProvider):
             raise QlooHarnessError('Qloo needs a clearer location or cultural seed. Refine the project details and try again.', code='NEEDS_INPUT')
         rows = self.rows(recommendations)
         signals: list[CulturalSignal] = []
-        for row in rows[:5]:
+        for row in rows[:BRIEF_PLACE_LIMIT]:
             label = row.get('name')
             if not isinstance(label, str) or not label.strip():
                 continue
@@ -717,7 +730,7 @@ class QlooHarnessProvider(CultureProvider):
         trace.append(entity_trace)
 
         entity_rows: list[dict] = []
-        for row in rows[:5]:
+        for row in rows[:BRIEF_PLACE_LIMIT]:
             name = row.get('name')
             if not isinstance(name, str) or not name.strip():
                 continue
@@ -765,6 +778,50 @@ class QlooHarnessProvider(CultureProvider):
             for item in evidence
         ]
 
+        # ---- The audience bridge -----------------------------------------
+        # The same audience tags, sent to other domains (artists, films,
+        # brands…) with no location. Each domain is its own cached request;
+        # one that fails is stated and the others still count.
+        bridge_domains = config.bridge_domains() if domains is None else list(domains)
+        crossdomain: list[dict] = []
+        for result in self.bridge_domains(matched_tags, bridge_domains, held_only=bridge_held_only):
+            domain = result['domain']
+            envelope = result['envelope']
+            if envelope is None:
+                trace.append(TraceEvent(
+                    id=f'trace-bridge-{domain}', step=f'bridge-{domain}', workflow='recommend',
+                    status='skipped' if result['skipped'] else 'error', resultCount=0,
+                    detail=result['reason'][:600]))
+                continue
+            spent += result['requests']
+            live = live or not result['cached']
+            bridge_rows = self.rows(envelope)[:BRIDGE_LIMIT]
+            event = self._trace_event(f'bridge-{domain}', 'recommend', envelope, len(bridge_rows))
+            event.id = f'trace-bridge-{domain}'
+            if result['cached']:
+                mark_reused(event)
+            trace.append(event)
+            for row in bridge_rows:
+                name = row.get('name')
+                if not isinstance(name, str) or not name.strip():
+                    continue
+                entity_id = row.get('entity_id') or row.get('id')
+                properties = row.get('properties') if isinstance(row.get('properties'), dict) else {}
+                image = properties.get('image')
+                image_url = image.get('url') if isinstance(image, dict) else image
+                evidence_id = f'ev-bridge-{len(evidence)}'
+                evidence.append(Evidence(
+                    id=evidence_id, kind='crossdomain', label=name,
+                    entityId=entity_id if isinstance(entity_id, str) else None,
+                    entityType=row.get('subtype') or row.get('type') or f'urn:entity:{domain}',
+                    affinity=self._affinity(row),
+                    popularity=row.get('popularity') if isinstance(row.get('popularity'), (int, float)) else None,
+                    description=properties.get('short_description') or properties.get('description'),
+                    image=image_url if isinstance(image_url, str) else None,
+                    traceId=event.id,
+                ))
+                crossdomain.append({'evidence_id': evidence_id, 'name': name, 'domain': domain})
+
         composed = compose(
             business_type=project.businessType,
             audience=project.audience,
@@ -776,6 +833,7 @@ class QlooHarnessProvider(CultureProvider):
             tag_evidence_ids=tag_evidence_ids,
             entity_evidence_ids=entity_evidence_ids,
             trace_id=entity_trace.id,
+            crossdomain=crossdomain,
         )
         trace.append(TraceEvent(
             id='ev-compose', step='compose-directions', status='ok' if composed else 'skipped',
@@ -824,6 +882,10 @@ class QlooHarnessProvider(CultureProvider):
                 'are CultureForge’s interpretation of that evidence, and each one names the '
                 'returned venue it was built from. Fit scores are omitted because affinity does '
                 'not measure business fit.'
+                + (f' The same audience tags also returned {len(crossdomain)} '
+                   f'{"/".join(sorted({item["domain"] for item in crossdomain}))} reference'
+                   f'{"s" if len(crossdomain) != 1 else ""} with no location, cited as audience-level '
+                   'cross-references.' if crossdomain else '')
             )
         else:
             # Abstain rather than pad the answer with catalog concepts.
@@ -916,6 +978,41 @@ class QlooHarnessProvider(CultureProvider):
     @staticmethod
     def _tag_label(tag_id: str) -> str:
         return tag_id.rsplit(':', 1)[-1].replace('_', ' ').strip().capitalize()
+
+    def bridge_domains(self, tags: list[str], domains: list[str],
+                       held_only: bool = False) -> list[dict]:
+        """Ask Qloo what else the audience gravitates to, one domain at a time.
+
+        The domains are fetched in parallel, each through the durable cache,
+        so a cold brief waits for the slowest one rather than the sum. With
+        `held_only`, nothing is fetched: a rebuild must not call Qloo.
+        Returns one result per domain, in order, never raising.
+        """
+        if not tags or not domains:
+            return []
+
+        def one(domain: str) -> dict:
+            payload = bridge_payload(tags, domain)
+            if held_only:
+                held = get_store().get(canonical_key('recommend', payload))
+                if held is None:
+                    return {'domain': domain, 'envelope': None, 'cached': True, 'requests': 0, 'skipped': True,
+                            'reason': f'No {domain} references were held for this brief, and a rebuild does not call Qloo.'}
+                return {'domain': domain, 'envelope': held, 'cached': True, 'requests': 0, 'skipped': False, 'reason': ''}
+            try:
+                envelope, cached, requests = self.run_workflow_cached('recommend', payload)
+            except QlooHarnessError as exc:
+                return {'domain': domain, 'envelope': None, 'cached': False, 'requests': 0,
+                        'skipped': exc.code in ('LIVE_DISABLED', 'QUOTA_EXHAUSTED', 'ALLOWANCE_EXHAUSTED'),
+                        'reason': f'Qloo {domain} references were not retrieved: {exc} The places and directions do not depend on them.'}
+            if envelope.get('status') == 'needs_input':
+                return {'domain': domain, 'envelope': None, 'cached': cached, 'requests': requests, 'skipped': True,
+                        'reason': f'Qloo did not resolve {domain} references for these audience tags.'}
+            return {'domain': domain, 'envelope': envelope, 'cached': cached, 'requests': requests, 'skipped': False, 'reason': ''}
+
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(4, len(domains))) as pool:
+            return list(pool.map(one, domains))
 
     @staticmethod
     def _trace_event(step: str, workflow: str, envelope: dict, result_count: int) -> TraceEvent:

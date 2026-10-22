@@ -11,3 +11,15 @@ export function citationCoverage(concept: Concept, evidence: Evidence[]) {
     decisionEvidenceIds: [...cited],
   }
 }
+
+/** The Qloo entity type of a bridged item: `urn:entity:artist` -> `artist`. */
+export function bridgeDomain(item: Evidence): string {
+  return (item.entityType ?? '').split(':').pop()?.replace('_', ' ') || 'entity'
+}
+
+/** What a piece of evidence is, in words the reader can check. */
+export function evidenceKindLabel(item: Evidence): string {
+  if (item.kind === 'tag') return 'Audience seed'
+  if (item.kind === 'crossdomain') return `Qloo ${bridgeDomain(item)} · audience tags, no location`
+  return 'Qloo place'
+}

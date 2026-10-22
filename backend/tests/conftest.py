@@ -27,6 +27,17 @@ def isolated_runtime(tmp_path, monkeypatch):
     monkeypatch.setattr(evidence_store, '_store', None)
     monkeypatch.setattr(providers, '_cached_providers', {})
     monkeypatch.setattr(ledger, 'DB_PATH', tmp_path / 'budget.db')
+    # No test may reach the real Qloo CLI. A workflow that misses the test's
+    # own evidence store fails loudly here instead of spending live quota.
+    # Tests of the transport replace subprocess.run with their own fake.
+    import subprocess
+
+    def no_live_qloo(*args, **kwargs):
+        raise AssertionError(f'a test tried to run the Qloo CLI: {args[0] if args else kwargs}')
+    monkeypatch.setattr(subprocess, 'run', no_live_qloo)
+    # The audience bridge is off unless a test switches it on with its own
+    # held envelopes.
+    monkeypatch.setenv('CULTUREFORGE_BRIDGE_DOMAINS', 'off')
     yield
     if platform._platform is not None:
         platform._platform._connection.close()

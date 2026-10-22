@@ -168,11 +168,12 @@ class RecomposeProvider:
         return float(value) if value is not None else None
 
     def generate(self, project, tag_result=None, recommendations=None,
-                 seed_tag_ids=None, allow_naming=True):
+                 seed_tag_ids=None, allow_naming=True, bridge_held_only=False):
         self.seen.append({
             'tag_result': tag_result,
             'recommendations': recommendations,
             'allow_naming': allow_naming,
+            'bridge_held_only': bridge_held_only,
         })
         from backend.concept_composer import compose
         from backend.models import Delivery, GenerateResponse, ProvenanceMetadata
@@ -264,7 +265,7 @@ def test_removing_a_venue_rebuilds_the_directions_without_it(monkeypatch):
                                            'limit': 3})] = {'status': 'ok', 'results': tag_rows}
     store.keys[canonical_key('recommend', {
         'target_type': 'place', 'signal_tags': ['urn:tag:interests:qloo:food_design'],
-        'signal_location': 'Brooklyn, New York', 'limit': 5,
+        'signal_location': 'Brooklyn, New York', 'limit': 10,
     })] = {'status': 'ok', 'results': place_rows}
 
     monkeypatch.setattr(comparison, 'QlooHarnessProvider', lambda *a, **k: provider)
@@ -277,8 +278,9 @@ def test_removing_a_venue_rebuilds_the_directions_without_it(monkeypatch):
     # The held rows the composer was handed no longer contain the venue.
     handed = provider.seen[0]['recommendations']
     assert 'id-museum' not in [row.get('entity_id') for row in handed.get('results', [])]
-    # No model was asked to name anything.
+    # No model was asked to name anything, and the bridge was read, not fetched.
     assert provider.seen[0]['allow_naming'] is False
+    assert provider.seen[0]['bridge_held_only'] is True
     # And nothing in the answer still points at it.
     assert 'Whitney' not in ' '.join(concept['description'] for concept in result['concepts'])
     assert 'Whitney' not in ' '.join(

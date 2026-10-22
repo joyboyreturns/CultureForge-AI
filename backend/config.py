@@ -35,7 +35,8 @@ DEV_LIMITS: dict[str, int] = {
     'LLM_MAX_CALLS_PER_HOUR': 20,
     'LLM_MAX_CALLS_PER_DAY': 50,
     'AI_GATEWAY_ANALYSIS_DAILY_LIMIT': 10,
-    'RESEARCH_RUN_MAX_WORKFLOWS': 3,
+    # Seeds, places, and one recommend per cross-domain type (three by default).
+    'RESEARCH_RUN_MAX_WORKFLOWS': 5,
 }
 
 #: Limits the environment may lower but never raise in the dev profile. The
@@ -96,6 +97,32 @@ def limit(name: str) -> Optional[int]:
     return min(value, ceiling) if ceiling else value
 
 
+#: The entity types the audience bridge may ask Qloo for. Places are the
+#: brief's own evidence, so they are not a bridge domain.
+BRIDGE_DOMAIN_CHOICES = ('artist', 'movie', 'brand', 'book', 'podcast', 'tv_show', 'videogame', 'album')
+DEFAULT_BRIDGE_DOMAINS = ('artist', 'movie', 'brand')
+
+
+def bridge_domains() -> list[str]:
+    """The non-place domains the audience's tags are also sent to.
+
+    `CULTUREFORGE_BRIDGE_DOMAINS` is a comma-separated list; `off` (or an
+    empty value) switches the bridge off. Unknown names are ignored rather
+    than sent to Qloo, which would reject them.
+    """
+    raw = os.getenv('CULTUREFORGE_BRIDGE_DOMAINS')
+    if raw is None:
+        return list(DEFAULT_BRIDGE_DOMAINS)
+    if raw.strip().lower() in ('', 'off', 'none', 'false', '0'):
+        return []
+    chosen: list[str] = []
+    for item in raw.split(','):
+        name = item.strip().lower()
+        if name in BRIDGE_DOMAIN_CHOICES and name not in chosen:
+            chosen.append(name)
+    return chosen
+
+
 def qloo_live_enabled() -> bool:
     """False only when the kill switch is thrown: serve held evidence, fetch nothing."""
     return os.getenv('QLOO_LIVE_ENABLED', 'true').strip().lower() not in _FALSE
@@ -132,4 +159,5 @@ def summary() -> dict:
         'qlooLiveEnabled': qloo_live_enabled(),
         'evidenceTtlHours': round(evidence_ttl_seconds() / 3600, 2),
         'rateLimitCooldownSeconds': rate_limit_cooldown_seconds(),
+        'bridgeDomains': bridge_domains(),
     }

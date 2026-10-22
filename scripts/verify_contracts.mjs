@@ -76,7 +76,7 @@ const CONTRACT = {
   },
   Evidence: {
     id: { type: 'string', required: true },
-    kind: { type: 'string', oneOf: ['entity', 'tag'], required: true },
+    kind: { type: 'string', oneOf: ['entity', 'tag', 'crossdomain'], required: true },
     label: { type: 'string', required: true },
     entityId: { type: 'string', nullable: true },
     entityType: { type: 'string', nullable: true },
