@@ -112,6 +112,30 @@ def test_a_valid_run_plans_acts_observes_and_cites(monkeypatch, response, store)
     assert calls[-1]['model'] is AgentAnalysis
 
 
+def test_returned_names_with_digits_are_citable_without_allowing_invented_metrics(response):
+    observed = agent.Observed(response)
+    observed.entities[PLACE_A] = 'No.4'
+    kept, rejected = agent.validate_analysis(analysis(
+        AgentClaim(statement='No.4 is a returned reference, not proof of demand.', citations=[PLACE_A]),
+        AgentClaim(statement='No.4 establishes 40% demand.', citations=[PLACE_A])), observed, response)
+    assert len(kept['claims']) == 1
+    assert len(rejected) == 1
+    assert 'number' in rejected[0]['reason']
+
+
+def test_resolved_seeds_cannot_become_a_comparative_winner_without_a_comparison(response):
+    observed = agent.Observed(response)
+    proposal = analysis(
+        AgentClaim(statement='North Room was selected under the highest rating rule.', citations=[PLACE_A]),
+        AgentClaim(statement='North Room is a returned reference.', citations=[PLACE_A]))
+    proposal.recommendedDirectionId = response.concepts[0].id
+    kept, rejected = agent.validate_analysis(proposal, observed, response, [])
+    assert kept['recommendedDirectionId'] is None
+    assert len(kept['claims']) == 1
+    assert len(rejected) == 1
+    assert 'No comparative preference' in kept['summary']
+
+
 def test_an_uncited_or_numeric_claim_is_rejected_and_the_rest_kept(monkeypatch, response, store):
     script(monkeypatch, plan('rank', options=[PLACE_A, PLACE_B]), plan('finish'),
            analysis(AgentClaim(statement='South Hall outranks North Room here.', citations=[PLACE_B, PLACE_A]),

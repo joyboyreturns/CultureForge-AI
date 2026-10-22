@@ -153,6 +153,7 @@ SYSTEM_PROMPT = (
 def _build_user_prompt(brief: dict, directions: list[dict]) -> str:
     lines = [
         f"Business: {brief.get('businessType')}",
+        f"Business idea: {brief.get('businessIdea') or 'not specified'}",
         f"Audience: {brief.get('audience')}",
         f"Location: {brief.get('location')}",
         f"Budget: {brief.get('budget')}",

@@ -51,7 +51,7 @@ def test_the_place_sample_fits_what_the_evidence_test_can_send():
     assert brief_places_payload(TAGS, 'Brooklyn')['limit'] == BRIEF_PLACE_LIMIT
 
 
-def test_held_bridge_evidence_is_cited_by_every_direction(monkeypatch, store, recommend_places):
+def test_held_bridge_is_retained_without_unsupported_direction_edges(monkeypatch, store, recommend_places):
     monkeypatch.setenv('CULTUREFORGE_BRIDGE_DOMAINS', 'artist,movie,brand')
     project = _held_brief(store, recommend_places)
     for domain in ('artist', 'movie', 'brand'):
@@ -70,11 +70,9 @@ def test_held_bridge_evidence_is_cited_by_every_direction(monkeypatch, store, re
     bridged_ids = {item.id for item in bridged}
     for concept in response.concepts:
         cross = [d for d in concept.decisions if d.field == 'cultural cross-references']
-        assert len(cross) == 1
-        assert cross[0].evidenceIds and set(cross[0].evidenceIds) <= bridged_ids
-        assert 'not specific to this direction' in cross[0].proposal
-        cited_types = {item.entityType for item in bridged if item.id in cross[0].evidenceIds}
-        assert cited_types == {'urn:entity:artist', 'urn:entity:movie', 'urn:entity:brand'}
+        assert not cross
+        assert all(not (set(d.evidenceIds) & bridged_ids) for d in concept.decisions)
+    assert all(item.relevance['relationship'] == 'indirect' for item in bridged)
     # Places stay places: a bridged artist is never a direction's anchor.
     places = {item.id for item in response.evidence if item.kind == 'entity'}
     for concept in response.concepts:

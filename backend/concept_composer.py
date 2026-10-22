@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from itertools import zip_longest
 from typing import Callable, Optional
 
 # Tag families Qloo returns, keyed by the fragment that identifies them.
@@ -131,8 +130,7 @@ RECIPES: tuple[Recipe, ...] = (
         positioning='For an audience that treats taste as the primary signal of quality.',
         personality='Precise, confident, curated',
         signals=['Design-led spaces', 'Independent discovery'],
-        matchers=('design', 'designer', 'style', 'aesthetic', 'fashion', 'creative', 'culture',
-                 'curated', 'artisan', 'premium'),
+        matchers=('design', 'designer', 'style', 'aesthetic', 'fashion', 'creative', 'curated'),
         type_matchers=('retail', 'hospitality'),
         facet=FACET_POPULARITY,
         accent='#e69b73',
@@ -276,12 +274,6 @@ def _matches(recipe: Recipe, tag_names: list[str], business_type: str) -> tuple[
                 score += recipe.weight
                 hit_tags.append(tag)
                 break
-    # The business type alone can unlock a direction, more weakly, so a brief
-    # still yields directions when the audience tags are narrow.
-    if not hit_tags:
-        lowered = business_type.lower()
-        if any(_whole_words(matcher, lowered) for matcher in recipe.type_matchers):
-            score += 0.5
     return score, hit_tags
 
 
@@ -364,6 +356,7 @@ def _first_sentence(text: Optional[str], limit: int = 180) -> str:
 def compose(
     *,
     business_type: str,
+    business_idea: str = '',
     audience: str,
     location: str,
     budget: str,
@@ -381,12 +374,49 @@ def compose(
     pads the set with catalog concepts: a half-supported answer is more
     honest than a full one.
     """
+    from .relevance import assess, brief_family
     tag_names = [_tag_name(tag.get('id', '')) for tag in tags]
+    family = brief_family(business_type, business_idea, audience)
+    eligible = []
+    for entity in entities:
+        relevance = entity.get('relevance') or assess(
+            business_type=business_type, idea=business_idea, audience=audience,
+            location=location, name=entity.get('name') or '',
+            description=entity.get('description') or '',
+            has_identifier=bool(entity.get('entity_id') or entity.get('id')))
+        if relevance['anchorEligible']:
+            eligible.append(entity)
+    if not eligible:
+        return []
     scored = []
     for recipe in RECIPES:
         score, hit_tags = _matches(recipe, tag_names, business_type)
         if score > 0:
             scored.append((score, recipe, hit_tags))
+    # Specific formats depend on both a brief occasion and a direct returned
+    # category reference. The occasion is the founder's hypothesis, not a
+    # behavior inferred from Qloo. Missing opening hours remain an explicit gap.
+    if family == 'bakery':
+        bread_tags = [tag for tag in tag_names if any(_whole_words(word, tag)
+                      for word in ('bread', 'bakery', 'artisan', 'croissant', 'baking'))]
+        if bread_tags:
+            if any(_whole_words(word, audience.lower()) for word in ('commuters', 'commuter', 'morning', 'early')):
+                scored.append((5, Recipe(
+                    rule_id='bakery-morning-collection', name='The Morning Bread Counter',
+                    tagline='A bread collection format to test around the morning journey.',
+                    offering='An artisan bakery with a focused takeaway bread offer and preordered collection. The morning occasion comes from your brief; Qloo supplies category-relevant references, not commuter demand.',
+                    ritual='Pilot a collection window with the audience in the brief; measure repeat collection before expanding.',
+                    positioning='A proposed quick-collection occasion for the commuters described in the brief.',
+                    personality='Focused, practical, welcoming', signals=['Bread craft', 'Morning collection hypothesis'],
+                    matchers=(), facet=FACET_ACCESSIBLE), bread_tags))
+            scored.append((4, Recipe(
+                rule_id='bakery-craft-counter', name='The Bread Workshop',
+                tagline='A craft-led bread offer with the making process in view.',
+                offering='An artisan bakery with a small bread range and a visible making process. Returned bakery references and bread-related audience seeds support exploring this category; enthusiasm for demonstrations is untested.',
+                ritual='Offer a small bread tasting and ask visitors whether the process adds value before building a programme.',
+                positioning='A proposed craft-discovery occasion, with products and process as the focus.',
+                personality='Precise, tactile, curious', signals=['Bread craft', 'Process discovery hypothesis'],
+                matchers=(), facet=FACET_RATING), bread_tags))
     if not scored:
         return []
     scored.sort(key=lambda item: -item[0])
@@ -405,7 +435,7 @@ def compose(
         # the three are visibly distinct rather than three views of one venue.
         if recipe.facet in used_facets and len(concepts) < 2:
             continue
-        ranked = _facet_rank(recipe.facet, entities)
+        ranked = _facet_rank(recipe.facet, eligible)
         if not ranked:
             continue
         # An organisation Qloo described as an organisation does not become
@@ -450,7 +480,8 @@ def compose(
         # does not establish that it is the strongest match, or that it sits
         # inside the location, so the wording says only what is true.
         description = (
-            f'{recipe.offering} '
+            (f'Proposed for {business_idea} in {location}. ' if business_idea else '')
+            + f'{recipe.offering} '
             f'The reference selected for this direction is {primary_label}'
             + (f' ({descriptor})' if descriptor else '')
             + (f', described by Qloo as "{primary_desc}"' if primary_desc else '')
@@ -479,37 +510,21 @@ def compose(
                 'id': f'{recipe.rule_id}-positioning',
                 'field': 'positioning',
                 'proposal': recipe.positioning,
-                'evidenceIds': evidence_ids[:2],
+                'evidenceIds': evidence_ids[:1] + [tag_evidence_ids[tag.get('id')] for tag in tags
+                    if _tag_name(tag.get('id', '')) in hit_tags and tag.get('id') in tag_evidence_ids],
                 'ruleId': recipe.rule_id,
                 'origin': 'cultureforge_rule',
             },
         ]
-        if crossdomain:
-            # The bridge is audience-level: the same references for every
-            # direction, listed in Qloo's returned order, and said to be so.
-            # Interleaved by domain, so the citation spans every domain that
-            # answered rather than six of the first.
-            by_domain: dict[str, list[dict]] = {}
-            for item in crossdomain:
-                by_domain.setdefault(item['domain'], []).append(item)
-            cited = [row for group in zip_longest(*by_domain.values()) for row in group if row][:6]
-            decisions.append({
-                'id': f'{recipe.rule_id}-cross-reference',
-                'field': 'cultural cross-references',
-                'proposal': (
-                    'Beyond places, the same audience tags also returned '
-                    + '; '.join(f"{item['name']} ({item['domain']})" for item in cited)
-                    + '. These are audience-level Qloo references with no location, not specific '
-                      'to this direction: candidates for programming, partnerships or mood to test.'),
-                'evidenceIds': [item['evidence_id'] for item in cited],
-                'ruleId': 'audience-cross-reference',
-                'origin': 'cultureforge_rule',
-            })
+        # Cross-domain responses stay in the audience bridge. Sharing the
+        # audience seeds does not establish a relationship to this particular
+        # proposal, so no automatic bridge-to-decision citations are added.
 
         limitations = [
             'Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.',
+            'Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.',
         ]
-        skipped = [e.get('name') for e in ranked if _is_organisation(e) and e.get('name')]
+        skipped = [e.get('name') for e in entities if _is_organisation(e) and e.get('name')]
         if skipped:
             limitations.append(
                 'Qloo also returned '
@@ -521,7 +536,7 @@ def compose(
             limitations.append(
                 'Qloo returned the same affinity for every candidate here, so affinity does not separate these venues.'
             )
-        basis = FACET_BASIS[recipe.facet]
+        basis = FACET_BASIS[recipe.facet] + ' This ordering is restricted to category-relevant references.'
         if (primary.get('entity_id') or primary.get('id')) != (places[0].get('entity_id') or places[0].get('id')):
             basis += ' The first such place already anchors another direction, so the next one was used.'
         limitations.append(basis)
@@ -543,7 +558,7 @@ def compose(
                 decisions=decisions,
                 limitations=limitations,
                 rationale=(
-                    'Unlocked by ' + ', '.join(hit_tags[:3]) if hit_tags
+                    'Unlocked by ' + ', '.join(hit_tags[:3]) + f'; proposed for {audience} in {location}. The audience occasion is from the brief, not inferred behavior.' if hit_tags
                     else 'Unlocked by the ' + business_type.lower() + ' brief'
                 ),
             )
