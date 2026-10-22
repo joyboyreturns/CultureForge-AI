@@ -93,7 +93,7 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
             {orderMoved ? ' The order changed.' : ''}
           </strong>
           <p>
-            {contested.map((entry) => entry.name).join(', ')} failed the relative-ranking check
+            {contested.map((entry) => entry.name).join(', ')} ranked in the bottom third
             under this profile{orderMoved ? ', and the order below is the one the evidence leaves — not the one the first pass produced' : ''}.
           </p>
         </div>
@@ -162,6 +162,18 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
                     </div>
                   </div>
                 ))}
+                {entry.index && <p className="challenge-index">
+                  <b>Confidence: {entry.index.confidence}.</b> {entry.index.confidenceReason}{' '}
+                  {entry.index.sensitivity.checked && (entry.index.sensitivity.stable
+                    ? 'Leave-one-out: removing any single other place leaves the rank check unchanged.'
+                    : `Leave-one-out: the rank check changes when ${entry.index.sensitivity.changesWhenRemoved.slice(0, 3).map((change) => change.removed).join(', ')}${entry.index.sensitivity.changesWhenRemoved.length > 3 ? ' and others' : ''} ${entry.index.sensitivity.changesWhenRemoved.length === 1 ? 'is' : 'are'} removed.`)}{' '}
+                  {entry.index.sensitivity.alternativeAnchors.length > 0 && <>With another anchor, the rank check alone would pass for{' '}
+                    {entry.index.sensitivity.alternativeAnchors.filter((alt) => alt.rankCheck === 'pass').length}, fail for{' '}
+                    {entry.index.sensitivity.alternativeAnchors.filter((alt) => alt.rankCheck === 'fail').length} and be mixed for{' '}
+                    {entry.index.sensitivity.alternativeAnchors.filter((alt) => alt.rankCheck === 'mixed').length} of the{' '}
+                    {entry.index.sensitivity.alternativeAnchors.length} other places; the tag check runs only when you test one.</>}{' '}
+                  Rule: {entry.index.rule} Sample {entry.index.sampleSize}, minimum {entry.index.minimumSample}. Policy {entry.index.policy}.
+                </p>}
                 <p className="challenge-coverage">
                   {entry.coverage.note}
                   {entry.coverage.howSignalsWereCounted ? ' ' + entry.coverage.howSignalsWereCounted : ''}
@@ -170,7 +182,9 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
                   Judged on {entry.coverage.venuesRetrieved} places Qloo returned, {entry.coverage.venuesCited} of
                   which this direction cites, using the “{challenge.profile.demographic}” profile near{' '}
                   {challenge.profile.location}
-                  {challenge.profile.proposedBy ? ` — ${challenge.profile.proposedBy.toLowerCase()}` : ''}.{' '}
+                  {challenge.profile.source === 'chosen' ? ' — chosen before the test ran'
+                    : challenge.profile.source === 'default' ? ' — a default, because the brief names no demographic'
+                    : challenge.profile.proposedBy ? ` — proposed by ${challenge.profile.proposedBy}` : ''}.{' '}
                   The {entry.coverage.tagsUsed} audience seed{entry.coverage.tagsUsed === 1 ? '' : 's'} were used for
                   retrieval, not for this ranking.
                 </p>

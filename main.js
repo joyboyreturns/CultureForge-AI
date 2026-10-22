@@ -661,6 +661,12 @@ import demoBriefs from './shared/demoBriefs.json';
           ? 'The evidence contested ' + contested.length + ' anchor assumption' +
             (contested.length === 1 ? '' : 's') + (moved ? ', and the order changed.' : '.')
           : 'Tested against the places Qloo returned.';
+        // The profile is a stated assumption, never a silent one.
+        const profile = tested.profile || {};
+        if (profile.demographic) {
+          note.textContent += ' Ranked for the “' + profile.demographic + '” profile' +
+            (profile.source === 'default' ? ', a default because the brief names no demographic; change it in the studio.' : ', which the brief names.');
+        }
         status.textContent = tested.summary || '';
         // Hand the studio the answer and the test that was run on it, so the
         // link below opens what was just shown.
