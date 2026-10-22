@@ -23,8 +23,16 @@ export interface Evidence {
   /** How this piece of evidence should be presented, derived from it by rule.
    *  It changes nothing about the evidence itself. */
   presentation?: EvidencePresentation | null
-  relevance?: { version: string; relationship: 'direct' | 'indirect' | 'unknown' | 'excluded'; category: string; anchorEligible: boolean; geography: string; audience: string; confidence: string; reasons: string[] } | null
+  relevance?: { version: string; evidenceClass?: EvidenceClass | null; relationship: 'direct' | 'indirect' | 'unknown' | 'excluded'; category: string; anchorEligible: boolean; geography: string; audience: string; confidence: string; reasons: string[] } | null
+  /** A coordinate for the place itself, present only when an upstream
+   *  response carried one. CultureForge never geocodes an address into one,
+   *  and Qloo's place geocode today carries an address, so this is usually
+   *  absent and the map says so. */
+  coordinates?: { lat: number; lon: number; source?: string | null } | null
 }
+
+/** What a piece of evidence is to this brief, by CultureForge's relevance rule. */
+export type EvidenceClass = 'direct_business' | 'indirect_business' | 'cultural_attraction' | 'audience_affinity' | 'unverified_geography' | 'unrelated'
 
 /** The tidied view of one piece of evidence. Every string in it is either
  *  Qloo's own or a statement about what Qloo's own does not establish. */
@@ -108,6 +116,7 @@ export interface GenerateResponse {
   dataMode: 'mock' | 'live'
   conceptMode: 'sample' | 'evidence_composed'
   notice: string
+  outcome?: Outcome | null
   provenance?: ProvenanceMetadata | null
   evidence: Evidence[]
   trace: TraceEvent[]
@@ -175,4 +184,15 @@ export interface AgentReport {
   cached?: boolean
   modelCalls: number
   stoppingReason: string
+}
+
+export type OutcomeState = 'supported' | 'promising_unverified' | 'contested' | 'insufficient_evidence' | 'provider_failure'
+
+export interface Outcome {
+  state: OutcomeState
+  missing: string[]
+  recovery: { action: string; label: string }[]
+  counts: Record<string, number>
+  category: string | null
+  categoryLabel: string | null
 }

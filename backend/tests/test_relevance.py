@@ -168,7 +168,7 @@ def test_a_specific_idea_is_never_widened_to_a_broader_category():
 
 
 def test_an_idea_the_rules_do_not_recognise_stays_unknown_and_says_why():
-    for idea in ('Cat cafe', 'Yoga cafe', 'Kombucha taproom', 'Shop'):
+    for idea in ('Yoga cafe', 'Shop'):
         category = classify_brief('Food & beverage', idea, 'Local regulars')
         assert category.family == '' and category.specificity == 'unknown', idea
         assert idea in category.reason
@@ -214,7 +214,7 @@ def test_assessment_states_how_the_category_was_read():
 
 
 def test_an_unrecognised_idea_gives_no_anchor_even_next_to_café_text():
-    result = assess(business_type='Food & beverage', idea='Cat cafe', audience='Food explorers',
+    result = assess(business_type='Food & beverage', idea='Yoga cafe', audience='Food explorers',
                     location='Tokyo', name='Café de Flore', description='A historic café, restaurant and bar.')
     assert result['category'] == 'unknown'
     assert result['categorySpecificity'] == 'unknown'
@@ -240,11 +240,12 @@ def test_the_prepared_briefs_keep_the_category_they_were_written_for():
 
 
 def test_the_category_version_is_bumped_for_the_new_rules():
-    assert VERSION == 'relevance-2'
+    assert VERSION == 'relevance-3'
 
 
 def test_a_category_with_no_label_sends_no_category_filter_to_qloo():
-    assert brief_category_payload('Ice cream parlour') is None
-    assert brief_category_payload('Gaming cafe') is None
-    assert brief_category_payload('Medical store') is None
+    assert brief_category_payload('Yoga cafe') is None
+    assert brief_category_payload('Shop') is None
+    assert brief_category_payload('Ice cream parlour')['query'] == 'ice cream'
+    assert brief_category_payload('Where should I open an ice cream parlour in Paris?')['query'] == 'ice cream'
     assert brief_category_payload('Artisan bakery')['query'] == 'bakery'

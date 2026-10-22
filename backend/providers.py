@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from hashlib import sha256
+import re
 import json
 import os
 from pathlib import Path
@@ -194,12 +195,16 @@ def brief_tags_payload(business_type: str, audience: str) -> dict:
 
 
 def brief_category_payload(business_idea: str) -> Optional[dict]:
-    from .relevance import brief_family
-    category = {'bakery': 'bakery', 'coffee': 'coffee shop', 'records': 'record store',
-                'ceramics': 'pottery', 'fashion': 'clothing store', 'wellness': 'spa',
-                'hospitality': 'hotel', 'music': 'music venue', 'food': 'restaurant'}.get(
-                    brief_family('', business_idea, '')) if business_idea else None
-    return {'query': category, 'limit': 10} if category else None
+    """The find_tags request that resolves the idea's own category.
+
+    Known categories carry a query term; an unfamiliar one is looked up by its
+    own words. A category that cannot be named sends no filter at all.
+    """
+    from .category import resolve
+    resolution = resolve(business_idea) if business_idea else None
+    if resolution is None or resolution.status == 'unresolved' or not resolution.query:
+        return None
+    return {'query': resolution.query, 'limit': 10}
 
 
 def select_category_tag(envelope: dict, query: str) -> Optional[str]:
@@ -214,6 +219,17 @@ def select_category_tag(envelope: dict, query: str) -> Optional[str]:
                   and isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')]
     for family in families:
         for row in candidates:
+            if row['id'].split(':')[2] == family:
+                return row['id']
+    # No exact label: accept a returned tag in a category-like family whose name
+    # holds every word of the query ("Boutique Hotel" for "boutique hotel").
+    words = set(re.findall(r'\w+', query.casefold()))
+    near = [row for row in QlooHarnessProvider.rows(envelope)
+            if isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')
+            and words and words <= set(re.findall(r'\w+', str(row.get('name', '')).casefold()))
+            and row['id'].split(':')[2] in families]
+    for family in families:
+        for row in near:
             if row['id'].split(':')[2] == family:
                 return row['id']
     return None
@@ -967,6 +983,7 @@ class QlooHarnessProvider(CultureProvider):
             trace_id=entity_trace.id,
             crossdomain=crossdomain,
         )
+        from .outcome import build_outcome
         from .relevance import classify_brief
         category = classify_brief(project.businessType, project.businessIdea, project.audience)
         trace.append(TraceEvent(
@@ -1048,6 +1065,7 @@ class QlooHarnessProvider(CultureProvider):
             projectId=f'cf-{uuid4().hex[:10]}', project=project,
             concepts=concepts, signals=signals, dataMode='live', conceptMode=concept_mode,
             notice=notice,
+            outcome=build_outcome(category=category, evidence=evidence, concepts=concepts),
             provenance=ProvenanceMetadata(source='Qloo API', endpoint='qloo exec find_tags → recommend', documentation='https://github.com/qloo/qloo-hackathon-kit', resolved_tags=matched_tags),
             evidence=evidence, trace=trace,
             composerVersion=COMPOSER_VERSION,
