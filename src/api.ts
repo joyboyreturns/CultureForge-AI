@@ -704,3 +704,16 @@ export async function askTheEvidence(result: GenerateResponse, question: string,
     concepts: result.concepts, question, history,
   })
 }
+
+/** The exploration as a client-ready PDF, built on the server. Costs no Qloo or model request. */
+export async function downloadReportPdf(result: GenerateResponse, challenge?: ChallengeResult | null): Promise<Blob> {
+  let response: Response
+  try {
+    response = await fetch('/api/report/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result, challenge: challenge ?? null }) })
+  } catch {
+    throw new Error('The CultureForge backend could not be reached to build the PDF.')
+  }
+  if (!response.ok) throw new Error(`The PDF could not be built (the backend answered ${response.status}).`)
+  return await response.blob()
+}

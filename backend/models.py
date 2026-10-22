@@ -258,6 +258,12 @@ class ChatRequest(BaseModel):
     history: list[ChatTurn] = Field(default_factory=list, max_length=8)
 
 
+class ReportRequest(BaseModel):
+    """The exploration on screen, and its evidence test if one was run."""
+    result: GenerateResponse
+    challenge: Optional[dict] = None
+
+
 class ProfileRequest(BaseModel):
     """Ask which demographic profile the evidence test would use."""
     audience: str = Field(min_length=2, max_length=240)
