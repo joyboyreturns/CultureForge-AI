@@ -15,7 +15,8 @@
     "test:endpoints": "node scripts/verify_endpoints.mjs",
     "check:submission": "node scripts/verify_submission.mjs",
     "check:release": "node scripts/verify_submission.mjs --release",
-    "test:unit": "node scripts/test_unit.mjs"
+    "test:unit": "node scripts/test_unit.mjs",
+    "smoke": "python3 scripts/smoke_test.py"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

@@ -118,3 +118,13 @@ def test_with_the_bridge_off_nothing_changes(store, recommend_places):
     response = QlooHarnessProvider().generate(_held_brief(store, recommend_places), allow_naming=False)
     assert not any(item.kind == 'crossdomain' for item in response.evidence)
     assert not any(d.field == 'cultural cross-references' for c in response.concepts for d in c.decisions)
+
+
+def test_a_brief_is_held_only_when_its_bridge_domains_are_too(monkeypatch, store, recommend_places):
+    monkeypatch.setenv('CULTUREFORGE_BRIDGE_DOMAINS', 'artist,brand')
+    project = _held_brief(store, recommend_places)
+    assert examples.held(project.model_dump()) is False
+    store.put(canonical_key('recommend', bridge_payload(TAGS, 'artist')), _bridge_rows('artist'))
+    assert examples.held(project.model_dump()) is False
+    store.put(canonical_key('recommend', bridge_payload(TAGS, 'brand')), _bridge_rows('brand'))
+    assert examples.held(project.model_dump()) is True

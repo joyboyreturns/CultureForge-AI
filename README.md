@@ -4,7 +4,7 @@
 
 CultureForge helps independent founders decide which local experience to prototype. It connects an audience and location to real Qloo cultural signals and reference places, composes business hypotheses, then lets the founder challenge an anchor or remove evidence and rebuild the answer.
 
-**Submission status:** local review build; public demo pending deployment. [Source repository](https://github.com/joyboyreturns/CultureForge-AI) · [MIT license](LICENSE) · [Judge walkthrough](docs/JUDGE_WALKTHROUGH.md) · [Deployment](docs/DEPLOYMENT.md) · [Devpost draft and checklist](docs/SUBMISSION.md) · [Final review results](docs/FINAL_REVIEW.md)
+**Submission status:** local review build; public demo pending deployment. [Source repository](https://github.com/joyboyreturns/CultureForge-AI) · [MIT license](LICENSE) · [Judge walkthrough](docs/JUDGE_WALKTHROUGH.md) · [Deployment](docs/DEPLOY.md) · [Devpost draft and checklist](docs/SUBMISSION.md) · [Final review results](docs/FINAL_REVIEW.md)
 
 > A verdict assesses **anchor fit within the retrieved sample**. It does not measure demand, revenue, profitability, rent or willingness to pay.
 
@@ -119,7 +119,7 @@ Open the Vite URL, then `/studio/`. If port 8000 is unavailable, set `CULTUREFOR
 
 ## Publish
 
-The [deployment guide](docs/DEPLOYMENT.md) covers a Docker service that serves both the built UI and API from one origin. Static-only hosting is insufficient. Use one worker, one replica and persistent storage; research runs are currently held in process memory.
+The [deployment guide](docs/DEPLOY.md) covers a Docker service that serves both the built UI and API from one origin. Static-only hosting is insufficient. Use one worker, one replica and persistent storage; research runs are currently held in process memory.
 
 ```bash
 docker build -t cultureforge .
