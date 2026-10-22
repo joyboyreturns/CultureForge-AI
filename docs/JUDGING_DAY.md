@@ -5,9 +5,10 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
 
 ## Before judging opens
 
-1. **Switch the profile.** In the host's environment settings set
-   `RUN_PROFILE=judging` (keep `QLOO_LIVE_ENABLED=true`), then redeploy or
-   restart. No code change is needed.
+1. **Check the profile.** The Render blueprint already deploys with
+   `RUN_PROFILE=judging` (keep `QLOO_LIVE_ENABLED=true`). On another host, or
+   after testing with `dev`, set it in the environment settings and restart.
+   No code change is needed.
 2. **Check health.**
 
    ```bash

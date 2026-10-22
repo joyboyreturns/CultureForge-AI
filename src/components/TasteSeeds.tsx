@@ -33,7 +33,7 @@ export function TasteSeeds({
       <p className="taste-seeds-note">
         {candidates.length
           ? `“${audience}” resolved to ${candidates.length} Qloo ${candidates.length === 1 ? 'signal' : 'signals'}. Drop anything that is not really your audience.`
-          : `Qloo did not match “${audience}” to a cultural signal. Describe the audience by what they do or care about — or let the agent resolve it from the brief and the neighbourhood.`}
+          : `Qloo did not match “${audience}” to a cultural signal. Describe the audience by what they do or care about — or let the agent resolve it from the brief and the neighborhood.`}
       </p>
 
       {candidates.length === 0 && (

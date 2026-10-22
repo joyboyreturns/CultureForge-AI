@@ -17,7 +17,7 @@ export function EvidenceAnalysisPanel({ analysis, concepts, evidence, onInspect 
   const evidenceById = new Map(evidence.map((item) => [item.id, item]))
   const recommended = analysis.recommendedDirectionId ? conceptById.get(analysis.recommendedDirectionId) : undefined
   return <section className="evidence-analysis panel" aria-label="Evidence analysis">
-    <header><div><span className="small-cap">MODEL INTERPRETATION · {analysis.model}{analysis.cached ? ' · HELD' : ''}</span>
+    <header><div><span className="small-cap">MODEL INTERPRETATION · {analysis.model || 'the configured model'}{analysis.cached ? ' · HELD' : ''}</span>
       <h2>{recommended ? `Most defensible to investigate: ${recommended.name}` : 'No single direction is preferred'}</h2>
       <p>{analysis.recommendationRationale}</p></div></header>
     <p className="analysis-limit">{analysis.limitation}</p>

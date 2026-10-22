@@ -249,6 +249,19 @@ class Platform:
             self._execute('UPDATE explorations SET updated_at = ?, title = ? WHERE id = ?',
                            (now, title, exploration_id))
             return self.exploration(exploration_id) or {}
+        if not exploration_id:
+            # Asking the same brief again is the same exploration, not a new
+            # list entry: a shared demo workspace would otherwise fill with
+            # copies. A new version is kept only when the answer changed.
+            repeat = self._same_brief(workspace_id, brief)
+            if repeat:
+                latest = self._one('SELECT payload FROM exploration_versions WHERE exploration_id = ?'
+                                   ' ORDER BY version DESC LIMIT 1', (repeat['id'],))
+                if latest and _answer_fingerprint(json.loads(latest['payload'])) == _answer_fingerprint(payload):
+                    self._execute('UPDATE explorations SET updated_at = ? WHERE id = ?', (now, repeat['id']))
+                    return self.exploration(repeat['id']) or {}
+                return self.save_exploration(workspace_id, payload, title, brief, project_id=project_id,
+                                             delivery=delivery, note=note, exploration_id=repeat['id'])
         new_id = exploration_id or f'exp-{secrets.token_hex(8)}'
         self._execute(
             'INSERT INTO explorations (id, workspace_id, project_id, title, brief, composer_version, created_at, updated_at)'
@@ -261,6 +274,16 @@ class Platform:
             (f'ver-{secrets.token_hex(8)}', new_id, 1, json.dumps(payload),
              json.dumps(delivery) if delivery else None, now, note))
         return self.exploration(new_id) or {}
+
+    def _same_brief(self, workspace_id: str, brief: dict) -> Optional[sqlite3.Row]:
+        for row in self._query('SELECT id, brief FROM explorations WHERE workspace_id = ?'
+                               ' ORDER BY updated_at DESC', (workspace_id,)):
+            try:
+                if json.loads(row['brief']) == brief:
+                    return row
+            except (TypeError, ValueError):
+                continue
+        return None
 
     def _next_version(self, exploration_id: str) -> int:
         row = self._one('SELECT MAX(version) AS v FROM exploration_versions WHERE exploration_id = ?',
@@ -371,6 +394,16 @@ def hash_key(secret: str) -> str:
     stolen key book."""
     salt = os.getenv('CULTUREFORGE_KEY_SALT', 'cultureforge-development-salt')
     return hashlib.sha256(f'{salt}:{secret}'.encode('utf-8')).hexdigest()
+
+
+def _answer_fingerprint(payload: dict) -> str:
+    """What makes two answers to the same brief the same answer: the evidence
+    and the directions, not the id, the timings or the trace."""
+    payload = payload or {}
+    evidence = [(item.get('entityId') or item.get('tagId'), item.get('kind')) for item in payload.get('evidence') or []]
+    concepts = [(item.get('name'), item.get('description'), tuple(item.get('evidenceIds') or []))
+                for item in payload.get('concepts') or []]
+    return json.dumps([evidence, concepts, payload.get('composerVersion')], sort_keys=True, default=str)
 
 
 _platform: Optional[Platform] = None

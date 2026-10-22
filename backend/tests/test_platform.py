@@ -116,3 +116,26 @@ def test_usage_is_metered(platform):
 def test_the_key_hash_is_salted_so_a_stolen_database_is_not_a_stolen_key_book():
     assert hash_key('secret') != hash_key('secret'.upper())
     assert len(hash_key('secret')) == 64
+
+
+def test_the_same_brief_is_one_exploration_with_a_version_only_when_the_answer_changed(tmp_path):
+    from backend.platform import Platform
+
+    platform = Platform(tmp_path / 'repeat.db')
+    workspace = platform.create_workspace('Repeat')['id']
+    brief = {'businessType': 'Retail', 'audience': 'Collectors', 'location': 'Chicago, Illinois'}
+
+    def answer(name, project_id):
+        return {'projectId': project_id, 'composerVersion': '3',
+                'evidence': [{'kind': 'entity', 'entityId': 'e1'}],
+                'concepts': [{'name': name, 'description': 'd', 'evidenceIds': ['ev-1']}],
+                'trace': [{'durationMs': project_id}]}
+
+    first = platform.save_exploration(workspace, answer('Direction', 1), 'T', brief, project_id='cf-1')
+    again = platform.save_exploration(workspace, answer('Direction', 2), 'T', brief, project_id='cf-2')
+    assert again['id'] == first['id'] and len(again['versions']) == 1
+    changed = platform.save_exploration(workspace, answer('Renamed', 3), 'T', brief, project_id='cf-3')
+    assert changed['id'] == first['id'] and len(changed['versions']) == 2
+    other = platform.save_exploration(workspace, answer('Direction', 4), 'T', {**brief, 'location': 'Paris'}, project_id='cf-4')
+    assert other['id'] != first['id']
+    assert len(platform.explorations(workspace)) == 2

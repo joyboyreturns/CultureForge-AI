@@ -198,10 +198,10 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
                 'operation': 'find_tags', 'status': 'ok',
                 'results': [{'id': tag_id} for tag_id in run.seed_tag_ids],
                 'execution': {'duration_ms': 0},
-                'provenance': {'endpoint': 'confirmed by the founder', 'requests': []},
+                'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
             }
             run.add_event(_event(run, 'use-confirmed-seeds', tag_envelope, result_count=len(run.seed_tag_ids),
-                                 detail='Used the audience seeds the founder confirmed.'))
+                                 detail='Used the audience seeds you confirmed.'))
         else:
             run.workflow_calls += 1
             tag_envelope, cached, requests = provider.run_workflow_cached(

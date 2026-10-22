@@ -579,7 +579,7 @@ import demoBriefs from './shared/demoBriefs.json';
       const retryButton = pulse.querySelector('[data-pulse-retry]');
       if (retryButton) retryButton.hidden = true;
       status.textContent = 'Retrieving cultural signals and reference places for this brief…';
-      note.textContent = 'Held evidence is reused. A fresh lookup can take about a minute.';
+      note.textContent = 'Held evidence is reused. A fresh lookup can take a minute or two.';
       try {
         const answer = await post('/api/projects/generate', brief);
         const directions = (answer.concepts || []).slice(0, 3);

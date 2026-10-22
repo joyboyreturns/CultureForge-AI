@@ -24,6 +24,13 @@
 - Agent scaffolding (the graph, the vault and tool configs) is local-only and no longer tracked.
 
 ### Fixed
+- The sidebar no longer shows a personal workspace name; it reads "Shared workspace".
+- The Render blueprint deploys with `RUN_PROFILE=judging`, so the public demo runs with every call-count budget off (dev stays the default everywhere else).
+- The provenance drawer stayed open over other screens, still showing a place that had been removed; it now closes when the screen or exploration changes.
+- Changing the evidence-test profile after a test left verdicts on screen that were produced for another profile with no warning; the chooser now says so.
+- Repeating the same brief filled the shared workspace with copies; it is now one saved exploration, with a new version only when the answer changed.
+- The share link has a Copy link button.
+- Stale or inconsistent copy: "founder" in the trace, "last fails" (now bottom third), a fixed count of open questions, "3 original directions", the footer line, mixed UK and US spelling, and a missing model-name fallback.
 - The `where_popular` route accepted up to 100 cells; the harness caps the workflow at 20.
 - The test suite could reach the real Qloo CLI and the model gateway when a workflow missed the test's store or a `.env` enabled the model. Both are now blocked in `conftest.py`.
 

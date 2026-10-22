@@ -28,7 +28,7 @@
     },
     {
       "id": "lisbon-local-stay",
-      "label": "A stay for travellers who want the local city",
+      "label": "A stay for travelers who want the local city",
       "project": {"businessType": "Hospitality", "audience": "Tourists who want the city to feel local", "location": "Lisbon, Portugal", "budget": "$100k+", "objectives": ["Attract a new audience"]}
     },
     {
