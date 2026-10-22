@@ -116,6 +116,19 @@ export interface GenerateResponse {
   agent?: AgentReport | null
 }
 
+export interface AgentStep {
+  index: number
+  tool: string
+  arguments: Record<string, unknown>
+  question: string
+  reason: string
+  status: 'ok' | 'rejected' | 'error' | 'skipped'
+  detail: string
+  upstreamRequests: number
+  cached: boolean
+  resultCount: number
+}
+
 export interface AgentReport {
   /** `frontier_ai` means the configured model planned and reflected; `model` names it. */
   mode: 'frontier_ai' | 'rules'
@@ -145,6 +158,20 @@ export interface AgentReport {
     model?: string
     cached?: boolean
   } | null
+  /** The plan-act-observe loop: every step the agent took, in order. */
+  steps?: AgentStep[]
+  /** The claims that passed the citation check. */
+  analysis?: {
+    claims: { statement: string; directionId?: string | null; citations: { id: string; label: string }[] }[]
+    recommendedDirectionId?: string | null
+    summary: string
+    whatWouldChangeTheConclusion: string
+    promptVersion?: string
+  } | null
+  /** Claims the validator rejected, and why. */
+  rejectedClaims?: { statement: string; reason: string }[]
+  /** True when the whole report was held from an earlier run of the same evidence. */
+  cached?: boolean
   modelCalls: number
   stoppingReason: string
 }

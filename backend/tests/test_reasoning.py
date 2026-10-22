@@ -109,6 +109,7 @@ def test_unavailable_gateway_is_reported_and_never_cached(analysis_request, tmp_
     monkeypatch.setenv('AI_GATEWAY_ENABLED', 'true')
     monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-placeholder')
     monkeypatch.setenv('AI_GATEWAY_MODEL', 'test/frontier-model')
+    monkeypatch.setattr(reasoning, 'configured', lambda: True)
     monkeypatch.setattr(reasoning.urllib.request, 'urlopen',
                         lambda *_args, **_kwargs: (_ for _ in ()).throw(reasoning.urllib.error.URLError('offline')))
     with pytest.raises(reasoning.AnalysisUnavailable, match='valid structured answer'):

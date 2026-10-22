@@ -35,8 +35,9 @@ DEV_LIMITS: dict[str, int] = {
     'LLM_MAX_CALLS_PER_HOUR': 20,
     'LLM_MAX_CALLS_PER_DAY': 50,
     'AI_GATEWAY_ANALYSIS_DAILY_LIMIT': 10,
-    # Seeds, places, and one recommend per cross-domain type (three by default).
-    'RESEARCH_RUN_MAX_WORKFLOWS': 5,
+    # Seeds, places, one recommend per bridge domain (three by default), and
+    # three live Qloo calls for the agent loop.
+    'RESEARCH_RUN_MAX_WORKFLOWS': 8,
 }
 
 #: Limits the environment may lower but never raise in the dev profile. The

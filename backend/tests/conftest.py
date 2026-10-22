@@ -92,6 +92,16 @@ def no_model_calls(monkeypatch):
     """
     from backend import llm
 
+    from backend import reasoning
+
     monkeypatch.setattr(llm, 'is_configured', lambda: False)
+    monkeypatch.setattr(reasoning, 'configured', lambda: False)
+    # And no request may leave for the Gateway, whatever a test switches on.
+    # Tests of the transport replace urlopen with their own fake.
+    import urllib.request
+
+    def no_live_model(*args, **kwargs):
+        raise AssertionError('a test tried to open a network connection')
+    monkeypatch.setattr(urllib.request, 'urlopen', no_live_model)
     # Blank, so a display name in a developer's .env cannot leak into a test.
     monkeypatch.setenv('AI_GATEWAY_DISPLAY_MODEL', '')

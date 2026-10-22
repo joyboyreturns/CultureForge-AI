@@ -154,7 +154,7 @@ def test_a_research_run_keeps_its_workflow_allowance_in_dev(monkeypatch):
     monkeypatch.setattr(research.threading, 'Thread',
                         lambda target, args, daemon: SimpleNamespace(start=lambda: seen.update(allowance=args[1])))
     research.start_research(main.ProjectRequest(**examples.briefs()[0]['project']))
-    assert seen['allowance'] == 5
+    assert seen['allowance'] == 8
 
 
 # ----------------------------------------------- guards kept in both profiles

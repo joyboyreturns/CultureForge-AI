@@ -55,7 +55,7 @@ flowchart LR
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS and Lucide; responsive light/dark studio and a cinematic introduction.
 - **HTTP contracts:** FastAPI and Pydantic; typed requests and a consistent readable error envelope.
 - **Qloo:** official [Hackathon Kit](https://github.com/qloo/qloo-hackathon-kit) harness, with workflow-specific request builders and a timeout-aware wrapper that disables blind transport retries.
-- **Research:** an observable state machine. Optional model control makes one schema-checked plan, at most one allowlisted evidence test, and reflection. Investigations use named, typed workflows.
+- **Research:** an observable state machine. When a model is configured, an agent loop runs up to eight plan-act-observe steps: the model picks the next Qloo workflow from an allowlist, naming only identifiers already observed, and the server builds and caches each request. Its final analysis keeps only claims that cite entity IDs or tag URNs from this run's envelopes and state no number of their own; anything else is rejected and listed. A failure or an empty analysis leaves the rule composer's answer, and the trace says so. Investigations use named, typed workflows.
 - **Optional models:** Vercel AI Gateway exclusively. A model may name directions, select existing evidence or interpret cited observations. Deterministic rules retain factual claims, citations and verdicts. Unavailable or invalid model output leaves the rule-based result intact and reports its state. The studio and trace name the model that answered: `AI_GATEWAY_DISPLAY_MODEL` if set, otherwise the configured `AI_GATEWAY_MODEL` id.
 - **Persistence:** durable evidence files and SQLite workspaces, saved explorations, share links and usage. The production package uses one process and a persistent volume.
 
@@ -80,7 +80,7 @@ A brief needs two Qloo workflows (audience seeds, then up to ten places) plus on
 | `LLM_MAX_CALLS_PER_HOUR` | 20 | unlimited |
 | `LLM_MAX_CALLS_PER_DAY` | 50 | unlimited |
 | `AI_GATEWAY_ANALYSIS_DAILY_LIMIT` | 10 | unlimited |
-| `RESEARCH_RUN_MAX_WORKFLOWS` | 5 | unlimited |
+| `RESEARCH_RUN_MAX_WORKFLOWS` | 8 | unlimited |
 | `CULTUREFORGE_EVIDENCE_TTL_HOURS` | 24 | 336 |
 
 In dev, the environment can change a budget but not switch it off: a value below one becomes one, and the analysis allowance cannot be raised above 10. Do not raise limits to work around errors. `backend/tests/test_config.py` fails if this table or `.env.example` drifts from `config.py`.

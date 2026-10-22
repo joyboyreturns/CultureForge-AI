@@ -39,7 +39,7 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 | `backend/main.py` | The HTTP surface. Typed requests, one error envelope, status codes that mean something. |
 | `backend/providers.py` | The Qloo provider. One request builder per workflow, because Qloo rejects fields it does not know. |
 | `backend/investigation.py` | The decision loop: the questions a direction has not answered, each one a named workflow. |
-| `backend/agent.py` | The bounded AI controller inside a research run: one schema-checked plan, at most one allowlisted evidence test, then reflection. |
+| `backend/agent.py` | The bounded agent loop inside a research run: up to eight plan-act-observe steps over allowlisted Qloo workflows (server-built requests, observed IDs only), then an analysis whose every claim must cite an entity ID or tag URN from the run's envelopes. Falls back to the rule composer, and says so. |
 | `backend/research.py` | The observable run state machine: Qloo retrieval, deterministic composition, then the bounded AI controller when configured. |
 | `backend/platform.py` | The licensable layer: workspaces, issued keys, saved explorations, metering. SQLite. |
 | `backend/evidence_store.py` | The durable evidence cache. A held answer costs nothing; a failure is never cached. |

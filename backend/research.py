@@ -340,10 +340,11 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             }
             return
 
-        # The bounded AI controller becomes part of the research run itself:
-        # it may select one evidence test, execute that test against these
-        # exact envelopes, and reflect. A disabled or unavailable model keeps
-        # the deterministic composition intact.
+        # The bounded agent loop becomes part of the research run itself:
+        # up to eight plan-act-observe steps over allowlisted Qloo workflows,
+        # then a cited analysis. In dev it spends only what is left of this
+        # run's allowance. A disabled or unavailable model keeps the
+        # deterministic composition intact.
         def record_agent_event(event: TraceEvent) -> None:
             run.add_event(event)
             response.trace.append(event)
