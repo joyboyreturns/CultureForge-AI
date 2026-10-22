@@ -7,9 +7,11 @@ an engineering assessment, not a guarantee of competition placement.
 
 The relevance/composition change is `ba94f88`; the research/graph/reliability
 change is `b2b7331`. The following export-and-documentation commit contains
-this review, evidence artifacts and the continuation prompt. Changes remain
-local: release verification has three unresolved external/owner gates, so
-`origin/main` was not pushed. A portable Git bundle is supplied separately.
+this review, evidence artifacts and the continuation prompt. The three
+implementation commits through `026f3d1` were pushed to `origin/main` on
+22 October 2026 at the owner's explicit request. Release verification still
+has three unresolved external/owner gates; pushing code does not resolve
+deployment or attestations. A portable Git bundle is supplied separately.
 
 ## Priority audit and improvements
 
