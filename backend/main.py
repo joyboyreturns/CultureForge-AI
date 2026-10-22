@@ -56,6 +56,14 @@ app = FastAPI(
     ],
 )
 
+
+@app.on_event('startup')
+def _seed_demo_pack() -> None:
+    """Place the shipped demo evidence in the store; see backend/demo_pack.py."""
+    from .demo_pack import seed
+    seed()
+
+
 # The deployed studio is served from the same origin as the API and needs no
 # CORS. Local development serves it from another port, so local origins are
 # allowed; a deployment that hosts the studio elsewhere names its origins in

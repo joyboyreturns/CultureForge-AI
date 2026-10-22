@@ -188,6 +188,21 @@ BRIEF_PLACE_LIMIT = 10
 BRIDGE_LIMIT = 5
 
 
+def _returned_location(geocode: dict) -> str:
+    """Where Qloo says a place is: its city, metro area and region, once each, and never the country.
+
+    Suburbs are reported under their own council ("City of Yarra") with the
+    metro area ("Melbourne") separate, so the metro must be kept or every
+    suburb reads as another city. The country is left out on purpose: it would
+    make any place in the same country look like the requested city.
+    """
+    parts: list[str] = []
+    for value in (geocode.get('city'), geocode.get('metro'), geocode.get('admin1_region')):
+        if isinstance(value, str) and value.strip() and value.strip().casefold() not in (p.casefold() for p in parts):
+            parts.append(value.strip())
+    return ', '.join(parts)
+
+
 def brief_tags_payload(business_type: str, audience: str) -> dict:
     """The find_tags request for a brief. Every path that resolves a brief's
     audience builds it here, so they all share one cache entry."""
@@ -207,32 +222,41 @@ def brief_category_payload(business_idea: str) -> Optional[dict]:
     return {'query': resolution.query, 'limit': 10}
 
 
-def select_category_tag(envelope: dict, query: str) -> Optional[str]:
-    """Choose an exact returned category label, preferring place/category families.
+def _name_tokens(text: str) -> set[str]:
+    """Words of a tag name, with shop/store and plurals treated as one word."""
+    out = set()
+    for word in re.findall(r'\w+', str(text).casefold()):
+        word = 'store' if word in ('shop', 'shops', 'stores') else word
+        out.add(word[:-1] if len(word) > 3 and word.endswith('s') else word)
+    return out
 
-    A natural language label can resolve to many unrelated tag families. An
-    exact returned identifier avoids that ambiguity without inventing a URN.
+
+def select_category_tag(envelope: dict, query: str) -> Optional[str]:
+    """Choose a returned category tag, preferring Qloo's place-specific categories.
+
+    A natural language label resolves to many tag families, and many of them
+    (cuisine, product service, amenity) return no places at all. The place
+    categories (``urn:tag:category:place:…``, ``genre:place:…``,
+    ``specialty_dish:place:…``) are the ones places carry. An exact label wins
+    over a near one; a near one must contain every word of the query. No URN is
+    ever written here: only a returned identifier is chosen.
     """
-    families = ('category', 'cuisine', 'product_category', 'service_type', 'product_service', 'genre', 'setting',
-                'specialty_dish')
-    candidates = [row for row in QlooHarnessProvider.rows(envelope)
-                  if str(row.get('name', '')).casefold() == query.casefold()
-                  and isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')]
-    for family in families:
-        for row in candidates:
-            if row['id'].split(':')[2] == family:
-                return row['id']
-    # No exact label: accept a returned tag in a category-like family whose name
-    # holds every word of the query ("Boutique Hotel" for "boutique hotel").
-    words = set(re.findall(r'\w+', query.casefold()))
-    near = [row for row in QlooHarnessProvider.rows(envelope)
+    families = ('category', 'genre', 'specialty_dish', 'cuisine', 'product_category', 'service_type',
+                'product_service', 'setting')
+    wanted = _name_tokens(query)
+    rows = [row for row in QlooHarnessProvider.rows(envelope)
             if isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')
-            and words and words <= set(re.findall(r'\w+', str(row.get('name', '')).casefold()))
             and row['id'].split(':')[2] in families]
-    for family in families:
-        for row in near:
-            if row['id'].split(':')[2] == family:
-                return row['id']
+
+    def rank(row: dict) -> tuple[int, int]:
+        parts = row['id'].split(':')
+        return (0 if len(parts) > 3 and parts[3] == 'place' else 1, families.index(parts[2]))
+
+    exact = [r for r in rows if _name_tokens(r.get('name', '')) == wanted]
+    near = [r for r in rows if wanted and wanted <= _name_tokens(r.get('name', ''))]
+    for group in (exact, near):
+        if group:
+            return min(group, key=rank)['id']
     return None
 
 
@@ -543,7 +567,7 @@ class QlooHarnessProvider(CultureProvider):
             if code == 'FILTER_IGNORED':
                 raise QlooHarnessError('Qloo returned the excluded place. The replacement probe did not hold, so no conclusion was drawn.', code='UPSTREAM_REJECTED', details={'upstreamCode': code})
             if code in ('QLOO_DNS_ERROR', 'QLOO_NETWORK_ERROR', 'QLOO_CONNECTION_ERROR', 'QLOO_TIMEOUT'):
-                raise QlooHarnessError('Qloo could not be reached for this probe. The existing direction and evidence are unchanged.', code='PROVIDER_UNAVAILABLE', retryable=True)
+                raise QlooHarnessError('Qloo did not answer in time (a network error or timeout). Nothing was lost and nothing was invented; held evidence is still available, and trying again may work.', code='PROVIDER_UNAVAILABLE', retryable=True)
             if code:
                 raise QlooHarnessError(f'Qloo rejected the request ({code}).', code='UPSTREAM_REJECTED', retryable=retryable, details={'upstreamCode': code})
             raise QlooHarnessError('Qloo rejected the request. Check the backend credential and CLI status.', code='UPSTREAM_REJECTED')
@@ -572,6 +596,30 @@ class QlooHarnessProvider(CultureProvider):
                     )
         self._note_answered()
         return result
+
+    def recommend_places(self, tags: list[str], location: str, business_idea: str = '') -> tuple[dict, bool, int]:
+        """The places recommend call for a brief: the one path both the direct and the research routes use.
+
+        A location Qloo will not search becomes a request for a clearer one. When the category and the
+        audience's tags share no place in the city, the category's places are retrieved once without the
+        audience tags; ``category_only`` says so, and the answer states it wherever it is shown.
+        """
+        payload = brief_places_retrieval_payload(tags, location, business_idea)
+        try:
+            envelope, cached, requests = self.run_workflow_cached('recommend', payload)
+        except QlooHarnessError as exc:
+            if exc.code in ('QLOO_CONTRACT', 'UPSTREAM_REJECTED'):
+                raise QlooHarnessError(
+                    f"Qloo did not accept '{location}' as a place it can search. Use a city and country, "
+                    "for example 'Toronto, Canada'.", code='NEEDS_INPUT', details={'field': 'location'}) from exc
+            raise
+        if not self.rows(envelope) and payload.get('include_tags') and envelope.get('status') != 'needs_input':
+            fallback, fallback_cached, fallback_requests = self.run_workflow_cached(
+                'recommend', {k: v for k, v in payload.items() if k != 'signal_tags'})
+            if self.rows(fallback):
+                return fallback, fallback_cached, requests + fallback_requests
+            requests += fallback_requests
+        return envelope, cached, requests
 
     def run_workflow_cached(self, operation: str, payload: dict) -> tuple[dict, bool, int]:
         """Run a workflow through the durable store.
@@ -761,8 +809,8 @@ class QlooHarnessProvider(CultureProvider):
                 live = live or not was_cached
                 if not select_category_tag(category_result, category_payload['query']):
                     raise QlooHarnessError('Qloo did not resolve an exact business category. Refine the business idea or use a broader category.', code='NEEDS_INPUT')
-            recommendations, was_cached, requests = self.run_workflow_cached(
-                'recommend', brief_places_retrieval_payload(matched_tags, project.location, project.businessIdea))
+            recommendations, was_cached, requests = self.recommend_places(
+                matched_tags, project.location, project.businessIdea)
             spent += requests
             live = live or not was_cached
             places_reused = was_cached
@@ -882,7 +930,7 @@ class QlooHarnessProvider(CultureProvider):
                 priceLevel=properties.get('price_level') if isinstance(properties.get('price_level'), int) else None,
                 description=properties.get('short_description') or properties.get('description'),
                 image=image_url if isinstance(image_url, str) else None,
-                location=', '.join(part for part in (geocode.get('city'), geocode.get('admin1_region')) if part) or None,
+                location=_returned_location(geocode) or None,
                 address=properties.get('address') if isinstance(properties.get('address'), str) else None,
                 traceId=entity_trace.id,
             ))
@@ -1063,6 +1111,16 @@ class QlooHarnessProvider(CultureProvider):
                     'a relevant business direction. Specify the business idea, refine the audience, or try another location.'
                 )
 
+        signals_used = ((recommendations.get('query_intent') or {}).get('signals') or {}).get('tags')
+        category_only_retrieval = bool(self.rows(recommendations)) and not signals_used and bool(
+            ((recommendations.get('query_intent') or {}).get('filters') or {}).get('includeTags'))
+        if category_only_retrieval:
+            caveat = (' These places were retrieved for the business category in this city only: no place matched the '
+                      'category and the audience’s tags together, so the audience did not shape which places '
+                      'appear, and the affinity values are not audience affinities.')
+            notice += caveat
+            trace.append(TraceEvent(id='trace-category-only', step='category-only-retrieval', status='ok',
+                                    resultCount=len(entity_rows), detail=caveat.strip()))
         response = GenerateResponse(
             projectId=f'cf-{uuid4().hex[:10]}', project=project,
             concepts=concepts, signals=signals, dataMode='live', conceptMode=concept_mode,

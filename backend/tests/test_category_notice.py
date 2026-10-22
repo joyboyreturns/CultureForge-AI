@@ -19,12 +19,12 @@ def _generate(monkeypatch, recommend_places, idea, audience='Food explorers'):
 
 
 def test_an_unrecognised_idea_gives_no_direction_and_names_the_idea(monkeypatch, recommend_places):
-    response = _generate(monkeypatch, recommend_places, idea='Yoga cafe')
+    response = _generate(monkeypatch, recommend_places, idea='Shop')
     assert response.concepts == []
-    assert 'does not recognise "Yoga cafe"' in response.notice
+    assert 'does not recognise "Shop"' in response.notice
     steps = {event.step: event for event in response.trace}
     assert steps['classify-business-category'].status == 'skipped'
-    assert '"Yoga cafe"' in steps['classify-business-category'].detail
+    assert '"Shop"' in steps['classify-business-category'].detail
     assert 'not widened' in steps['classify-business-category'].detail
 
 

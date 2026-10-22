@@ -23,6 +23,15 @@ def _counts(evidence) -> dict:
     return counts
 
 
+def _is_starting_point(concept) -> bool:
+    """The narrow fallback direction: same-category references, no audience occasion."""
+    for decision in getattr(concept, 'decisions', None) or []:
+        rule = decision.get('ruleId') if isinstance(decision, dict) else getattr(decision, 'ruleId', None)
+        if rule == 'category-reference-study':
+            return True
+    return False
+
+
 def build_outcome(*, category, evidence, concepts, provider_failed: bool = False) -> dict:
     counts = _counts(evidence)
     base = {'counts': counts, 'category': category.family or None, 'categoryLabel': category.matched or None}
@@ -30,7 +39,11 @@ def build_outcome(*, category, evidence, concepts, provider_failed: bool = False
         return {**base, 'state': PROVIDER_FAILURE, 'missing': ['A completed Qloo response'],
                 'recovery': [{'action': 'retry', 'label': 'Try again'}]}
     if concepts:
-        return {**base, 'state': SUPPORTED if counts.get('direct_business') else PROMISING, 'missing': [], 'recovery': []}
+        only_a_starting_point = all(_is_starting_point(c) for c in concepts)
+        missing = (['What makes this concept distinct: the returned evidence names same-category places but no audience occasion']
+                   if only_a_starting_point else [])
+        return {**base, 'state': SUPPORTED if counts.get('direct_business') and not only_a_starting_point else PROMISING,
+                'missing': missing, 'recovery': []}
     missing: list[str] = []
     recovery: list[dict] = []
     if category.specificity == 'unknown' or not category.family:

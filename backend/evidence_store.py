@@ -99,7 +99,7 @@ class EvidenceStore:
             entry = self._cache.get(key)
             if not entry:
                 return None
-            if time.time() - float(entry.get('storedAt', 0)) > ttl_seconds:
+            if not entry.get('pinned') and time.time() - float(entry.get('storedAt', 0)) > ttl_seconds:
                 self._cache.pop(key, None)
                 self._persist_cache()
                 return None
@@ -113,6 +113,23 @@ class EvidenceStore:
                 'transportRequests': transport_requests,
             }
             self._persist_cache()
+
+    def seed(self, key: str, envelope: dict, stored_at: float, transport_requests: int = 1) -> bool:
+        """Hold a shipped, real Qloo answer under its original acquisition time.
+
+        Pinned entries do not expire, because they are the prepared demos; they
+        are never written over a fresher answer already held.
+        """
+        with self._lock:
+            existing = self._cache.get(key)
+            if existing and not existing.get('pinned') and float(existing.get('storedAt', 0)) >= stored_at:
+                return False
+            if existing and existing.get('pinned'):
+                return False
+            self._cache[key] = {'envelope': envelope, 'storedAt': stored_at,
+                                'transportRequests': transport_requests, 'pinned': True}
+            self._persist_cache()
+            return True
 
     def stored_at(self, key: str) -> Optional[float]:
         """When the held entry was fetched from Qloo, or None if nothing is held."""

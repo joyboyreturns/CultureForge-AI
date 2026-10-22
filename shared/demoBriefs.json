@@ -4,52 +4,148 @@
     {
       "id": "brooklyn-gen-z-cafe",
       "label": "A café for design-conscious Gen Z",
-      "project": {"businessType": "Food & beverage", "audience": "Design-conscious Gen Z & young professionals", "location": "Brooklyn, New York", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
+      "project": {
+        "businessType": "Food & beverage",
+        "audience": "Design-conscious Gen Z & young professionals",
+        "location": "Brooklyn, New York",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
     },
     {
       "id": "london-mindful-wellness",
       "label": "A wellness room for mindful professionals",
-      "project": {"businessType": "Wellness", "audience": "Mindful professionals who want a slow afternoon", "location": "London, United Kingdom", "budget": "$50k – $100k", "objectives": ["Create a memorable experience"]}
+      "project": {
+        "businessType": "Wellness",
+        "audience": "Mindful professionals who want a slow afternoon",
+        "location": "London, United Kingdom",
+        "budget": "$50k – $100k",
+        "objectives": [
+          "Create a memorable experience"
+        ]
+      }
     },
     {
       "id": "chicago-vinyl-retail",
       "label": "A record shop for vinyl collectors",
-      "project": {"businessType": "Retail", "audience": "Independent vinyl collectors and record-store regulars", "location": "Chicago, Illinois", "budget": "Under $25k", "objectives": ["Build a loyal community"]}
+      "project": {
+        "businessType": "Retail",
+        "audience": "Independent vinyl collectors and record-store regulars",
+        "location": "Chicago, Illinois",
+        "budget": "Under $25k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
     },
     {
       "id": "austin-live-music",
       "label": "A venue for live-music regulars",
-      "project": {"businessType": "Entertainment", "audience": "Live-music fans who want to be part of something", "location": "Austin, Texas", "budget": "$50k – $100k", "objectives": ["Create a memorable experience"]}
+      "project": {
+        "businessType": "Entertainment",
+        "audience": "Live-music fans who want to be part of something",
+        "location": "Austin, Texas",
+        "budget": "$50k – $100k",
+        "objectives": [
+          "Create a memorable experience"
+        ]
+      }
     },
     {
       "id": "los-angeles-slow-fashion",
       "label": "A store for slow-fashion loyalists",
-      "project": {"businessType": "Retail", "audience": "Sustainable fashion subscribers and slow-fashion loyalists", "location": "Los Angeles, California", "budget": "$25k – $50k", "objectives": ["Stand out in a crowded market"]}
+      "project": {
+        "businessType": "Retail",
+        "audience": "Sustainable fashion subscribers and slow-fashion loyalists",
+        "location": "Los Angeles, California",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Stand out in a crowded market"
+        ]
+      }
     },
     {
       "id": "lisbon-local-stay",
       "label": "A stay for travelers who want the local city",
-      "project": {"businessType": "Hospitality", "audience": "Tourists who want the city to feel local", "location": "Lisbon, Portugal", "budget": "$100k+", "objectives": ["Attract a new audience"]}
+      "project": {
+        "businessType": "Hospitality",
+        "audience": "Tourists who want the city to feel local",
+        "location": "Lisbon, Portugal",
+        "budget": "$100k+",
+        "objectives": [
+          "Attract a new audience"
+        ]
+      }
     },
     {
       "id": "seattle-family-cafe",
       "label": "A café for young families",
-      "project": {"businessType": "Food & beverage", "audience": "Young families looking for a slow afternoon", "location": "Seattle, Washington", "budget": "Under $25k", "objectives": ["Build a loyal community"]}
+      "project": {
+        "businessType": "Food & beverage",
+        "audience": "Young families looking for a slow afternoon",
+        "location": "Seattle, Washington",
+        "budget": "Under $25k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
     },
     {
       "id": "tokyo-ceramics-studio",
       "label": "A shop for studio potters",
-      "project": {"businessType": "Retail", "audience": "Independent ceramics makers and studio potters", "location": "Tokyo, Japan", "budget": "$25k – $50k", "objectives": ["Stand out in a crowded market"]}
+      "project": {
+        "businessType": "Retail",
+        "audience": "Independent ceramics makers and studio potters",
+        "location": "Tokyo, Japan",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Stand out in a crowded market"
+        ]
+      }
     },
     {
       "id": "tokyo-morning-bakery",
       "label": "An artisan bakery for morning commuters",
-      "project": {"businessType": "Food & beverage", "businessIdea": "Artisan bakery", "audience": "Early-morning commuters and neighborhood regulars who love artisan bread and pastries", "location": "Tokyo, Japan", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "Artisan bakery",
+        "audience": "Early-morning commuters and neighborhood regulars who love artisan bread and pastries",
+        "location": "Tokyo, Japan",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
     },
     {
       "id": "paris-ice-cream",
       "label": "An ice cream parlour for design-conscious young professionals",
-      "project": {"businessType": "Food & beverage", "businessIdea": "Ice cream parlour", "audience": "Design-conscious young professionals who love desserts", "location": "Paris, France", "budget": "$25k – $50k", "objectives": ["Build a loyal local following"]}
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "Ice cream parlour",
+        "audience": "Design-conscious young professionals who love desserts",
+        "location": "Paris, France",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal local following"
+        ]
+      }
+    },
+    {
+      "id": "melbourne-specialty-coffee",
+      "label": "A specialty coffee shop for design-conscious young professionals",
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "Specialty coffee shop",
+        "audience": "Design-conscious young professionals who love independent cafes and live music",
+        "location": "Melbourne, Australia",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal local following"
+        ]
+      }
     }
   ]
 }

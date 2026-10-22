@@ -40,7 +40,8 @@ def test_synonyms_and_other_languages(idea, expected):
 
 
 def test_ambiguity_is_not_guessed():
-    assert resolve('Yoga cafe').status == 'unresolved'
+    assert resolve('Bakery and bookstore').status == 'unresolved'
+    assert resolve('Gelato and coffee bar').status == 'unresolved'
     assert resolve('Shop').status == 'unresolved'
     assert resolve('').status == 'unresolved'
 
@@ -70,7 +71,8 @@ def test_category_tag_is_chosen_only_from_returned_identifiers():
 
 def test_boutique_hotel_resolves_by_returned_words():
     env = {'results': [{'id': 'urn:tag:category:qloo:boutique_hotel', 'name': 'Boutique Hotels'}]}
-    assert select_category_tag(env, 'boutique hotel') is None  # 'hotels' != 'hotel': fail closed
+    assert select_category_tag(env, 'boutique hotel') == 'urn:tag:category:qloo:boutique_hotel'  # plural is the same word
+    assert select_category_tag({'results': [{'id': 'urn:tag:category:qloo:hotel_bar', 'name': 'Hotel Bar'}]}, 'boutique hotel') is None
 
 
 class _Item:
@@ -98,3 +100,55 @@ def test_a_matching_business_in_another_city_cannot_anchor():
                  name="Pizza 4P's", description='Pizza restaurant', returned_location='Ho Chi Minh City, Vietnam')
     assert out['relationship'] == 'direct' and out['evidenceClass'] == 'unverified_geography'
     assert not out['anchorEligible']
+
+
+def test_a_modified_head_is_looked_up_whole_and_matches_on_its_distinctive_word():
+    r = resolve('Yoga cafe')
+    assert r.status == 'open_vocabulary' and r.terms == ('yoga',)
+    base = dict(business_type='Food & beverage', idea='Yoga cafe', audience='', location='Toronto',
+                returned_location='Toronto, Ontario')
+    assert not assess(name='Plain Cafe', description='A coffee shop', **base)['anchorEligible']
+    assert assess(name='Yoga House', description='yoga and tea', **base)['anchorEligible']
+    assert resolve('Sushi restaurant').status == 'open_vocabulary'
+
+
+def test_suburbs_reported_under_their_own_council_still_match_their_metro():
+    from backend.providers import _returned_location
+    place = {'city': 'City of Yarra', 'name': 'Fitzroy', 'metro': 'Melbourne', 'country': 'Australia',
+             'admin1_region': 'Victoria'}
+    text = _returned_location(place)
+    assert text == 'City of Yarra, Melbourne, Victoria' and 'Australia' not in text
+    out = assess(business_type='Food & beverage', idea='Specialty coffee shop', audience='', location='Melbourne, Australia',
+                 name='Seven Seeds Coffee Roasters', description='Specialty coffee roasters', returned_location=text)
+    assert out['geography'] == 'text_match' and out['anchorEligible']
+
+
+def test_place_namespaced_categories_beat_qloo_namespace_tags_and_shop_equals_store():
+    env = {'results': [{'id': 'urn:tag:cuisine:qloo:bubble_tea_shop', 'name': 'Bubble Tea Shop'},
+                       {'id': 'urn:tag:category:place:bubble_tea_store', 'name': 'Bubble tea store'},
+                       {'id': 'urn:tag:amenity:qloo:bubble_tea_shop', 'name': 'Bubble Tea Shop'}]}
+    assert select_category_tag(env, 'bubble tea shop') == 'urn:tag:category:place:bubble_tea_store'
+
+
+def test_a_well_referenced_category_with_no_matching_recipe_gets_a_narrow_honest_direction():
+    from backend.concept_composer import compose
+    entities = [{'entity_id': f'e{i}', 'name': f'Boba House {i}', 'description': 'A bubble tea shop.',
+                 'popularity': 0.5, 'affinity': 0.5 + i / 100, 'relevance': {'anchorEligible': True}} for i in range(3)]
+    out = compose(business_type='Food & beverage', business_idea='Bubble tea shop', audience='Gen Z',
+                  location='Los Angeles', budget='', tags=[{'id': 'urn:tag:customer_segment:qloo:gen_z'}], entities=entities,
+                  evidence_index={}, tag_evidence_ids={}, entity_evidence_ids={f'e{i}': f'ev{i}' for i in range(3)},
+                  trace_id='t')
+    assert len(out) == 1 and out[0].name == 'The Local Reference Study'
+    assert 'not established' in out[0].offering and out[0].evidence_ids
+    one = compose(business_type='Food & beverage', business_idea='Bubble tea shop', audience='Gen Z',
+                  location='Los Angeles', budget='', tags=[], entities=entities[:1], evidence_index={},
+                  tag_evidence_ids={}, entity_evidence_ids={'e0': 'ev0'}, trace_id='t')
+    assert one == []
+
+
+def test_the_narrow_fallback_is_promising_not_supported():
+    class D:
+        decisions = [{'ruleId': 'category-reference-study'}]
+    cat = classify_brief('Retail', 'Bubble tea shop', '')
+    out = build_outcome(category=cat, evidence=[_Item('entity', 'direct_business')], concepts=[D()])
+    assert out['state'] == 'promising_unverified' and out['missing']
