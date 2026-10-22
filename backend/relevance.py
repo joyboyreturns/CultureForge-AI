@@ -262,18 +262,21 @@ def assess(*, business_type: str, idea: str, audience: str, location: str,
     if not returned_location:
         geography = 'unknown'
         reasons.append('No location metadata returned. The query location is not the place location.')
-    elif location.split(',')[0].strip().casefold() in returned_location.casefold():
+    elif any(part in returned_location.casefold() for part in
+             (p.strip().casefold() for p in location.split(',')) if part):
         geography = 'text_match'
         reasons.append('Returned location text matches the requested city; neighbourhood and travel time are unverified.')
     else:
         geography = 'unverified'
         reasons.append(f'Returned location is {returned_location}; it does not confirm the requested city {location}.')
     evidence_class = _evidence_class(relation, kind, text, category, geography, has_identifier)
+    if relation == 'direct' and geography == 'unverified':
+        reasons.append('A matching business, but returned for another place: it cannot anchor a direction for the requested city.')
     if evidence_class == 'cultural_attraction':
         reasons.append('Returned text describes a cultural attraction. Kept as context; it is not a competitor or a reference for this business.')
     return {'version': VERSION, 'evidenceClass': evidence_class, 'relationship': relation, 'category': family or 'unknown',
             'categorySource': category.source, 'categorySpecificity': category.specificity,
             'categoryMatched': category.matched,
-            'anchorEligible': relation == 'direct', 'geography': geography,
+            'anchorEligible': relation == 'direct' and geography != 'unverified', 'geography': geography,
             'audience': 'returned_for_seeds', 'confidence': 'rule_assessment_only',
             'reasons': reasons}
