@@ -31,9 +31,11 @@ def _compose(tags, entities):
     )
 
 
-def test_composer_returns_three_directions(entities):
+def test_composer_does_not_pad_a_weak_category_sample(entities):
     concepts = _compose(DESIGN_TAGS, entities)
-    assert len(concepts) == 3
+    # Only the Bell House describes a food/bar offer in this real response.
+    assert len(concepts) == 1
+    assert 'The Bell House' in concepts[0].description
 
 
 def test_the_audience_changes_the_directions(entities):
@@ -67,22 +69,13 @@ def test_the_directions_are_different_from_one_another(entities):
     names = {c.name for c in concepts}
     assert len(names) == len(concepts)
     primary = {c.evidence_ids[0] for c in concepts}
-    assert len(primary) > 1, 'the directions should not all rest on the same venue'
+    assert len(primary) == len(concepts), 'a venue cannot masquerade as several directions'
 
 
-def test_a_brief_with_no_cultural_signal_falls_back_to_the_brief_and_says_so(entities):
-    """No audience tag matched, so only the business type can unlock a direction.
-
-    That is allowed, but it must be labelled honestly rather than pretending
-    the evidence supported it.
-    """
+def test_a_brief_with_no_cultural_signal_abstains(entities):
+    """A broad business category cannot substitute for cultural evidence."""
     concepts = _compose(['urn:tag:weather:qloo:rain'], entities)
-    assert concepts, 'the brief alone can still unlock a direction'
-    for concept in concepts:
-        assert 'brief' in concept.rationale
-        assert 'Unlocked by rain' not in concept.rationale
-    # And the directions the audience WOULD have unlocked are absent.
-    assert 'The Design Floor' not in {c.name for c in concepts}
+    assert concepts == []
 
 
 def test_a_concept_states_what_the_evidence_does_not_establish(entities):
@@ -144,7 +137,7 @@ def test_an_organisation_is_not_the_place_a_direction_is_built_around():
          'short_description': '', 'image': '', 'popularity': 0.0, 'affinity': 0.88,
          'business_rating': 5.0, 'price_level': None},
         {'entity_id': 'id-steel', 'name': 'Brooklyn Steel',
-         'description': 'Converted Williamsburg warehouse hosting lively, large-capacity concerts.',
+         'description': 'Converted Williamsburg warehouse with a bar hosting lively, large-capacity concerts.',
          'short_description': '', 'image': '', 'popularity': 0.999, 'affinity': 0.88,
          'business_rating': 4.6, 'price_level': None},
     ]

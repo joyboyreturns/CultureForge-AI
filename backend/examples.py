@@ -14,7 +14,7 @@ from pathlib import Path
 from .evidence_store import canonical_key, get_store
 from .models import ProjectRequest
 from . import config
-from .providers import QlooHarnessProvider, bridge_payload, brief_places_payload, brief_tags_payload
+from .providers import QlooHarnessProvider, bridge_payload, brief_places_retrieval_payload, brief_tags_payload
 
 BRIEFS_FILE = Path(__file__).resolve().parent.parent / 'shared' / 'demoBriefs.json'
 
@@ -42,7 +42,7 @@ def held(project: dict) -> bool:
             if (tag := QlooHarnessProvider.tag_id(row))][:3]
     if not tags:
         return False
-    if store.get(canonical_key('recommend', brief_places_payload(tags, project['location']))) is None:
+    if store.get(canonical_key('recommend', brief_places_retrieval_payload(tags, project['location'], project.get('businessIdea', '')))) is None:
         return False
     return all(store.get(canonical_key('recommend', bridge_payload(tags, domain))) is not None
                for domain in config.bridge_domains())

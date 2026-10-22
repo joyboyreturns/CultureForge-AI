@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .evidence_store import canonical_key, get_store
-from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_payload,
+from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_retrieval_payload,
                         brief_tags_payload, safe_query)
 
 __all__ = ['compare_audiences', 'rank_entities', 'recompose', 'safe_query']
@@ -167,7 +167,9 @@ def _without(envelope: dict, drop: set[str], provider: QlooHarnessProvider) -> d
 def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[str]] = None,
                exclude_tag_ids: Optional[list[str]] = None,
                tag_envelope: Optional[dict] = None,
-               recommend_envelope: Optional[dict] = None) -> dict:
+               recommend_envelope: Optional[dict] = None,
+               seed_tag_ids: Optional[list[str]] = None,
+               retain_entity_ids: Optional[list[str]] = None) -> dict:
     """Rebuild the directions without the given evidence, using no new call.
 
     This is the check that the answer really depends on the data: remove one
@@ -187,13 +189,22 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     if tag_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
     tags = [tag for row in provider.rows(tag_envelope) if (tag := provider.tag_id(row))][:3]
-    tags = [tag for tag in tags if tag not in exclude_tag_ids]
-    if not tags:
+    if seed_tag_ids:
+        selected = set(seed_tag_ids)
+        tags = [tag for tag in tags if tag in selected]
+        tag_envelope = _without(tag_envelope,
+                                {provider.tag_id(row) for row in provider.rows(tag_envelope)} - selected,
+                                provider)
+    if not [tag for tag in tags if tag not in exclude_tag_ids]:
         raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.', code='INVALID_REQUEST')
-    rec_key = canonical_key('recommend', brief_places_payload(tags, project.location))
+    rec_key = canonical_key('recommend', brief_places_retrieval_payload(tags, project.location, project.businessIdea))
     rec_envelope = recommend_envelope or store.get(rec_key)
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
+    if retain_entity_ids is not None:
+        retained = set(retain_entity_ids)
+        exclude_entity_ids |= {entity_id for row in provider.rows(rec_envelope)
+                               if isinstance((entity_id := row.get('entity_id') or row.get('id')), str)} - retained
 
     # The exclusions are applied to the held evidence *before* the composer
     # runs, so the directions are rebuilt from what is left.
@@ -230,6 +241,9 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     return {
         'concepts': [concept.model_dump() for concept in concepts],
         'evidence': [item.model_dump() for item in kept_evidence],
+        'trace': [event.model_dump() for event in response.trace],
+        'delivery': response.delivery.model_dump() if response.delivery else None,
+        'composerVersion': response.composerVersion,
         # What was actually taken out, counted from the exclusions rather
         # than from the difference: the answer was composed from what was
         # left, so the two are the same length.

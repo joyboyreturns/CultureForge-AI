@@ -44,7 +44,7 @@ from .providers import (QLOO_ENTITY_TYPES, QlooHarnessError, QlooHarnessProvider
                         audience_demographics_payload, describe_payload, entity_tags_payload,
                         trends_payload, where_popular_payload)
 
-PROMPT_VERSION = 'agent-loop-1'
+PROMPT_VERSION = 'agent-loop-3'
 MAX_STEPS = 8
 #: Seconds one model request may take. A live run showed the configured model
 #: answering a low-effort planning request in 5 to 29 seconds, so a 45-second
@@ -69,6 +69,8 @@ PLAN_PROMPT = (
     'demographic}; compare_audiences {group_a, group_b}; entity_tags {entities}; where_popular '
     '{entity}; audience_demographics {entity}; trends {entities, entity_type}; describe {entity}; '
     'remove_anchor {directionId, evidenceId}; finish {}. Never invent demand, prices or facts. '
+    'A tag resolved from the founder brief only interprets that brief; it does not independently '
+    'measure audience preference. Category text matches do not validate a proposed service. '
     'Keep question and reason short.'
 )
 ANALYSIS_PROMPT = (
@@ -77,7 +79,14 @@ ANALYSIS_PROMPT = (
     'anything else is rejected. Do not write any digit or number in a statement: numbers are '
     'shown from Qloo data, never from you. Do not claim demand, revenue, footfall or willingness '
     'to pay. Recommend a direction only when the observations support a comparative preference; '
-    'otherwise use null. Keep each statement under 300 characters.'
+    'otherwise use null. Keep each statement under 300 characters. '
+    'Audience tags resolved from the brief are query inputs, not measured preference or strength. '
+    'Do not call one concept a stronger fit on tag names alone. A place describing a bakery '
+    'does not support visible making, preorders, opening hours or commuter use unless those '
+    'attributes are explicitly returned. Describe those as unverified proposals. A resolved '
+    'tag naming another city does not establish a local preference. '
+    'Use recommendedDirectionId=null unless an observed rank or compare_audiences result '
+    'establishes a comparative preference; a deterministic selection rule is not that result.'
 )
 
 
@@ -233,15 +242,21 @@ def _remove_anchor(arguments: dict, response: GenerateResponse, tag_envelope: di
 def _payload(response: GenerateResponse, observed: Observed, steps: list[AgentStep],
              steps_left: int, qloo_left: Optional[int]) -> dict:
     return {
-        'project': {'businessType': response.project.businessType, 'audience': response.project.audience,
+        'project': {'businessType': response.project.businessType, 'businessIdea': response.project.businessIdea,
+                    'audience': response.project.audience,
                     'location': response.project.location, 'objectives': response.project.objectives},
         'directions': [{
             'id': concept.id, 'name': concept.name, 'claim': concept.description[:260],
-            'citedEvidence': [{'evidenceId': item.id, 'entityId': item.entityId, 'label': item.label}
+            'limitations': concept.limitations[:5],
+            'citedEvidence': [{'evidenceId': item.id, 'entityId': item.entityId, 'label': item.label,
+                               'returnedDescription': (item.description or '')[:240],
+                               'returnedLocation': item.location, 'relevance': item.relevance}
                               for item in response.evidence if item.id in concept.evidenceIds and item.entityId],
         } for concept in response.concepts],
         'knownEntities': [{'entityId': key, 'label': value} for key, value in list(observed.entities.items())[:60]],
-        'knownTags': [{'tagId': key, 'label': value} for key, value in list(observed.tags.items())[:40]],
+        'knownTags': [{'tagId': key, 'label': value,
+                       'origin': 'brief_resolution' if key in (response.provenance.resolved_tags if response.provenance else []) else 'observed_workflow'}
+                      for key, value in list(observed.tags.items())[:40]],
         'observations': [{'step': step.index, 'tool': step.tool, 'arguments': step.arguments,
                           'status': step.status, 'detail': step.detail, 'results': step.observed}
                          for step in steps],
@@ -252,10 +267,12 @@ def _payload(response: GenerateResponse, observed: Observed, steps: list[AgentSt
 
 
 def validate_analysis(analysis: AgentAnalysis, observed: Observed,
-                      response: GenerateResponse) -> tuple[dict, list[dict]]:
+                      response: GenerateResponse, steps: Optional[list[AgentStep]] = None) -> tuple[dict, list[dict]]:
     """Keep the claims whose every citation was observed in this run, and say why the others went."""
     known = observed.known()
     directions = {concept.id for concept in response.concepts}
+    comparison_observed = any(step.tool in ('rank', 'compare_audiences') and step.status == 'ok'
+                              and step.resultCount for step in steps or [])
     kept, rejected = [], []
     for claim in analysis.claims:
         missing = [item for item in claim.citations if item not in known]
@@ -263,7 +280,10 @@ def validate_analysis(analysis: AgentAnalysis, observed: Observed,
             rejected.append({'statement': claim.statement[:300],
                              'reason': f'Cites identifiers not in this run’s Qloo envelopes: {", ".join(missing[:3])}.'})
             continue
-        if _DIGIT.search(claim.statement):
+        statement_without_names = claim.statement
+        for citation in claim.citations:
+            statement_without_names = statement_without_names.replace(observed.label(citation), '')
+        if _DIGIT.search(statement_without_names):
             rejected.append({'statement': claim.statement[:300],
                              'reason': 'States a number; numbers are shown only as Qloo returned them.'})
             continue
@@ -271,13 +291,21 @@ def validate_analysis(analysis: AgentAnalysis, observed: Observed,
             rejected.append({'statement': claim.statement[:300],
                              'reason': 'Names a direction that is not on screen.'})
             continue
+        if not comparison_observed and __import__('re').search(
+                r'\b(highest|lowest|outranks?|ranked|stronger|preference-led|selected under)\b',
+                claim.statement, __import__('re').I):
+            rejected.append({'statement': claim.statement[:300],
+                             'reason': 'No completed ranking or audience comparison supports this comparative claim.'})
+            continue
         kept.append({'statement': claim.statement, 'directionId': claim.directionId,
                      'citations': [{'id': item, 'label': observed.label(item)} for item in claim.citations]})
-    recommended = analysis.recommendedDirectionId if analysis.recommendedDirectionId in directions else None
+    recommended = analysis.recommendedDirectionId if comparison_observed and analysis.recommendedDirectionId in directions else None
     summary_ok = not _DIGIT.search(analysis.summary)
     return ({'claims': kept,
              'recommendedDirectionId': recommended,
-             'summary': analysis.summary if summary_ok else 'The model summary stated a number and was withheld.',
+             'summary': ('No comparative preference was established by a completed ranking or audience comparison in this run. The directions remain proposals to test.'
+                         if not comparison_observed else analysis.summary if summary_ok
+                         else 'The model summary stated a number and was withheld.'),
              'whatWouldChangeTheConclusion': analysis.whatWouldChangeTheConclusion,
              'promptVersion': PROMPT_VERSION}, rejected)
 
@@ -422,7 +450,7 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
         emit(_event('agent-analysis', 'error', f'{exc} The rule composer’s answer stands.'))
         return AgentReport(model=model_name, mode='rules', status='limited', steps=steps, modelCalls=model_calls,
                            stoppingReason=f'{stopping} The analysis was not valid; the rule composer’s answer stands.')
-    kept, rejected = validate_analysis(analysis, observed, response)
+    kept, rejected = validate_analysis(analysis, observed, response, steps)
     if not kept['claims']:
         emit(_event('agent-analysis', 'error',
                     f'All {len(rejected)} claims failed the citation check; the rule composer’s answer stands.'))

@@ -6,6 +6,7 @@ BusinessType = Literal['Food & beverage', 'Retail', 'Hospitality', 'Wellness', '
 
 class ProjectRequest(BaseModel):
     businessType: BusinessType
+    businessIdea: str = Field(default='', max_length=160)
     audience: str = Field(min_length=2, max_length=240)
     location: str = Field(min_length=2, max_length=160)
     budget: str
@@ -49,6 +50,8 @@ class Evidence(BaseModel):
     #: How this piece of evidence should be presented, derived from it by
     #: rule. It changes nothing about the evidence itself.
     presentation: Optional[dict] = None
+    # CultureForge's inspectable assessment, never a Qloo confidence score.
+    relevance: Optional[dict] = None
 
 class Decision(BaseModel):
     """One business proposal, and the evidence it was derived from.
@@ -158,6 +161,8 @@ class RecomposeRequest(BaseModel):
     project: ProjectRequest
     excludeEntityIds: list[str] = Field(default_factory=list)
     excludeTagIds: list[str] = Field(default_factory=list)
+    seedTagIds: list[str] = Field(default_factory=list, max_length=10)
+    retainEntityIds: Optional[list[str]] = Field(default=None, max_length=50)
 
 
 class EvidencePresentationRequest(BaseModel):

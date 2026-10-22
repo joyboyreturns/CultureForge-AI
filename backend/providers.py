@@ -41,7 +41,7 @@ QLOO_WORKFLOWS = (
     'trends',
 )
 
-COMPOSER_VERSION = '3'
+COMPOSER_VERSION = '4'
 
 # The exact set of query parameters this app sends to Qloo. A provenance
 # panel may only show a parameter that appears here. Anything else is dropped
@@ -120,7 +120,7 @@ QLOO_CAPABILITIES = {
     'recommend': {
         'summary': 'Return places for a set of taste signals and a location.',
         'entityTypeField': 'target_type', 'acceptsLimit': True, 'latency': 'slow',
-        'required': ['target_type'], 'optional': ['signal_tags', 'signal_location', 'limit'],
+        'required': ['target_type'], 'optional': ['signal_tags', 'signal_location', 'limit', 'include_tags', 'include_tags_operator'],
     },
     'rank': {
         'summary': 'Rank a caller-supplied shortlist against one signal profile.',
@@ -193,10 +193,62 @@ def brief_tags_payload(business_type: str, audience: str) -> dict:
     return {'query': f'{business_type} {audience}'.strip(), 'limit': BRIEF_TAG_LIMIT}
 
 
-def brief_places_payload(tags: list[str], location: str) -> dict:
+def brief_category_payload(business_idea: str) -> Optional[dict]:
+    from .relevance import brief_family
+    category = {'bakery': 'bakery', 'coffee': 'coffee shop', 'records': 'record store',
+                'ceramics': 'pottery', 'fashion': 'clothing store', 'wellness': 'spa',
+                'hospitality': 'hotel', 'music': 'music venue', 'food': 'restaurant'}.get(
+                    brief_family('', business_idea, '')) if business_idea else None
+    return {'query': category, 'limit': 10} if category else None
+
+
+def select_category_tag(envelope: dict, query: str) -> Optional[str]:
+    """Choose an exact returned category label, preferring place/category families.
+
+    A natural language label can resolve to many unrelated tag families. An
+    exact returned identifier avoids that ambiguity without inventing a URN.
+    """
+    families = ('category', 'cuisine', 'product_category', 'service_type', 'product_service', 'genre', 'setting')
+    candidates = [row for row in QlooHarnessProvider.rows(envelope)
+                  if str(row.get('name', '')).casefold() == query.casefold()
+                  and isinstance(row.get('id'), str) and row['id'].startswith('urn:tag:')]
+    for family in families:
+        for row in candidates:
+            if row['id'].split(':')[2] == family:
+                return row['id']
+    return None
+
+
+def brief_places_payload(tags: list[str], location: str, business_idea: str = '') -> dict:
     """The recommend request for a brief's local places."""
-    return {'target_type': 'place', 'signal_tags': list(tags),
-            'signal_location': location, 'limit': BRIEF_PLACE_LIMIT}
+    payload = {'target_type': 'place', 'signal_tags': list(tags),
+               'signal_location': location, 'limit': BRIEF_PLACE_LIMIT}
+    category_payload = brief_category_payload(business_idea)
+    if category_payload:
+        held = get_store().get(canonical_key('find_tags', category_payload)) or {}
+        category_tag = select_category_tag(held, category_payload['query'])
+        # Unresolved labels fail closed in the official harness. Production
+        # callers resolve the category first; cache-only readers spend nothing.
+        payload['include_tags'] = [category_tag or category_payload['query']]
+        payload['include_tags_operator'] = 'intersection'
+    return payload
+
+
+def brief_places_retrieval_payload(tags: list[str], location: str, business_idea: str = '') -> dict:
+    """Reuse a smaller authentic held sample without broadening its constraints.
+
+    Earlier releases asked for five places. Keep that exact request/provenance
+    rather than copying its answer under a ten-place cache key or spending
+    another request merely to enlarge the sample.
+    """
+    payload = brief_places_payload(tags, location, business_idea)
+    store = get_store()
+    if store.get(canonical_key('recommend', payload)) is not None:
+        return payload
+    smaller = {**payload, 'limit': 5}
+    if store.get(canonical_key('recommend', smaller)) is not None:
+        return smaller
+    return payload
 
 
 def bridge_payload(tags: list[str], domain: str) -> dict:
@@ -297,11 +349,12 @@ def _pace_live_call() -> None:
     if gap <= 0:
         return
     with _PACE['lock']:
-        now = time.time()
-        start = max(now, _PACE['next'])
-        _PACE['next'] = start + gap
-    if start > now:
-        time.sleep(start - now)
+        now = time.monotonic()
+        if _PACE['next'] > now:
+            time.sleep(_PACE['next'] - now)
+        # A delayed wake must move the next slot, not make later callers
+        # catch up in a burst. Wall-clock adjustments cannot move this clock.
+        _PACE['next'] = time.monotonic() + gap
 
 
 class QlooHarnessProvider(CultureProvider):
@@ -588,7 +641,10 @@ class QlooHarnessProvider(CultureProvider):
         # cache that ignored those would serve the old concept metadata
         # against the new top-level project.
         cache_payload = {
+            'composerVersion': COMPOSER_VERSION,
+            'domains': config.bridge_domains() if domains is None else list(domains),
             'businessType': project.businessType,
+            'businessIdea': project.businessIdea,
             'audience': project.audience,
             'location': project.location,
             'budget': project.budget,
@@ -677,9 +733,19 @@ class QlooHarnessProvider(CultureProvider):
         if not matched_tags:
             raise QlooHarnessError('Qloo did not resolve any cultural tags for this audience. Refine the description and try again.', code='NO_EVIDENCE')
 
+        category_result = None
+        category_reused = False
         if recommendations is None:
+            category_payload = brief_category_payload(project.businessIdea)
+            if category_payload:
+                category_result, was_cached, requests = self.run_workflow_cached('find_tags', category_payload)
+                category_reused = was_cached
+                spent += requests
+                live = live or not was_cached
+                if not select_category_tag(category_result, category_payload['query']):
+                    raise QlooHarnessError('Qloo did not resolve an exact business category. Refine the business idea or use a broader category.', code='NEEDS_INPUT')
             recommendations, was_cached, requests = self.run_workflow_cached(
-                'recommend', brief_places_payload(matched_tags, project.location))
+                'recommend', brief_places_retrieval_payload(matched_tags, project.location, project.businessIdea))
             spent += requests
             live = live or not was_cached
             places_reused = was_cached
@@ -722,7 +788,7 @@ class QlooHarnessProvider(CultureProvider):
         store = get_store()
         stamps = [stamp for key in (
             canonical_key('find_tags', brief_tags_payload(project.businessType, project.audience)),
-            canonical_key('recommend', brief_places_payload(matched_tags, project.location)),
+            canonical_key('recommend', brief_places_retrieval_payload(matched_tags, project.location, project.businessIdea)),
         ) if (stamp := store.stored_at(key)) is not None]
         acquired = min(stamps) if stamps else time.time()
         acquired_at = datetime.fromtimestamp(acquired, timezone.utc).isoformat()
@@ -736,6 +802,18 @@ class QlooHarnessProvider(CultureProvider):
         if tags_reused:
             mark_reused(tag_trace)
         trace.append(tag_trace)
+        category_payload = brief_category_payload(project.businessIdea)
+        if category_payload:
+            if category_result is None:
+                category_result = store.get(canonical_key('find_tags', category_payload))
+                category_reused = True
+            if category_result:
+                category_trace = self._trace_event('resolve-business-category', 'find_tags', category_result,
+                                                   len(self.rows(category_result)))
+                category_trace.detail = 'Resolved business category to a returned Qloo tag; this is a category filter, not an audience seed.'
+                if category_reused:
+                    mark_reused(category_trace)
+                trace.append(category_trace)
 
         # The resolved tag rows, so each seed carries the name and the
         # popularity Qloo actually returned for it.
@@ -761,6 +839,8 @@ class QlooHarnessProvider(CultureProvider):
         if places_reused:
             mark_reused(entity_trace)
         trace.append(entity_trace)
+        if len(rows) < BRIEF_PLACE_LIMIT and places_reused:
+            entity_trace.detail = (entity_trace.detail or '') + f' Held sample: {len(rows)} returned places; no call was spent to enlarge it.'
 
         entity_rows: list[dict] = []
         for row in rows[:BRIEF_PLACE_LIMIT]:
@@ -785,7 +865,7 @@ class QlooHarnessProvider(CultureProvider):
                 priceLevel=properties.get('price_level') if isinstance(properties.get('price_level'), int) else None,
                 description=properties.get('short_description') or properties.get('description'),
                 image=image_url if isinstance(image_url, str) else None,
-                location=', '.join(part for part in (geocode.get('city'), geocode.get('admin1_region')) if part) or project.location,
+                location=', '.join(part for part in (geocode.get('city'), geocode.get('admin1_region')) if part) or None,
                 traceId=entity_trace.id,
             ))
             entity_rows.append({
@@ -799,6 +879,20 @@ class QlooHarnessProvider(CultureProvider):
                 'business_rating': properties.get('business_rating'),
                 'price_level': properties.get('price_level'),
             })
+
+        from .relevance import assess
+        for item, entity in zip((e for e in evidence if e.kind == 'entity'), entity_rows):
+            item.relevance = assess(
+                business_type=project.businessType, idea=project.businessIdea,
+                audience=project.audience, location=project.location, name=item.label,
+                description=item.description or '', returned_location=item.location or '',
+                has_identifier=bool(item.entityId))
+            entity['relevance'] = item.relevance
+        trace.append(TraceEvent(
+            id='trace-relevance', step='assess-reference-relevance', status='ok',
+            resultCount=sum(bool(e.get('relevance', {}).get('anchorEligible')) for e in entity_rows),
+            detail='CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.',
+            evidenceIds=[item.id for item in evidence if item.kind == 'entity']))
 
         # The presentation is derived from the evidence by rule, and attached
         # to it. The evidence itself is untouched.
@@ -852,11 +946,16 @@ class QlooHarnessProvider(CultureProvider):
                     description=properties.get('short_description') or properties.get('description'),
                     image=image_url if isinstance(image_url, str) else None,
                     traceId=event.id,
+                    relevance=assess(business_type=project.businessType, idea=project.businessIdea,
+                                     audience=project.audience, location=project.location,
+                                     name=name, description=properties.get('description') or '',
+                                     kind='crossdomain', has_identifier=bool(entity_id)),
                 ))
                 crossdomain.append({'evidence_id': evidence_id, 'name': name, 'domain': domain})
 
         composed = compose(
             business_type=project.businessType,
+            business_idea=project.businessIdea,
             audience=project.audience,
             location=project.location,
             budget=project.budget,
@@ -918,7 +1017,7 @@ class QlooHarnessProvider(CultureProvider):
                 + (f' The same audience tags also returned {len(crossdomain)} '
                    f'{"/".join(sorted({item["domain"] for item in crossdomain}))} reference'
                    f'{"s" if len(crossdomain) != 1 else ""} with no location, cited as audience-level '
-                   'cross-references.' if crossdomain else '')
+                   'cross-references, separate from direction-specific supporting evidence.' if crossdomain else '')
             )
         else:
             # Abstain rather than pad the answer with catalog concepts.
@@ -926,7 +1025,7 @@ class QlooHarnessProvider(CultureProvider):
             concept_mode = 'evidence_composed'
             notice = (
                 'Qloo returned live evidence for this audience and location, but it did not support '
-                'three distinct business directions. Refine the audience description and try again.'
+                'a relevant business direction. Specify the business idea, refine the audience, or try another location.'
             )
 
         response = GenerateResponse(
@@ -940,6 +1039,11 @@ class QlooHarnessProvider(CultureProvider):
                               expiresAt=expires_at,
                               cachedIn=None if live else 'server'),
         )
+        persistence_warning = store.stats().get('persistenceWarning')
+        if persistence_warning:
+            response.notice += ' ' + persistence_warning
+            response.trace.append(TraceEvent(id='trace-persistence', step='hold-evidence', status='error',
+                                             detail=persistence_warning))
         with self._lock:
             # A failed naming is not held. The Qloo evidence is still in the
             # evidence store, so the next run costs no Qloo request and can
@@ -1182,6 +1286,7 @@ class QlooHarnessProvider(CultureProvider):
 
         brief = {
             'businessType': project.businessType,
+            'businessIdea': project.businessIdea,
             'audience': project.audience,
             'location': project.location,
             'budget': project.budget,

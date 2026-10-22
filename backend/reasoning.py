@@ -94,6 +94,7 @@ def _prompt(request: EvidenceAnalysisRequest) -> str:
     return json.dumps({
         'project': {
             'businessType': request.project.businessType,
+            'businessIdea': request.project.businessIdea,
             'audience': request.project.audience[:240],
             'location': request.project.location[:160],
             'budget': request.project.budget[:120],
