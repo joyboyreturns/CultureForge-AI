@@ -374,9 +374,13 @@ def compose(
     pads the set with catalog concepts: a half-supported answer is more
     honest than a full one.
     """
-    from .relevance import assess, brief_family
+    from .relevance import assess, classify_brief
     tag_names = [_tag_name(tag.get('id', '')) for tag in tags]
-    family = brief_family(business_type, business_idea, audience)
+    family = classify_brief(business_type, business_idea, audience).family
+    if not family:
+        # An idea CultureForge cannot name is not widened to a broader category,
+        # so there is no reference to anchor a direction on.
+        return []
     eligible = []
     for entity in entities:
         relevance = entity.get('relevance') or assess(
