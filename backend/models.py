@@ -264,6 +264,21 @@ class ReportRequest(BaseModel):
     challenge: Optional[dict] = None
 
 
+class WorkspaceRequest(BaseModel):
+    """Provision a workspace (operator only)."""
+    model_config = ConfigDict(extra='forbid')
+    name: str = Field(min_length=1, max_length=120)
+    plan: str = Field(default='partner', max_length=40)
+
+
+class KeyRequest(BaseModel):
+    """Issue an API key for a workspace (operator only)."""
+    model_config = ConfigDict(extra='forbid')
+    scopes: list[Literal['read', 'write', 'export']] = Field(default_factory=lambda: ['read'], min_length=1, max_length=3)
+    #: Unix time in seconds, as the platform stores it.
+    expiresAt: Optional[float] = None
+
+
 class ProfileRequest(BaseModel):
     """Ask which demographic profile the evidence test would use."""
     audience: str = Field(min_length=2, max_length=240)

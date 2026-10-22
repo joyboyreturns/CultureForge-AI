@@ -27,3 +27,5 @@ services:
         sync: false
       - key: CULTUREFORGE_ALLOWED_ORIGINS
         sync: false
+      - key: CULTUREFORGE_KEY_SALT       # salts issued workspace keys; never the dev default
+        generateValue: true

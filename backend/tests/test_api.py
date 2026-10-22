@@ -221,3 +221,10 @@ def test_interest_cells_are_capped_at_what_the_harness_accepts(client):
     """The Qloo harness rejects more than 20 where_popular cells; ask for more and it is a 422 here."""
     response = client.post('/api/qloo/where-popular', json={'entity': 'x', 'within': 'Brooklyn', 'limit': 21})
     assert response.status_code == 422
+
+
+def test_operator_bodies_are_typed(client):
+    """A workspace or key request of the wrong shape is a 422, like every other body."""
+    assert client.post('/api/workspaces', json={'name': ''}).status_code == 422
+    assert client.post('/api/workspaces', json={'name': 'x', 'surprise': 1}).status_code == 422
+    assert client.post('/api/workspaces/w/keys', json={'scopes': ['admin']}).status_code == 422
