@@ -49,14 +49,9 @@
   <!-- Scroll progress indicator -->
   <div class="scroll-progress" aria-hidden="true"><i></i></div>
 
-  <!-- Full-viewport cover video background -->
+  <!-- Full-viewport background, drawn in code (landing-scene.js) -->
   <div class="bg">
-    <video class="bg-video" autoplay muted loop playsinline preload="metadata" poster="assets/cultureforge-poster.jpg">
-      <source
-        src="assets/cultureforge-background.mp4"
-        type="video/mp4"
-      />
-    </video>
+    <canvas class="bg-video" aria-hidden="true"></canvas>
     <!-- Cinematic grade: colour wash, vignette, and animated film grain -->
     <div class="bg-grade" aria-hidden="true"></div>
     <div class="bg-vignette" aria-hidden="true"></div>

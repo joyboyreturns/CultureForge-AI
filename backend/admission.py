@@ -116,8 +116,20 @@ def client_id(request) -> str:
     if trust is None:
         trust = _is_local_peer(peer)
     if trust:
+        # Cloudflare's own header names the visitor exactly; otherwise the last forwarded address.
+        connecting = request.headers.get('cf-connecting-ip', '').strip()
+        if connecting:
+            return connecting
         forwarded = request.headers.get('x-forwarded-for', '')
         last = forwarded.split(',')[-1].strip() if forwarded else ''
         if last:
             return last
     return peer
+
+
+#: Headers that a reverse proxy or tunnel adds. A request carrying one did not come from this machine.
+PROXY_HEADERS = ('x-forwarded-for', 'x-real-ip', 'cf-connecting-ip', 'forwarded', 'x-forwarded-host')
+
+
+def is_proxied(request) -> bool:
+    return any(request.headers.get(name) for name in PROXY_HEADERS)
