@@ -241,8 +241,12 @@ npm run dev                     # then open the printed URL at /studio/
 
 Or as the deployed container: `docker compose up --build`, then open
 `http://localhost:8000/studio/`. Pick a prepared brief; one marked **Evidence
-held** costs no Qloo request. `python3 scripts/prewarm.py` shows which are
-held, and `--live` fetches the rest.
+held** costs no Qloo request. The held evidence ships with the code in
+`shared/demoPack.json` (every prepared brief, its agent report and its evidence
+test, plus the briefs researched while building this), so a fresh clone or a
+new server opens them with no Qloo or model request.
+`python3 scripts/export_evidence_store.py` adds whatever your own store holds;
+`python3 scripts/prewarm.py` shows which briefs are held, and `--live` fetches the rest.
 
 ## Configuration
 

@@ -129,12 +129,24 @@ sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.ta
 - Power cuts and router restarts take the demo down. After one, confirm
   `docker compose ps` and run the smoke test.
 
-**7. Smoke-test, then prewarm** from any machine:
+**7. Smoke-test.** The held evidence travels with the code: `shared/demoPack.json`
+holds every Qloo answer, agent report, model naming and analysis the
+development machine held, under their original acquisition times, and the
+server loads it into `/data` at start-up as pinned entries. So every prepared
+brief, and every brief researched on the development machine, opens on the
+server from held evidence, with no Qloo or model request. Check it costs
+nothing (read-only):
 
 ```bash
 python3 scripts/smoke_test.py https://demo.example.com
-python3 scripts/prewarm.py --live --base-url https://demo.example.com   # spends quota, once per brief
+python3 scripts/prewarm.py --base-url https://demo.example.com          # lists held and cold briefs, spends nothing
 ```
+
+To ship more held evidence later, research the briefs on the development
+machine, then `python3 scripts/export_evidence_store.py`, commit
+`shared/demoPack.json`, push, and on the server `git pull && docker compose up -d --build`.
+A brief the pack does not hold can still be prewarmed on the server with
+`python3 scripts/prewarm.py --live --base-url https://demo.example.com` (spends quota, once per brief).
 
 Then record the URL in [`submission.json`](../submission.json).
 
