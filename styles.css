@@ -461,6 +461,7 @@ body.menu-open {
   display: inline-flex;
   align-items: center;
   --trust-size: clamp(36px, 4.5vw, 42px);
+  margin-top: clamp(22px, 4vh, 40px);
   margin-bottom: clamp(16px, 2.5vh, 26px);
   position: relative;
 }
