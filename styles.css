@@ -55,19 +55,14 @@ html, body {
 }
 
 /* --------------------------------------------------------------------------
-   Background Video (exact)
+   Background (a canvas drawn by landing-scene.js)
    -------------------------------------------------------------------------- */
 .bg {
   position: absolute;
   inset: 0;
   background-color: #000000;
-  /* The poster is painted on the container, not only on the video element.
-     Safari paints a video's own surface white until a frame is decoded, so a
-     paused or blocked video would otherwise flash a white panel over the
-     whole viewport. With the poster here, the fallback is always correct. */
-  background-image: url("assets/cultureforge-poster.jpg");
-  background-size: cover;
-  background-position: center center;
+  /* What shows before the canvas has drawn, or if it cannot: the same dusk, as a plain gradient. */
+  background-image: linear-gradient(180deg, #8b88bd 0%, #f1ebe3 30%, #eba6bd 44%, #e48f5f 52%, #3b2342 66%, #000000 100%);
   overflow: hidden;
   z-index: 0;
   pointer-events: none;

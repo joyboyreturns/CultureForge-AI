@@ -110,3 +110,38 @@ def test_an_identical_running_brief_is_joined_not_started_twice(monkeypatch):
     first = client.post('/api/research/runs', json=body).json()
     second = client.post('/api/research/runs', json=body).json()
     assert second['runId'] == first['runId'] and second['joined'] is True and len(created) == 1
+
+
+def _client():
+    return TestClient(main.app, raise_server_exceptions=False)
+
+
+def test_operator_routes_are_closed_to_visitors_arriving_through_a_local_tunnel(monkeypatch):
+    """cloudflared connects from 127.0.0.1, so 'only on this machine' must also mean 'not proxied'."""
+    monkeypatch.delenv('CULTUREFORGE_OPERATOR_TOKEN', raising=False)
+
+    class Local:
+        def __init__(self, headers):
+            self.headers, self.client = headers, type('C', (), {'host': '127.0.0.1'})()
+    main._require_operator(Local({}))                                       # the operator at the machine
+    for header in ('x-forwarded-for', 'cf-connecting-ip', 'x-real-ip'):
+        with pytest.raises(main.HTTPException) as refused:
+            main._require_operator(Local({header: '203.0.113.9'}))
+        assert refused.value.status_code == 403
+
+
+def test_each_visitor_to_a_public_demo_has_their_own_saved_explorations(monkeypatch):
+    monkeypatch.setenv('RUN_PROFILE', 'judging')
+    first = {'cf-connecting-ip': '8.8.8.8'}
+    second = {'cf-connecting-ip': '8.8.4.4'}
+
+    class Req:
+        def __init__(self, headers):
+            self.headers, self.client = headers, type('C', (), {'host': '127.0.0.1'})()
+    a, _ = main.resolve_workspace(Req(first))
+    b, _ = main.resolve_workspace(Req(second))
+    again, _ = main.resolve_workspace(Req(first))
+    assert a['id'] != b['id'] and a['id'] == again['id']
+    assert '8.8.8.8' not in a['name']          # the address itself is not stored
+    monkeypatch.setenv('RUN_PROFILE', 'dev')
+    assert main.resolve_workspace(Req(first))[0]['name'] == 'Local studio'
