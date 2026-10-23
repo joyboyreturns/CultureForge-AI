@@ -30,6 +30,11 @@
     test; it now says why, with ways forward, and offers only what can run.
   - After a scenario re-research the studio stayed on the old section; it opens on the new brief.
   - Same-named Qloo tags in the audience comparison are told apart by their family.
+- **Every prepared brief now supports a direction.** Four returned none from Qloo (vinyl in Chicago, slow
+  fashion in Los Angeles, a local stay in Lisbon, ceramics in Tokyo). They are replaced by a jazz club in
+  Chicago, a clothing boutique for streetwear fans in Los Angeles, a boutique hotel in Lisbon and an
+  independent bookshop in London, each researched once live and shipped in the pack with its agent report
+  and evidence test.
 - **README screenshots retaken from the live run**, including the agent workspace mid-run, the model analysis
   and an alternative anchor turning a contested verdict into a supported one.
 

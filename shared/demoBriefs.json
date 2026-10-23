@@ -28,15 +28,16 @@
       }
     },
     {
-      "id": "chicago-vinyl-retail",
-      "label": "A record shop for vinyl collectors",
+      "id": "chicago-jazz-club",
+      "label": "A jazz club for an intimate night out",
       "project": {
-        "businessType": "Retail",
-        "audience": "Independent vinyl collectors and record-store regulars",
+        "businessType": "Entertainment",
+        "businessIdea": "Jazz club",
+        "audience": "Jazz fans who want an intimate night out",
         "location": "Chicago, Illinois",
-        "budget": "Under $25k",
+        "budget": "$50k – $100k",
         "objectives": [
-          "Build a loyal community"
+          "Create a memorable experience"
         ]
       }
     },
@@ -54,24 +55,26 @@
       }
     },
     {
-      "id": "los-angeles-slow-fashion",
-      "label": "A store for slow-fashion loyalists",
+      "id": "los-angeles-streetwear-boutique",
+      "label": "A clothing boutique for streetwear fans",
       "project": {
         "businessType": "Retail",
-        "audience": "Sustainable fashion subscribers and slow-fashion loyalists",
+        "businessIdea": "Clothing boutique",
+        "audience": "Streetwear fans and sneaker collectors",
         "location": "Los Angeles, California",
-        "budget": "$25k – $50k",
+        "budget": "$50k – $100k",
         "objectives": [
           "Stand out in a crowded market"
         ]
       }
     },
     {
-      "id": "lisbon-local-stay",
-      "label": "A stay for travelers who want the local city",
+      "id": "lisbon-boutique-hotel",
+      "label": "A boutique hotel for design-conscious travellers",
       "project": {
         "businessType": "Hospitality",
-        "audience": "Tourists who want the city to feel local",
+        "businessIdea": "Boutique hotel",
+        "audience": "Design-conscious travellers who want a stay with character",
         "location": "Lisbon, Portugal",
         "budget": "$100k+",
         "objectives": [
@@ -93,15 +96,16 @@
       }
     },
     {
-      "id": "tokyo-ceramics-studio",
-      "label": "A shop for studio potters",
+      "id": "london-independent-bookshop",
+      "label": "An independent bookshop for book lovers",
       "project": {
         "businessType": "Retail",
-        "audience": "Independent ceramics makers and studio potters",
-        "location": "Tokyo, Japan",
+        "businessIdea": "Independent bookshop",
+        "audience": "Book lovers who browse independent bookshops",
+        "location": "London, United Kingdom",
         "budget": "$25k – $50k",
         "objectives": [
-          "Stand out in a crowded market"
+          "Build a loyal community"
         ]
       }
     },
