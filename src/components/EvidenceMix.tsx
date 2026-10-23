@@ -2,7 +2,7 @@ import type { Evidence } from '../contracts'
 
 const CLASSES: { id: string; label: string; note: string; color: string }[] = [
   { id: 'direct_business', label: 'Same kind of business', note: 'Returned text matches the requested category', color: 'var(--mix-direct, #2f7d5b)' },
-  { id: 'indirect_business', label: 'Related business', note: 'Adjacent category; cannot anchor a direction', color: 'var(--mix-indirect, #8aa84a)' },
+  { id: 'indirect_business', label: 'Related business', note: 'Adjacent category; cannot anchor a direction', color: 'var(--mix-indirect, #7243af)' },
   { id: 'cultural_attraction', label: 'Cultural attraction', note: 'Context only; not a competitor', color: 'var(--mix-attraction, #8a6fb3)' },
   { id: 'unverified_geography', label: 'Another location', note: 'Matches the category but not the requested city', color: 'var(--mix-geo, #d19a3a)' },
   { id: 'audience_affinity', label: 'Audience affinity', note: 'What this audience likes elsewhere; not local', color: 'var(--mix-affinity, #4f8fb8)' },

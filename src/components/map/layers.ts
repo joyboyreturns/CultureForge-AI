@@ -35,13 +35,13 @@ export function readOverlayColors(element: Element): OverlayColors {
   const style = getComputedStyle(element)
   const read = (n: string, fallback: string) => style.getPropertyValue(n).trim() || fallback
   return {
-    cellLow: read('--map-cell', '#8da875'),
+    cellLow: read('--map-cell', '#8b71ac'),
     cellHigh: read('--map-cell-hot', '#c0612b'),
     direct: read('--map-competitor', '#9b3a2f'),
     indirect: read('--map-indirect', '#c79a2e'),
     attraction: read('--map-attraction', '#3f5f8a'),
-    context: read('--map-context', '#18221b'),
-    ink: read('--text', '#18221b'),
+    context: read('--map-context', '#1c1723'),
+    ink: read('--text', '#1c1723'),
     surface: read('--surface', '#fbfbf5'),
   }
 }

@@ -122,14 +122,14 @@ function readColors(element: Element) {
   const style = getComputedStyle(element)
   const read = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback
   return {
-    background: read('--map-ground', '#f0f2e8'),
-    grid: read('--line', '#d4dbd1'),
-    cellLow: read('--map-cell', '#8da875'),
+    background: read('--map-ground', '#ece7f3'),
+    grid: read('--line', '#d5d0dc'),
+    cellLow: read('--map-cell', '#8b71ac'),
     cellHigh: read('--map-cell-hot', '#c0612b'),
-    stroke: read('--text', '#18221b'),
+    stroke: read('--text', '#1c1723'),
     competitor: read('--map-competitor', '#9b3a2f'),
     attraction: read('--map-attraction', '#3f5f8a'),
-    context: read('--map-context', '#18221b'),
+    context: read('--map-context', '#1c1723'),
   }
 }
 
