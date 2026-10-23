@@ -17,6 +17,7 @@ import { Clarification } from './components/Clarification'
 import { IntentSummary } from './components/IntentSummary'
 import { AgentTrace } from './components/AgentTrace'
 import { RunMonitor } from './components/RunMonitor'
+import { shouldUpgradeInitial } from './initialResearch'
 import { ExecutiveBrief } from './components/ExecutiveBrief'
 import { RunExpectation, RUN_TIME_NOTE } from './components/RunExpectation'
 import { TasteSeeds } from './components/TasteSeeds'
@@ -124,6 +125,7 @@ export default function App() {
   const [parked, setParked] = useState<{ runId: string; project: ProjectRequest } | null>(null)
   // The project id of an initial answer opened while its run is still going; cleared when the full results open.
   const [partialId, setPartialId] = useState<string | null>(null)
+  const openedInitialRuns = useRef(new Set<string>())
   useEffect(() => {
     const active = readStored<{ runId: string; project: ProjectRequest } | null>('cultureforge-active-run', null)
     if (active?.runId && active.project) { setForm(active.project); setResearchRunId(active.runId); setScreen('progress') }
@@ -357,6 +359,16 @@ export default function App() {
    * watch its actual steps.
    */
   async function beginResearch(project: ProjectRequest = form) {
+    if (project.audience.trim().length < 2) {
+      setProviderError('Describe who this is for, using at least two characters beyond spaces.')
+      document.getElementById('brief-audience')?.focus()
+      return
+    }
+    if (project.location.trim().length < 2) {
+      setProviderError('Enter a city or location, using at least two characters beyond spaces.')
+      document.getElementById('brief-location')?.focus()
+      return
+    }
     setSeedBusy(true); setProviderError('')
     try {
       const resolution = await resolveTaste(project, project.audience)
@@ -398,6 +410,8 @@ export default function App() {
   // Opening a finished run that was followed from another screen. The run on
   // the workspace, if any, keeps going where it was.
   function openParked(data: GenerateResponse) {
+    const active = readStored<{ runId: string } | null>('cultureforge-active-run', null)
+    if (active?.runId === parked?.runId) writeStored('cultureforge-active-run', null)
     setPartialId(null)
     rememberLiveResult(data.project, data)
     setResult(data); setSelected(data.concepts[0]?.id ?? '01'); setParked(null); setScreen('results')
@@ -406,9 +420,18 @@ export default function App() {
   // The initial rule composition, opened before the agent has finished. It is not remembered in this
   // browser (it is not the finished answer); the run keeps going and the monitor offers the full results.
   function openPartial(data: GenerateResponse) {
-    if (researchRunId) setParked({ runId: researchRunId, project: form })
+    if (researchRunId) {
+      openedInitialRuns.current.add(researchRunId)
+      setParked({ runId: researchRunId, project: form })
+    }
     setResearchRunId(null); setPartialId(data.projectId)
-    setResult(data); setSelected(data.concepts[0]?.id ?? '01'); setScreen('results')
+    setResult(data); setSelected(data.concepts[0]?.id ?? '01')
+    setResultsView(data.concepts.length ? 'brief' : 'places'); setScreen('results')
+  }
+
+  function watchParked() {
+    if (!parked) return
+    setForm(parked.project); setResearchRunId(parked.runId); setParked(null); setScreen('progress')
   }
 
   function onRunClarify(ask: ClarificationAsk) {
@@ -644,16 +667,16 @@ export default function App() {
         {screen === 'create' && clarification && <Clarification ask={clarification}
           onUseIdea={(value) => { const next = {...form, businessIdea: value}; setForm(next); setClarification(null); beginResearch(next) }}
           onUseLocation={(value) => { const next = {...form, location: value}; setForm(next); setClarification(null); beginResearch(next) }}
-          onEditField={(field) => { setClarification(null); window.setTimeout(() => document.getElementById(field === 'location' ? 'brief-location' : 'brief-idea')?.focus(), 0) }}/>}
+          onEditField={(field) => { setClarification(null); window.setTimeout(() => document.getElementById(field === 'location' ? 'brief-location' : field === 'audience' ? 'brief-audience' : 'brief-idea')?.focus(), 0) }}/>}
         {screen === 'progress' && (researchRunId
-          ? <Progress project={form} runId={researchRunId} onOpenPartial={openPartial} onComplete={onRunComplete} onClarify={onRunClarify} onGiveUp={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create') }} onRetry={() => { writeStored('cultureforge-active-run', null); void confirmSeeds(seedSelection ?? []) }} onChangeLocation={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create'); window.setTimeout(() => document.getElementById('brief-location')?.focus(), 50) }}/>
+          ? <Progress project={form} runId={researchRunId} autoOpenPartial={!openedInitialRuns.current.has(researchRunId)} onOpenPartial={openPartial} onComplete={onRunComplete} onClarify={onRunClarify} onGiveUp={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create') }} onRetry={() => { writeStored('cultureforge-active-run', null); void confirmSeeds(seedSelection ?? []) }} onChangeLocation={() => { writeStored('cultureforge-active-run', null); setResearchRunId(null); setScreen('create'); window.setTimeout(() => document.getElementById('brief-location')?.focus(), 50) }}/>
           : <Progress project={form}/>)}
         {(screen === 'results' || screen === 'compare') && <StudioNav
           back={screen === 'compare' ? { label: 'Back to concept studio', go: () => navigate('results') } : { label: 'Back to overview', go: () => navigate('home') }}
           overview={screen === 'compare' ? () => navigate('home') : undefined}
           switchIdea={() => navigate('create')}
           examples={() => document.getElementById('demo-showcase-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}/>}
-        {screen === 'results' && result && partialId === result.projectId && !result.agent && <div className="partial-banner panel" role="status"><strong>Initial answer.</strong> This is the rule composition from the places Qloo has returned so far. The agent is still asking Qloo further questions about it; the notice at the bottom of the screen opens the finished results, which can differ.</div>}
+        {screen === 'results' && result && partialId === result.projectId && !result.agent && <div className="partial-banner panel" role="status"><strong>First evidence is ready · research continues in the background.</strong> This is an initial answer from the Qloo records received so far. Further research and optional model analysis are still running. The status card shows real progress. This view updates automatically when the full report is ready; its conclusions may change.</div>}
         {screen === 'results' && (result
           ? <><Results view={resultsView} onView={setResultsView} result={result} selected={selected} select={setSelected} saved={saved} save={save} savedOnly={savedOnly} setSavedOnly={setSavedOnly} open={setModal} compare={() => navigate('compare')} exportBrief={exportBrief} onInspect={setProvenanceId} onShare={shareThisExploration} shareUrl={shareUrl} onNotebook={() => setNotebookOpen(true)} onInvestigate={setInvestigating} onEvidenceDependence={() => setDependenceOpen(true)} challenge={challenge} challenging={challenging} challengeError={challengeError} onChallenge={() => testDirections()} onReanchor={(directionId, anchorEntityId) => testDirections(directionId, anchorEntityId)} onCloseChallenge={() => setChallenge(null)} usage={usage} onNewBrief={() => navigate('create')} challengeHistory={challengeHistory} challengeSavedAt={challengeSavedAt} analysis={analysis} analysisBusy={analysisBusy} analysisError={analysisError} onAnalyze={analyzeCurrentEvidence} dependenceSummary={dependenceSummary} onExportPdf={exportPdf} onApplyRebuild={(next, label) => { if (result) setMapUndo({ original: result, label }); applyRebuild(next, label) }} mapUndo={mapUndo ? { label: mapUndo.label, run: () => { restoreBaseline(mapUndo.original); setMapUndo(null) } } : null} profileControl={<ProfileChooser proposal={profileProposal} chosen={profileChoice} onChoose={setProfileChoice} testedWith={challenge?.profile.demographic}/>}/><DemoShowcase onRun={(project) => create(project)} title="Explore another example"/></>
           : <NoExploration start={() => navigate('create')} runExample={(project) => create(project)}/>)}
@@ -674,8 +697,14 @@ export default function App() {
       return <div className="run-dock" data-tour-skip>
         {parked && <RunMonitor key={parked.runId} runId={parked.runId} project={parked.project} earlier={Boolean(researchRunId)}
           onOpen={openParked}
+          onReady={(data) => {
+            if (shouldUpgradeInitial(result, data, partialId, screen === 'results')) {
+              openParked(data)
+              setToast('Research complete — full evidence and report ready.')
+            }
+          }}
           onClarify={(ask) => { setForm(parked.project); setClarification(ask); setParked(null); setScreen('create') }}
-          onWatch={() => setParked(null)}
+          onWatch={watchParked}
           onDismiss={() => setParked(null)}/>}
         {foreground && <RunMonitor key={foreground.runId} runId={foreground.runId} project={foreground.project}
           onOpen={onRunComplete} onClarify={onRunClarify}
@@ -744,14 +773,23 @@ function Home({ start, demo, explore, openExploration, runExample }: { start: ()
 
 const SHOWCASE = ['tokyo-morning-bakery', 'paris-ice-cream', 'melbourne-specialty-coffee']
 function DemoShowcase({ onRun, title }: { onRun: (project: ProjectRequest) => void; title?: string }) {
-  const demos = SHOWCASE.map((id) => demoBriefs.briefs.find((brief) => brief.id === id)).filter((brief): brief is NonNullable<typeof brief> => Boolean(brief))
+  const [category, setCategory] = useState('All')
+  const categories = ['All', ...new Set(demoBriefs.briefs.map((brief) => brief.project.businessType))]
+  const ordered = [...SHOWCASE, 'berlin-plant-based-trial', 'mexico-city-bookshop-cafe', 'vienna-plant-based-trial']
+  const demos = [...demoBriefs.briefs].sort((a, b) => {
+    const rank = (id: string) => ordered.includes(id) ? ordered.indexOf(id) : ordered.length
+    return rank(a.id) - rank(b.id)
+  }).filter((brief) => category === 'All' || brief.project.businessType === category)
   return <section className="demo-showcase" aria-labelledby="demo-showcase-title">
     <div className="section-heading"><div><Eyebrow>SEE IT WORK</Eyebrow><h2 id="demo-showcase-title">{title ?? <>Try a real example. <em>One tap.</em></>}</h2></div></div>
+    <p>Browse {demoBriefs.briefs.length} trial briefs across five business categories. Inspect the evidence and its limits, then try your own idea.</p>
+    <div className="showcase-filters" role="group" aria-label="Filter trial ideas by business category">{categories.map((item) => <button type="button" key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div>
     <ul>{demos.map((brief) => <li key={brief.id}><button type="button" onClick={() => onRun(brief.project as ProjectRequest)} aria-label={`Open the demo: ${brief.label}, ${brief.project.location}`}>
       <span className="demo-place"><MapPin size={14}/>{brief.project.location}</span>
-      <strong>{brief.project.businessIdea}</strong>
+      <strong>{brief.project.businessIdea ?? brief.label}</strong>
       <span className="demo-audience">{brief.project.audience}</span>
-      <span className="demo-includes">Street map · Evidence · Remove a place</span>
+      {'trialNote' in brief && <span className="demo-audience">{brief.trialNote}</span>}
+      <span className="demo-includes">{brief.project.businessType} · Evidence · Remove a place</span>
       <span className="demo-go">Open demo <ArrowUpRight size={15}/></span>
     </button></li>)}</ul>
   </section>
@@ -793,12 +831,12 @@ function Create({ form, setForm, submit, runExample, error, back }: { form: Proj
   const allGoals = [...new Set([...objectives, ...form.objectives])]
   function toggle(goal: string) { setForm({...form, objectives: form.objectives.includes(goal) ? form.objectives.filter(value => value !== goal) : [...form.objectives, goal]}) }
   const add = () => { const value=custom.trim(); if(value && !form.objectives.includes(value)) toggle(value); setCustom('') }
-  return <div className="create-page" data-tour="brief"><button className="back-link" onClick={back}><ArrowLeft size={14}/> Back to overview</button><div className="page-heading"><div><Eyebrow>THE BEGINNING OF SOMETHING GOOD</Eyebrow><h1>Tell us what you’re<br/><em>dreaming of.</em></h1><p>You bring the ambition. We’ll find the cultural connections.</p></div><span className="page-index">EXPLORATION / 001</span></div><div className="create-layout"><form className="creation-form panel" onSubmit={event => { event.preventDefault(); submit() }}>{error && <div className="api-error" role="alert">{error}</div>}<div className="form-section"><div className="form-section-title"><span>01</span><div><h3>What are you building?</h3><p>Choose the world your idea belongs in.</p></div></div><label className="field"><span>Business idea</span><input id="brief-idea" maxLength={160} value={form.businessIdea ?? ''} onChange={event => setForm({...form, businessIdea: event.target.value})} placeholder="e.g. Artisan bakery, record shop, ceramics studio"/><small>Name one business (café, bakery, bookshop, ice cream parlour, record shop) and a city. Qloo covers large cities best; a niche idea in a small city may come back as “not enough evidence”, and the page will say why. A new idea takes about 2–3 minutes; the first directions appear in seconds. Availability and demand still need testing.</small></label><div className="business-types">{types.map(({label,icon:Icon})=><button type="button" className={form.businessType===label?'business-tile selected':'business-tile'} aria-pressed={form.businessType===label} key={label} onClick={()=>setForm({...form,businessType:label})}><Icon size={20}/><span>{label}</span>{form.businessType===label&&<Check size={12}/>}</button>)}</div></div><div className="form-section"><div className="form-section-title"><span>02</span><div><h3>Who do you want to move?</h3><p>Describe the people at the heart of your idea.</p></div></div><label className="field"><span>Target audience</span><div className="input-with-icon"><Users size={16}/><input required minLength={2} maxLength={240} value={form.audience} onChange={event=>setForm({...form,audience:event.target.value})}/></div></label><div className="preset-row"><span>TRY</span>{audiencePresets.slice(0,3).map(preset=><button type="button" key={preset} onClick={()=>setForm({...form,audience:preset})}>{preset}<Plus size={10}/></button>)}</div><div className="field-grid"><label className="field"><span>Location</span><div className="input-with-icon"><MapPin size={16}/><input id="brief-location" required minLength={2} maxLength={160} value={form.location} onChange={event=>setForm({...form,location:event.target.value})}/></div></label><label className="field"><span>Starting budget</span><select value={form.budget} onChange={event=>setForm({...form,budget:event.target.value})}>{['Under $25k','$25k – $50k','$50k – $100k','$100k+','Still figuring it out'].map(budget=><option key={budget}>{budget}</option>)}</select></label></div></div><div className="form-section"><div className="form-section-title"><span>03</span><div><h3>What would success feel like?</h3><p>Select the things that matter to you.</p></div></div><div className="goal-grid">{allGoals.map(goal=><button type="button" className={`goal-chip ${form.objectives.includes(goal)?'selected':''}`} aria-pressed={form.objectives.includes(goal)} key={goal} onClick={()=>toggle(goal)}><span>{form.objectives.includes(goal)?<Check size={12}/>:<Plus size={12}/>}</span>{goal}</button>)}</div><div className="custom-goal"><input aria-label="Custom objective" placeholder="Something else on your mind?" value={custom} onChange={event=>setCustom(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();add()}}}/><button type="button" onClick={add} disabled={!custom.trim()} aria-label="Add custom objective"><Plus size={15}/></button></div></div><div className="form-submit-row"><span><ShieldCheck size={14}/> Your vision stays yours.</span><small className="submit-time-note">{RUN_TIME_NOTE}</small><Button type="submit">Find my cultural edge <ArrowUpRight size={17}/></Button></div></form><aside className="creation-aside"><ExamplePicker onRun={runExample}/><div className="brief-preview panel"><span className="small-cap"><span className="orange-dot"/> YOUR EXPLORATION, AT A GLANCE</span><div className="brief-art"><Fingerprint size={52} strokeWidth={1}/><span/><span/></div><h3>A little context.<br/><em>A lot of possibility.</em></h3><dl><div><dt>Business</dt><dd>{form.businessIdea || form.businessType}</dd></div><div><dt>Location</dt><dd>{form.location || 'Your neighborhood'}</dd></div><div><dt>Budget</dt><dd>{form.budget}</dd></div></dl><div className="brief-deliverables"><span><Check size={13}/> Up to 3 concept directions</span><span><Check size={13}/> Cultural signals & evidence</span><span><Check size={13}/> Audience scenario comparison</span></div></div><div className="curiosity-note"><Lightbulb size={18}/><p><strong>Get specific. Stay curious.</strong>The most interesting connections often start with the smallest details.</p></div></aside></div></div>
+  return <div className="create-page" data-tour="brief"><button className="back-link" onClick={back}><ArrowLeft size={14}/> Back to overview</button><div className="page-heading"><div><Eyebrow>THE BEGINNING OF SOMETHING GOOD</Eyebrow><h1>Tell us what you’re<br/><em>dreaming of.</em></h1><p>You bring the ambition. We’ll find the cultural connections.</p></div><span className="page-index">EXPLORATION / 001</span></div><div className="create-layout"><form className="creation-form panel" onSubmit={event => { event.preventDefault(); submit() }}>{error && <div className="api-error" role="alert">{error}</div>}<div className="form-section"><div className="form-section-title"><span>01</span><div><h3>What are you building?</h3><p>Choose the world your idea belongs in.</p></div></div><label className="field"><span>Business idea</span><input id="brief-idea" maxLength={160} value={form.businessIdea ?? ''} onChange={event => setForm({...form, businessIdea: event.target.value})} placeholder="e.g. Artisan bakery, record shop, ceramics studio"/><small>Name one business (café, bakery, bookshop, ice cream parlour, record shop) and a city. Qloo covers large cities best; a niche idea in a small city may come back as “not enough evidence”, and the page will say why. First evidence opens automatically when available, while research continues in the background. Availability and demand still need testing.</small></label><div className="business-types">{types.map(({label,icon:Icon})=><button type="button" className={form.businessType===label?'business-tile selected':'business-tile'} aria-pressed={form.businessType===label} key={label} onClick={()=>setForm({...form,businessType:label})}><Icon size={20}/><span>{label}</span>{form.businessType===label&&<Check size={12}/>}</button>)}</div></div><div className="form-section"><div className="form-section-title"><span>02</span><div><h3>Who do you want to move?</h3><p>Describe the people at the heart of your idea.</p></div></div><label className="field"><span>Target audience</span><div className="input-with-icon"><Users size={16}/><input id="brief-audience" required minLength={2} maxLength={240} value={form.audience} onChange={event=>setForm({...form,audience:event.target.value})}/></div></label><div className="preset-row"><span>TRY</span>{audiencePresets.slice(0,3).map(preset=><button type="button" key={preset} onClick={()=>setForm({...form,audience:preset})}>{preset}<Plus size={10}/></button>)}</div><div className="field-grid"><label className="field"><span>Location</span><div className="input-with-icon"><MapPin size={16}/><input id="brief-location" required minLength={2} maxLength={160} value={form.location} onChange={event=>setForm({...form,location:event.target.value})}/></div></label><label className="field"><span>Starting budget</span><select value={form.budget} onChange={event=>setForm({...form,budget:event.target.value})}>{['Under $25k','$25k – $50k','$50k – $100k','$100k+','Still figuring it out'].map(budget=><option key={budget}>{budget}</option>)}</select></label></div></div><div className="form-section"><div className="form-section-title"><span>03</span><div><h3>What would success feel like?</h3><p>Select the things that matter to you.</p></div></div><div className="goal-grid">{allGoals.map(goal=><button type="button" className={`goal-chip ${form.objectives.includes(goal)?'selected':''}`} aria-pressed={form.objectives.includes(goal)} key={goal} onClick={()=>toggle(goal)}><span>{form.objectives.includes(goal)?<Check size={12}/>:<Plus size={12}/>}</span>{goal}</button>)}</div><div className="custom-goal"><input aria-label="Custom objective" placeholder="Something else on your mind?" value={custom} onChange={event=>setCustom(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();add()}}}/><button type="button" onClick={add} disabled={!custom.trim()} aria-label="Add custom objective"><Plus size={15}/></button></div></div><div className="form-submit-row"><span><ShieldCheck size={14}/> Your vision stays yours.</span><small className="submit-time-note">{RUN_TIME_NOTE}</small><Button type="submit">Find my cultural edge <ArrowUpRight size={17}/></Button></div></form><aside className="creation-aside"><ExamplePicker onRun={runExample}/><div className="brief-preview panel"><span className="small-cap"><span className="orange-dot"/> YOUR EXPLORATION, AT A GLANCE</span><div className="brief-art"><Fingerprint size={52} strokeWidth={1}/><span/><span/></div><h3>A little context.<br/><em>A lot of possibility.</em></h3><dl><div><dt>Business</dt><dd>{form.businessIdea || form.businessType}</dd></div><div><dt>Location</dt><dd>{form.location || 'Your neighborhood'}</dd></div><div><dt>Budget</dt><dd>{form.budget}</dd></div></dl><div className="brief-deliverables"><span><Check size={13}/> Up to 3 concept directions</span><span><Check size={13}/> Cultural signals & evidence</span><span><Check size={13}/> Audience scenario comparison</span></div></div><div className="curiosity-note"><Lightbulb size={18}/><p><strong>Get specific. Stay curious.</strong>The most interesting connections often start with the smallest details.</p></div></aside></div></div>
 }
-function Progress({project,runId,onComplete,onClarify,onGiveUp,onRetry,onChangeLocation,onOpenPartial}:{project:ProjectRequest;runId?:string;onComplete?:(result:GenerateResponse)=>void;onClarify?:(ask:ClarificationAsk)=>void;onGiveUp?:()=>void;onRetry?:()=>void;onChangeLocation?:()=>void;onOpenPartial?:(result:GenerateResponse)=>void}) {
+function Progress({project,runId,onComplete,onClarify,onGiveUp,onRetry,onChangeLocation,onOpenPartial,autoOpenPartial}:{project:ProjectRequest;runId?:string;autoOpenPartial?:boolean;onComplete?:(result:GenerateResponse)=>void;onClarify?:(ask:ClarificationAsk)=>void;onGiveUp?:()=>void;onRetry?:()=>void;onChangeLocation?:()=>void;onOpenPartial?:(result:GenerateResponse)=>void}) {
   // The steps are lit by the agent's real events, not by a timer. A run that
   // takes twenty-five seconds must not show every step as complete.
-  return <div className="progress-page"><span className="small-cap"><span className="orange-dot pulse"/> AGENT WORKSPACE</span><div className="agent-orbit"><div className="orbit-outer"/><div className="orbit-middle"/><span className="orbit-icon"><Waves size={35}/></span><span className="satellite sat-one"><Coffee size={17}/></span><span className="satellite sat-two"><AudioLines size={17}/></span><span className="satellite sat-three"><Leaf size={17}/></span></div><h1>Curiosity is<br/><em>connecting the dots.</em></h1><p>Completed evidence appears here as it arrives. Optional analysis continues in the background.</p><div className="progress-context"><span><BusinessIcon type={project.businessType} size={13}/>{project.businessType}</span><span><MapPin size={13}/>{project.location}</span></div><RunExpectation runId={runId}/>{runId&&<AgentTrace key={runId} runId={runId} onComplete={onComplete as (r:GenerateResponse)=>void} onClarify={onClarify as (a:ClarificationAsk)=>void} onGiveUp={onGiveUp} onRetry={onRetry} onChangeLocation={onChangeLocation} onOpenPartial={onOpenPartial}/>}<span className="progress-footnote"><ShieldCheck size={13}/> {runId?'A real research run. The trace shows retrieval, composition, and any bounded model steps that actually ran.':'Waiting for the backend. The answer comes back with the Qloo calls that produced it, and what it cost.'}</span></div>
+  return <div className="progress-page"><span className="small-cap"><span className="orange-dot pulse"/> AGENT WORKSPACE</span><div className="agent-orbit"><div className="orbit-outer"/><div className="orbit-middle"/><span className="orbit-icon"><Waves size={35}/></span><span className="satellite sat-one"><Coffee size={17}/></span><span className="satellite sat-two"><AudioLines size={17}/></span><span className="satellite sat-three"><Leaf size={17}/></span></div><h1>Curiosity is<br/><em>connecting the dots.</em></h1><p>Completed evidence appears here as it arrives. Optional analysis continues in the background.</p><div className="progress-context"><span><BusinessIcon type={project.businessType} size={13}/>{project.businessType}</span><span><MapPin size={13}/>{project.location}</span></div><RunExpectation runId={runId}/>{runId&&<AgentTrace key={runId} runId={runId} onComplete={onComplete as (r:GenerateResponse)=>void} onClarify={onClarify as (a:ClarificationAsk)=>void} onGiveUp={onGiveUp} onRetry={onRetry} onChangeLocation={onChangeLocation} onOpenPartial={onOpenPartial} autoOpenPartial={autoOpenPartial}/>}<span className="progress-footnote"><ShieldCheck size={13}/> {runId?'A real research run. The trace shows retrieval, composition, and any bounded model steps that actually ran.':'Waiting for the backend. The answer comes back with the Qloo calls that produced it, and what it cost.'}</span></div>
 }
 
 /**

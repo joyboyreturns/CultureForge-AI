@@ -636,12 +636,51 @@ import { startScene } from './landing-scene.js';
   // ---------------------------------------------------------------------------
   // Lifecycle Initialization
   // ---------------------------------------------------------------------------
+  function initPilotBrief() {
+    const form = document.querySelector('[data-pilot-form]');
+    if (!form) return;
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const fields = new FormData(form);
+      const value = (key) => String(fields.get(key) ?? '').trim();
+      const status = form.querySelector('[data-pilot-status]');
+      if (['team', 'idea', 'decision', 'success'].some((key) => !value(key))) {
+        status.textContent = 'Complete each field with a team, idea, decision and success criteria.';
+        return;
+      }
+      const text = [
+        '# CultureForge design partner pilot — discussion draft', '',
+        'Prepared locally. Not a booking, purchase, customer commitment or Qloo evidence.', '',
+        `Team: ${value('team')}`, `First idea and city: ${value('idea')}`, '',
+        `Decision to support: ${value('decision')}`, `Buyer-defined success and stop criteria: ${value('success')}`, '',
+        '## Proposed offer — unvalidated pricing hypothesis',
+        '$1,500 USD for 30 days, one team and five scoped briefs. One brief means one idea, one audience and one city.',
+        'Deliverables: five cited evidence briefs, one concept review and a field experiment plan.',
+        'Agree refresh, comparison, support and usage limits before kickoff. Commercial Qloo permission and costs must be confirmed before accepting payment.', '',
+        '## Review at the end',
+        'Record baseline and assisted research time, edits before a real review, response to contested results, and willingness to pay to continue.',
+        'Success is a buyer using the brief in a real concept review and choosing to continue on agreed paid terms. No outcome is promised.', '',
+        '## Before kickoff',
+        'Name an accountable owner, confirm the data licence, agree the five briefs and the acceptance criteria, and arrange the review date.',
+        'Cultural fit is limited to the retrieved sample. This is not a forecast of demand, revenue, rent, footfall or willingness to pay.',
+      ].join('\n');
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'cultureforge-pilot-brief.md';
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = 'Pilot brief downloaded. Keep it for your team review; no inquiry was sent and no booking was made.';
+    });
+  }
+
   function init() {
     initStatsObserver();
     initMobileMenu();
     initLandingNavigation();
     initPrototypeJourney();
     initLivePulse();
+    initPilotBrief();
     initFramerMotionEnhancements();
     initBackgroundVideo();
     initCinematic();

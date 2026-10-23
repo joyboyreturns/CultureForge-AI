@@ -47,6 +47,7 @@ from .providers import (QLOO_ENTITY_TYPES, QlooHarnessError, QlooHarnessProvider
 
 PROMPT_VERSION = 'agent-loop-3'
 MAX_STEPS = 8
+MAX_CONSECUTIVE_REJECTIONS = 3
 #: Seconds one model request may take. A live run showed the configured model
 #: answering a low-effort planning request in 5 to 29 seconds, so a 45-second
 #: limit sometimes ended the loop on a plan that was merely slow.
@@ -194,7 +195,9 @@ def build_request(tool: str, arguments: dict, observed: Observed, response: Gene
             raise ToolRejected(f'recommend target_type must be one of {", ".join(QLOO_ENTITY_TYPES)}.')
         tags = _ids(arguments.get('signal_tags'), observed.tags, 1, 3, 'signal_tags')
         payload: dict = {'target_type': target, 'signal_tags': tags, 'limit': 10}
-        if target == 'place' or arguments.get('use_location'):
+        if target == 'place':
+            payload['filter_location'] = project.location
+        elif arguments.get('use_location'):
             payload['signal_location'] = project.location
         return 'recommend', payload
     if tool == 'rank':
@@ -205,6 +208,11 @@ def build_request(tool: str, arguments: dict, observed: Observed, response: Gene
         return 'rank', {'options': options, 'option_type': 'place',
                         'signal_location': project.location, 'demographic': demographic}
     if tool == 'compare_audiences':
+        for group in ('group_a', 'group_b'):
+            values = arguments.get(group)
+            if isinstance(values, list) and any(isinstance(value, str) and value.startswith('urn:tag:') for value in values):
+                raise ToolRejected('compare_audiences requires two groups of observed place entity IDs, '
+                                   'not audience tag URNs. Choose returned places or another tool.')
         group_a = _ids(arguments.get('group_a'), observed.entities, 1, 10, 'group_a')
         group_b = _ids(arguments.get('group_b'), observed.entities, 1, 10, 'group_b')
         if set(group_a) & set(group_b):
@@ -426,6 +434,7 @@ def _loop(response: GenerateResponse, tag_envelope: dict, recommend_envelope: di
     steps: list[AgentStep] = []
     walled = False
     model_calls = 0
+    rejected_streak = 0
     stopping = f'The loop reached its limit of {step_limit} steps.'
 
     for index in range(1, step_limit + 1):
@@ -485,6 +494,12 @@ def _loop(response: GenerateResponse, tag_envelope: dict, recommend_envelope: di
         emit(_event(f'agent-step-{index}', step.status if step.status != 'rejected' else 'skipped',
                     f'{plan.tool}: {plan.question or plan.reason} — {step.detail}', workflow=plan.tool,
                     result_count=step.resultCount))
+        rejected_streak = rejected_streak + 1 if step.status == 'rejected' else 0
+        if rejected_streak >= MAX_CONSECUTIVE_REJECTIONS:
+            stopping = ('The agent proposed three invalid tool requests in a row, so planning stopped. '
+                        'The analysis uses only evidence already obtained.')
+            emit(_event('agent-plan', 'skipped', stopping))
+            break
 
     tool_steps = [step for step in steps if step.tool != 'finish' and step.status == 'ok']
     if walled and not tool_steps:

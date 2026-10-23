@@ -13,7 +13,7 @@
   },
   "brief_places_payload": {
     "limit": 10,
-    "signal_location": "Brooklyn, New York",
+    "filter_location": "Brooklyn, New York",
     "signal_tags": [
       "urn:tag:a",
       "urn:tag:b"

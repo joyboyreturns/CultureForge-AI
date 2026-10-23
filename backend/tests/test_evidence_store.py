@@ -269,3 +269,11 @@ def test_a_location_with_no_places_is_not_offered(store):
     store.put(canonical_key('recommend', {'signal_location': 'Greenpoint, Brooklyn'}), envelope)
 
     assert known_location(['urn:tag:x:qloo:y']) is None
+
+
+def test_result_location_filters_are_available_as_recovery_suggestions(store):
+    from backend.evidence_store import known_location
+    envelope = {'operation': 'recommend', 'results': [{'name': 'A real reference'}],
+        'query_intent': {'signals': {'tags': ['urn:tag:food']}, 'filters': {'location': 'Berlin, Germany'}}}
+    store.put(canonical_key('recommend', {'filter_location': 'Berlin, Germany'}), envelope)
+    assert known_location(['urn:tag:food']) == 'Berlin, Germany'

@@ -15,6 +15,14 @@ willingness to pay.
 
 **A prototype.** Where Qloo doesn't have enough data for an idea in a place, CultureForge says so plainly instead of inventing an answer.
 
+**Try it in the first minute:** choose from **14 trial briefs** or enter your own
+idea. The first evidence-backed answer opens automatically as soon as it is
+available. A floating card follows the continuing research; when it finishes,
+the preview updates to the full report with a completion message.
+London's fresh vegan-restaurant test produced its initial answer in about
+**11 seconds**. This is a measured example, not a latency guarantee; the full
+analysis continues in the background. See the [verification record](docs/JUDGE_SCENARIOS.md).
+
 ![The landing page: put the idea on trial](docs/screenshots/landing.jpg)
 
 ## What it does, at a glance
@@ -27,18 +35,23 @@ willingness to pay.
 | **Evidence that can say no** | Directions are tested against the places Qloo returned. A direction can come out *supported*, *unproven* or *contested*, and the order can change. |
 | **Refresh-proof** | A reload reopens the exploration you last had open, from this browser's copy of it. |
 | **Take evidence away** | Remove each returned venue in turn and see which one is carrying the answer. It runs on held evidence, with no Qloo or model call. |
-| **Runs that never stall the reader** | Research keeps going when you open another demo or screen. A card follows you with the agent's real latest step and offers the results when they are ready. |
+| **First evidence, automatically** | The initial answer opens as soon as real evidence supports a preview, clearly labelled as research in progress. No extra click to reveal it. |
+| **Visible background research** | A floating card shows the latest real step. The preview updates automatically to the full report on completion. If you have switched to another exploration, the card offers the completed report without taking you away. |
+| **14 trial ideas to explore** | A scrollable, category-filtered gallery spans food, wellness, entertainment, retail and hospitality, including Berlin, Vienna and a Mexico City café-bookshop. Held evidence retains its original provenance. |
+| **City-specific place retrieval** | Fresh place searches constrain the returned places to the requested city. Shared retrieval covers primary ideas, hybrid components, agent recommendations and replacement searches. |
 | **Always a way out** | Back, Switch idea and Try another example in the Concept studio and Scenario lab. |
 | **A tour that keeps up** | The guided tour moves to the right screen and the right section for each step, and highlights the target. |
 
 ## See it in 60 seconds
 
-1. Open the landing page and press **Run the example and evidence test**, or pick any prepared brief. One marked **Evidence held** costs no Qloo request.
-2. Watch the **Agent workspace**. Leave whenever you like: the run **keeps going in the background**.
-3. Read the **Executive brief**, then step through the sections from the sidebar: **Evidence trace** (open any source to see Qloo's own request and excerpt), **Places & signals**, **Directions**, the **Evidence test**, **Decision** and **Cultural roots** (the interest map).
-4. Press **Trace evidence dependence** to remove one place at a time and watch the answer rebuild from what is left.
-5. Use **Switch idea**, **Try another example** or the back button to move between ideas. **Scenario lab** re-researches the same idea for another audience or city.
-6. New here? Press **Guided tour**.
+1. Press **Try the demo** and choose one of the **14 trial ideas**, or enter a fresh brief. The gallery has category filters and notes explaining the scope of each example. A brief marked **Evidence held** reuses real Qloo evidence without a new Qloo request.
+2. Read the **initial answer** when it opens automatically. Open a source in **Evidence trace** to inspect the actual request and response excerpt. A floating card shows the research continuing in the background.
+3. Try the **Evidence test** or remove a cited venue to see whether the direction survives. Verdicts can be supported, contested or unproven; missing evidence stays explicit.
+4. When research completes, the initial view updates to the **full evidence and report**, with a completion message. If you switch ideas, the completed report remains available from the floating card. Use **Watch it live** to return to the detailed research trace.
+
+The first-minute experience is about seeing and testing evidence immediately;
+it does not promise that every fresh report finishes within a minute. Missing
+coverage, invalid inputs and upstream failures have stated recovery paths.
 
 ### The studio
 
@@ -146,10 +159,14 @@ sequenceDiagram
     UI->>API: Fetch run state and real steps
     API-->>UI: steps, timings, partial answer
   end
-  J->>UI: Opens another demo or screen
-  Note over UI,API: The run is not cancelled. A floating card keeps following it.
-  API-->>UI: Complete
-  UI-->>J: "Your exploration is ready" - Open the results
+  UI-->>J: Automatically open first evidence / initial answer
+  Note over UI,API: Research continues; a floating card shows real progress.
+  API-->>UI: Complete with full report
+  alt Judge is still reading this preview
+    UI-->>J: Update to full report and show completion message
+  else Judge has moved to another idea or screen
+    UI-->>J: Your exploration is ready - Open the results
+  end
 ```
 
 ### How the test can say no
@@ -242,9 +259,10 @@ npm run dev                     # then open the printed URL at /studio/
 Or as the deployed container: `docker compose up --build`, then open
 `http://localhost:8000/studio/`. Pick a prepared brief; one marked **Evidence
 held** costs no Qloo request. The held evidence ships with the code in
-`shared/demoPack.json` (every prepared brief, its agent report and its evidence
-test, plus the briefs researched while building this), so a fresh clone or a
-new server opens them with no Qloo or model request.
+`shared/demoPack.json` (prepared Qloo evidence, held evidence tests and available
+agent reports, plus briefs researched while building this). A fresh server
+can replay the prepared evidence without new Qloo requests. Optional model
+analysis can continue in the background when its result is not already held.
 `python3 scripts/export_evidence_store.py` adds whatever your own store holds;
 `python3 scripts/prewarm.py` shows which briefs are held, and `--live` fetches the rest.
 
@@ -349,3 +367,14 @@ The full list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md). Also see
 ## Thank you
 
 Thank you to **Qloo** for providing access to its API and for hosting this hackathon, and to everyone who made it possible. Thanks as well to the tools and services this project is built on: the Qloo harness, Vercel AI Gateway, FastAPI, React and Vite, MapLibre, and the open-source community behind them. Your support made CultureForge AI possible.
+
+## Business direction
+
+**Commercial direction:** a proposed $1,500 design partner pilot for one
+hospitality strategy team, five scoped briefs and a 30-day review. Pricing
+and customer value are unvalidated; commercial data terms are a prerequisite.
+The landing page leads with **Why Qloo** and a demo. A quieter **For teams**
+footer link offers the team-specific pilot discussion brief.
+See the [business model](docs/BUSINESS.md), [investment pitch](docs/INVESTOR_BRIEF.md)
+and [release audit](docs/RELEASE_AUDIT.md).
+

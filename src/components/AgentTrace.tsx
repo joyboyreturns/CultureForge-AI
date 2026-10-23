@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import type { ResearchRun } from '../api'
 import { EvidenceDecisionGraph } from './EvidenceDecisionGraph'
+import { shouldOpenInitial } from '../initialResearch'
 
 /**
  * The live research workspace.
@@ -32,7 +33,7 @@ const FAILURE: Record<string, { title: string; body: string; retry: boolean }> =
   BUDGET_UNAVAILABLE: { title: 'The request allowance could not be read.', body: 'No Qloo request was sent. This is a server problem.', retry: true },
 }
 
-export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress, onRetry, onChangeLocation, onOpenPartial }: {
+export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress, onRetry, onChangeLocation, onOpenPartial, autoOpenPartial = true }: {
   runId: string
   onComplete: (result: NonNullable<ResearchRun['result']>) => void
   onClarify: (clarification: NonNullable<ResearchRun['clarification']>) => void
@@ -41,6 +42,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
   onChangeLocation?: () => void
   /** Open the initial rule composition now; the run keeps going and offers the full results when it lands. */
   onOpenPartial?: (result: NonNullable<ResearchRun['partialResult']>) => void
+  autoOpenPartial?: boolean
   /** How many real steps the agent has taken, so the workspace can show them. */
   onProgress?: (steps: number) => void
 }) {
@@ -49,6 +51,9 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
   const [slow, setSlow] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const settled = useRef(false)
+  const openedPartial = useRef(false)
+  const openInitial = useRef(onOpenPartial)
+  openInitial.current = onOpenPartial
 
   // Fresh evidence and the model analysis can take a minute or more; say so
   // once a run has been going for longer than half a minute.
@@ -88,6 +93,11 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
           setError(next.error ?? 'The research run could not be completed.')
           return
         }
+        if (shouldOpenInitial(next, autoOpenPartial && Boolean(openInitial.current), openedPartial.current)) {
+          openedPartial.current = true
+          openInitial.current?.(next.partialResult!)
+          return
+        }
       } catch (pollError) {
         if (!cancelled) setError(pollError instanceof Error ? pollError.message : 'The research run could not be reached.')
         if (!cancelled && ++failures < 3) timer = window.setTimeout(poll, 2000 * failures)
@@ -101,7 +111,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
       cancelled = true
       if (timer) window.clearTimeout(timer)
     }
-  }, [runId, onComplete, onClarify, onProgress, attempt])
+  }, [runId, onComplete, onClarify, onProgress, attempt, autoOpenPartial])
 
   const events = run?.events ?? []
 

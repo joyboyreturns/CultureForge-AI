@@ -132,7 +132,7 @@ def _state_for(resolution: TagResolution, places: list[dict], complete: bool) ->
 def retrieve_secondary(provider, project, component: IntentComponent, tags: list[str], *, retrieve: bool,
                        remaining: Optional[int], category_only: bool) -> tuple[dict, int, bool, int]:
     """(entry, requests spent, whether anything was fetched live, workflows used) for one more business."""
-    from .providers import BRIEF_PLACE_LIMIT, QlooHarnessError, brief_places_payload  # noqa: F401
+    from .providers import BRIEF_PLACE_LIMIT, QlooHarnessError, held_place_payload
     from .relevance import assess
     resolution, complete = held_tag(component)
     spent, live, workflows = 0, False, 0
@@ -149,10 +149,11 @@ def retrieve_secondary(provider, project, component: IntentComponent, tags: list
             return _entry(component, resolution, _state_for(resolution, [], complete), [], [],
                           message=('Qloo returned no category tag matching "%s".' % component.phrase) if complete else
                           'The category for this business is not held and this answer may not fetch it.'), spent, live, workflows
-        payload = {'target_type': 'place', 'signal_location': project.location, 'limit': BRIEF_PLACE_LIMIT,
+        payload = {'target_type': 'place', 'filter_location': project.location, 'limit': BRIEF_PLACE_LIMIT,
                    'include_tags': [resolution.tag], 'include_tags_operator': 'intersection'}
         if not category_only:
             payload['signal_tags'] = list(tags)
+        payload = held_place_payload(payload)
         store = get_store()
         envelope = store.get(canonical_key('recommend', payload))
         was_cached = envelope is not None

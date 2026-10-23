@@ -41,6 +41,37 @@ def test_validation_errors_are_readable(client):
     assert 'businessType' in detail
 
 
+@pytest.mark.parametrize('field', ['audience', 'location'])
+def test_whitespace_brief_is_rejected_before_provider_access(client, monkeypatch, field):
+    def unexpected_provider():
+        raise AssertionError('An empty brief must not reach a provider')
+    monkeypatch.setattr(main, 'get_provider', unexpected_provider)
+    body = {'businessType': 'Retail', 'businessIdea': 'Bookshop', 'audience': 'Readers',
+            'location': 'London', 'budget': '', 'objectives': [], field: ' \t '}
+    response = client.post('/api/projects/generate', json=body)
+    assert response.status_code == 422
+    assert field in response.json()['detail']
+
+
+def test_whitespace_run_audience_is_rejected_before_start(client, monkeypatch):
+    def unexpected_start(*args, **kwargs):
+        raise AssertionError('An empty audience must not start research')
+    monkeypatch.setattr(main, 'start_research', unexpected_start)
+    response = client.post('/api/research/runs', json={
+        'project': {'businessType': 'Retail', 'audience': 'Readers', 'location': 'London',
+                    'budget': '', 'objectives': []}, 'audience': ' \t '})
+    assert response.status_code == 422
+
+
+def test_brief_normalises_accidental_padding_without_changing_the_idea():
+    from backend.models import ProjectRequest
+    project = ProjectRequest(businessType='Retail', businessIdea='  Bookshop cafe  ',
+        audience='  Readers  ', location='  Mexico City  ', budget='', objectives=[])
+    assert project.businessIdea == 'Bookshop cafe'
+    assert project.audience == 'Readers'
+    assert project.location == 'Mexico City'
+
+
 def test_a_valid_request_answers_with_the_contract(client, monkeypatch):
     from backend.providers import MockCultureProvider
 
