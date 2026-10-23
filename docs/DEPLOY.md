@@ -75,6 +75,43 @@ Replace `demo.example.com`. Research runs and cold lookups can take over a
 minute, so if you use nginx instead, set `proxy_read_timeout 180s;`. Caddy's
 default has no such limit.
 
+**4b. Alternative: a named Cloudflare Tunnel (no open ports).** You need a domain on Cloudflare. A *named*
+tunnel has a stable address; the temporary `trycloudflare.com` ones change and cannot be submitted.
+
+```bash
+# install cloudflared from Cloudflare's apt repository (see developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/)
+cloudflared tunnel login                              # opens a browser once, picks your domain
+cloudflared tunnel create cultureforge
+cloudflared tunnel route dns cultureforge demo.example.com
+sudo mkdir -p /etc/cloudflared && sudo tee /etc/cloudflared/config.yml >/dev/null <<'YML'
+tunnel: cultureforge
+credentials-file: /root/.cloudflared/<TUNNEL-ID>.json
+ingress:
+  - hostname: demo.example.com
+    service: http://127.0.0.1:8000
+  - service: http_status:404
+YML
+sudo cloudflared service install && sudo systemctl enable --now cloudflared
+```
+
+Things that matter for judging:
+
+- **Keep `docker-compose.yml` bound to `127.0.0.1`** (the default). The tunnel is then the only way in.
+- **Visitors are told apart automatically.** The tunnel connects from this machine, so the app reads
+  `CF-Connecting-IP`; the per-visitor allowance and each visitor's private saved explorations depend on it.
+  Operator routes (`/api/workspaces`, keys) stay closed to anything that arrives through the tunnel; they
+  answer only on the machine itself, or with `CULTUREFORGE_OPERATOR_TOKEN`.
+- **Cloudflare cuts a request after 100 seconds (error 524).** The studio's long work is a polled research run,
+  so each request is short; only a direct call to a slow cold route could hit it.
+- **Do not put Cloudflare Access, "Under Attack" mode or Bot Fight Mode in front of the demo hostname.** A
+  challenge page blocks judges and any automated check of your URL.
+- **The landing page's hero video is 13.9 MB.** Cloudflare's self-serve terms limit serving video and other
+  non-HTML content through their network. A hackathon's traffic is tiny, but you can remove the question
+  entirely by shrinking it on the server: `sudo apt install -y ffmpeg && ffmpeg -i assets/cultureforge-background.mp4
+  -vf scale=-2:720 -an -crf 30 -movflags +faststart assets/cultureforge-background.small.mp4`, check it looks
+  right, then replace the original and rebuild. Only do that if you own or may modify the video.
+- Check from a phone on mobile data, then run `python3 scripts/smoke_test.py https://demo.example.com`.
+
 **5. Firewall.** Keep port 8000 private:
 
 ```bash

@@ -35,7 +35,7 @@ that was never given the chance to be wrong.
 ### What it does
 
 A strategist enters a business category, a specific business idea, an audience, a location and a planning budget, or
-picks one of nine prepared briefs. CultureForge:
+picks one of three prepared briefs that open instantly from held Qloo evidence. CultureForge:
 
 1. resolves the audience into Qloo tags, retrieves up to ten local places, and
    sends the same tags to other domains (artists, films, brands) with no

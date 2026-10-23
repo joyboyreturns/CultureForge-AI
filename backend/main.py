@@ -38,7 +38,7 @@ from .providers import (COMPOSER_VERSION, QLOO_ENTITY_TYPES, QLOO_WORKFLOWS, Qlo
                         trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
 from .research import registry as research_registry, run_key, start_research
-from .admission import Refusal, admission, client_id
+from .admission import Refusal, admission, client_id, is_proxied
 
 app = FastAPI(
     title='CultureForge API',
@@ -340,8 +340,14 @@ def resolve_workspace(request: Request) -> tuple[dict, Optional[str]]:
             raise HTTPException(status_code=403, detail='That key belongs to a workspace that no longer exists.')
         return workspace, identity['prefix']
     platform = get_platform()
-    existing = next((w for w in platform.workspaces() if w['name'] == LOCAL_WORKSPACE_NAME), None)
-    return existing or platform.create_workspace(LOCAL_WORKSPACE_NAME, plan='studio'), None
+    name = LOCAL_WORKSPACE_NAME
+    if config.run_profile() == config.PROFILE_JUDGING:
+        # A public demo: each visitor gets their own saved explorations, so one judge's ideas are never
+        # listed to the next. Only a short hash of the address is kept, as the workspace's name.
+        import hashlib
+        name = f"Visitor {hashlib.sha256(('cultureforge|' + client_id(request)).encode()).hexdigest()[:12]}"
+    existing = next((w for w in platform.workspaces() if w['name'] == name), None)
+    return existing or platform.create_workspace(name, plan='studio'), None
 
 
 @app.middleware('http')
@@ -384,7 +390,9 @@ def _require_operator(request: Request) -> None:
             raise HTTPException(status_code=401, detail='This route needs the operator token.')
         return
     host = request.client.host if request.client else ''
-    if host not in ('127.0.0.1', '::1', 'localhost'):
+    # Behind a tunnel or reverse proxy on this machine every visitor connects from 127.0.0.1, so the
+    # address alone proves nothing: a request that carries proxy headers is not "on this machine".
+    if host not in ('127.0.0.1', '::1', 'localhost') or is_proxied(request):
         raise HTTPException(
             status_code=403,
             detail='This route is for the operator and is only open on this machine. '
