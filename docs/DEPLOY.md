@@ -164,6 +164,9 @@ example). Set the same environment variables, mount storage at `/data`
 | `CULTUREFORGE_ALLOWED_ORIGINS` | Empty for same-origin; otherwise the exact studio origins, comma-separated |
 | `CULTUREFORGE_KEY_SALT` | A long random string (the Render blueprint generates one). It salts the hashes of issued workspace API keys; the built-in default is for development only |
 | `CULTUREFORGE_OPERATOR_TOKEN` | Unset unless operator administration is deliberately enabled |
+| `CULTUREFORGE_MAX_COLD_RUNS` / `_COLD_RUNS_PER_CLIENT_HOUR` | 3 / 8. Fair use in every profile: how many new ideas are researched at once, and how many one visitor may start an hour. Held evidence is never limited. A refusal is HTTP 429 with `Retry-After`, says when to come back and that prepared examples still open instantly |
+| `CULTUREFORGE_AGENT_SLOTS` / `_AGENT_QUEUE_SECONDS` | 2 / 45. Agent loops that may run at once (about ten model requests each, against a route that allows five a minute). A loop that finds no slot in time is skipped and says so; it is not held, so a later open runs it |
+| `CULTUREFORGE_TRUST_PROXY` | Blank (automatic). The per-visitor allowance needs each visitor's address. Behind Caddy, a tunnel or Docker's bridge the connecting address is local, so the last `X-Forwarded-For` value is used; an internet peer is never believed. `true`/`false` force it |
 | `PORT` | Set by most hosts; the container listens on it (default 8000) |
 
 The Dockerfile installs `fonts-dejavu-core` for Latin text and

@@ -1,5 +1,39 @@
 # Changelog
 
+## Unreleased — live-run hardening, 2026-10-23
+
+Every item below was found by running a real brief against Qloo and the configured model (see
+docs/LIVE_MATRIX.md), and each has a test that fails without the fix.
+
+- **Held demos no longer replay a failed agent.** An agent loop that ended because Qloo was switched off,
+  rate-limited or out of quota is never held, and one already held is discarded and re-run. The featured
+  demos had been held with a lone `LIVE_DISABLED` step. With no evidence added, no analysis is written.
+- **A held replay costs nothing.** A held agent report's steps carried the requests of the run that paid
+  for them, so a free replay reported "2 upstream requests". It now reports 0, and the agent card says
+  "held · fetched earlier".
+- **Category words follow the model reading.** A category read by the model carried only the typed word, so
+  Qloo's own "bookstore" and "Librerías" never matched and ten real Mexico City bookshops produced no
+  direction. It now uses the category's synonyms.
+- **Unfamiliar categories match on identity.** A drive-thru coffee shop that lists tea among its drinks was
+  a "direct tea house"; a place now matches on its name and how its description opens.
+- **No agent for an empty answer.** With no direction composed the agent loop no longer spends requests and
+  two minutes on claims about nothing. The reason names the place Qloo returned for the wrong city.
+- **Agent analysis tolerates length.** An over-long summary clipped at a sentence rather than discarding the
+  whole answer; fenced JSON is read; rejections log the failing schema fields (never the text).
+- **Unsupported categories offer a way out** built from the founder's own words ("film camera shop" →
+  "camera shop").
+- **Fair use for a public demo** (`backend/admission.py`): identical running briefs are joined; at most
+  three new ideas at once; eight new ideas an hour per visitor (address from `X-Forwarded-For` behind a
+  local proxy only); two agent loops at once. Held evidence is never limited. A refusal is a 429 with
+  `Retry-After` and a way forward.
+- **Open the initial answer now.** The directions exist seconds after Qloo answers. The workspace offers
+  them at once, labelled as initial, while the run keeps going and the monitor offers the finished results.
+- **What Qloo contributed** strip in the executive brief: cited decisions, the extra workflows the agent
+  chose (and which were refused), who produced each (rules or model), and whether anything pushed back.
+- The landing page's example and the Create form now open the Tokyo bakery (it names its idea and ships in
+  the demo pack) instead of the Brooklyn brief that named none.
+- `scripts/brief_probe.py`: one brief through the real research-run path with timings and cost.
+
 ## Unreleased — business intent and tag resolution
 
 - **Business intent** (`backend/intent.py`). An idea is read into typed components: every business it names

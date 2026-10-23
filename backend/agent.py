@@ -26,6 +26,7 @@ lifted, but the step limit and the deadline are not.
 from __future__ import annotations
 
 import os
+import threading
 import time
 import uuid
 from datetime import date, timedelta
@@ -33,7 +34,7 @@ from typing import Callable, Optional
 
 from pydantic import ValidationError
 
-from . import reasoning
+from . import config, reasoning
 from .challenge import DEMOGRAPHIC_CHOICES, guess_demographic
 from .comparison import recompose
 from .evidence_store import canonical_key, get_store
@@ -57,6 +58,31 @@ QLOO_TOOLS = ('find_tags', 'recommend', 'rank', 'compare_audiences', 'entity_tag
 STOPPING_CODES = {'RATE_LIMITED', 'QUOTA_EXHAUSTED', 'LIVE_DISABLED', 'BUDGET_UNAVAILABLE',
                   'PROVIDER_UNAVAILABLE', 'UPSTREAM_UNAUTHENTICATED', 'UPSTREAM_TIMEOUT'}
 _DIGIT = __import__('re').compile(r'\d')
+
+
+_slots_lock = threading.Lock()
+_slots: Optional[threading.BoundedSemaphore] = None
+_slots_size = -1
+
+
+def _slot_gate() -> Optional[threading.BoundedSemaphore]:
+    """The semaphore for the configured number of simultaneous loops; None when unlimited."""
+    global _slots, _slots_size
+    size = config.agent_slots()
+    with _slots_lock:
+        if size != _slots_size:
+            _slots, _slots_size = (threading.BoundedSemaphore(size) if size else None), size
+        return _slots
+
+
+def interrupted(report: AgentReport) -> bool:
+    """Whether an upstream wall (switched off, rate-limited, out of quota) ended the loop.
+
+    That is a fact about the server at that moment, not about the evidence, so
+    a report that carries one must never be held as the answer for this brief.
+    """
+    return any(step.status == 'error' and f'({code})' in step.detail
+               for step in report.steps for code in STOPPING_CODES)
 
 PLAN_PROMPT = (
     'You are the research controller for CultureForge, a tool that tests business directions '
@@ -359,12 +385,36 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
     if held is not None:
         try:
             report = AgentReport.model_validate({**held, 'cached': True, 'modelCalls': 0})
+        except ValidationError:
+            report = None
+        if report is not None and not interrupted(report):
             emit(_event('agent-analysis', 'cached',
                         f'Held agent analysis from an earlier run of this exact evidence ({len(report.steps)} steps); no new model or Qloo request.'))
             return report
-        except ValidationError:
-            get_store().discard(cache_key)
+        # Unreadable, or held while Qloo was switched off or rate-limiting: run again.
+        get_store().discard(cache_key)
 
+    gate = _slot_gate()
+    if gate is not None and not gate.acquire(blocking=False):
+        emit(_event('agent-plan', 'running',
+                    'Other analyses are using the model right now; waiting for a free slot so each one finishes in reasonable time.'))
+        if not gate.acquire(timeout=config.agent_queue_seconds()):
+            emit(_event('agent-plan', 'skipped', 'No analysis slot became free in time, so the agent did not run for this answer.'))
+            return AgentReport(mode='rules', status='skipped',
+                               stoppingReason='Other analyses were using the model and none finished in time, so the agent did not run. '
+                                              'This is not held: opening the idea again later will run it. The rule composer’s answer stands.')
+    try:
+        return _loop(response, tag_envelope, recommend_envelope, remaining_allowance, deadline, emit, provider,
+                     model_name, observed, cache_key)
+    finally:
+        if gate is not None:
+            gate.release()
+
+
+def _loop(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dict,
+          remaining_allowance: Optional[int], deadline: float, emit: Callable[[TraceEvent], None],
+          provider: Optional[QlooHarnessProvider], model_name: Optional[str], observed: Observed,
+          cache_key: str) -> AgentReport:
     model_left = _model_allowance()
     if model_left is not None and model_left < 2:
         emit(_event('agent-plan', 'skipped', 'The model analysis allowance cannot cover a plan and an analysis today; the rule composer’s answer stands.'))
@@ -374,6 +424,7 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
     provider = provider or QlooHarnessProvider()
     qloo_left = remaining_allowance
     steps: list[AgentStep] = []
+    walled = False
     model_calls = 0
     stopping = f'The loop reached its limit of {step_limit} steps.'
 
@@ -428,6 +479,7 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
                 steps.append(step)
                 emit(_event(f'agent-step-{index}', 'error', step.detail, workflow=plan.tool))
                 stopping = f'Qloo answered {exc.code}, so the loop stopped instead of pressing on.'
+                walled = True
                 break
         steps.append(step)
         emit(_event(f'agent-step-{index}', step.status if step.status != 'rejected' else 'skipped',
@@ -435,6 +487,13 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
                     result_count=step.resultCount))
 
     tool_steps = [step for step in steps if step.tool != 'finish' and step.status == 'ok']
+    if walled and not tool_steps:
+        # No evidence was added, so an analysis would only restate the rules' answer under the
+        # model's name. Say what stopped it instead; this is not held, so a later run may try again.
+        emit(_event('agent-analysis', 'skipped',
+                    'No additional Qloo evidence was obtained, so no analysis was written; the rule composer’s answer stands.'))
+        return AgentReport(model=model_name, mode='rules', status='limited', steps=steps, modelCalls=model_calls,
+                           stoppingReason=f'{stopping} No extra evidence was obtained, so the rule composer’s answer stands.')
     if not tool_steps and not steps:
         return AgentReport(model=model_name, mode='rules', status='limited', steps=steps, modelCalls=model_calls,
                            stoppingReason=f'{stopping} The rule composer’s answer stands.')
@@ -469,5 +528,6 @@ def _run(response: GenerateResponse, tag_envelope: dict, recommend_envelope: dic
                     'recommendationRationale': kept['summary'],
                     'whatWouldChangeTheConclusion': kept['whatWouldChangeTheConclusion'], 'cached': False},
         stoppingReason=stopping)
-    get_store().put(cache_key, report.model_dump(), transport_requests=0)
+    if not walled:
+        get_store().put(cache_key, report.model_dump(), transport_requests=0)
     return report

@@ -105,6 +105,18 @@ def matches(text: str, terms) -> list[str]:
     return [term for term in terms if re.search(r'\b' + re.escape(term) + r'(?:s|es)?\b', text, re.I)]
 
 
+_IDENTITY_STOP = re.compile(r'\b(?:serving|offering|featuring|specializing|specialising|providing|selling|known for|'
+                            r'with|where|that|which|including|offers|serves|features|and offering)\b', re.I)
+
+
+def _identity(description: str) -> str:
+    """How a description introduces the place: the words before it starts listing what it serves or sells."""
+    text = (description or '').strip()
+    stop = _IDENTITY_STOP.search(text)
+    head = text[:stop.start()] if stop else text
+    return ' '.join(head.split()[:14])
+
+
 def _normalise(idea: str) -> list[str]:
     """Lowercase words of the idea, up to the first preposition."""
     words = re.sub(r'[-&]', ' ', (idea or '').casefold())
@@ -248,7 +260,9 @@ def assess(*, business_type: str, idea: str, audience: str, location: str,
     family = category.family
     text = f'{name} {description}'
     terms = FAMILIES.get(family) or category.terms or taxonomy.terms_for(family)
-    hits = matches(text, terms)
+    # An unfamiliar business is matched on what the place IS (its name and how its description opens),
+    # not on what it sells: a drive-thru coffee shop that lists "tea" among its drinks is not a tea house.
+    hits = matches(f'{name} {_identity(description)}' if family.startswith('open:') else text, terms)
     if family.startswith('open:') and terms:
         # An unfamiliar business is matched on all of its product words (all but one when there
         # are three or more), so a "vintage" cinema is not a vintage sneaker shop.

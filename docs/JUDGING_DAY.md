@@ -48,7 +48,23 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
 
 5. **Click through** the [demo script](DEMO.md) once in a private window.
 
+## Before judging: heal the agent reports of the prepared demos
+
+Qloo evidence is shipped in `shared/demoPack.json`; the agent's analysis is not, because it is the model's
+output for one particular run. The first visitor to a prepared demo therefore triggers its agent loop
+(about ten model requests, one to two minutes) unless it was run before. Open each of the three featured
+demos once from your own browser, or run `python3 scripts/brief_probe.py --base-url $HOST --example
+tokyo-morning-bakery` (and `paris-ice-cream`, `melbourne-specialty-coffee`), and wait for
+`AGENT mode=frontier_ai`. Check `--challenge` too if you want its verdicts held. A report that ended
+because Qloo was switched off or rate-limited is **never held** (it used to be, and the demos then
+showed one failed step), and an older one is discarded on the next open.
+
 ## During judging
+
+- **Fair use.** `GET $HOST/api/health` shows `admission.coldRunsActive` against `maxColdRuns`. A visitor
+  who starts more than eight new ideas in an hour, or a ninth idea while three are being researched, gets a
+  stated 429 and the prepared examples keep opening. Raise `CULTUREFORGE_COLD_RUNS_PER_CLIENT_HOUR` in
+  `.env` only if a judge reports being refused, and recreate the container.
 
 - `GET $HOST/api/health` at any time shows the profile, calls made this
   hour and day, and the cache size. It never calls Qloo.

@@ -25,7 +25,7 @@ from typing import Optional
 from . import config
 from .evidence_store import known_location
 from .agent import run_agent
-from .models import ProjectRequest, TraceEvent
+from .models import AgentReport, ProjectRequest, TraceEvent
 from .intent_report import build as build_intent_report, idea_alternatives, resolve_tag
 from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_retrieval_payload,
                         brief_tags_payload, brief_category_payload, select_category_tag, mark_reused)
@@ -64,6 +64,7 @@ class ResearchRun:
         self.transport_requests = 0
         self.workflow_calls = 0
         self.seed_tag_ids: list[str] = []
+        self.key = ''
         self._lock = threading.Lock()
 
     def add_event(self, event: TraceEvent) -> None:
@@ -123,6 +124,15 @@ class ResearchRegistry:
         with self._lock:
             return self._runs.get(run_id)
 
+    def running_for(self, key: str) -> Optional[ResearchRun]:
+        """The run of this exact brief that is still going, so a second visitor joins it."""
+        with self._lock:
+            for run_id in reversed(self._order):
+                run = self._runs.get(run_id)
+                if run and run.key == key and run.status == STATUS_RUNNING:
+                    return run
+        return None
+
     def recent(self, limit: int = 10) -> list[dict]:
         with self._lock:
             ids = self._order[-limit:][::-1]
@@ -150,19 +160,40 @@ def _event(run: ResearchRun, step: str, envelope: dict, *, status: str = 'ok',
     )
 
 
+def run_key(project: ProjectRequest, audience: Optional[str], seed_tag_ids: Optional[list[str]]) -> str:
+    """What makes two requests the same brief: the whole project, the audience and the confirmed seeds."""
+    import json
+    return json.dumps([project.model_dump(), audience or project.audience, sorted(seed_tag_ids or [])],
+                      sort_keys=True, ensure_ascii=False)
+
+
 def start_research(project: ProjectRequest, audience: Optional[str] = None,
                    seed_tag_ids: Optional[list[str]] = None,
                    allowance=_FROM_PROFILE,
-                   workspace_id: Optional[str] = None) -> ResearchRun:
-    """Start a run in the background and return it immediately."""
+                   workspace_id: Optional[str] = None,
+                   on_finish=None) -> ResearchRun:
+    """Start a run in the background and return it immediately.
+
+    `on_finish` is called once when the run ends, however it ends.
+    """
     if allowance is _FROM_PROFILE:
         allowance = config.limit('RESEARCH_RUN_MAX_WORKFLOWS')
     run = ResearchRun(project, audience, workspace_id)
     run.seed_tag_ids = list(seed_tag_ids or [])
+    run.key = run_key(project, audience, seed_tag_ids)
     registry.add(run)
-    thread = threading.Thread(target=_execute, args=(run, allowance), daemon=True)
+
+    thread = threading.Thread(target=_execute_and_release, args=(run, allowance, on_finish), daemon=True)
     thread.start()
     return run
+
+
+def _execute_and_release(run: ResearchRun, allowance: Optional[int], on_finish=None) -> None:
+    try:
+        _execute(run, allowance)
+    finally:
+        if on_finish:
+            on_finish()
 
 
 def _save_exploration(run: ResearchRun, response) -> None:
@@ -430,17 +461,30 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             run.add_event(event)
             response.trace.append(event)
 
-        response.agent = run_agent(
-            response, tag_envelope, rec_envelope,
-            remaining_allowance=None if allowance is None else max(0, allowance - run.workflow_calls),
-            deadline=started + DEFAULT_RUN_TIMEOUT_SECONDS,
-            on_event=record_agent_event,
-        )
+        if response.concepts:
+            response.agent = run_agent(
+                response, tag_envelope, rec_envelope,
+                remaining_allowance=None if allowance is None else max(0, allowance - run.workflow_calls),
+                deadline=started + DEFAULT_RUN_TIMEOUT_SECONDS,
+                on_event=record_agent_event,
+            )
+        else:
+            # Nothing was composed, so there is no direction for the agent to test. Spending Qloo
+            # requests and two minutes on claims about nothing would only delay the honest answer.
+            record_agent_event(TraceEvent(
+                id=f'trace-{uuid.uuid4().hex[:8]}', step='agent-plan', status='skipped',
+                detail='No direction was supported by the returned evidence, so the agent had nothing to test and spent no further request.',
+                acquiredAt=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())))
+            response.agent = AgentReport(
+                mode='rules', status='skipped',
+                stoppingReason='No direction was supported by the returned evidence, so the agent did not run.')
 
         # The answer's stated cost is the whole run's: the seeds and places this
         # run fetched, the bridge domains, and the agent's live workflows. Left
         # to generate(), it would count only what generate() fetched itself.
-        run.transport_requests += sum(step.upstreamRequests for step in (response.agent.steps if response.agent else []))
+        # A held report replays steps that an earlier run paid for; this run spent nothing on them.
+        if response.agent and not response.agent.cached:
+            run.transport_requests += sum(step.upstreamRequests for step in response.agent.steps)
         if response.delivery:
             response.delivery.transportRequests = run.transport_requests
             if run.transport_requests:

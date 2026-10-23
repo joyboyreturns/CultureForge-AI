@@ -107,6 +107,16 @@ def _prompt(request: EvidenceAnalysisRequest) -> str:
     }, ensure_ascii=False)
 
 
+def _json_text(content: str) -> str:
+    """The JSON object in a model's answer, even when it wrapped it in a code fence or a sentence."""
+    text = (content or '').strip()
+    if text.startswith('```'):
+        text = text.split('\n', 1)[1] if '\n' in text else text[3:]
+        text = text.rsplit('```', 1)[0]
+    start, end = text.find('{'), text.rfind('}')
+    return text[start:end + 1] if 0 <= start < end else text
+
+
 def call_structured(system_prompt: str, payload: dict, output_model, *,
                     effort: str = 'high', max_tokens: int = MAX_OUTPUT_TOKENS,
                     timeout: int = TIMEOUT_SECONDS):
@@ -150,8 +160,21 @@ def call_structured(system_prompt: str, payload: dict, output_model, *,
                     continue
                 raise
         content = raw['choices'][0]['message']['content']
-        data = json.loads(content)
-        return output_model.model_validate(data)
+        finish = raw['choices'][0].get('finish_reason')
+        try:
+            data = json.loads(_json_text(content))
+            tame = getattr(output_model, 'tame', None)
+            return output_model.model_validate(tame(data) if tame else data)
+        except (ValueError, ValidationError) as exc:
+            # What went wrong, never what was said: the length, how the model stopped and the
+            # schema fields that failed. Enough to tell truncation from a too-long field.
+            import logging
+            fields = ','.join(sorted({'.'.join(str(part) for part in err['loc']) + ':' + err['type']
+                                      for err in exc.errors()}))[:300] if isinstance(exc, ValidationError) else ''
+            logging.getLogger('cultureforge').warning(
+                'model answer rejected: schema=%s finish=%s chars=%s %s', output_model.__name__, finish,
+                len(content or ''), fields)
+            raise
     except (urllib.error.URLError, TimeoutError, KeyError, IndexError, TypeError,
             ValueError, json.JSONDecodeError, ValidationError) as exc:
         # Never include upstream bodies: they can contain prompt data or other
