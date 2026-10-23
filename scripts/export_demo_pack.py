@@ -30,6 +30,9 @@ def main() -> int:
     parser.add_argument('--live', action='store_true')
     parser.add_argument('--only', action='append')
     parser.add_argument('--allow-gaps', action='store_true', help='write the pack even if some flows were not held')
+    parser.add_argument('--with-agent', action='store_true',
+                        help='also ship the held model naming and agent report of each demo (needs the model on; '
+                             'an unheld one is reported as a gap, never fetched with Qloo)')
     args = parser.parse_args()
     os.environ.setdefault('RUN_PROFILE', 'judging')
     os.environ['AI_GATEWAY_ENABLED'] = 'false'
@@ -39,7 +42,7 @@ def main() -> int:
     load_dotenv(ROOT / '.env')
     if not args.live:
         os.environ['QLOO_LIVE_ENABLED'] = 'false'
-    os.environ['AI_GATEWAY_ENABLED'] = 'false'
+    os.environ['AI_GATEWAY_ENABLED'] = 'true' if args.with_agent else 'false'
     from fastapi.testclient import TestClient
     from backend import geocode
     from backend.evidence_store import ADAPTER_VERSION, get_store
@@ -85,6 +88,23 @@ def main() -> int:
             print(f'  cells for {anchor["label"]}: HTTP {r.status_code}')
             if r.status_code != 200:
                 problems.append(f'{demo}: cells: {r.text[:200]}')
+        if args.with_agent:
+            import time
+            started = client.post('/api/research/runs', json={'project': project, 'audience': project['audience'],
+                                                              'seedTagIds': []}, timeout=60).json()
+            run = {}
+            for _ in range(60):
+                time.sleep(1)
+                run = client.get(f"/api/research/runs/{started['runId']}").json()
+                if run['status'] != 'running':
+                    break
+            agent = ((run.get('result') or {}).get('agent') or {})
+            print(f"  agent: {run.get('status')}, mode={agent.get('mode')}, cached={agent.get('cached')}, "
+                  f"upstream={run.get('transportRequests')}")
+            if run.get('status') != 'complete' or agent.get('mode') != 'frontier_ai' or not agent.get('cached') \
+                    or run.get('transportRequests'):
+                problems.append(f'{demo}: the agent report is not held (run it once with live Qloo and the model on, '
+                                'then export again)')
         r = client.post('/api/projects/challenge', json={'project': project}, timeout=300)
         print(f'  challenge: HTTP {r.status_code}')
         if r.status_code != 200:
@@ -118,7 +138,8 @@ def main() -> int:
         entries = {**previous.get('evidence', {}), **entries}   # a partial run adds to the pack, never shrinks it
         geo = {**previous.get('geocodes', {}), **geo}
     pack = {'note': 'Real Qloo responses for the prepared demos, with their original acquisition times, and the verified '
-                    'venue geocodes. Built by scripts/export_demo_pack.py; loaded by backend/demo_pack.py.',
+                    'venue geocodes, and where built with --with-agent the held model naming and agent reports. Built by '
+                    'scripts/export_demo_pack.py; loaded by backend/demo_pack.py.',
             'gaps': problems, 'adapterVersion': ADAPTER_VERSION, 'demos': list(DEMOS), 'evidence': entries, 'geocodes': geo}
     out = ROOT / 'shared' / 'demoPack.json'
     out.write_text(json.dumps(pack, ensure_ascii=False, separators=(',', ':')))
