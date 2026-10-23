@@ -48,16 +48,23 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
 
 5. **Click through** the [demo script](DEMO.md) once in a private window.
 
-## Before judging: heal the agent reports of the prepared demos
+## The three featured demos open instantly on a fresh host
 
-Qloo evidence is shipped in `shared/demoPack.json`; the agent's analysis is not, because it is the model's
-output for one particular run. The first visitor to a prepared demo therefore triggers its agent loop
-(about ten model requests, one to two minutes) unless it was run before. Open each of the three featured
-demos once from your own browser, or run `python3 scripts/brief_probe.py --base-url $HOST --example
-tokyo-morning-bakery` (and `paris-ice-cream`, `melbourne-specialty-coffee`), and wait for
-`AGENT mode=frontier_ai`. Check `--challenge` too if you want its verdicts held. A report that ended
-because Qloo was switched off or rate-limited is **never held** (it used to be, and the demos then
-showed one failed step), and an older one is discarded on the next open.
+`shared/demoPack.json` ships, for Tokyo bakery, Paris ice cream and Melbourne coffee: the real Qloo
+responses, the model's direction names, the agent's eight-step report, the evidence-test rankings and the
+venue geocodes, each with its original acquisition time. A new container with an empty volume therefore opens
+each demo in about a second with zero Qloo and zero model requests (verified against an empty cache
+directory with live Qloo off and an invalid model key).
+
+The held names and agent report are keyed on the model id, so keep `AI_GATEWAY_MODEL=minimax/minimax-m3.1-flash`
+(and the prompt version in the code). If you change the model, those two entries miss and the first visitor
+to each demo waits about two minutes for a fresh agent run. To rebuild the pack after a deliberate change:
+open the three demos on a live-capable instance until the agent shows `frontier_ai`, then run
+`.venv/bin/python scripts/export_demo_pack.py --with-agent` (it spends nothing and refuses to write a pack
+whose agent report is not held).
+
+A report that ended because Qloo was switched off or rate-limited is never held, and an older one is
+discarded on the next open.
 
 ## During judging
 

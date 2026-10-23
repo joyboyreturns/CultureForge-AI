@@ -3,6 +3,8 @@ export const TOUR_STEPS = [
     body: 'Follow a brief from Qloo observations to a business hypothesis, then challenge its evidence. The tour itself makes no Qloo or model requests.', action: 'Show the overview' },
   { id: 'brief', title: 'Start with a real audience and place', target: '[data-tour="brief"]', screen: 'create',
     body: 'Describe who you want to serve and where. Confirm the cultural signals Qloo resolves. Starting research is your choice; held evidence is reused.', action: 'Open the brief' },
+  { id: 'difference', title: 'See what Qloo changed', target: '[data-tour="qloo-difference"]', screen: 'results',
+    body: 'This strip lists what the answer rests on that only Qloo could supply: the places it returned, the extra questions the agent chose to ask it, which parts were written by rules or by a model, and whether anything pushed back on the lead direction.', action: 'Read the contribution strip' },
   { id: 'sources', title: 'Separate observations from proposals', target: '[data-tour="sources"]', screen: 'results',
     body: 'Qloo supplies the places and cultural signals. CultureForge proposes the direction. Open one source to inspect its request, returned excerpt and timing.', action: 'Inspect a source' },
   { id: 'challenge', title: 'Let the evidence disagree', target: '[data-tour="challenge"]', screen: 'results',

@@ -32,6 +32,11 @@ docs/LIVE_MATRIX.md), and each has a test that fails without the fix.
   chose (and which were refused), who produced each (rules or model), and whether anything pushed back.
 - The landing page's example and the Create form now open the Tokyo bakery (it names its idea and ships in
   the demo pack) instead of the Brooklyn brief that named none.
+- **The demo pack now ships the model's names and the agent reports** (`export_demo_pack.py --with-agent`), so
+  a fresh host opens the three featured demos in ~1 s with no Qloo and no model request.
+- The picker offers only the three featured demos; the eight weaker prepared briefs stay in the JSON for
+  prewarming. The Create form says what kind of idea works and how long a new one takes. The guided tour gains
+  a step for the Qloo-contribution strip.
 - `scripts/brief_probe.py`: one brief through the real research-run path with timings and cost.
 
 ## Unreleased — business intent and tag resolution
