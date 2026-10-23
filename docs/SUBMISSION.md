@@ -1,7 +1,7 @@
 # Submission
 
 For the [Qloo Agentic Hackathon](https://qloo.devpost.com/). The
-[official rules](https://qloo.devpost.com/rules), checked on 22 October 2026,
+[official rules](https://qloo.devpost.com/rules), checked on 23 October 2026,
 set the deadline to **30 October 2026, 11:45 pm EDT** (31 October, 9:15 am IST).
 They currently state judging on **2–5 November**, with winners around
 5 November. Keep the service accessible through judging and recheck the rules
@@ -92,9 +92,16 @@ rather than hiding it.
 
 ### What's next
 
-Test it with strategists on live projects (the assumptions are in
-[BUSINESS.md](BUSINESS.md)). Possible next technical steps: a native HTTP
-transport in place of the CLI harness, and multi-instance state.
+Test a proposed $1,500, 30-day design partner pilot with hospitality agency
+strategy teams: five scoped briefs, a concept review and a field experiment
+plan. The Pilot page prepares a downloadable discussion brief; the experiment
+notebook captures an owner, review date, spending cap and proceed/stop criteria.
+Pricing, willingness to pay and delivery economics remain unvalidated.
+Commercial Qloo terms are required before accepting a paid pilot. The
+[business model](BUSINESS.md) defines customer interviews and repeat-purchase
+gates; the [investor brief](INVESTOR_BRIEF.md) proposes milestones for a
+$25,000 investment. Production authentication and tenant isolation precede
+client-sensitive use.
 
 **Built with:** Qloo Hackathon Kit, Python, FastAPI, Pydantic, SQLite, fpdf2,
 React, TypeScript, Vite, Tailwind CSS, Vercel AI Gateway.

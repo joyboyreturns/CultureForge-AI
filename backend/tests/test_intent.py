@@ -204,6 +204,17 @@ BAKERY = ('urn:tag:category:place:bakery', 'Bakery')
 BOOKS = ('urn:tag:category:place:bookstore', 'Bookstore')
 
 
+def test_both_businesses_in_a_fresh_hybrid_constrain_the_returned_city(monkeypatch):
+    scripted = Script(monkeypatch,
+        tags={'bakery': _tags(BAKERY)['results'], 'bookstore': _tags(BOOKS)['results']},
+        places={(BAKERY[0], 'any'): [_place('b1', 'Bakery', 'A bakery')],
+                (BOOKS[0], 'any'): [_place('s1', 'Bookstore', 'A bookstore')]})
+    QlooHarnessProvider().generate(_project('Bakery and bookstore in Paris'), allow_naming=False)
+    requests = [payload for operation, payload in scripted.calls if operation == 'recommend']
+    assert len(requests) == 2
+    assert all(payload['filter_location'] == 'Paris, France' and 'signal_location' not in payload for payload in requests)
+
+
 def test_a_single_exact_category_costs_the_baseline_and_no_more(monkeypatch):
     script = Script(monkeypatch, tags={'bakery': _tags(BAKERY)['results']},
                     places={(BAKERY[0], 'any'): [_place('e1', 'Boulangerie Utopie', 'A bakery')]})

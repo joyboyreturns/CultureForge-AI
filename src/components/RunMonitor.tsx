@@ -14,11 +14,12 @@ import type { ClarificationAsk, ResearchRun } from '../api'
  */
 type Phase = 'running' | 'ready' | 'clarify' | 'failed'
 
-export function RunMonitor({ runId, project, earlier, onOpen, onClarify, onWatch, onDismiss }: {
+export function RunMonitor({ runId, project, earlier, onOpen, onReady, onClarify, onWatch, onDismiss }: {
   runId: string
   project: ProjectRequest
   /** True for a run that was set aside when a newer one started. */
   earlier?: boolean
+  onReady?: (result: GenerateResponse) => void
   onOpen: (result: GenerateResponse) => void
   onClarify: (ask: ClarificationAsk) => void
   onWatch: () => void
@@ -30,6 +31,8 @@ export function RunMonitor({ runId, project, earlier, onOpen, onClarify, onWatch
   const [lost, setLost] = useState(false)
   const result = useRef<GenerateResponse | null>(null)
   const ask = useRef<ClarificationAsk | null>(null)
+  const readyCallback = useRef(onReady)
+  readyCallback.current = onReady
 
   useEffect(() => {
     const started = Date.now()
@@ -48,7 +51,7 @@ export function RunMonitor({ runId, project, earlier, onOpen, onClarify, onWatch
         if (cancelled) return
         failures = 0
         setRun(next)
-        if (next.status === 'complete' && next.result) { result.current = next.result; setPhase('ready'); return }
+        if (next.status === 'complete' && next.result) { result.current = next.result; setPhase('ready'); readyCallback.current?.(next.result); return }
         if (next.status === 'clarify' && next.clarification) { ask.current = next.clarification; setPhase('clarify'); return }
         if (next.status === 'failed') { setPhase('failed'); return }
       } catch {
