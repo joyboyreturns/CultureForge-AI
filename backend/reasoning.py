@@ -211,9 +211,34 @@ def _call(request: EvidenceAnalysisRequest, agent_context: Optional[dict] = None
         'its internal evidence id. State assumptions plainly. Choose a recommendation only when '
         'the supplied evidence supports a comparative preference; otherwise use null. '
         'The nextStep is a suggestion only; you cannot call tools. Confidence labels are computed by the application. '
-        'Keep recommendationRationale under 450 characters and whatWouldChangeTheConclusion under 300 characters; '
+        'Return exactly one entry in directions for each supplied direction, with directionId copied verbatim '
+        'from that direction\'s id field. '
+        'Keep recommendationRationale under 450 characters, whatWouldChangeTheConclusion under 300, each '
+        'hypothesis under 400, alternativeExplanation under 260 and nextStepReason under 200; '
         'be brief, because longer text is rejected.',
         payload, EvidenceAnalysisOutput)
+
+
+def _align_directions(output: EvidenceAnalysisOutput, request: EvidenceAnalysisRequest) -> EvidenceAnalysisOutput:
+    """Match each returned analysis to a direction on screen by its id, or by its exact name.
+
+    A model sometimes answers with the direction's name where its id was asked for. That is the
+    same direction, so it is mapped back; a row for a direction that is not on screen, or a second
+    row for one already answered, is left out. Nothing is invented: a missing direction still fails.
+    """
+    by_id = {c.id: c.id for c in request.concepts}
+    by_name = {c.name.strip().casefold(): c.id for c in request.concepts}
+    rows, seen = [], set()
+    for row in output.directions:
+        key = by_id.get(row.directionId) or by_name.get(row.directionId.strip().casefold())
+        if key is None or key in seen:
+            continue
+        seen.add(key)
+        rows.append(row.model_copy(update={'directionId': key}))
+    recommended = output.recommendedDirectionId
+    if recommended is not None:
+        recommended = by_id.get(recommended) or by_name.get(recommended.strip().casefold(), recommended)
+    return output.model_copy(update={'directions': rows, 'recommendedDirectionId': recommended})
 
 
 def _validate_citations(output: EvidenceAnalysisOutput, request: EvidenceAnalysisRequest) -> None:
@@ -274,6 +299,7 @@ def analyze(request: EvidenceAnalysisRequest, agent_context: Optional[dict] = No
         except (ValidationError, AnalysisUnavailable):
             get_store().discard(key)
     result = _call(request) if agent_context is None else _call(request, agent_context)
+    result = _align_directions(result, request)
     _validate_citations(result, request)
     get_store().put(key, result.model_dump(), transport_requests=0)
     return EvidenceAnalysisResult(**result.model_dump(), model=display_model() or 'unnamed model',

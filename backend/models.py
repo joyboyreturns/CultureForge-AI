@@ -360,6 +360,40 @@ class EvidenceAnalysisOutput(BaseModel):
     recommendationRationale: str = Field(min_length=4, max_length=800)
     whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=500)
 
+    @classmethod
+    def tame(cls, data: object) -> object:
+        """Fit a model's analysis to the limits without discarding the rest of it.
+
+        Prose is cut back to its last whole sentence and lists are cut to their limit. Nothing is
+        added or reworded, and citations are left exactly as returned, so they are still checked.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        def clip(value: object, limit: int) -> object:
+            if not isinstance(value, str) or len(value) <= limit:
+                return value
+            cut = value[:limit]
+            stop = max(cut.rfind('. '), cut.rfind('.'))
+            return cut[:stop + 1] if stop >= limit // 3 else cut.rsplit(' ', 1)[0].rstrip(' ,;:') + '…'
+        tamed = dict(data)
+        tamed['recommendationRationale'] = clip(tamed.get('recommendationRationale'), 800)
+        tamed['whatWouldChangeTheConclusion'] = clip(tamed.get('whatWouldChangeTheConclusion'), 500)
+        directions = tamed.get('directions')
+        if isinstance(directions, list):
+            rows = []
+            for row in directions:
+                if isinstance(row, dict):
+                    row = dict(row)
+                    row['hypothesis'] = clip(row.get('hypothesis'), 500)
+                    row['alternativeExplanation'] = clip(row.get('alternativeExplanation'), 320)
+                    row['nextStepReason'] = clip(row.get('nextStepReason'), 240)
+                    if isinstance(row.get('assumptions'), list):
+                        row['assumptions'] = row['assumptions'][:5]
+                rows.append(row)
+            tamed['directions'] = rows
+        return tamed
+
 
 class EvidenceAnalysisResult(EvidenceAnalysisOutput):
     model: str

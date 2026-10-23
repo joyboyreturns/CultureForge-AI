@@ -15,6 +15,9 @@ import type { Evidence, ProjectRequest } from '../contracts'
  * audience is edited, the old comparison is not still the comparison of the
  * new one, so it is dropped rather than presented under new words.
  */
+/** The family a Qloo tag URN names (urn:tag:genre:qloo:… → genre), for telling same-named tags apart. */
+function familyOf(tagId?: string | null) { return tagId?.split(':')[2]?.replace(/_/g, ' ') ?? '' }
+
 export function AudienceComparison({
   project, currentAudience, alternativeAudience, currentEvidence, onApply, busy,
 }: {
@@ -72,6 +75,9 @@ export function AudienceComparison({
   }
 
   const [overlap, setOverlap] = useState(0)
+  const labelCounts = new Map<string | null, number>()
+  for (const tag of comparison?.shared ?? []) labelCounts.set(tag.label, (labelCounts.get(tag.label) ?? 0) + 1)
+  const repeated = new Set([...labelCounts].filter(([, count]) => count > 1).map(([label]) => label))
 
   return (
     <section className="audience-comparison">
@@ -98,14 +104,15 @@ export function AudienceComparison({
             </p>
           )}
           <div className="comparison-shared">
+            {/* Two Qloo tags can share a label (a category and a genre both called "Restaurant"); their family tells them apart. */}
             <span className="small-cap">SHARED CULTURAL TAGS</span>
             {comparison.shared.length === 0 && <p className="audience-comparison-note">No shared tags were returned in this comparison.</p>}
             {comparison.shared.map((tag) => (
               <div className="comparison-tag" key={tag.tagId ?? tag.label}>
-                <strong>{tag.label}</strong>
+                <strong>{tag.label}{tag.label != null && repeated.has(tag.label) && familyOf(tag.tagId) && <small className="comparison-family"> · {familyOf(tag.tagId)}</small>}</strong>
                 <span className="comparison-score">score {tag.score?.toFixed(4) ?? '—'}</span>
-                <span className="comparison-hits">
-                  {currentAudience.slice(0, 14)}… {tag.groupAHits ?? 'unknown'} · {alternativeAudience.slice(0, 14)}… {tag.groupBHits ?? 'unknown'}
+                <span className="comparison-hits" title={`${currentAudience}: ${tag.groupAHits ?? 'unknown'} · ${alternativeAudience}: ${tag.groupBHits ?? 'unknown'}`}>
+                  Current {tag.groupAHits ?? 'unknown'} · Alternative {tag.groupBHits ?? 'unknown'}
                 </span>
                 <span className="comparison-bar"><i style={{ width: `${Math.min(100, (tag.score ?? 0) * 100)}%` }} /></span>
               </div>

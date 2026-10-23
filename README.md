@@ -25,6 +25,7 @@ willingness to pay.
 | **Executive decision brief** | The studio opens on the answer: the lead direction, its verdict, the top cultural anchors with `[evidence id]` chips, who it is for, and the lead place Qloo returned. There is deliberately **no 0-100 fit score**: Qloo returns none, so the brief shows citation coverage and the evidence test instead. |
 | **Seven sections, not one long scroll** | The concept studio is split into *Executive brief, Evidence trace, Places & signals, Directions, Evidence test, Decision* and *Cultural roots*. Each is reachable from the sidebar (nested under Concept studio, with live counts) or from a sticky section bar, and ends with *Previous / Next*. |
 | **Evidence that can say no** | Directions are tested against the places Qloo returned. A direction can come out *supported*, *unproven* or *contested*, and the order can change. |
+| **Refresh-proof** | A reload reopens the exploration you last had open, from this browser's copy of it. |
 | **Take evidence away** | Remove each returned venue in turn and see which one is carrying the answer. It runs on held evidence, with no Qloo or model call. |
 | **Runs that never stall the reader** | Research keeps going when you open another demo or screen. A card follows you with the agent's real latest step and offers the results when they are ready. |
 | **Always a way out** | Back, Switch idea and Try another example in the Concept studio and Scenario lab. |
@@ -41,13 +42,20 @@ willingness to pay.
 
 ### The studio
 
+Every screenshot below is from a real run on the `judging` profile against the live Qloo API, with the
+optional model on: a wellness studio for *mindful professionals who want a slow afternoon* in London.
+
 ![The studio overview, in the landing page's dusk](docs/screenshots/studio-overview.jpg)
 
 *The overview. The same dusk scene as the front page sits behind the studio, painted once as a still frame.*
 
-![Executive decision brief: the answer first, with the seven sections in the sidebar](docs/screenshots/executive-brief.jpg)
+![The agent workspace during a live run](docs/screenshots/agent-workspace.jpg)
 
-*The concept studio opens on the answer. The seven sections sit under Concept studio in the sidebar and in the section bar above the brief.*
+*The agent workspace during a live run. Evidence appears as it arrives, the clock says what to expect, and when Qloo's first answer supports no direction yet the screen says so instead of guessing.*
+
+![Executive decision brief with the seven sections in the sidebar](docs/screenshots/executive-brief.jpg)
+
+*The concept studio opens on the answer. The seven sections sit under Concept studio in the sidebar and in the section bar above the brief. Here the live evidence test has already contested the first anchor.*
 
 ![Evidence trace: what the answer is built on](docs/screenshots/evidence-trace.jpg)
 
@@ -59,27 +67,35 @@ willingness to pay.
 
 ![Directions: each proposal with its photograph and citations](docs/screenshots/directions.jpg)
 
-*Directions. Each proposal carries the Qloo photograph of the place it was built on, its tagline and the evidence it cites.*
+*Directions. A lone direction takes the full width: the Qloo photograph of its anchor beside the words, the tagline and the evidence it cites.*
 
-![The evidence test: one direction contested, the order changed](docs/screenshots/evidence-test.jpg)
+![The evidence test: contested on one anchor, supported on another](docs/screenshots/evidence-test.jpg)
 
-*The evidence test can disagree with the composer. Here one anchor hypothesis was contested and the order changed. The scope is stated on screen: anchor fit within the retrieved sample.*
+*The evidence test can disagree with the composer. Held to Third Space City the direction is contested; held to Biome by Corinthia London it is supported. The screen names the alternative anchor, the original reference, and that the concept was not rebuilt.*
 
-![Decision: the agent's outcome, ask the evidence, and which direction is most defensible](docs/screenshots/decision.jpg)
+![Decision: the research agent's steps](docs/screenshots/decision.jpg)
 
-*Decision. The research agent's outcome, questions answered only from observed evidence, and a comparison of how defensible each direction is. (This capture ran without the optional model, and says so.)*
+*Decision. What the bounded research agent asked Qloo, step by step, including the steps it was refused. Every step is held, so a replay costs nothing.*
 
-![The cultural opportunity map in Tokyo](docs/screenshots/map.jpg)
+![The model's analysis, citing evidence ids](docs/screenshots/analysis.jpg)
 
-*Cultural roots, with the interest map: a real street map with named pins, a plain-words key and a clickable venue list. Pins are address matches, never surveyed points.*
+*The optional model analysis. Its claims cite only evidence on screen; the verdict label and the citation coverage are computed by the application, not the model.*
+
+![The cultural opportunity map in London](docs/screenshots/map.jpg)
+
+*Cultural roots, with the interest map: a real street map with named pins and a venue list that says why each unplotted place is not drawn. Pins are address matches, never surveyed points.*
+
+![Investigating one direction](docs/screenshots/investigate.jpg)
+
+*Investigate opens the questions a direction has not answered, each one a named Qloo workflow: here, where interest in the anchor concentrates.*
 
 ![Which place is carrying this answer?](docs/screenshots/dependence-test.jpg)
 
-*The dependence test removes each returned venue once and reports whether the answer, or only its sources, changed.*
+*The dependence test removes each returned venue once and reports whether the answer, or only its sources, changed. No Qloo or model call.*
 
 ![Scenario lab: same vision, a different audience](docs/screenshots/scenario-lab.jpg)
 
-*Scenario lab. Change the audience or the place and let Qloo measure what changes.*
+*Scenario lab. Qloo's own comparison of two audiences, including when they overlap so much that it cannot show a difference.*
 
 ![Guided tour highlighting the evidence test](docs/screenshots/guided-tour.jpg)
 
