@@ -197,7 +197,7 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
                                 provider)
     if not [tag for tag in tags if tag not in exclude_tag_ids]:
         raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.', code='INVALID_REQUEST')
-    rec_key = canonical_key('recommend', brief_places_retrieval_payload(tags, project.location, project.businessIdea))
+    rec_key = canonical_key('recommend', brief_places_retrieval_payload(tags, project.location, project.businessIdea, evidence_store=store))
     rec_envelope = recommend_envelope or store.get(rec_key)
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')

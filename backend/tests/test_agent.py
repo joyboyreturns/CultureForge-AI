@@ -211,6 +211,51 @@ def test_judging_is_bounded_by_steps_and_dev_by_its_allowances(monkeypatch, resp
     assert 'allowance' in report.stoppingReason
 
 
+def test_repeated_invalid_plans_stop_without_spending_the_remaining_steps(monkeypatch, response, store):
+    calls = script(monkeypatch,
+        plan('rank', options=[PLACE_A, PLACE_B]),
+        plan('describe', entity='unobserved-a'),
+        plan('describe', entity='unobserved-b'),
+        plan('describe', entity='unobserved-c'),
+        analysis(AgentClaim(statement='South Hall outranks North Room here.', citations=[PLACE_B])))
+    qloo = FakeQloo()
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=qloo)
+    assert [step.status for step in report.steps] == ['ok', 'rejected', 'rejected', 'rejected']
+    assert [operation for operation, _ in qloo.calls] == ['rank']
+    assert len(calls) == 5
+    assert 'three invalid tool requests' in report.stoppingReason
+    assert report.analysis['claims']
+
+
+def test_comparing_tags_explains_the_entity_only_workflow_before_any_call(monkeypatch, response, store):
+    script(monkeypatch, plan('compare_audiences', group_a=[TAG], group_b=[TAG]),
+        plan('finish'), analysis(AgentClaim(statement='North Room is cited.', citations=[PLACE_A])))
+    provider = FakeQloo()
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=provider)
+    assert report.steps[0].status == 'rejected'
+    assert 'place entity IDs' in report.steps[0].detail
+    assert provider.calls == []
+
+
+def test_a_valid_action_resets_the_invalid_plan_streak(monkeypatch, response, store):
+    script(monkeypatch,
+        plan('describe', entity='unobserved-a'),
+        plan('describe', entity='unobserved-b'),
+        plan('rank', options=[PLACE_A, PLACE_B]),
+        plan('describe', entity='unobserved-c'),
+        plan('finish'),
+        analysis(AgentClaim(statement='South Hall outranks North Room here.', citations=[PLACE_B])))
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    assert report.steps[-1].tool == 'finish'
+    assert len(report.steps) == 5
+
+
+def test_agent_place_search_uses_the_shared_geographic_constraint(response):
+    _, payload = agent.build_request('recommend', {'target_type': 'place', 'signal_tags': [TAG]}, agent.Observed(response), response)
+    assert payload['filter_location'] == response.project.location
+    assert 'signal_location' not in payload
+
+
 def test_a_repeated_run_of_the_same_evidence_is_held(monkeypatch, response, store):
     script(monkeypatch, plan('finish'),
            analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))

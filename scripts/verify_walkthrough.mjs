@@ -403,16 +403,24 @@ async function main() {
     method: 'POST',
     body: { project: { ...BRIEF, location: 'Greenpoint, Brooklyn' }, audience: ALTERNATIVE_AUDIENCE },
   });
-  const strandedDetail = String(stranded.body?.detail ?? '');
+  // Since the result-location filter, Greenpoint returns places but none that
+  // support a direction. Either way the reader gets a stated reason, never a
+  // blank panel: an error that names the location, or a notice with no concepts.
+  const strandedDetail = String(stranded.body?.detail ?? stranded.body?.notice ?? '');
+  const statedOutcome = stranded.status !== 200
+    ? /returned no places for|No held result for/i.test(strandedDetail)
+    : (stranded.body?.concepts ?? []).length === 0 && strandedDetail.length > 0;
   check('a location Qloo cannot resolve is reported, not guessed at',
-    stranded.status !== 200 && /returned no places for/i.test(strandedDetail),
-    strandedDetail || `HTTP ${stranded.status}`);
-  check('the message names the location that failed',
-    /Greenpoint, Brooklyn/.test(strandedDetail),
-    strandedDetail.slice(0, 140));
-  check('the message offers a location Qloo already returned places for',
-    /returned places for these same signals earlier/i.test(strandedDetail),
-    strandedDetail.slice(0, 200));
+    statedOutcome, strandedDetail.slice(0, 160) || `HTTP ${stranded.status}`);
+  if (stranded.status !== 200) {
+    check('the message names the location that failed',
+      /Greenpoint, Brooklyn/.test(strandedDetail), strandedDetail.slice(0, 140));
+    check('the message offers a location Qloo already returned places for',
+      /returned places for these same signals earlier/i.test(strandedDetail), strandedDetail.slice(0, 200));
+  } else {
+    check('a thin answer offers a way forward',
+      /larger|try|broader/i.test(strandedDetail), strandedDetail.slice(-120));
+  }
 
   console.log('\n----------------------------------------------------------');
   if (failures === 0) {

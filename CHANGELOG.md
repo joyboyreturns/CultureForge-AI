@@ -1,5 +1,70 @@
 # Changelog
 
+## Unreleased — first evidence and visible completion, 2026-10-23
+
+- Open evidence-bearing initial answers automatically while research continues.
+- Follow the run in a floating status card; update the matching preview to the
+  full report automatically, with a completion message. Preserve other screens
+  and other briefs; keep the detailed trace accessible without redirect loops.
+- Replace generic waiting-time copy in the form and README with the actual
+  first-evidence journey. Document London's measured eleven-second initial
+  answer separately from its 109-second completed report.
+- Describe the 14-trial gallery, shared city-filter fix and evidence challenge
+  in the README before the proposed commercial offer.
+
+## Unreleased — fix live place retrieval and expand trials, 2026-10-23
+
+- Isolated the Berlin timeout to a wrongly used location role: with the same
+  tags, category and result count, a result-location filter returned ten places
+  in under nine seconds. Full Berlin research and its evidence test completed.
+- Use result-location filters for fresh primary, hybrid, agent and replacement
+  place searches. Preserve original successful cache keys and provenance;
+  prefer modern held responses and do not reuse legacy empty answers.
+- Extend known-location recovery to the corrected request form. Keep audience
+  location signals for demographic ranking, where they are intentional.
+- Added Berlin, Mexico City and Vienna to a 14-brief trial library, exposed on
+  overview/results with category filters and in a scrollable creation list.
+- Package their real responses without fetching or inventing replacement data.
+- Regression suite: 444 passed. See `docs/JUDGE_SCENARIOS.md` for observations,
+  scope and the distinction between a timed-out request and genuinely empty evidence.
+
+## Unreleased — judge input hardening, 2026-10-23
+
+- Verified all 11 prepared ideas across five categories, including citations,
+  cited-place removal, scoped verdicts and PDF responses, without new calls.
+- Tested fresh Berlin, Mexico City hybrid and unsupported Singapore inputs;
+  recorded successful, clarification and upstream-timeout outcomes separately.
+- Reject whitespace-only audience/city inputs before provider access and offer
+  a direct edit action for unresolved audiences.
+- Stop planning after three consecutive invalid agent requests, and explain
+  that audience comparisons require place entities rather than tag URNs.
+- Make the live one-brief probe fail its exit status when the run fails.
+- See `docs/JUDGE_SCENARIOS.md` for evidence, tests and remaining limitations.
+
+## Unreleased — hackathon first presentation, 2026-10-23
+
+- Replaced Pilot in desktop and mobile navigation with Why Qloo: a source,
+  challenge and removal walkthrough connected to the working studio.
+- Made Try the demo the primary landing action. Commercial pilot details
+  remain accessible through the quieter For teams footer link.
+- Removed the landing example's fixed promise of three directions; the
+  composer returns only the directions its retrieved evidence supports.
+
+## Unreleased — commercial pilot and validation, 2026-10-23
+
+- Added a Pilot page with a proposed offer, scope, acceptance criteria and a
+  local downloadable discussion brief. No inquiry or payment is transmitted.
+- Renamed the landing navigation's Case Studies to Evidence test to describe
+  the actual content without implying customer case studies.
+- Added accountable owner, review date and a team-entered spending cap to the
+  existing local decision notebook and its Markdown export. Older notes remain readable.
+- Wrote a concrete business model, customer-validation gates, illustrative
+  cost constraints and investment milestones; prices and results remain labeled hypotheses.
+- Updated the contract checker to recognise the existing agent, intent,
+  address, coordinates and running-state fields.
+- Rechecked the held-evidence HTTP journey with Qloo and model calls disabled;
+  see `docs/RELEASE_AUDIT.md` for results and remaining public-release gates.
+
 ## Unreleased — the studio takes the landing page's look, 2026-10-23
 
 - **One look from front page to studio.** A new last stylesheet (`src/dusk.css`) gives the studio the

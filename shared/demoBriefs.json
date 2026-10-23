@@ -150,6 +150,51 @@
           "Build a loyal local following"
         ]
       }
+    },
+    {
+      "id": "berlin-plant-based-trial",
+      "label": "A plant-based restaurant hypothesis",
+      "trialNote": "Live-tested after the location fix. General restaurant references; vegan-specific support remains unproven.",
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "Vegan restaurant",
+        "audience": "Design-conscious young professionals who enjoy plant-based food",
+        "location": "Berlin, Germany",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
+    },
+    {
+      "id": "mexico-city-bookshop-cafe",
+      "label": "A bookshop café for readers and wine enthusiasts",
+      "trialNote": "Hybrid trial: two separate business samples; demand for the combination is not established.",
+      "project": {
+        "businessType": "Retail",
+        "businessIdea": "Bookshop cafe",
+        "audience": "Readers of translated fiction and natural wine enthusiasts",
+        "location": "Mexico City, Mexico",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
+    },
+    {
+      "id": "vienna-plant-based-trial",
+      "label": "A plant-based restaurant hypothesis in Vienna",
+      "trialNote": "Live-tested with the same location-filter method in another city. Vegan-specific coverage remains a separate question.",
+      "project": {
+        "businessType": "Food & beverage",
+        "businessIdea": "Vegan restaurant",
+        "audience": "Design-conscious young professionals who enjoy plant-based food",
+        "location": "Vienna, Austria",
+        "budget": "$25k – $50k",
+        "objectives": [
+          "Build a loyal community"
+        ]
+      }
     }
   ]
 }

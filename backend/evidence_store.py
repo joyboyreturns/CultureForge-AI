@@ -220,7 +220,8 @@ class EvidenceStore:
                 continue
             intent = envelope.get('query_intent') if isinstance(envelope.get('query_intent'), dict) else {}
             signals = intent.get('signals') if isinstance(intent.get('signals'), dict) else {}
-            location = signals.get('location')
+            filters = intent.get('filters') if isinstance(intent.get('filters'), dict) else {}
+            location = filters.get('location') or signals.get('location')
             if not isinstance(location, str) or not location.strip():
                 continue
             held = signals.get('tags')

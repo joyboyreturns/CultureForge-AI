@@ -1,9 +1,10 @@
 # Who pays, and why
 
-This page states the commercial case as **assumptions to test**. None of it is
-measured. No customer, revenue, conversion or market-size figure appears here,
-because none has been observed. Each assumption below says how it would be
-checked.
+CultureForge sells a defensible cultural argument for a hospitality concept review.
+The first buyer is a strategy lead at a hospitality brand agency with recurring
+client briefs. Expansion to multi-site operators follows proof of repeat use.
+The commercial claims and prices below are **hypotheses to test**, not traction.
+No paying customers, revenue, measured savings or market size have been established.
 
 ## The buyer
 
@@ -51,10 +52,29 @@ replace them, and it says so on every verdict.
 | A4 | The PDF is close to a client-ready deliverable | Ask them to send it as-is; record every edit they make first |
 | A5 | Budget sits with the strategy team or the agency engagement, not with IT | Ask who signed the last research-tool purchase |
 
-## Pilot pricing logic (a structure, not a price)
+## The first offer
 
-No price is proposed here, because none has been tested. The structure a
-pilot price should follow:
+**Proposed design partner pilot: $1,500 USD, 30 days, one team, five scoped briefs.**
+One brief means one idea, one audience and one city. Include one onboarding
+session, five cited evidence briefs, one concept review and a field experiment
+plan. Agree refresh, comparison, support and workflow limits before kickoff.
+This is a pricing experiment, not a currently available paid subscription.
+
+The public Pilot page creates a downloadable discussion brief with the buyer's
+decision and acceptance criteria. It sends no inquiry, books nothing and takes
+no payment. The existing studio supplies the research, evidence tests, PDF,
+share links and decision notebook; onboarding and the review are founder-led
+services to validate before automating them.
+
+**Continuation hypothesis:** $750 USD per team per month for up to five scoped
+briefs, with usage and support caps agreed in the contract. No unlimited plan.
+This is not implemented billing. Offer it only if observed willingness to pay,
+repeat usage and the commercial data quote support the cost floor below.
+
+## Pilot pricing logic
+
+The proposed price must pass both constraints; lower the scope or stop if it
+cannot. Do not assume the hackathon key grants commercial usage rights.
 
 ```
 pilot price  >=  (Qloo licence share + model calls + hosting) per brief  x  briefs in pilot
@@ -71,6 +91,59 @@ pilot price  <=  value of strategist time saved per brief  x  briefs in pilot
 - **Pilot shape (assumption).** A fixed number of briefs for one team over a
   fixed period, with a review against A2–A4 at the end. A per-workspace key
   and usage metering already exist (`backend/platform.py`).
+
+Cache hits lower transport consumption; they do not eliminate a fixed data
+licence fee. Meter every workflow, including comparisons and optional agent
+steps. A brief is not guaranteed to cost two calls. Local call counts are not
+an invoice, and model-off replay does not establish production model costs.
+
+**Illustrative planning scenario, not measured economics:** at a $1,500 pilot
+price, a 60% contribution-margin target permits at most $600 in direct delivery
+costs. If onboarding and review take four hours valued internally at $75/hour,
+$300 remains for the allocated data licence, model, hosting and other direct
+costs across five briefs. Replace these assumptions with actual quotes and
+time logs. If the costs exceed that allowance, renegotiate scope or price
+before accepting a pilot. This target is not a demonstrated margin.
+
+## First customers and a decision to continue
+
+1. Founder identifies 20 hospitality brand agencies with recurring concept
+   work. Outreach must be sent by the founder; none has been sent by the app.
+2. Conduct eight problem interviews. Ask about the last review, existing
+   workflow, evidence gaps, time spent, purchasing owner and budget authority.
+   Do not count enthusiasm as demand.
+3. Invite three teams to scope a design partner pilot using one of their own
+   real briefs. Show an unproven or contested result as well as a supported one.
+4. Agree the acceptance criteria, baseline task and cost cap before delivery.
+   Record who used the output, edits required, time before and after, and what
+   was actually decided. The notebook records owner, review date and spending cap.
+5. Proposed continuation gate: at least two teams pay the agreed pilot price,
+   use the export in a real review, and at least one purchases a second period
+   within 60 days. These are targets, not results. Rework the offer if they fail.
+
+## Why this could remain useful
+
+Qloo supplies the licensed taste graph; CultureForge owns the workflow for
+turning it into an inspectable, challengeable and reusable decision record.
+Generic chat can draft concepts. This product adds bounded evidence retrieval,
+anchor tests that can fail, removal and recomposition, and cited deliverables.
+No exclusive access to Qloo, proprietary dataset or proven moat is claimed.
+Longer-term differentiation would require demonstrated reviewer adoption and,
+with customer permission, learning which experiments lead to useful decisions.
+
+## Commercial readiness gates
+
+- Obtain a written Qloo commercial quote and confirm permitted storage,
+  retention, display, export and any resale or sublicensing terms.
+- The studio is an anonymous hackathon experience. Issued keys and SQLite
+  metering are foundations, not a complete multi-tenant enterprise product.
+  Authenticate users, verify tenant isolation, establish deletion and retention
+  policies, and agree support and availability before hosting client-sensitive work.
+- Implement billing only after the price and delivery cost are validated.
+- Do not sell cultural affinity as demand forecasting or site underwriting.
+
+See [INVESTOR_BRIEF.md](INVESTOR_BRIEF.md) for the pitch, proposed use of funds
+and validation milestones.
 
 ## What would change this
 

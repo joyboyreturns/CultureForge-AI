@@ -10,7 +10,7 @@ def test_a_fresh_store_opens_each_demo_from_the_shipped_pack(monkeypatch, tmp_pa
     result = demo_pack.seed()
     assert result['skipped'] == '' and result['evidence'] > 10 and result['geocodes'] > 5
     listing = {row['id']: row['held'] for row in examples.listing()}
-    for demo in ('tokyo-morning-bakery', 'paris-ice-cream', 'melbourne-specialty-coffee'):
+    for demo in listing:
         assert listing[demo], demo
 
 
