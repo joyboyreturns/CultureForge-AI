@@ -105,11 +105,7 @@ Things that matter for judging:
   so each request is short; only a direct call to a slow cold route could hit it.
 - **Do not put Cloudflare Access, "Under Attack" mode or Bot Fight Mode in front of the demo hostname.** A
   challenge page blocks judges and any automated check of your URL.
-- **The landing page's hero video is 13.9 MB.** Cloudflare's self-serve terms limit serving video and other
-  non-HTML content through their network. A hackathon's traffic is tiny, but you can remove the question
-  entirely by shrinking it on the server: `sudo apt install -y ffmpeg && ffmpeg -i assets/cultureforge-background.mp4
-  -vf scale=-2:720 -an -crf 30 -movflags +faststart assets/cultureforge-background.small.mp4`, check it looks
-  right, then replace the original and rebuild. Only do that if you own or may modify the video.
+- The landing background is drawn in code (no video file), so there is no large media to serve through Cloudflare.
 - Check from a phone on mobile data, then run `python3 scripts/smoke_test.py https://demo.example.com`.
 
 **5. Firewall.** Keep port 8000 private:

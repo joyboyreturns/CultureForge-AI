@@ -11,9 +11,18 @@ The root MIT license applies to CultureForge's original software. Dependencies, 
 | fpdf2 (the PDF export) | [py-pdf/fpdf2](https://github.com/py-pdf/fpdf2), LGPL-3.0-or-later. Used unmodified as a library dependency installed from PyPI; it is not vendored or relicensed here. |
 | React, Vite, Tailwind CSS, Motion, Lucide, FastAPI, Pydantic, Uvicorn | Respective upstream projects. Package license files remain with their distributions; consult installed packages and lockfiles for exact versions and terms. |
 
+## Landing background
+
+The landing page's background is drawn in code by `landing-scene.js` (sine waves and a hash function). It contains no
+video, photograph or other third-party media. An earlier version used a video downloaded from MotionSites AI, whose
+terms state that the site owns its video backgrounds and do not permit republishing them; that video and its poster
+image were removed.
+
 ## Owner review before publication
 
-The repository already contained `assets/cultureforge-background.mp4`, `assets/cultureforge-poster.jpg`, `assets/logo.webp` and product screenshots. Their creation or purchase records are not in the repository. Confirm ownership or suitable permissions for publication and redistribution; retain attribution/receipts if applicable. The software license does not establish media ownership. Set `ownerConfirmedAssetRights` in submission.json only after this review.
+`assets/logo.webp` and the product screenshots in `docs/screenshots/` have no creation or purchase records in the
+repository. Confirm ownership or suitable permissions for publication and redistribution. The software license does not
+establish media ownership. Set `ownerConfirmedAssetRights` in submission.json only after this review.
 
 The external Bubbledot font stylesheet has been removed; the landing page uses the bundled, licensed Geist Pixel Circle display font. Product screenshots should reflect the final build and must not be described as user/customer validation.
 
