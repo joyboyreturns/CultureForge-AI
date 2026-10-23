@@ -271,3 +271,105 @@ def test_a_malformed_analysis_is_retried_once_and_then_stands_on_the_rules(monke
     script(monkeypatch, plan('finish'), bad, bad)
     report = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
     assert report.mode == 'rules' and 'rule composer' in report.stoppingReason and report.modelCalls == 3
+
+
+def test_a_wall_on_the_first_step_writes_no_analysis_and_holds_nothing(monkeypatch, response, store):
+    """LIVE_DISABLED on step one added no evidence: no analysis, and nothing frozen as 'complete'."""
+    calls = script(monkeypatch, plan('entity_tags', entities=[PLACE_A]))
+    qloo = FakeQloo(fail_on={'entity_tags': QlooHarnessError('Live retrieval is switched off.', code='LIVE_DISABLED')})
+    events = []
+    report = agent.run_agent(response, {}, {}, None, time.time() + 60, events.append, provider=qloo)
+    assert report.mode == 'rules' and report.status == 'limited' and report.analysis is None
+    assert 'LIVE_DISABLED' in report.stoppingReason and 'rule composer' in report.stoppingReason
+    assert len(calls) == 1  # the plan only; no analysis request was made
+    assert events[-1].step == 'agent-analysis' and events[-1].status == 'skipped'
+    # Nothing was held, so the next run is free to try again.
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    again = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    assert again.cached is False and again.mode == 'frontier_ai'
+
+
+def test_an_analysis_after_a_mid_loop_wall_is_shown_but_not_held(monkeypatch, response, store):
+    script(monkeypatch, plan('rank', options=[PLACE_A, PLACE_B]), plan('entity_tags', entities=[PLACE_A]),
+           analysis(AgentClaim(statement='South Hall outranks North Room here.', citations=[PLACE_B])))
+    qloo = FakeQloo(fail_on={'entity_tags': QlooHarnessError('rate limited', code='RATE_LIMITED')})
+    first = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=qloo)
+    assert first.mode == 'frontier_ai' and agent.interrupted(first)
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    assert agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo()).cached is False
+
+
+def test_a_report_held_while_qloo_was_off_is_discarded_and_rerun(monkeypatch, response, store):
+    """The featured demos were held with a lone LIVE_DISABLED step; that must heal, not replay."""
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    good = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    key = next(iter(store._cache))
+    poisoned = good.model_dump()
+    poisoned['steps'] = [{'index': 1, 'tool': 'entity_tags', 'status': 'error', 'cached': False,
+                          'detail': 'Qloo entity_tags failed (LIVE_DISABLED): Live Qloo retrieval is switched off.'}]
+    store.put(key, poisoned, transport_requests=0)
+    assert store.get(key) == poisoned
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    healed = agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    assert healed.cached is False and not agent.interrupted(healed)
+
+
+def test_an_overlong_summary_is_clipped_not_thrown_away(monkeypatch):
+    """Observed live: a valid 4.9k-character answer was lost because its summary ran past 800."""
+    from backend.models import AgentAnalysis
+    long_summary = ('The anchor ranks first for the proposed profile. ' * 30).strip()
+    tamed = AgentAnalysis.tame({
+        'claims': [{'statement': 'North Room is cited.', 'citations': [PLACE_A]},
+                   {'statement': 'x' * 450, 'citations': [PLACE_A]}] + [
+                       {'statement': f'Claim number {i} stands.', 'citations': [PLACE_A]} for i in range(10)],
+        'summary': long_summary, 'whatWouldChangeTheConclusion': 'A different profile. ' * 40})
+    parsed = AgentAnalysis.model_validate(tamed)
+    assert len(parsed.summary) <= 800 and parsed.summary.endswith('.')
+    assert len(parsed.whatWouldChangeTheConclusion) <= 500
+    assert len(parsed.claims) == 8 and all(len(c.statement) <= 400 for c in parsed.claims)
+
+
+def test_a_fenced_answer_is_still_read():
+    from backend.reasoning import _json_text
+    assert json.loads(_json_text('```json\n{"a": 1}\n```')) == {'a': 1}
+    assert json.loads(_json_text('Here you go: {"a": 1} Thanks.')) == {'a': 1}
+
+
+def test_loops_beyond_the_slot_limit_are_skipped_in_words_and_not_held(monkeypatch, response, store):
+    """Public demo: the model route allows five requests a minute, so a third simultaneous loop must not queue for minutes."""
+    monkeypatch.setenv('CULTUREFORGE_AGENT_SLOTS', '1')
+    monkeypatch.setenv('CULTUREFORGE_AGENT_QUEUE_SECONDS', '0')
+    gate = agent._slot_gate()
+    assert gate.acquire(blocking=False)          # another visitor's loop holds the only slot
+    try:
+        calls = script(monkeypatch)              # any model call would fail the test
+        events = []
+        report = agent.run_agent(response, {}, {}, None, time.time() + 60, events.append, provider=FakeQloo())
+        assert report.mode == 'rules' and report.status == 'skipped' and 'did not run' in report.stoppingReason
+        assert calls == [] and events[-1].status == 'skipped'
+    finally:
+        gate.release()
+    # With the slot free again the loop runs, and the slot is given back afterwards.
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    assert agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo()).mode == 'frontier_ai'
+    assert gate.acquire(blocking=False)
+    gate.release()
+
+
+def test_a_held_report_never_waits_for_a_slot(monkeypatch, response, store):
+    script(monkeypatch, plan('finish'),
+           analysis(AgentClaim(statement='North Room is the cited anchor.', citations=[PLACE_A])))
+    agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo())
+    monkeypatch.setenv('CULTUREFORGE_AGENT_SLOTS', '1')
+    monkeypatch.setenv('CULTUREFORGE_AGENT_QUEUE_SECONDS', '0')
+    gate = agent._slot_gate()
+    assert gate.acquire(blocking=False)
+    try:
+        assert agent.run_agent(response, {}, {}, None, time.time() + 60, provider=FakeQloo()).cached is True
+    finally:
+        gate.release()

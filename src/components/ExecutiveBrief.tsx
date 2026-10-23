@@ -3,6 +3,7 @@ import type { Concept, GenerateResponse } from '../contracts'
 import type { ChallengeResult } from '../api'
 import { citationCoverage } from '../evidenceSummary'
 import { VerdictBadge } from './Challenge'
+import { qlooDifference, toolLabel } from '../qlooDifference'
 
 /**
  * The answer first, the workbench on request.
@@ -33,6 +34,7 @@ export function ExecutiveBrief({ result, ordered, challenge, challenging, onInsp
   const audience = challenge?.profile.demographic
   const tagCount = result.evidence.filter((item) => item.kind === 'tag').length
   const placeCount = result.evidence.filter((item) => item.kind === 'entity').length
+  const difference = qlooDifference(result, ordered, challenge)
 
   return (
     <section className="exec-brief panel" aria-label="Executive decision brief" data-tour="exec-brief">
@@ -73,6 +75,37 @@ export function ExecutiveBrief({ result, ordered, challenge, challenging, onInsp
           {lead?.location && <small>{lead.location}</small>}
         </div>
       </div>
+      {difference && (
+        <div className="qloo-difference" data-tour="qloo-difference" aria-label="What Qloo contributed">
+          <span className="tiny-cap">WHAT QLOO CONTRIBUTED TO THIS ANSWER</span>
+          <ul>
+            <li>
+              <b>Grounded · rules</b>
+              <span>{difference.cited.numerator} of {difference.cited.denominator} decisions cite one of the {difference.places} places or {difference.signals} audience signals Qloo returned for this audience and city. Open any [id] to see Qloo&apos;s own record.</span>
+            </li>
+            <li>
+              <b>Extended · {difference.steps.length > 0 ? `model-chosen steps (${difference.agent?.model ?? 'configured model'})${difference.agent?.by === 'rules' ? ' · analysis fell back to rules' : ''}` : 'rules only'}</b>
+              {difference.steps.length > 0 ? (
+                <span>
+                  The agent asked Qloo {difference.steps.length} more question{difference.steps.length === 1 ? '' : 's'}{difference.notRun > 0 ? ` (${difference.notRun} more were refused or failed, and are marked in the trace)` : ''}.
+                  <ol className="qloo-steps">
+                    {difference.steps.slice(0, 4).map((step) => (
+                      <li key={step.index}><em>{toolLabel(step.tool)}</em> — {step.question} <small>{step.returned} result{step.returned === 1 ? '' : 's'} · {step.source === 'held' ? 'held evidence' : 'fetched live'}</small></li>
+                    ))}
+                  </ol>
+                  {difference.steps.length > 4 && <small>{difference.steps.length - 4} more in the agent trace.</small>}
+                </span>
+              ) : (
+                <span>{difference.agent ? difference.agent.stopped : 'The agent has not run for this answer.'}</span>
+              )}
+            </li>
+            <li>
+              <b>Tested · {challenge ? 'rules' : 'not run yet'}</b>
+              <span>{difference.pushback.text}{difference.agent && difference.agent.rejected > 0 ? ` ${difference.agent.rejected} model claim${difference.agent.rejected === 1 ? ' was' : 's were'} rejected by the citation check and are listed under the agent outcome.` : ''}</span>
+            </li>
+          </ul>
+        </div>
+      )}
       <footer>
         <small>{placeCount} places and {tagCount} audience signals returned by Qloo. Scope: anchor fit within the retrieved sample, not demand, competition or willingness to pay.</small>
         <button className="text-link" onClick={onOpenWorkbench}>Open the evidence workbench <ArrowRight size={14} /></button>

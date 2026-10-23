@@ -106,3 +106,17 @@ def test_every_mapped_code_has_an_http_status():
              'UPSTREAM_REJECTED', 'UPSTREAM_TIMEOUT', 'UPSTREAM_MALFORMED', 'QUOTA_EXHAUSTED',
              'LIVE_DISABLED', 'BUDGET_UNAVAILABLE', 'MODEL_UNAVAILABLE', 'NO_EVIDENCE', 'NEEDS_INPUT'}
     assert codes <= set(main.ERROR_STATUS)
+
+
+def test_a_matching_place_returned_for_another_city_is_named_in_what_is_missing():
+    """Observed live: Qloo returned a Chicago climbing gym for a Denver query."""
+    from types import SimpleNamespace
+    from backend.category import resolve
+    from backend.outcome import build_outcome
+    from backend import relevance
+    category = relevance.classify_brief('Wellness', 'bouldering gym', 'beginner climbers')
+    place = SimpleNamespace(kind='entity', label='First Ascent Uptown', location='Chicago, Illinois',
+                            relevance={'evidenceClass': 'unverified_geography'})
+    outcome = build_outcome(category=category, evidence=[place], concepts=[])
+    assert outcome['state'] == 'insufficient_evidence'
+    assert any('First Ascent Uptown (Chicago, Illinois)' in line for line in outcome['missing'])

@@ -552,7 +552,7 @@ import demoBriefs from './shared/demoBriefs.json';
     const note = pulse.querySelector('[data-pulse-note]');
     // The first prepared brief: the studio offers the same one, and
     // scripts/prewarm.py fetches its evidence before anyone clicks.
-    const brief = demoBriefs.briefs[0].project;
+    const brief = (demoBriefs.briefs.find((item) => item.id === 'tokyo-morning-bakery') ?? demoBriefs.briefs[0]).project;
 
     function fail(message) {
       status.textContent = message || 'The example could not be retrieved. Try again or start your own exploration.';

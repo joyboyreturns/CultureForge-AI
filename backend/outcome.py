@@ -57,7 +57,11 @@ def build_outcome(*, category, evidence, concepts, provider_failed: bool = False
         if counts.get('cultural_attraction'):
             missing.append('Attractions were returned, but they are context, not competitors or references')
         if counts.get('unverified_geography'):
-            missing.append('Matching places were returned for a different location than the one requested')
+            named = [f"{getattr(item, 'label', '')} ({getattr(item, 'location', None) or 'location not returned'})"
+                     for item in evidence
+                     if (getattr(item, 'relevance', None) or {}).get('evidenceClass') == 'unverified_geography'][:3]
+            missing.append('Matching places were returned for a different location than the one requested: '
+                           + '; '.join(named) + '. They cannot anchor a direction here.')
     if not missing:
         missing.append('Enough distinct, cited evidence to compose a direction')
     state = INSUFFICIENT
