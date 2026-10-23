@@ -438,3 +438,40 @@ def test_held_tag_reads_the_store_and_spends_nothing():
 def test_the_json_intent_has_no_free_form_fields_a_client_could_inject():
     dumped = json.dumps(interpret('Bakery and bookstore').model_dump())
     assert 'urn:' not in dumped
+
+
+def test_a_model_read_category_judges_places_by_the_categorys_own_words(monkeypatch):
+    """Observed live (Mexico City, "bookshop cafe"): ten returned bookshops, none direct.
+
+    The model reading carried only the typed word "bookshop", so Qloo's own "bookstore" and
+    "Librerías" text never matched and every real bookshop was demoted to indirect.
+    """
+    from backend import relevance
+    _enable_model(monkeypatch, {'components': [{'phrase': 'bookshop', 'search': 'bookstore'},
+                                               {'phrase': 'cafe', 'search': 'coffee shop'}]})
+    QlooHarnessProvider().interpret_idea('bookshop cafe')
+    places = {
+        'Librerías El Sótano': "Large Mexican bookstore offering a broad selection of fiction, non-fiction and regular cultural events in a central Coyoacán location.",
+        'Cafebrería El Péndulo San Ángel': 'Bookstore-café and restaurant blending curated books, gifts and on-site dining.',
+    }
+    for name, text in places.items():
+        verdict = relevance.assess(business_type='Retail', idea='bookshop cafe', audience='readers',
+                                   location='Mexico City, Mexico', name=name, description=text,
+                                   returned_location='Mexico City')
+        assert verdict['evidenceClass'] == 'direct_business' and verdict['anchorEligible'], name
+    # The same bookstore returned for another country still cannot anchor: geography is unchanged.
+    far = relevance.assess(business_type='Retail', idea='bookshop cafe', audience='readers',
+                           location='Mexico City, Mexico', name='Librería Puro Verso',
+                           description='Independent Montevideo bookstore on Av. 18 de Julio.',
+                           returned_location='Montevideo')
+    assert far['evidenceClass'] == 'unverified_geography' and not far['anchorEligible']
+
+
+def test_an_unsupported_three_word_idea_offers_its_own_shorter_form_as_a_way_out():
+    """Observed live (Singapore, "film camera shop"): Qloo had no such tag and the reader was offered nothing."""
+    from backend.intent_report import idea_alternatives
+    reading = interpret('film camera shop')
+    offered = idea_alternatives(reading, tried=('film camera shop',))
+    assert [option['value'] for option in offered] == ['camera shop']
+    assert idea_alternatives(reading, tried=('film camera shop', 'camera shop')) == []
+    assert idea_alternatives(interpret('camera shop'), tried=('camera shop',)) == []

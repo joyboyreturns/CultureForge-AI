@@ -37,7 +37,8 @@ from .providers import (COMPOSER_VERSION, QLOO_ENTITY_TYPES, QLOO_WORKFLOWS, Qlo
                         audience_demographics_payload, brief_tags_payload, describe_payload, entity_tags_payload,
                         trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
-from .research import registry as research_registry, start_research
+from .research import registry as research_registry, run_key, start_research
+from .admission import Refusal, admission, client_id
 
 app = FastAPI(
     title='CultureForge API',
@@ -129,6 +130,15 @@ async def qloo_error_handler(request: Request, exc: QlooHarnessError):
     return error_response(exc.code, str(exc), retryable=exc.retryable, details=exc.details)
 
 
+@app.exception_handler(Refusal)
+async def refusal_handler(request: Request, exc: Refusal):
+    """Fair-use refusal: says what happened and when to come back, and that held work still opens."""
+    response = error_response(exc.code, exc.message, status=429, retryable=True,
+                              details={'retryAfterSeconds': exc.retry_after_seconds})
+    response.headers['Retry-After'] = str(exc.retry_after_seconds)
+    return response
+
+
 @app.exception_handler(HTTPException)
 async def http_error_handler(request: Request, exc: HTTPException):
     message = exc.detail if isinstance(exc.detail, str) else 'The request could not be completed.'
@@ -214,6 +224,7 @@ def _operating_state() -> dict:
         'analysis': analysis_budget_state(),
         'researchRunWorkflows': config.describe_limit(config.limit('RESEARCH_RUN_MAX_WORKFLOWS')),
     }
+    state['admission'] = admission.snapshot()
     try:
         state['cache'] = get_store().stats()
     except Exception:  # pragma: no cover - health must never raise
@@ -250,7 +261,12 @@ def generate(project: ProjectRequest, request: Request) -> GenerateResponse:
     Every answer is saved to the caller's workspace, so it is still there
     after the tab closes and can be exported or handed to somebody else.
     """
-    response = get_provider().generate(project)
+    ticket = admission.enter(client_id(request) if request is not None else 'internal',
+                             held=examples.held(project.model_dump()))
+    try:
+        response = get_provider().generate(project)
+    finally:
+        admission.leave(ticket)
     try:
         if request is not None:
             workspace, _prefix = resolve_workspace(request)
@@ -267,7 +283,7 @@ def generate(project: ProjectRequest, request: Request) -> GenerateResponse:
 
 @app.post('/api/projects/compare', tags=['brief'],
           summary='Re-research the same brief for a different audience')
-def compare(request: CompareRequest) -> dict:
+def compare(request: CompareRequest, http_request: Request) -> dict:
     """Re-research the same brief for a different audience.
 
     The scenario lab needs real evidence for the alternative audience, not a
@@ -278,7 +294,11 @@ def compare(request: CompareRequest) -> dict:
     if not isinstance(provider, QlooHarnessProvider):
         raise HTTPException(status_code=409, detail='Live comparison needs the Qloo provider. Run the backend in qloo mode.')
     project = request.project.model_copy(update={'audience': request.audience})
-    response = provider.generate(project)
+    ticket = admission.enter(client_id(http_request), held=examples.held(project.model_dump()))
+    try:
+        response = provider.generate(project)
+    finally:
+        admission.leave(ticket)
     return {
         'audience': request.audience,
         'concepts': [concept.model_dump() for concept in response.concepts],
@@ -654,8 +674,15 @@ def start_run(request: CompareRequest, response: Response, http_request: Request
     produces is saved the same way the direct route saves one.
     """
     workspace, _prefix = resolve_workspace(http_request)
+    # An identical brief that is still running is joined, not researched a second time.
+    joined = research_registry.running_for(run_key(request.project, request.audience, request.seedTagIds))
+    if joined is not None:
+        response.headers['Location'] = f'/api/research/runs/{joined.id}'
+        return {'runId': joined.id, 'status': joined.status, 'statusUrl': f'/api/research/runs/{joined.id}',
+                'joined': True}
+    ticket = admission.enter(client_id(http_request), held=examples.held(request.project.model_dump()))
     run = start_research(request.project, request.audience, request.seedTagIds,
-                         workspace_id=workspace['id'])
+                         workspace_id=workspace['id'], on_finish=lambda: admission.leave(ticket))
     response.headers['Location'] = f'/api/research/runs/{run.id}'
     return {'runId': run.id, 'status': run.status, 'statusUrl': f'/api/research/runs/{run.id}'}
 

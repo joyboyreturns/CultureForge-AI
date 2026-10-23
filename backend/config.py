@@ -187,6 +187,61 @@ def min_call_interval_seconds() -> float:
         return DEFAULT_MIN_CALL_INTERVAL_SECONDS
 
 
+DEFAULT_MAX_COLD_RUNS = 3
+DEFAULT_COLD_RUNS_PER_CLIENT_HOUR = 8
+
+
+def _count(name: str, default: int) -> int:
+    raw = os.getenv(name, '').strip()
+    try:
+        return max(0, int(raw)) if raw else default
+    except ValueError:
+        return default
+
+
+def max_cold_runs() -> int:
+    """How many briefs that need new Qloo evidence may be researched at once (0 = no limit).
+
+    Qloo calls are already spaced server-wide and the model route allows five requests a minute,
+    so a fourth simultaneous cold brief would only queue behind the others and look hung. Replaying
+    held evidence is never counted. This is fairness, not a call budget, so it applies in judging too.
+    """
+    return _count('CULTUREFORGE_MAX_COLD_RUNS', DEFAULT_MAX_COLD_RUNS)
+
+
+def cold_runs_per_client_hour() -> int:
+    """How many cold briefs one visitor may start in an hour (0 = no limit)."""
+    return _count('CULTUREFORGE_COLD_RUNS_PER_CLIENT_HOUR', DEFAULT_COLD_RUNS_PER_CLIENT_HOUR)
+
+
+DEFAULT_AGENT_SLOTS = 2
+DEFAULT_AGENT_QUEUE_SECONDS = 45
+
+
+def agent_slots() -> int:
+    """How many agent loops may run at once (0 = no limit).
+
+    Each loop makes about ten model requests and the gateway route allows five a minute, so a third
+    simultaneous loop only makes every loop slower. Held reports never wait for a slot.
+    """
+    return _count('CULTUREFORGE_AGENT_SLOTS', DEFAULT_AGENT_SLOTS)
+
+
+def agent_queue_seconds() -> int:
+    """How long a loop waits for a slot before it is skipped, and says so."""
+    return _count('CULTUREFORGE_AGENT_QUEUE_SECONDS', DEFAULT_AGENT_QUEUE_SECONDS)
+
+
+def trust_proxy() -> Optional[bool]:
+    """Whether to believe X-Forwarded-For: True/False when set, None to decide from the connecting address."""
+    raw = os.getenv('CULTUREFORGE_TRUST_PROXY', '').strip().lower()
+    if raw in ('1', 'true', 'yes', 'on'):
+        return True
+    if raw in ('0', 'false', 'no', 'off'):
+        return False
+    return None
+
+
 def rate_limit_cooldown_seconds() -> int:
     raw = os.getenv('QLOO_RATE_LIMIT_COOLDOWN_SECONDS', '').strip()
     try:
@@ -212,4 +267,7 @@ def summary() -> dict:
         'bridgeDomains': bridge_domains(),
         'llmRequestsPerMinute': llm_requests_per_minute(),
         'qlooMinCallIntervalSeconds': min_call_interval_seconds(),
+        'maxColdRuns': max_cold_runs(),
+        'coldRunsPerClientHour': cold_runs_per_client_hour(),
+        'agentSlots': agent_slots(),
     }

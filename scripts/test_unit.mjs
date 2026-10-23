@@ -130,3 +130,33 @@ assert.ok(exported.some(line => line.startsWith('Overlap: Overlap not establishe
 assert.ok(exported.some(line => line.startsWith('Simplified or not verified: Showing general bakery')));
 assert.equal(renderBrief(result, [concept]).includes('How the idea was read'), false, 'An answer with no reading exports exactly as before');
 console.log('[ok] The idea reading is shown only when informative, and exports each business, the overlap and every simplification.');
+
+// --- what Qloo contributed: derived from the exploration, never claimed -------------------------------------
+{
+  const evidenceUrl = summary.url;
+  const { module: diff } = await loadTs('../src/qlooDifference.ts', { "'./evidenceSummary'": `'${evidenceUrl}'` });
+  const lead = { id: 'a', name: 'Lead', decisions: [{ evidenceIds: ['p1'] }, { evidenceIds: ['missing'] }], evidenceIds: ['p1'] };
+  const other = { id: 'b', name: 'Other', decisions: [], evidenceIds: [] };
+  const base = { concepts: [lead, other], evidence: [{ id: 'p1', kind: 'entity' }, { id: 't1', kind: 'tag' }],
+    agent: { mode: 'frontier_ai', model: 'm', status: 'complete', modelCalls: 3, stoppingReason: 'done', rejectedClaims: [{}],
+      steps: [{ index: 1, tool: 'rank', question: 'Does it rank?', reason: 'r', status: 'ok', resultCount: 3, cached: false },
+              { index: 2, tool: 'recommend', question: 'q', reason: 'r', status: 'rejected', resultCount: 0, cached: false },
+              { index: 3, tool: 'finish', question: '', reason: 'r', status: 'ok', resultCount: 0, cached: false }],
+      analysis: { claims: [{}, {}], recommendedDirectionId: 'b' } } };
+  const d = diff.qlooDifference(base, [lead, other], null);
+  assert.equal(d.cited.numerator, 1); assert.equal(d.cited.denominator, 2);
+  assert.equal(d.places, 1); assert.equal(d.signals, 1);
+  assert.equal(d.steps.length, 1, 'finish and refused steps are not counted as evidence'); assert.equal(d.notRun, 1);
+  assert.equal(d.agent.by, 'model'); assert.equal(d.agent.rejected, 1);
+  assert.equal(d.pushback.kind, 'agent-differs');
+  const contested = diff.qlooDifference(base, [lead, other], { directions: [{ directionId: 'a', verdict: 'contested', reason: 'Ranked 8 of 10.' }] });
+  assert.equal(contested.pushback.kind, 'contested'); assert.match(contested.pushback.text, /Ranked 8 of 10/);
+  const reordered = diff.qlooDifference(base, [other, lead], { directions: [{ directionId: 'b', verdict: 'supported', reason: '' }] });
+  assert.equal(reordered.pushback.kind, 'reordered');
+  const both = diff.qlooDifference(base, [other, lead], { directions: [{ directionId: 'b', verdict: 'unproven', reason: 'One check is missing.' }] });
+  assert.equal(both.pushback.kind, 'unproven'); assert.match(both.pushback.text, /changed the order: Lead led before/);
+  const rules = diff.qlooDifference({ ...base, agent: { mode: 'rules', status: 'limited', modelCalls: 0, stoppingReason: 'rules', steps: [] } }, [lead], null);
+  assert.equal(rules.agent.by, 'rules'); assert.equal(rules.steps.length, 0);
+  assert.equal(diff.qlooDifference(base, [], null), null);
+  console.log('[ok] The Qloo-contribution strip counts only cited, run, evidence-bearing steps and can report pushback.');
+}
