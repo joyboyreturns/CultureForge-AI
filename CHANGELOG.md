@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — the studio takes the landing page's look, 2026-10-23
+
+- **One look from front page to studio.** A new last stylesheet (`src/dusk.css`) gives the studio the
+  landing page's dusk: the same scene from `landing-scene.js`, painted once as a still frame and veiled
+  behind every screen, the Geist Pixel display face for headlines, Inter for text, white pills for the next
+  step, dark glass for panels and lavender as the one accent. The old green tokens and hard-coded greens
+  were moved to the matching violet at the same lightness; "supported" and "ok" stay mint so they still
+  read as good. The light theme follows.
+- **The concept studio is read one section at a time.** The evidence workbench was one long scroll. It is
+  now seven sections — Executive brief, Evidence trace, Places & signals, Directions, Evidence test,
+  Decision, Cultural roots — listed under Concept studio in the sidebar (with place and direction counts and
+  a mark once tested) and in a sticky section bar, each ending in Previous / Next. A finished evidence test
+  opens its section; the guided tour opens the section its step points at.
+- **Readability fixes found on the way.** The "Evidence based" badge, the replacement-probe button and its
+  notes were unreadable on dark; the topbar overflowed a 375 px phone; small print set at 6–8 px now sits at
+  10–11 px; a lone direction no longer leaves two empty columns.
+- **README screenshots retaken** from held evidence, with no Qloo request.
+
 ## Unreleased — live-run hardening, 2026-10-23
 
 Every item below was found by running a real brief against Qloo and the configured model (see

@@ -21,53 +21,80 @@ willingness to pay.
 
 | | |
 | --- | --- |
-| **Executive decision brief** | The studio opens on the answer: the lead direction, its verdict, the top cultural anchors with `[evidence id]` chips, who it is for, and the lead place Qloo returned. One tap opens the full evidence workbench. There is deliberately **no 0-100 fit score**: Qloo returns none, so the brief shows citation coverage and the evidence test instead. |
+| **One look, front page to studio** | The studio shares the landing page's dusk: the same scene drawn in code behind every screen, the pixel display face for headlines, white pills for the next step and dark glass for everything else. A light theme is one tap away. |
+| **Executive decision brief** | The studio opens on the answer: the lead direction, its verdict, the top cultural anchors with `[evidence id]` chips, who it is for, and the lead place Qloo returned. There is deliberately **no 0-100 fit score**: Qloo returns none, so the brief shows citation coverage and the evidence test instead. |
+| **Seven sections, not one long scroll** | The concept studio is split into *Executive brief, Evidence trace, Places & signals, Directions, Evidence test, Decision* and *Cultural roots*. Each is reachable from the sidebar (nested under Concept studio, with live counts) or from a sticky section bar, and ends with *Previous / Next*. |
 | **Evidence that can say no** | Directions are tested against the places Qloo returned. A direction can come out *supported*, *unproven* or *contested*, and the order can change. |
+| **Take evidence away** | Remove each returned venue in turn and see which one is carrying the answer. It runs on held evidence, with no Qloo or model call. |
 | **Runs that never stall the reader** | Research keeps going when you open another demo or screen. A card follows you with the agent's real latest step and offers the results when they are ready. |
 | **Always a way out** | Back, Switch idea and Try another example in the Concept studio and Scenario lab. |
-| **A tour that keeps up** | The guided tour moves to the right screen for each step, opens the workbench when a step needs it, and highlights the target. |
+| **A tour that keeps up** | The guided tour moves to the right screen and the right section for each step, and highlights the target. |
 
 ## See it in 60 seconds
 
 1. Open the landing page and press **Run the example and evidence test**, or pick any prepared brief. One marked **Evidence held** costs no Qloo request.
 2. Watch the **Agent workspace**. Leave whenever you like: the run **keeps going in the background**.
-3. Read the **Executive brief**, then open the **Evidence workbench**. Open any source to see Qloo's own request and excerpt, run the **evidence test**, and **remove a place** to watch the answer rebuild from what is left.
-4. Use **Switch idea**, **Try another example** or the back button to move between ideas. **Scenario lab** re-researches the same idea for another audience or city.
-5. New here? Press **Guided tour**.
+3. Read the **Executive brief**, then step through the sections from the sidebar: **Evidence trace** (open any source to see Qloo's own request and excerpt), **Places & signals**, **Directions**, the **Evidence test**, **Decision** and **Cultural roots** (the interest map).
+4. Press **Trace evidence dependence** to remove one place at a time and watch the answer rebuild from what is left.
+5. Use **Switch idea**, **Try another example** or the back button to move between ideas. **Scenario lab** re-researches the same idea for another audience or city.
+6. New here? Press **Guided tour**.
 
 ### The studio
 
-![Executive decision brief: the answer first, with evidence chips](docs/screenshots/executive-brief.jpg)
+![The studio overview, in the landing page's dusk](docs/screenshots/studio-overview.jpg)
 
-*The executive brief. Every anchor carries an evidence chip that opens Qloo's own record.*
+*The overview. The same dusk scene as the front page sits behind the studio, painted once as a still frame.*
 
-![Source, proposal and direction: what the answer is built on](docs/screenshots/evidence-graph.jpg)
+![Executive decision brief: the answer first, with the seven sections in the sidebar](docs/screenshots/executive-brief.jpg)
 
-*The evidence workbench. Qloo returned the sources; CultureForge proposed the decisions; the lines show attached citations, not proof.*
+*The concept studio opens on the answer. The seven sections sit under Concept studio in the sidebar and in the section bar above the brief.*
 
-![Guided tour highlighting the evidence test](docs/screenshots/guided-tour.jpg)
+![Evidence trace: what the answer is built on](docs/screenshots/evidence-trace.jpg)
 
-*The guided tour follows the reader to each step and highlights what it describes.*
+*Evidence trace. Qloo returned the sources; CultureForge proposed the decisions; the lines show attached citations, not proof.*
 
-![The cultural opportunity map, Tokyo, dark theme](docs/screenshots/map-tokyo-dark.jpg)
+![Places and signals: how the idea was read, and what Qloo returned](docs/screenshots/places-signals.jpg)
 
-*The map, made for non-technical readers: a real street map with named pins, a plain-words key, hover cards and a clickable venue list. Pins are address matches, never surveyed points.*
+*Places & signals. How the idea was read, every returned result sorted by relevance, and the real Qloo photographs and measurements.*
 
-![The cultural opportunity map, Paris, light theme](docs/screenshots/map-paris-light.jpg)
+![Directions: each proposal with its photograph and citations](docs/screenshots/directions.jpg)
 
-*The same map in the light theme. Pins the selected direction cites carry a halo; the rest fade back.*
+*Directions. Each proposal carries the Qloo photograph of the place it was built on, its tagline and the evidence it cites.*
+
+![The evidence test: one direction contested, the order changed](docs/screenshots/evidence-test.jpg)
+
+*The evidence test can disagree with the composer. Here one anchor hypothesis was contested and the order changed. The scope is stated on screen: anchor fit within the retrieved sample.*
+
+![Decision: the agent's outcome, ask the evidence, and which direction is most defensible](docs/screenshots/decision.jpg)
+
+*Decision. The research agent's outcome, questions answered only from observed evidence, and a comparison of how defensible each direction is. (This capture ran without the optional model, and says so.)*
+
+![The cultural opportunity map in Tokyo](docs/screenshots/map.jpg)
+
+*Cultural roots, with the interest map: a real street map with named pins, a plain-words key and a clickable venue list. Pins are address matches, never surveyed points.*
+
+![Which place is carrying this answer?](docs/screenshots/dependence-test.jpg)
+
+*The dependence test removes each returned venue once and reports whether the answer, or only its sources, changed.*
 
 ![Scenario lab: same vision, a different audience](docs/screenshots/scenario-lab.jpg)
 
 *Scenario lab. Change the audience or the place and let Qloo measure what changes.*
 
-![The agent workspace while a run is in progress](docs/screenshots/agent-workspace.jpg)
+![Guided tour highlighting the evidence test](docs/screenshots/guided-tour.jpg)
 
-*The agent workspace tells the reader what to expect: usually 2–3 minutes for a brand-new idea, rarely 5 or more, while held ideas open in seconds.*
+*The guided tour follows the reader to each step, opens the section it needs and highlights what it describes.*
 
-<img src="docs/screenshots/mobile-brief.jpg" alt="The studio on a phone" width="260"/>
+![The light theme](docs/screenshots/light-mode.jpg)
 
-*It works on a phone.*
+*The light theme keeps the dusk masthead and the same section navigation.*
+
+<p>
+  <img src="docs/screenshots/mobile.jpg" alt="The concept studio on a phone" width="260"/>
+  <img src="docs/screenshots/mobile-menu.jpg" alt="The sections in the phone menu" width="260"/>
+</p>
+
+*It works on a phone: the section bar scrolls to the open section, and the menu lists every section.*
 
 The studio assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [verified implementation review](docs/IMPLEMENTATION_REVIEW.md) and [demo journey](docs/DEMO.md).
 
@@ -115,7 +142,7 @@ sequenceDiagram
 flowchart LR
   D[Direction + anchor place] --> P1[rank: anchor vs places returned for the profile]
   D --> P2[compare_audiences: anchor tags vs every other place]
-  P1 & P2 --> POL{Policy<br/>anchor-fit-4}
+  P1 & P2 --> POL{Policy<br/>anchor-fit-5}
   POL -- both pass --> S[supported]
   POL -- one check missing --> U[unproven]
   POL -- a check fails --> N[contested]
@@ -132,7 +159,7 @@ flowchart LR
   S -- miss --> Q[Qloo harness<br/>9 workflows] --> S
   C[Deterministic composer<br/>cited decisions] --> AG[Agent loop<br/>≤8 allowlisted steps]
   AG --> V[Citation validator]
-  C --> T[Evidence test<br/>anchor-fit-4]
+  C --> T[Evidence test<br/>anchor-fit-5]
   C --> CH[Ask the evidence] --> V
   T & V & C --> OUT[Studio · PDF · share link]
   P[RUN_PROFILE · ledger · kill switch] -.-> Q
@@ -259,7 +286,7 @@ FastAPI documents every route at `/docs`. The main ones:
 | `GET /api/examples` | Prepared briefs and whether each is held |
 | `POST /api/research/runs` → `GET /api/research/runs/{id}` | The observable research run, with agent steps |
 | `POST /api/projects/generate` | Answer a brief directly |
-| `POST /api/projects/challenge` | The evidence test (anchor-fit-4), with an optional anchor and profile |
+| `POST /api/projects/challenge` | The evidence test (anchor-fit-5), with an optional anchor and profile |
 | `POST /api/chat` | Ask the evidence |
 | `POST /api/report/pdf` | The PDF report |
 
@@ -289,9 +316,9 @@ CI runs all of these except the smoke test, with coverage.
   not the soundness of reasoning.
 - The deployment is one process and one instance. The judging profile lifts
   local budgets, not Qloo's own quota, so prewarm first.
-- The background video's Safari handling (`muted`, `playsinline`, a guarded
-  `play()`, a poster) is in `main.js`. It was checked in Chromium, not in
-  Safari.
+- The landing and studio backgrounds are drawn in code (`landing-scene.js`):
+  no video, photograph or third-party media. The studio paints one still
+  frame. It was checked in Chromium, not in Safari.
 
 The full list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md). Also see
 [EVIDENCE_POLICY](docs/EVIDENCE_POLICY.md), [DEPLOY](docs/DEPLOY.md),

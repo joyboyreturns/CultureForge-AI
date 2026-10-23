@@ -47,7 +47,8 @@ The vault is a retrieval source *and* a human browsing surface. Prefer a vault n
 | `backend/platform.py` | The licensable layer: workspaces, issued keys, saved explorations, metering. SQLite. |
 | `backend/evidence_store.py` | The durable evidence cache. A held answer costs nothing; a failure is never cached. |
 | `backend/concept_composer.py` | The rules that turn evidence into directions. Every proposal names its evidence. |
-| `src/wildroot.css` | The editorial layer. Imported last, so it wins over the dashboard styles. |
+| `src/wildroot.css` | The editorial layer, over the dashboard styles. |
+| `src/dusk.css` | The landing page's look for the studio (tokens, type, pills, glass, the section navigation). Imported last, so it wins. |
 
 Three rules the codebase holds to, and the tests pin them:
 

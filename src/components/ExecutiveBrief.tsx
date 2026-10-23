@@ -108,7 +108,7 @@ export function ExecutiveBrief({ result, ordered, challenge, challenging, onInsp
       )}
       <footer>
         <small>{placeCount} places and {tagCount} audience signals returned by Qloo. Scope: anchor fit within the retrieved sample, not demand, competition or willingness to pay.</small>
-        <button className="text-link" onClick={onOpenWorkbench}>Open the evidence workbench <ArrowRight size={14} /></button>
+        <button className="text-link" onClick={onOpenWorkbench}>Open the evidence trace <ArrowRight size={14} /></button>
       </footer>
     </section>
   )

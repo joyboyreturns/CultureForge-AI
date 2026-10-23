@@ -63,7 +63,7 @@ export function GuidedTour({ screen, hasEvidence, onNavigate, onInspect, onRemov
       // changes, and that runs after this effect.
       if (ticks++ === 0) return
       // A target that lives in the evidence workbench: open the workbench for it, once.
-      if (!node && screen === step.screen && screen === 'results' && !asked && Date.now() - started > 400) { asked = true; window.dispatchEvent(new Event('cultureforge:show-workbench')) }
+      if (!node && screen === step.screen && screen === 'results' && !asked && Date.now() - started > 400) { asked = true; window.dispatchEvent(new CustomEvent('cultureforge:show-workbench', { detail: step.target })) }
       if (node && !scrolled) {
         scrolled = true
         const tall = node.getBoundingClientRect().height > window.innerHeight * 0.7

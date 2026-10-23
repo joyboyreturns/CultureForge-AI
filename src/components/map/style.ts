@@ -23,14 +23,14 @@ export type BasemapMode = 'streets' | 'grid'
 
 const PALETTE: Record<Theme, Record<string, string>> = {
   dark: {
-    background: '#16201a', water: '#1d3b4d', landcover: '#1b2b21', park: '#234a2f', landuse: '#18241d', building: '#27352c',
-    minor: '#34443a', major: '#4b5d51', motorway: '#6b7a4a', casing: '#0d130f', boundary: '#6a7c6e',
-    label: '#b8c6b9', labelMajor: '#e6eee3', halo: '#121a15', grid: '#2a362f',
+    background: '#1a1521', water: '#1d3b4d', landcover: '#221a2c', park: '#34204d', landuse: '#1d1725', building: '#2d2636',
+    minor: '#3b3345', major: '#4b5d51', motorway: '#5e467e', casing: '#100d13', boundary: '#6a7c6e',
+    label: '#b8c6b9', labelMajor: '#e8e2ef', halo: '#15111b', grid: '#2f2937',
   },
   light: {
-    background: '#eef0e6', water: '#c6d7dc', landcover: '#e2e8d5', park: '#d8e4c9', landuse: '#e9ebe0', building: '#dfdfd3',
-    minor: '#ffffff', major: '#fbf6e6', motorway: '#f0dfb4', casing: '#d2d6c8', boundary: '#a6ad9f',
-    label: '#5d6a60', labelMajor: '#27322a', halo: '#f6f6ef', grid: '#d4dbd1',
+    background: '#eae5f1', water: '#c6d7dc', landcover: '#ddd4e9', park: '#d4c7e6', landuse: '#e5dfec', building: '#d8d2e0',
+    minor: '#ffffff', major: '#fbf6e6', motorway: '#f0dfb4', casing: '#cec7d7', boundary: '#a6ad9f',
+    label: '#5d6a60', labelMajor: '#2c2633', halo: '#f2eef7', grid: '#d5d0dc',
   },
 }
 
