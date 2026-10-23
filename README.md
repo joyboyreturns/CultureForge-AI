@@ -13,6 +13,8 @@ follow-up questions are answered from the evidence or refused. Every number
 shown is one Qloo returned. Nothing claims demand, rent, footfall or
 willingness to pay.
 
+**A prototype.** Where Qloo doesn't have enough data for an idea in a place, CultureForge says so plainly instead of inventing an answer.
+
 ![The landing page: put the idea on trial](docs/screenshots/landing.jpg)
 
 ## What it does, at a glance
