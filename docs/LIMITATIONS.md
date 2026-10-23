@@ -57,6 +57,28 @@
 - **Unverified here:** how many niche categories Qloo's place tags actually cover per city. The offline tests
   script Qloo; only the live matrix in `docs/IMPLEMENTATION_REVIEW.md` records real observations.
 
+## Limits found in live runs (23 October 2026)
+
+See [LIVE_MATRIX.md](LIVE_MATRIX.md) for the inputs and outputs.
+
+- **Qloo's category filter is loose for sparse cities.** A "bouldering gym" in Denver returned a Chicago
+  gym and parks; a "tea house" in Boise returned drive-thru coffee chains and a Portland garden. The
+  relevance rules refuse to anchor on them (another city, or a menu word rather than what the place is),
+  so the honest result is *no direction* or a single narrow one, with the reason named.
+- **One brand can fill the sample.** Six outlets of one chain can be six of the ten returned places. They
+  are not merged, so the evidence test ranks a chain against itself.
+- **The unfamiliar-category matcher is text-based.** An open-vocabulary idea matches a place by its name
+  and the opening of its description. A real tea room described as "a calm room where regulars stay" would
+  not match.
+- **Eight of the eleven prepared briefs name no business idea.** Only the three featured ones do. The
+  others are judged against the broad business type and can anchor on an adjacent place (the Brooklyn café
+  anchored on a comedy and pizza venue). They open from held evidence and say so; give them an idea and
+  prewarm them before featuring any of them.
+- **The agent is not deterministic.** Its plan is a model's, so a re-run may ask different questions, and
+  3 of the first 10 live analyses failed both attempts (an over-long summary, once fenced JSON) before
+  over-long prose was clipped instead of rejected. A fallback to the rules is shown as such and is never held.
+- **A held replay may still call the model** if its agent report was never held (see JUDGING_DAY.md).
+
 ## Limits of the model layer
 
 - It is optional, and off by default. With it off, the rule composer

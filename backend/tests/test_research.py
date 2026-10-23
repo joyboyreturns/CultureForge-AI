@@ -230,3 +230,52 @@ def test_a_category_without_local_places_is_not_called_an_unsupported_category(m
     research._execute(run, allowance=8)
     assert run.clarification['code'] == 'CATEGORY_NO_PLACES' and run.clarification['field'] == 'location'
     assert 'gap in Qloo' in run.clarification['reason']
+
+
+def test_a_run_with_no_direction_does_not_spend_the_agent(monkeypatch):
+    """Observed live (Denver bouldering, Mexico City bookshop cafe): 5 Qloo requests and ~100 s of agent
+    loop on a brief that composed nothing. The honest answer should arrive without them."""
+    tag_envelope = {'status': 'ok', 'operation': 'find_tags', 'results': [{'id': 'urn:tag:x:qloo:y'}]}
+    rec_envelope = {'status': 'ok', 'operation': 'recommend',
+                    'results': [{'entity_id': 'urn:place:far', 'name': 'Far Gym'}]}
+    empty = GenerateResponse(
+        projectId='cf-run', project=PROJECT, concepts=[], signals=[], dataMode='live',
+        conceptMode='evidence_composed', notice='did not support a relevant business direction',
+        evidence=[Evidence(id='ev-place-a', kind='entity', label='Far Gym', entityId='urn:place:far')],
+        trace=[], delivery=Delivery(kind='fresh', transportRequests=1))
+    _install(monkeypatch, StubProvider(tag_envelope, rec_envelope, empty))
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError('the agent must not run when there is no direction')
+    monkeypatch.setattr(research, 'run_agent', forbidden)
+    run = research.ResearchRun(PROJECT)
+    research._execute(run, allowance=None)
+    assert run.status == research.STATUS_COMPLETE and run.result['concepts'] == []
+    assert run.result['agent']['status'] == 'skipped' and 'did not run' in run.result['agent']['stoppingReason']
+    skipped = [event for event in run.events if event['step'] == 'agent-plan']
+    assert skipped and skipped[0]['status'] == 'skipped'
+
+
+def test_a_held_agent_report_costs_the_run_nothing(monkeypatch):
+    """Observed live: a free replay of a held brief reported 2 upstream requests, borrowed from the steps
+    that an earlier run had paid for."""
+    from backend.models import AgentStep
+    tag_envelope = {'status': 'ok', 'operation': 'find_tags', 'results': [{'id': 'urn:tag:x:qloo:y'}]}
+    rec_envelope = {'status': 'ok', 'operation': 'recommend', 'results': [{'entity_id': 'urn:place:a', 'name': 'A'}]}
+    concept = Concept(id='d', name='N', tagline='t', description='d', budget='TBD', investment='x', signals=[], accent='#fff',
+                      image='', evidenceIds=['ev-place-a'], decisions=[{'id': 'x', 'field': 'f', 'proposal': 'p',
+                                                                        'evidenceIds': ['ev-place-a'], 'ruleId': 'r'}])
+    generated = GenerateResponse(
+        projectId='cf-run', project=PROJECT, concepts=[concept], signals=[], dataMode='live', conceptMode='evidence_composed',
+        notice='n', evidence=[Evidence(id='ev-place-a', kind='entity', label='A', entityId='urn:place:a')], trace=[],
+        delivery=Delivery(kind='cache', transportRequests=0))
+    provider = _install(monkeypatch, StubProvider(tag_envelope, rec_envelope, generated))
+    provider.generate = lambda project, **_kw: generated.model_copy(deep=True)  # the run edits its delivery
+    earlier = AgentStep(index=1, tool='rank', status='ok', detail='Fetched rank.', upstreamRequests=2)
+    monkeypatch.setattr(research, 'run_agent', lambda *a, **k: AgentReport(
+        mode='frontier_ai', status='complete', stoppingReason='held', modelCalls=0, cached=True, steps=[earlier]))
+    run = research.ResearchRun(PROJECT)
+    research._execute(run, allowance=None)
+    held_requests = run.transport_requests - 2  # the stub provider's own find_tags + recommend
+    assert held_requests == 0
+    assert run.result['delivery']['transportRequests'] == run.transport_requests

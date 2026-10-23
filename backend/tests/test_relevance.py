@@ -255,3 +255,20 @@ def test_a_category_with_no_label_sends_no_category_filter_to_qloo():
     assert brief_category_payload('Ice cream parlour')['query'] == 'ice cream'
     assert brief_category_payload('Where should I open an ice cream parlour in Paris?')['query'] == 'ice cream'
     assert brief_category_payload('Artisan bakery')['query'] == 'bakery'
+
+
+def test_an_unfamiliar_business_matches_on_what_the_place_is_not_on_its_menu():
+    """Observed live (Boise, "tea house"): six drive-thru coffee shops were 'direct' because their menu said tea."""
+    from backend import relevance
+
+    def verdict(name, description, location='Boise, Idaho'):
+        return relevance.assess(business_type='Food & beverage', idea='tea house', audience='slow-living tea drinkers',
+                                location='Boise, Idaho', name=name, description=description, returned_location=location)
+    drive_thru = verdict('Dutch Bros Coffee', 'Fun drive-thru coffee shop offering customized espresso drinks, cold brew, Rebel energy drinks, tea and quick grab-and-go snacks.')
+    assert drive_thru['relationship'] == 'indirect' and not drive_thru['anchorEligible']
+    garden = verdict('Portland Japanese Garden', 'Serene 5.5-acre Japanese garden featuring varied garden styles, waterfall, teahouse and mountain views.', 'Portland, Oregon')
+    assert not garden['anchorEligible']
+    for name, text in [('Leaf & Kettle', 'Quiet tea house offering single-origin oolong and a small food menu.'),
+                       ('Boise Boba', 'Casual boba and tea cafe serving bubble tea, coffee, and offering takeout.'),
+                       ('Tea Room 208', 'A calm tea room where regulars stay for hours.')]:
+        assert verdict(name, text)['relationship'] == 'direct', name

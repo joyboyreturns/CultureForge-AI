@@ -28,7 +28,7 @@ export function AgentOutcome({ report, concepts }: { report?: AgentReport | null
     </header>
     {steps.length > 0 && <ol className="agent-steps">
       {steps.map((step) => <li key={step.index} className={`is-${step.status}`}>
-        <span className="small-cap">STEP {step.index} · {step.tool.replace('_', ' ').toUpperCase()} · {step.status.toUpperCase()}{step.tool !== 'finish' && step.tool !== 'remove_anchor' ? ` · ${step.cached ? 'HELD' : `${step.upstreamRequests} QLOO REQUEST${step.upstreamRequests === 1 ? '' : 'S'}`}` : ''}</span>
+        <span className="small-cap">STEP {step.index} · {step.tool.replace('_', ' ').toUpperCase()} · {step.status.toUpperCase()}{step.tool !== 'finish' && step.tool !== 'remove_anchor' ? ` · ${report.cached ? 'HELD · FETCHED EARLIER' : step.cached ? 'HELD' : `${step.upstreamRequests} QLOO REQUEST${step.upstreamRequests === 1 ? '' : 'S'}`}` : ''}</span>
         {step.question && <strong>{step.question}</strong>}
         <p>{step.detail}</p>
         <small>{step.reason}</small>

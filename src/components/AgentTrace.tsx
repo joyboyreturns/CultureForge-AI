@@ -32,13 +32,15 @@ const FAILURE: Record<string, { title: string; body: string; retry: boolean }> =
   BUDGET_UNAVAILABLE: { title: 'The request allowance could not be read.', body: 'No Qloo request was sent. This is a server problem.', retry: true },
 }
 
-export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress, onRetry, onChangeLocation }: {
+export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress, onRetry, onChangeLocation, onOpenPartial }: {
   runId: string
   onComplete: (result: NonNullable<ResearchRun['result']>) => void
   onClarify: (clarification: NonNullable<ResearchRun['clarification']>) => void
   onGiveUp?: () => void
   onRetry?: () => void
   onChangeLocation?: () => void
+  /** Open the initial rule composition now; the run keeps going and offers the full results when it lands. */
+  onOpenPartial?: (result: NonNullable<ResearchRun['partialResult']>) => void
   /** How many real steps the agent has taken, so the workspace can show them. */
   onProgress?: (steps: number) => void
 }) {
@@ -105,7 +107,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
 
   return (
     <div className="agent-trace">
-      {run?.partialResult && <div className="research-partial"><span className="small-cap">INITIAL ANSWER · ANALYSIS PENDING</span><p>Real retrieved evidence and the initial rule composition. Optional bridge retrieval and model analysis have not finished.</p>{run.timings?.firstEvidenceMs != null && <p>First evidence: {(run.timings.firstEvidenceMs / 1000).toFixed(1)}s{run.timings.firstConceptMs != null ? ` · First concept: ${(run.timings.firstConceptMs / 1000).toFixed(1)}s` : ' · No category-relevant concept yet'}</p>}<EvidenceDecisionGraph result={run.partialResult}/></div>}
+      {run?.partialResult && <div className="research-partial"><span className="small-cap">INITIAL ANSWER · ANALYSIS PENDING</span><p>Real retrieved evidence and the initial rule composition. Optional bridge retrieval and model analysis have not finished.</p>{run.timings?.firstEvidenceMs != null && <p>First evidence: {(run.timings.firstEvidenceMs / 1000).toFixed(1)}s{run.timings.firstConceptMs != null ? ` · First concept: ${(run.timings.firstConceptMs / 1000).toFixed(1)}s` : ' · No category-relevant concept yet'}</p>}{onOpenPartial && run.status === 'running' && run.partialResult.concepts.length > 0 && <button className="button button-primary" onClick={() => onOpenPartial(run.partialResult!)}>Open the initial answer now <ArrowRight size={15}/></button>}{run.status === 'running' && run.partialResult.concepts.length === 0 && <p>Qloo returned evidence, but no direction is supported by it so far. The run is checking what else it can learn.</p>}<EvidenceDecisionGraph result={run.partialResult}/></div>}
       {events.length === 0 && !error && (
         <div className="agent-trace-waiting">
           <span className="orange-dot" /> Starting the research run…
@@ -129,7 +131,7 @@ export function AgentTrace({ runId, onComplete, onClarify, onGiveUp, onProgress,
 
       {slow && !error && run?.status === 'running' && (
         <div className="agent-trace-waiting" role="status">
-          <span className="orange-dot" /> Research continues. New evidence and the optional model analysis can take a few minutes. You can inspect the initial answer above as soon as it is ready.
+          <span className="orange-dot" /> Research continues. New evidence and the optional model analysis can take a few minutes. When the initial answer appears above you can open it without waiting for the analysis.
         </div>
       )}
 

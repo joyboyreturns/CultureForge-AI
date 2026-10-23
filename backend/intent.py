@@ -246,8 +246,14 @@ def primary_resolution(idea: str) -> taxonomy.CategoryResolution:
     """The category resolution for the idea's first business, or for a held, validated model reading."""
     primary = interpret(idea).primary
     if primary is not None and primary.source == 'model' and primary.queries:
+        words = tuple(w for w in primary.phrase.casefold().split() if len(w) > 2)
+        # A model reading that lands on a known category judges places by that category's own
+        # words (bookstore, librería ...), not only by the one word the founder typed: a bookshop
+        # called a "bookstore" in Qloo's text is still a bookshop.
+        known = taxonomy.CATEGORIES.get(primary.categoryId)
+        terms = tuple(dict.fromkeys(words + tuple(t.casefold() for t in known['terms']))) if known else words
         return taxonomy.CategoryResolution(
             primary.categoryId, primary.categoryLabel, primary.queries[0], primary.status, primary.phrase.casefold(),
-            tuple(w for w in primary.phrase.casefold().split() if len(w) > 2), (),
+            terms, tuple(known['adjacent']) if known else (),
             'Read from a validated model proposal; the tag is still resolved by Qloo.')
     return taxonomy.resolve(primary_phrase(idea))

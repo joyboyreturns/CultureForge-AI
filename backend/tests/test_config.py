@@ -266,9 +266,17 @@ def test_there_are_at_least_eight_prepared_briefs_across_cities_and_types():
     assert len({row['project']['businessType'] for row in rows}) == 5
 
 
-def test_the_landing_page_and_studio_run_the_first_prepared_brief():
-    assert "demoBriefs.briefs[0].project" in (ROOT / 'main.js').read_text(encoding='utf-8')
-    assert "demoBriefs.briefs[0].project" in (ROOT / 'src' / 'App.tsx').read_text(encoding='utf-8')
+def test_the_landing_page_and_studio_run_the_same_hero_brief_and_it_is_one_that_ships_with_the_demo_pack():
+    """The hero names its business idea (the Brooklyn brief did not, and anchored a café on a comedy venue)
+    and is one the demo pack holds, so a fresh clone opens it with no Qloo request."""
+    hero = "'tokyo-morning-bakery'"
+    assert hero in (ROOT / 'main.js').read_text(encoding='utf-8')
+    assert hero in (ROOT / 'src' / 'App.tsx').read_text(encoding='utf-8')
+    brief = next(row for row in examples.briefs() if row['id'] == 'tokyo-morning-bakery')
+    assert brief['project']['businessIdea'].strip()
+    import json
+    pack = json.loads((ROOT / 'shared' / 'demoPack.json').read_text(encoding='utf-8'))
+    assert 'tokyo-morning-bakery' in json.dumps(pack['demos'])
 
 
 def test_a_brief_is_held_only_when_its_seeds_and_places_are(store):
@@ -360,3 +368,4 @@ def test_live_qloo_calls_are_spaced_and_held_evidence_is_not(monkeypatch, store)
     before = __import__('time').time()
     provider.run_workflow_cached('find_tags', {'query': 'held', 'limit': 3})
     assert __import__('time').time() - before < 0.1
+

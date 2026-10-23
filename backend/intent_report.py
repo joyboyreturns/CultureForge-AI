@@ -313,4 +313,11 @@ def idea_alternatives(intent: BusinessIntent, tried: tuple = ()) -> list[dict]:
                              if w.casefold().replace('-', ' ') not in {m.replace('-', ' ') for m in component.modifiers})
             if plain and plain.casefold() != component.phrase.casefold():
                 add(f'Without "{", ".join(component.modifiers)}": {plain}', plain)
+    first = intent.components[0] if intent.components else None
+    if first is not None and not intent.hybrid:
+        words = first.phrase.split()
+        if len(words) >= 3:
+            # "film camera shop" -> "camera shop": the same business, one qualifier fewer, in the founder's own words.
+            broader = ' '.join(words[1:])
+            add(f'Broader: {broader}', broader)
     return options[:3]

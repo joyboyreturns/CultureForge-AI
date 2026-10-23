@@ -424,6 +424,33 @@ class AgentAnalysis(BaseModel):
     summary: str = Field(min_length=8, max_length=800)
     whatWouldChangeTheConclusion: str = Field(min_length=4, max_length=500)
 
+    @classmethod
+    def tame(cls, data: object) -> object:
+        """Fit a model's answer to the limits without discarding the rest of it.
+
+        Prose is cut back to its last whole sentence; a claim that is itself too long is dropped
+        (it was never validated, so nothing unvalidated is kept); claims beyond the eighth are
+        left out. Nothing is added or reworded.
+        """
+        if not isinstance(data, dict):
+            return data
+
+        def clip(value: object, limit: int) -> object:
+            if not isinstance(value, str) or len(value) <= limit:
+                return value
+            cut = value[:limit]
+            stop = max(cut.rfind('. '), cut.rfind('.'))
+            return cut[:stop + 1] if stop >= limit // 3 else cut.rsplit(' ', 1)[0].rstrip(' ,;:') + '…'
+        tamed = dict(data)
+        tamed['summary'] = clip(tamed.get('summary'), 800)
+        tamed['whatWouldChangeTheConclusion'] = clip(tamed.get('whatWouldChangeTheConclusion'), 500)
+        claims = tamed.get('claims')
+        if isinstance(claims, list):
+            tamed['claims'] = [claim for claim in claims
+                               if not (isinstance(claim, dict) and isinstance(claim.get('statement'), str)
+                                       and len(claim['statement']) > 400)][:8]
+        return tamed
+
 
 class AgentStep(BaseModel):
     """One turn of the loop, as the trace shows it."""
