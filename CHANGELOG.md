@@ -16,7 +16,22 @@
 - **Readability fixes found on the way.** The "Evidence based" badge, the replacement-probe button and its
   notes were unreadable on dark; the topbar overflowed a 375 px phone; small print set at 6–8 px now sits at
   10–11 px; a lone direction no longer leaves two empty columns.
-- **README screenshots retaken** from held evidence, with no Qloo request.
+- **Checked end to end against live Qloo on the judging profile**, with the model on. Found and fixed:
+  - The model analysis failed whenever the model named a direction instead of giving its id, or wrote an
+    over-long field. Rows are now matched to the direction by id or exact name, and prose is cut back to its
+    last sentence (`EvidenceAnalysisOutput.tame`); a missing direction or an unknown citation still fails.
+  - Investigate called the original anchor "the alternative anchor this direction was last tested against".
+    Only a counterfactual anchor is named as one now.
+  - The landing example card said Brooklyn while it ran the Tokyo bakery brief; it now names the brief it runs.
+  - A reload forgot the exploration on screen. The studio reopens the last one this browser holds.
+  - "Curiosity isconnecting the dots" lost its space when the partial answer hid the line break; icons sat on
+    the text of the audience and location fields; the More menu stayed open after a choice.
+  - An answer with no direction said "0 directions. Assumptions to test." and still offered the evidence
+    test; it now says why, with ways forward, and offers only what can run.
+  - After a scenario re-research the studio stayed on the old section; it opens on the new brief.
+  - Same-named Qloo tags in the audience comparison are told apart by their family.
+- **README screenshots retaken from the live run**, including the agent workspace mid-run, the model analysis
+  and an alternative anchor turning a contested verdict into a supported one.
 
 ## Unreleased — live-run hardening, 2026-10-23
 

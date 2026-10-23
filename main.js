@@ -493,6 +493,9 @@ import { startScene } from './landing-scene.js';
     // The first prepared brief: the studio offers the same one, and
     // scripts/prewarm.py fetches its evidence before anyone clicks.
     const brief = (demoBriefs.briefs.find((item) => item.id === 'tokyo-morning-bakery') ?? demoBriefs.briefs[0]).project;
+    // The card names the brief it actually runs, so its label can never describe another one.
+    const briefLine = pulse.querySelector('[data-pulse-brief]');
+    if (briefLine) briefLine.textContent = (brief.businessIdea || brief.businessType) + ' · ' + brief.location;
 
     function fail(message) {
       status.textContent = message || 'The example could not be retrieved. Try again or start your own exploration.';
