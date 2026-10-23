@@ -29,3 +29,15 @@ def test_a_pack_for_another_adapter_is_refused_not_guessed(monkeypatch, tmp_path
     monkeypatch.setattr(evidence_store, '_store', evidence_store.EvidenceStore(tmp_path / 's'))
     out = demo_pack.seed()
     assert out['evidence'] == 0 and 'adapter' in out['skipped']
+
+
+def test_seeding_many_entries_writes_once_and_keeps_fresher_answers(monkeypatch, tmp_path):
+    store = evidence_store.EvidenceStore(tmp_path)
+    store.put('fresh', {'ok': 'held'}, transport_requests=1)
+    writes = []
+    original = store._persist_cache
+    monkeypatch.setattr(store, '_persist_cache', lambda: writes.append(1) or original())
+    added = store.seed_many([('a', {'ok': 1}, 1_700_000_000.0, 1), ('b', {'ok': 2}, 1_700_000_000.0, 1),
+                             ('fresh', {'ok': 'older'}, 1_600_000_000.0, 1)])
+    assert added == 2 and len(writes) == 1
+    assert store.get('fresh') == {'ok': 'held'}

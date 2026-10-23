@@ -120,16 +120,22 @@ class EvidenceStore:
         Pinned entries do not expire, because they are the prepared demos; they
         are never written over a fresher answer already held.
         """
+        return self.seed_many([(key, envelope, stored_at, transport_requests)]) == 1
+
+    def seed_many(self, entries) -> int:
+        """seed() for many entries, written to disk once. Returns how many were added."""
+        added = 0
         with self._lock:
-            existing = self._cache.get(key)
-            if existing and not existing.get('pinned') and float(existing.get('storedAt', 0)) >= stored_at:
-                return False
-            if existing and existing.get('pinned'):
-                return False
-            self._cache[key] = {'envelope': envelope, 'storedAt': stored_at,
-                                'transportRequests': transport_requests, 'pinned': True}
-            self._persist_cache()
-            return True
+            for key, envelope, stored_at, transport_requests in entries:
+                existing = self._cache.get(key)
+                if existing and (existing.get('pinned') or float(existing.get('storedAt', 0)) >= stored_at):
+                    continue
+                self._cache[key] = {'envelope': envelope, 'storedAt': stored_at,
+                                    'transportRequests': transport_requests, 'pinned': True}
+                added += 1
+            if added:
+                self._persist_cache()
+        return added
 
     def stored_at(self, key: str) -> Optional[float]:
         """When the held entry was fetched from Qloo, or None if nothing is held."""

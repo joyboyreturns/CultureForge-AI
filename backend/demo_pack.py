@@ -3,6 +3,9 @@
 ``shared/demoPack.json`` is an export of what Qloo actually returned for the
 three prepared briefs (seeds, places, bridges, interest cells), with the time
 each answer was acquired, plus the venue geocodes that were verified for them.
+``scripts/export_evidence_store.py`` adds everything else a working copy holds —
+every brief researched there, its agent reports and analyses — so a deployment
+opens those without paying for them again.
 At start-up it is placed in the evidence store as pinned entries, so a fresh
 clone opens the demos instantly, from held evidence, with no Qloo request and
 with the original acquisition time still stated on the screen. Nothing here is
@@ -33,10 +36,9 @@ def seed() -> dict:
             result['skipped'] = f'pack is for adapter {pack.get("adapterVersion")}, this is {ADAPTER_VERSION}'
             logging.getLogger(__name__).warning('Demo pack skipped: %s', result['skipped'])
             return result
-        store = get_store()
-        for key, entry in (pack.get('evidence') or {}).items():
-            if store.seed(key, entry['envelope'], float(entry['storedAt']), int(entry.get('transportRequests', 1))):
-                result['evidence'] += 1
+        result['evidence'] = get_store().seed_many(
+            (key, entry['envelope'], float(entry['storedAt']), int(entry.get('transportRequests', 1)))
+            for key, entry in (pack.get('evidence') or {}).items())
         result['geocodes'] = geocode.seed(pack.get('geocodes') or {})
     except (OSError, ValueError, KeyError, TypeError) as exc:
         result['skipped'] = f'pack unreadable ({type(exc).__name__})'
