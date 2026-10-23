@@ -230,9 +230,9 @@ def test_the_prepared_briefs_keep_the_category_they_were_written_for():
     briefs = json.loads((Path(__file__).resolve().parents[2] / 'shared' / 'demoBriefs.json').read_text())['briefs']
     expected = {
         'brooklyn-gen-z-cafe': ('food', 'business_type'), 'seattle-family-cafe': ('food', 'business_type'),
-        'london-mindful-wellness': ('wellness', 'business_type'), 'lisbon-local-stay': ('hospitality', 'business_type'),
-        'austin-live-music': ('music', 'business_type'), 'chicago-vinyl-retail': ('records', 'audience'),
-        'los-angeles-slow-fashion': ('fashion', 'audience'), 'tokyo-ceramics-studio': ('ceramics', 'audience'),
+        'london-mindful-wellness': ('wellness', 'business_type'), 'lisbon-boutique-hotel': ('hotel', 'idea'),
+        'austin-live-music': ('music', 'business_type'), 'chicago-jazz-club': ('music', 'idea'),
+        'los-angeles-streetwear-boutique': ('fashion', 'idea'), 'london-independent-bookshop': ('books', 'idea'),
         'tokyo-morning-bakery': ('bakery', 'idea'), 'paris-ice-cream': ('frozen_dessert', 'idea'),
         'melbourne-specialty-coffee': ('coffee', 'idea'),
     }
