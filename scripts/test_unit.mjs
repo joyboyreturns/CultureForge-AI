@@ -58,7 +58,8 @@ console.log('[ok] Notebook notes stay attached to their proposal and evidence; r
 const { module: tour } = await loadTs('../src/tourSteps.ts');
 assert.equal(tour.tourNeedsEvidence(1), false);
 assert.equal(tour.tourNeedsEvidence(2), true);
-assert.equal(tour.TOUR_STEPS.length, 6);
+assert.equal(tour.TOUR_STEPS.length, 7);
+assert.ok(tour.TOUR_STEPS.some((step) => step.id === "difference" && tour.tourNeedsEvidence(tour.TOUR_STEPS.indexOf(step))), "the Qloo-contribution step needs real evidence");
 console.log('[ok] Guided tour supports the brief before evidence exists and requires real evidence for the remaining interactions.');
 
 const { module: map } = await loadTs('../src/components/map/mapModel.ts');
