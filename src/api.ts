@@ -186,6 +186,7 @@ export async function fetchHealth(): Promise<BackendStatus> {
 export interface ExampleBrief {
   id: string
   label: string
+  trialNote?: string
   project: ProjectRequest
   /** True when running it costs no upstream request. */
   held: boolean

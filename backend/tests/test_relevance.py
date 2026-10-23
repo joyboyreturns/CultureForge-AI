@@ -235,6 +235,10 @@ def test_the_prepared_briefs_keep_the_category_they_were_written_for():
         'los-angeles-streetwear-boutique': ('fashion', 'idea'), 'london-independent-bookshop': ('books', 'idea'),
         'tokyo-morning-bakery': ('bakery', 'idea'), 'paris-ice-cream': ('frozen_dessert', 'idea'),
         'melbourne-specialty-coffee': ('coffee', 'idea'),
+        'berlin-plant-based-trial': ('food', 'idea'),
+        'vienna-plant-based-trial': ('food', 'idea'),
+        # A hybrid deliberately has no single broad-family classification.
+        'mexico-city-bookshop-cafe': ('', 'idea'),
     }
     seen = {}
     for brief in briefs:

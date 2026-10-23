@@ -148,7 +148,7 @@ if (argv[0] === "insights_probe") {
       const query = JSON.parse(readFileSync(argv[inputIndex + 1], "utf8"));
       const allowed = new Set([
         "filter.type", "signal.interests.tags", "operator.signal.interests.tags",
-        "signal.location.query", "filter.exclude.entities", "take",
+        "filter.location.query", "filter.exclude.entities", "take",
         "feature.explainability",
       ]);
       if (!query || typeof query !== "object" || Array.isArray(query) ||
@@ -156,7 +156,7 @@ if (argv[0] === "insights_probe") {
           query["filter.type"] !== "urn:entity:place" ||
           typeof query["signal.interests.tags"] !== "string" ||
           !query["signal.interests.tags"].length ||
-          typeof query["signal.location.query"] !== "string" ||
+          typeof query["filter.location.query"] !== "string" ||
           typeof query["filter.exclude.entities"] !== "string") {
         process.stdout.write(JSON.stringify({ error: { code: "TOOL_INPUT" } }));
         process.exitCode = 2;

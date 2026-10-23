@@ -8,6 +8,7 @@ from .intent import BusinessIntent  # noqa: E402
 
 
 class ProjectRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
     businessType: BusinessType
     businessIdea: str = Field(default='', max_length=160)
     audience: str = Field(min_length=2, max_length=240)
@@ -161,6 +162,7 @@ class GenerateResponse(BaseModel):
 
 class CompareRequest(BaseModel):
     """Re-research a brief for a different audience."""
+    model_config = ConfigDict(str_strip_whitespace=True)
     project: ProjectRequest
     audience: str = Field(min_length=2, max_length=240)
     # When the founder confirmed the audience seeds, the research uses exactly

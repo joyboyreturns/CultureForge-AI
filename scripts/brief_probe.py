@@ -137,10 +137,12 @@ def main() -> int:
         print('INTENT ', json.dumps(intent, ensure_ascii=False)[:600])
 
     record = {'input': project, 'run': run, 'marks': marks}
+    failed = run.get('status') not in ('complete', 'clarify')
     if args.challenge and result.get('concepts'):
         t1 = time.monotonic()
         status, tested = call(base, 'POST', '/api/projects/challenge', {'project': project}, timeout=300)
         print(f'CHALLENGE HTTP {status} in {time.monotonic() - t1:.1f}s')
+        failed = failed or status != 200
         for item in tested.get('directions', []):
             print(f"   {item.get('verdict'):<10} {item.get('directionId')} — {(item.get('reason') or '')[:130]}")
         record['challenge'] = tested
@@ -151,7 +153,7 @@ def main() -> int:
     print(f'COUNTERS qloo calls today {qloo_before} -> {qloo_after}; model calls today {llm_before} -> {llm_after}')
     if args.json:
         pathlib.Path(args.json).write_text(json.dumps(record, ensure_ascii=False, indent=1))
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == '__main__':

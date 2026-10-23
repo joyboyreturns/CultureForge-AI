@@ -12,9 +12,9 @@ export function Clarification({ ask, onUseIdea, onUseLocation, onEditField }: {
   ask: ClarificationAsk
   onUseIdea: (value: string) => void
   onUseLocation: (value: string) => void
-  onEditField: (field: 'businessIdea' | 'location') => void
+  onEditField: (field: 'businessIdea' | 'location' | 'audience') => void
 }) {
-  const field = ask.field === 'location' ? 'location' : ask.field === 'businessIdea' ? 'businessIdea' : null
+  const field = ask.field === 'location' ? 'location' : ask.field === 'businessIdea' ? 'businessIdea' : ask.field === 'audience' ? 'audience' : null
   return <div className="clarification" role="alert" data-code={ask.code ?? ''}>
     <strong>{(ask.code && HEADLINE[ask.code]) || ask.question}</strong>
     <p>{ask.reason}</p>
@@ -22,7 +22,7 @@ export function Clarification({ ask, onUseIdea, onUseLocation, onEditField }: {
     <div className="clarification-actions">
       {ask.suggestion && <button type="button" className="clarification-suggestion" onClick={() => onUseLocation(ask.suggestion as string)}>Use {ask.suggestion} instead</button>}
       {ask.actions?.map(action => <button type="button" className="clarification-suggestion" key={action.value} onClick={() => onUseIdea(action.value)}>{action.label}</button>)}
-      {field && <button type="button" className="clarification-edit" onClick={() => onEditField(field)}>{field === 'location' ? 'Change the location' : 'Edit the business idea'} <ArrowRight size={13}/></button>}
+      {field && <button type="button" className="clarification-edit" onClick={() => onEditField(field)}>{field === 'location' ? 'Change the location' : field === 'audience' ? 'Edit the audience' : 'Edit the business idea'} <ArrowRight size={13}/></button>}
     </div>
   </div>
 }

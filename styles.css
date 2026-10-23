@@ -876,6 +876,17 @@ html,body{height:auto;min-height:100%;min-height:100dvh;overflow-x:hidden;overfl
 .contact-card>div{padding:18px 0;border-bottom:1px solid #ffffff25}
 .contact-card>div:last-child{border-bottom:0}
 .contact-card strong{display:block;margin-top:7px;color:#fff;font:500 15px/1.5 var(--font-sans)}
+.contact-card p,.pilot-form p{color:#d4d6dd;font:400 14px/1.7 var(--font-sans);margin:10px 0 0}
+.pilot-form{width:min(100%,640px);box-sizing:border-box;text-align:left;margin:12px auto 24px;padding:24px;border:1px solid #ffffff35;border-radius:16px;background:#0b0d12e8;color:#fff}
+.pilot-form h2{font:500 23px/1.3 var(--font-sans);margin:0}
+.pilot-form label{display:block;margin:20px 0;color:#fff;font:500 14px/1.5 var(--font-sans)}
+.pilot-form input,.pilot-form textarea{display:block;box-sizing:border-box;width:100%;margin-top:7px;padding:12px;border:1px solid #ffffff50;border-radius:8px;color:#fff;background:#ffffff0a;font:400 16px/1.5 var(--font-sans)}
+.pilot-form textarea{resize:vertical}
+.pilot-form input::placeholder,.pilot-form textarea::placeholder{color:#b7b5c0}
+.pilot-form input:focus-visible,.pilot-form textarea:focus-visible{outline:2px solid #c7a3ff;outline-offset:3px}
+.pilot-form .cta-btn{margin-top:8px}
+.teams-footer{position:relative;z-index:2;text-align:center;padding:18px 24px 28px}
+.teams-footer .followup-link{font-size:12px;color:#e1dbe8}
 .home-followup{width:min(100%,900px);margin:30px auto 10px;padding:42px 24px 32px;border:1px solid rgba(199, 163, 255,.3);border-radius:18px;background:linear-gradient(145deg,rgba(23, 16, 31,.9),rgba(12, 10, 15,.88));box-shadow:0 20px 70px rgba(0,0,0,.22);text-align:center;position:relative;z-index:2}
 .home-followup .detail-kicker{font-size:10px;color:#c7a3ff}
 .home-followup h2{margin:14px 0 8px;color:#f7f6ed;font:400 clamp(26px,4vw,42px)/1.2 var(--font-display)}

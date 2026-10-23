@@ -7,6 +7,9 @@ export interface DecisionDraft {
   stop: string
   observations: string
   choice: 'investigate' | 'revise' | 'park'
+  owner?: string
+  reviewDate?: string
+  spendingCap?: string
   savedAt?: string
 }
 
@@ -30,6 +33,7 @@ export function readDecision(key: string): DecisionDraft | null {
     const value = JSON.parse(localStorage.getItem(key) ?? 'null')
     if (!value || !['interviews', 'concept_test', 'pop_up'].includes(value.method) || !['investigate', 'revise', 'park'].includes(value.choice)) return null
     if (!['hypothesis', 'success', 'stop', 'observations'].every((field) => typeof value[field] === 'string')) return null
+    if (['owner', 'reviewDate', 'spendingCap'].some((field) => value[field] !== undefined && typeof value[field] !== 'string')) return null
     return value as DecisionDraft
   } catch { return null }
 }
@@ -39,6 +43,9 @@ export function renderDecision(draft: DecisionDraft): string {
   return ['## Founder decision notebook',
     'Founder-entered plan and observations. Not independently verified; not Qloo evidence. This record does not change the cultural verdict.', '',
     `Decision: ${draft.choice}`, `Hypothesis: ${draft.hypothesis}`, `Method: ${method}`,
+    `Accountable owner: ${draft.owner?.trim() || 'Not assigned'}`,
+    `Review date: ${draft.reviewDate || 'Not set'}`,
+    `Experiment spending cap (team-entered, not a cost estimate): ${draft.spendingCap?.trim() || 'Not set'}`,
     `Proceed only if: ${draft.success || 'Not defined'}`, `Revise or stop if: ${draft.stop || 'Not defined'}`,
     `Recorded observations: ${draft.observations || 'None recorded; field validation has not been demonstrated.'}`,
     `Saved: ${draft.savedAt ?? 'Unsaved draft'}`, ''].join('\n')

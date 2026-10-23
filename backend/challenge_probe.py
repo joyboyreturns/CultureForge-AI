@@ -11,7 +11,7 @@ import re
 from .models import ChallengeProbeRequest, Evidence
 from .providers import QlooHarnessError, QlooHarnessProvider
 
-POLICY_VERSION = 'replacement-probe-1'
+POLICY_VERSION = 'replacement-probe-2'
 BOUNDARY = (
     'This probe tests Qloo retrieval with one returned place excluded. It does not test '
     'demand, competition, rent, willingness to pay, or commercial viability.'
@@ -49,7 +49,7 @@ def challenge_probe(request: ChallengeProbeRequest, provider: QlooHarnessProvide
         'filter.type': 'urn:entity:place',
         'signal.interests.tags': ','.join(sorted(tags[:3])),
         'operator.signal.interests.tags': 'intersection',
-        'signal.location.query': request.project.location.strip(),
+        'filter.location.query': request.project.location.strip(),
         'filter.exclude.entities': anchor.entityId,
         'take': 5,
         'feature.explainability': True,

@@ -61,6 +61,9 @@ export function DecisionNotebook({ result, concept, challenge, onClose }: {
       <div className="notebook-layout"><div className="notebook-fields">
         <label>Hypothesis to test<textarea rows={3} maxLength={2000} value={draft.hypothesis} onChange={(e) => set('hypothesis', e.target.value)}/></label>
         <label>How will you test it?<select value={draft.method} onChange={(e) => set('method', e.target.value as DecisionDraft['method'])}><option value="interviews">Audience interviews</option><option value="concept_test">Concept walkthrough</option><option value="pop_up">Small pop-up or prototype</option></select></label>
+        <label>Accountable owner<input type="text" maxLength={160} placeholder="Who will run this experiment?" value={draft.owner ?? ''} onChange={(e) => set('owner', e.target.value)}/></label>
+        <label>Review date<input type="date" value={draft.reviewDate ?? ''} onChange={(e) => set('reviewDate', e.target.value)}/></label>
+        <label>Experiment spending cap<input type="text" maxLength={100} placeholder="Enter your own cap and currency, e.g. USD 200" value={draft.spendingCap ?? ''} onChange={(e) => set('spendingCap', e.target.value)}/></label>
         <label>Proceed only if…<textarea rows={2} maxLength={2000} placeholder="Define the observation you would need before investing more." value={draft.success} onChange={(e) => set('success', e.target.value)}/></label>
         <label>Revise or stop if…<textarea rows={2} maxLength={2000} placeholder="Write the result that would contradict your hypothesis." value={draft.stop} onChange={(e) => set('stop', e.target.value)}/></label>
         <label>Your field observations<textarea rows={3} maxLength={6000} placeholder="Leave blank until you have observed something. Record who, when and what happened without private personal details." value={draft.observations} onChange={(e) => set('observations', e.target.value)}/></label>

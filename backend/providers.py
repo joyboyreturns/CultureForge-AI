@@ -122,7 +122,7 @@ QLOO_CAPABILITIES = {
     'recommend': {
         'summary': 'Return places for a set of taste signals and a location.',
         'entityTypeField': 'target_type', 'acceptsLimit': True, 'latency': 'slow',
-        'required': ['target_type'], 'optional': ['signal_tags', 'signal_location', 'limit', 'include_tags', 'include_tags_operator'],
+        'required': ['target_type'], 'optional': ['signal_tags', 'signal_location', 'filter_location', 'limit', 'include_tags', 'include_tags_operator'],
     },
     'rank': {
         'summary': 'Rank a caller-supplied shortlist against one signal profile.',
@@ -288,7 +288,7 @@ def select_category_tag(envelope: dict, query: str) -> Optional[str]:
 def brief_places_payload(tags: list[str], location: str, business_idea: str = '') -> dict:
     """The recommend request for a brief's local places."""
     payload = {'target_type': 'place', 'signal_tags': list(tags),
-               'signal_location': location, 'limit': BRIEF_PLACE_LIMIT}
+               'filter_location': location, 'limit': BRIEF_PLACE_LIMIT}
     category_payload = brief_category_payload(business_idea)
     if category_payload:
         held = get_store().get(canonical_key('find_tags', category_payload)) or {}
@@ -300,7 +300,7 @@ def brief_places_payload(tags: list[str], location: str, business_idea: str = ''
     return payload
 
 
-def brief_places_retrieval_payload(tags: list[str], location: str, business_idea: str = '') -> dict:
+def brief_places_retrieval_payload(tags: list[str], location: str, business_idea: str = '', evidence_store=None) -> dict:
     """Reuse a smaller authentic held sample without broadening its constraints.
 
     Earlier releases asked for five places. Keep that exact request/provenance
@@ -308,12 +308,26 @@ def brief_places_retrieval_payload(tags: list[str], location: str, business_idea
     another request merely to enlarge the sample.
     """
     payload = brief_places_payload(tags, location, business_idea)
-    store = get_store()
-    if store.get(canonical_key('recommend', payload)) is not None:
-        return payload
-    smaller = {**payload, 'limit': 5}
-    if store.get(canonical_key('recommend', smaller)) is not None:
-        return smaller
+    return held_place_payload(payload, evidence_store)
+
+
+def held_place_payload(payload: dict, evidence_store=None) -> dict:
+    """Prefer a held real request, retaining its original key and provenance.
+
+    Fresh requests constrain result geography with filter_location. Old
+    signal-location responses remain replayable, never relabelled as a
+    filtered response. A modern held response always takes precedence.
+    """
+    store = evidence_store if evidence_store is not None else get_store()
+    candidates = [payload, {**payload, 'limit': 5}]
+    if payload.get('filter_location') and not payload.get('signal_location'):
+        legacy = {k: v for k, v in payload.items() if k != 'filter_location'}
+        legacy['signal_location'] = payload['filter_location']
+        candidates += [legacy, {**legacy, 'limit': 5}]
+    for candidate in candidates:
+        envelope = store.get(canonical_key('recommend', candidate))
+        if envelope is not None and (candidate.get('filter_location') or envelope.get('results')):
+            return candidate
     return payload
 
 
@@ -633,6 +647,13 @@ class QlooHarnessProvider(CultureProvider):
         try:
             envelope, cached, requests = self.run_workflow_cached('recommend', payload)
         except QlooHarnessError as exc:
+            if exc.code == 'LIVE_DISABLED':
+                suggestion = self._known_location(tags, location)
+                message = f"No held result for '{location}' under the current place query. Live retrieval is switched off."
+                if suggestion:
+                    message += f" '{suggestion}' returned places for these same signals earlier; try that held evidence."
+                raise QlooHarnessError(message, code='LIVE_DISABLED',
+                                       details={'location': location, 'suggestion': suggestion}) from exc
             if exc.code in ('QLOO_CONTRACT', 'UPSTREAM_REJECTED'):
                 raise QlooHarnessError(
                     f"Qloo did not accept '{location}' as a place it can search. Use a city and country, "

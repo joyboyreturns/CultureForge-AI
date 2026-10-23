@@ -65,7 +65,7 @@ def test_probe_builds_fixed_exclusion_query_and_keeps_result_unresolved():
         'filter.type': 'urn:entity:place',
         'signal.interests.tags': 'urn:tag:interests:qloo:food_design',
         'operator.signal.interests.tags': 'intersection',
-        'signal.location.query': 'Brooklyn, New York',
+        'filter.location.query': 'Brooklyn, New York',
         'filter.exclude.entities': 'entity-a',
         'take': 5,
         'feature.explainability': True,

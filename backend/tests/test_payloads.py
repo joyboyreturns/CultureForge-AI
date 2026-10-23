@@ -53,6 +53,46 @@ def test_entity_lists_never_exceed_the_harness_cap():
     assert len(p.trends_payload([f'e{n}' for n in range(30)], 'place', 'a', 'b')['entities']) == 5
 
 
+def test_fresh_place_retrieval_constrains_results_not_the_audience_location(store):
+    payload = p.brief_places_retrieval_payload(['urn:tag:food'], 'Berlin, Germany')
+    assert payload['filter_location'] == 'Berlin, Germany'
+    assert 'signal_location' not in payload
+
+
+def test_legacy_evidence_replays_under_its_own_key_and_modern_evidence_wins(store):
+    tags, location = ['urn:tag:food'], 'Berlin, Germany'
+    modern = p.brief_places_payload(tags, location)
+    legacy = {k: v for k, v in modern.items() if k != 'filter_location'}
+    legacy['signal_location'] = location
+    store.put(p.canonical_key('recommend', legacy), {'results': [{'name': 'Held'}]}, 1)
+    assert p.brief_places_retrieval_payload(tags, location) == legacy
+    assert store.get(p.canonical_key('recommend', modern)) is None, 'Never copy an old response to a new query key'
+    store.put(p.canonical_key('recommend', modern), {'results': [{'name': 'Filtered'}]}, 1)
+    assert p.brief_places_retrieval_payload(tags, location) == modern
+
+
+def test_a_legacy_empty_result_does_not_prevent_the_correct_location_search(store):
+    modern = p.brief_places_payload(['urn:tag:food'], 'Berlin, Germany')
+    legacy = {k: v for k, v in modern.items() if k != 'filter_location'}
+    legacy['signal_location'] = 'Berlin, Germany'
+    store.put(p.canonical_key('recommend', legacy), {'results': []}, 1)
+    assert p.brief_places_retrieval_payload(['urn:tag:food'], 'Berlin, Germany') == modern
+
+
+def test_unheld_location_with_live_off_names_the_location_and_a_real_recovery(monkeypatch, store):
+    provider = QlooHarnessProvider()
+    store.put(p.canonical_key('recommend', {'filter_location': 'Berlin, Germany'}), {
+        'operation': 'recommend', 'results': [{'name': 'Reference'}],
+        'query_intent': {'signals': {'tags': ['urn:tag:food']}, 'filters': {'location': 'Berlin, Germany'}}}, 1)
+    monkeypatch.setenv('QLOO_LIVE_ENABLED', 'false')
+    with pytest.raises(QlooHarnessError) as caught:
+        provider.recommend_places(['urn:tag:food'], 'Another City')
+    assert caught.value.code == 'LIVE_DISABLED'
+    assert 'Another City' in str(caught.value)
+    assert 'Berlin, Germany' in str(caught.value)
+    assert 'returned no places' not in str(caught.value), 'An unheld query is not evidence of no places'
+
+
 def _run_with(monkeypatch, stdout, returncode=1, raise_exc=None):
     provider = QlooHarnessProvider()
     monkeypatch.setattr(provider, '_resolve_command', lambda: ['fake-qloo'])
