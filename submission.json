@@ -1,8 +1,8 @@
 {
   "event": "Qloo Agentic Hackathon 2026",
-  "publicDemoUrl": "",
+  "publicDemoUrl": "https://cultureforge-ai.tail601a7c.ts.net",
   "publicRepositoryUrl": "https://github.com/joyboyreturns/CultureForge-AI",
   "devpostUrl": "",
-  "ownerConfirmedEligibility": false,
-  "ownerConfirmedAssetRights": false
+  "ownerConfirmedEligibility": true,
+  "ownerConfirmedAssetRights": true
 }
