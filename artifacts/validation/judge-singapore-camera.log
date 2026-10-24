@@ -1,0 +1,9 @@
+INPUT   {"businessType": "Retail", "businessIdea": "Film camera shop", "audience": "Film photography hobbyists", "location": "Singapore", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
+  +   3.0s  resolve-audience             ok       Qloo find_tags → /v2/tags
+  +   3.0s  resolve-business-category    ok       No returned tag matched "film camera shop". (reused from cache — the original call took 2.3s, this run spent n
+
+STATUS clarify  error=None  total=3.0s  firstEvent=3.0s  partialAnswer=-1.0s  timings={}
+COST   transportRequests=1 workflowCalls=2
+CLARIFY {"reason": "Qloo returned no category tag matching \"Film camera shop\". CultureForge did not substitute another category.", "question": "Use a different or broader kind of business.", "field": "businessIdea", "code": "UNSUPPORTED_CATEGORY", "actions": [{"kind": "idea", "label": "Broader: camera shop", "value": "camera shop"}]}
+PARTIAL: 0 direction(s), 0 place(s)
+COUNTERS qloo calls today 251 -> 252; model calls today 21 -> 21

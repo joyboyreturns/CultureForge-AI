@@ -1,0 +1,62 @@
+{
+  "city": "Vienna, Austria",
+  "seconds": 5.99,
+  "cached": false,
+  "requests": 1,
+  "payload": {
+    "target_type": "place",
+    "signal_tags": [
+      "urn:tag:interests:qloo:plant_based_dining",
+      "urn:tag:interests:qloo:modern_restaurant_design",
+      "urn:tag:interests:qloo:plant_based_cuisine"
+    ],
+    "filter_location": "Vienna, Austria",
+    "limit": 10,
+    "include_tags": [
+      "urn:tag:genre:place:restaurant"
+    ],
+    "include_tags_operator": "intersection"
+  },
+  "status": "ok",
+  "count": 10,
+  "places": [
+    "Witwe Bolte - Gutenberggasse 13",
+    "The Truth",
+    "RistORO",
+    "Café at the Park",
+    "Semberija Grill",
+    "Birol usta Wiener Gemüse Kebap",
+    "Café Restaurant Markt58",
+    "Joseph Brot",
+    "Markt Küche (BILLA)",
+    "THE BOX"
+  ],
+  "provenance": {
+    "source": "Qloo API",
+    "endpoint": "/v2/insights",
+    "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/v2/insights",
+        "query": {
+          "filter.type": "urn:entity:place",
+          "take": 10,
+          "signal.interests.tags": [
+            "urn:tag:interests:qloo:plant_based_dining",
+            "urn:tag:interests:qloo:modern_restaurant_design",
+            "urn:tag:interests:qloo:plant_based_cuisine"
+          ],
+          "operator.signal.interests.tags": "intersection",
+          "filter.location.query": "Vienna, Austria",
+          "filter.tags": [
+            "urn:tag:genre:place:restaurant"
+          ],
+          "operator.filter.tags": "intersection",
+          "feature.explainability": true
+        }
+      }
+    ],
+    "transport": "direct"
+  }
+}

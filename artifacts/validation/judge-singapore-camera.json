@@ -1,0 +1,72 @@
+{
+ "input": {
+  "businessType": "Retail",
+  "businessIdea": "Film camera shop",
+  "audience": "Film photography hobbyists",
+  "location": "Singapore",
+  "budget": "$25k – $50k",
+  "objectives": [
+   "Build a loyal community"
+  ]
+ },
+ "run": {
+  "runId": "run-db5d563472b4",
+  "status": "clarify",
+  "createdAt": 1792771521.8006961,
+  "audience": "Film photography hobbyists",
+  "events": [
+   {
+    "id": "trace-3a57a736",
+    "step": "resolve-audience",
+    "workflow": "find_tags",
+    "status": "ok",
+    "durationMs": 1583,
+    "correlationId": "exec-3dba01a8-3d31-4511-aea7-30c6bf576aa1",
+    "resultCount": 3,
+    "detail": "Qloo find_tags → /v2/tags",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:05:23Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-47cbf05d",
+    "step": "resolve-business-category",
+    "workflow": "find_tags",
+    "status": "ok",
+    "durationMs": 0,
+    "correlationId": "exec-ce35238b-0a11-465b-b706-dc4f73b84098",
+    "resultCount": 10,
+    "detail": "No returned tag matched \"film camera shop\". (reused from cache — the original call took 2.3s, this run spent no time waiting)",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:05:23Z",
+    "request": null,
+    "resultExcerpt": null
+   }
+  ],
+  "result": null,
+  "partialResult": null,
+  "timings": {},
+  "clarification": {
+   "reason": "Qloo returned no category tag matching \"Film camera shop\". CultureForge did not substitute another category.",
+   "question": "Use a different or broader kind of business.",
+   "field": "businessIdea",
+   "code": "UNSUPPORTED_CATEGORY",
+   "actions": [
+    {
+     "kind": "idea",
+     "label": "Broader: camera shop",
+     "value": "camera shop"
+    }
+   ]
+  },
+  "error": null,
+  "errorCode": null,
+  "transportRequests": 1,
+  "workflowCalls": 2
+ },
+ "marks": {
+  "firstEvent": 3.03124,
+  "done": 3.03124
+ }
+}

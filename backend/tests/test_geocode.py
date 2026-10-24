@@ -60,3 +60,14 @@ def test_name_match_needs_name_city_and_point_precision():
     assert geocode.name_match([{**row, 'name': 'Other Hotel'}], 'Sawamura Bakery', 'Tokyo') is None
     assert geocode.name_match([{**row, 'display_name': 'Osaka', 'address': {}}], 'Sawamura Bakery', 'Tokyo') is None
     assert geocode.name_match([{**row, 'place_rank': 16}], 'Sawamura Bakery', 'Tokyo') is None
+
+
+def test_a_one_word_overlap_is_not_a_name_match():
+    """Regression: "No.4" (Chiyoda) was pinned onto The Little BAKERY (Shibuya) in the shipped Tokyo demo."""
+    row = {'lat': '35.6700', 'lon': '139.7060', 'display_name': 'No Bakery, Shibuya, Tokyo, Japan',
+           'name': 'No Bakery', 'place_rank': 30, 'address': {'city': 'Tokyo'}}
+    assert geocode.name_match([row], 'No.4', 'Tokyo') is None
+    assert geocode.name_match([{**row, 'name': 'The Little BAKERY Tokyo'}], 'No.4', 'Tokyo') is None
+    # Two shared words, or the same words, still match.
+    assert geocode.name_match([{**row, 'name': 'Garden House Crafts'}], 'GARDEN HOUSE CRAFTS DAIKANYAMA', 'Tokyo')['status'] == 'plotted'
+    assert geocode.name_match([{**row, 'name': 'Path'}], 'PATH', 'Tokyo')['status'] == 'plotted'
