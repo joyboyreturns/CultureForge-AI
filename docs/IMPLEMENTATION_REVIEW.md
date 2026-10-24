@@ -173,22 +173,6 @@ Qloo category filters and tag operators are documented in the primary
 The installed official harness source was inspected for `include_tags`
 resolution and `filter.tags`; actual live output confirmed the request.
 
-## Estimated judge assessment
-
-Internal 0–10 estimates, not an official scoring scale or predicted result.
-A public working demo is an eligibility gate; these estimates assume that
-remaining hosting requirement is met.
-
-| Official category | Estimate | Evidence and remaining weakness |
-| --- | --- | --- |
-| Technological Implementation | 7.5 | Real Qloo/model checks, bounded calls, executable policy, Ubuntu container. Semantic entailment and cold-run limits remain. |
-| Design | 7.0 | Readable source graph, progressive preview, replay, recovery and meaningful removal. Dense secondary panels and incomplete mobile/browser testing remain. |
-| Potential Impact | 5.0 | Useful strategist workflow and portable evidence record. No customer validation, demonstrated adoption or measured business benefit. |
-| Quality of the Idea | 7.5 | Genuine source-dependent recomposition and scoped challenge. Generic LLMs could still propose the underlying collection/craft ideas. |
-
-Equal-weight average: approximately **6.8/10**, with low confidence as an
-external judging prediction. A first-place claim is not supported by this audit.
-
 ## Remaining weaknesses, ranked
 
 1. **Public demo and submission eligibility remain outstanding.** Render's

@@ -78,9 +78,7 @@ and a kill switch either way.
 | Potential Impact | 25% | A specific strategy workflow and useful exports; customer adoption and commercial value remain unvalidated. |
 | Quality of the Idea | 25% | A proposal that can be challenged and recomposed when evidence is removed, rather than another untraceable idea generator. |
 
-These weights come from the official rules. Estimated scores in
-[IMPLEMENTATION_REVIEW.md](IMPLEMENTATION_REVIEW.md) are internal estimates,
-not official judging results.
+These weights come from the official rules.
 
 ### Challenges
 

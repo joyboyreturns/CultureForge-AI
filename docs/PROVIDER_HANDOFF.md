@@ -62,7 +62,7 @@ was not changed.
 - Reviewed official rules and previous 2025 winners. Four criteria carry
   25% each. Deadline October 30, 2026, 11:45 pm EDT / October 31, 9:15 am IST.
   Competitor claims are author descriptions/README inspection, not source
-  audits or live tests. Internal estimate approximately 6.8/10, not a promise.
+  audits or live tests.
 
 ## Evidence and validation
 
