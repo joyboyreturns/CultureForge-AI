@@ -160,7 +160,7 @@ sequenceDiagram
     API-->>UI: steps, timings, partial answer
   end
   UI-->>J: Automatically open first evidence / initial answer
-  Note over UI,API: Research continues; a floating card shows real progress.
+  Note over UI,API: Research continues, and a floating card shows real progress.
   API-->>UI: Complete with full report
   alt Judge is still reading this preview
     UI-->>J: Update to full report and show completion message
