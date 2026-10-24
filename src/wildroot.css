@@ -919,7 +919,9 @@
 .ox .maplibregl-ctrl-attrib a { color: var(--text); }
 .ox .maplibregl-ctrl-attrib.maplibregl-compact { background: var(--map-glass); color: var(--muted); }
 .ox .maplibregl-ctrl-scale { border-color: var(--subtle); }
-@media (max-width: 900px) {
+/* With the sidebar open, a 1024px laptop leaves the map about 270px beside the venue list;
+   stack the list under it from 1180px down so the map keeps the full width. */
+@media (max-width: 1180px) {
   .ox-body { grid-template-columns: minmax(0, 1fr); }
   .ox-stage { border-right: 0; border-bottom: 1px solid var(--line); }
   .ox-canvas, .ox-skeleton.is-static { height: clamp(460px, 66vh, 600px); }

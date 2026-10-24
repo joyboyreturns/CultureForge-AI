@@ -576,6 +576,16 @@ body { font-family: var(--font-sans); color: var(--text); letter-spacing: -0.005
   .tour-launch, .theme-toggle { padding: 6px 11px !important; min-height: 32px; }
   .theme-toggle { width: 34px; justify-content: center; padding: 0 !important; }
 }
+/* Laptop and projector widths: the sidebar leaves the topbar too little room for
+   every control, and wildroot.css pins each one to nowrap. Drop the duplicate
+   "Front page" link (the Landing button goes there too) and let the left group
+   shrink, so the page never scrolls sideways. */
+@media (max-width: 1180px) {
+  .topbar { min-width: 0; }
+  .topbar-left { min-width: 0; overflow: hidden; }
+  .topbar-left > span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto !important; }
+  .topbar-link { display: none !important; }
+}
 @media (max-width: 520px) {
   .topbar { gap: 8px !important; padding: 0 14px !important; }
   .topbar-left { min-width: 0; overflow: hidden; }
