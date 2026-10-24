@@ -1,0 +1,4201 @@
+{
+ "input": {
+  "businessType": "Food & beverage",
+  "businessIdea": "Vegan restaurant",
+  "audience": "Design-conscious young professionals who enjoy plant-based food",
+  "location": "Berlin, Germany",
+  "budget": "$25k – $50k",
+  "objectives": [
+   "Build a loyal community"
+  ]
+ },
+ "run": {
+  "runId": "run-f3a02d28c91f",
+  "status": "complete",
+  "createdAt": 1792772262.811449,
+  "audience": "Design-conscious young professionals who enjoy plant-based food",
+  "events": [
+   {
+    "id": "trace-ffbd6b64",
+    "step": "resolve-audience",
+    "workflow": "find_tags",
+    "status": "ok",
+    "durationMs": 0,
+    "correlationId": "exec-dac91c3e-1b72-4d7c-816e-8ec3707e0b78",
+    "resultCount": 3,
+    "detail": "Reused cached Qloo find_tags. (reused from cache — the original call took 1.5s, this run spent no time waiting)",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:42Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-88abf91f",
+    "step": "resolve-business-category",
+    "workflow": "find_tags",
+    "status": "ok",
+    "durationMs": 0,
+    "correlationId": "exec-b7c34378-1eff-4388-bcf8-ae6f6b7343fa",
+    "resultCount": 10,
+    "detail": "Selected a returned Qloo tag (exact); this is a category filter, not an audience seed. (reused from cache — the original call took 2.5s, this run spent no time waiting)",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:42Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-49cb86a4",
+    "step": "retrieve-evidence",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": 0,
+    "correlationId": "exec-f5e85796-1317-4c54-88b4-2baa640feb1b",
+    "resultCount": 10,
+    "detail": "Reused cached Qloo recommend. (reused from cache — the original call took 8.2s, this run spent no time waiting)",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:42Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-initial-answer",
+    "step": "initial-answer-ready",
+    "workflow": null,
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 1,
+    "detail": "Initial rule composition is available. Bridge retrieval and model analysis are still pending.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:42Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-9b7cc7ea",
+    "step": "name-the-directions",
+    "workflow": null,
+    "status": "ok",
+    "durationMs": 2764,
+    "correlationId": null,
+    "resultCount": null,
+    "detail": "Named by minimax/minimax-m3.1-flash.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:48Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-bridge-artist",
+    "step": "bridge-artist",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": 1522,
+    "correlationId": "exec-c5fb1e14-4bff-412e-8cd7-396dfb2a0b1d",
+    "resultCount": 5,
+    "detail": "Qloo recommend → /v2/insights",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:48.813514+00:00",
+    "request": {
+     "method": "GET",
+     "path": "/v2/insights",
+     "query": {
+      "filter.type": "urn:entity:artist",
+      "take": 5,
+      "signal.interests.tags": [
+       "urn:tag:interests:qloo:plant_based_dining",
+       "urn:tag:interests:qloo:modern_restaurant_design",
+       "urn:tag:interests:qloo:plant_based_cuisine"
+      ],
+      "operator.signal.interests.tags": "intersection",
+      "feature.explainability": true
+     },
+     "endpoint": "/v2/insights",
+     "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+    },
+    "resultExcerpt": [
+     "Peter Phillips: The Tallis Scholars · affinity 0.765 · popularity 0.7951",
+     "Bandai · affinity 0.765 · popularity 0.5950",
+     "Mathématiques Modernes · affinity 0.765 · popularity 0.6594",
+     "Warbreed · affinity 0.765 · popularity 0.7094",
+     "MOOSE HILL · affinity 0.765 · popularity 0.5295"
+    ]
+   },
+   {
+    "id": "trace-bridge-movie",
+    "step": "bridge-movie",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": 1913,
+    "correlationId": "exec-a4616389-b204-4760-bb63-8223115e802b",
+    "resultCount": 5,
+    "detail": "Qloo recommend → /v2/insights",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:48.815265+00:00",
+    "request": {
+     "method": "GET",
+     "path": "/v2/insights",
+     "query": {
+      "filter.type": "urn:entity:movie",
+      "take": 5,
+      "signal.interests.tags": [
+       "urn:tag:interests:qloo:plant_based_dining",
+       "urn:tag:interests:qloo:modern_restaurant_design",
+       "urn:tag:interests:qloo:plant_based_cuisine"
+      ],
+      "operator.signal.interests.tags": "intersection",
+      "feature.explainability": true
+     },
+     "endpoint": "/v2/insights",
+     "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+    },
+    "resultExcerpt": [
+     "A Nice Neighbor · affinity 0.765",
+     "7:11 PM · affinity 0.765 · popularity 0.4317",
+     "Come on Children · affinity 0.765 · popularity 0.1981",
+     "Always Audacious · affinity 0.765",
+     "El enemigo · affinity 0.765"
+    ]
+   },
+   {
+    "id": "trace-bridge-brand",
+    "step": "bridge-brand",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": 1730,
+    "correlationId": "exec-850e2d6e-de95-40f7-b1e9-e1d5fa79c8b7",
+    "resultCount": 5,
+    "detail": "Qloo recommend → /v2/insights",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:48.816614+00:00",
+    "request": {
+     "method": "GET",
+     "path": "/v2/insights",
+     "query": {
+      "filter.type": "urn:entity:brand",
+      "take": 5,
+      "signal.interests.tags": [
+       "urn:tag:interests:qloo:plant_based_dining",
+       "urn:tag:interests:qloo:modern_restaurant_design",
+       "urn:tag:interests:qloo:plant_based_cuisine"
+      ],
+      "operator.signal.interests.tags": "intersection",
+      "feature.explainability": true
+     },
+     "endpoint": "/v2/insights",
+     "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+    },
+    "resultExcerpt": [
+     "Politix Men's Fashion · affinity 0.765 · popularity 0.6003",
+     "Duncan Quinn · affinity 0.765 · popularity 0.5456",
+     "Binance · affinity 0.765 · popularity 0.9937",
+     "Orfeu Cafés e Azeites · affinity 0.765 · popularity 0.8272",
+     "Goldilocks Bakeshop · affinity 0.765 · popularity 0.8560"
+    ]
+   },
+   {
+    "id": "trace-e21a1285",
+    "step": "compose-directions",
+    "workflow": null,
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 1,
+    "detail": "Composed 1 direction(s) from the returned evidence.",
+    "evidenceIds": [
+     "ev-entity-12",
+     "ev-entity-4",
+     "ev-entity-7"
+    ],
+    "acquiredAt": "2026-10-23T16:17:51Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-5041750d",
+    "step": "agent-step-1",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 10,
+    "detail": "recommend: Can we find Berlin places that actually carry plant-based dining affinity, rather than text-matched cafés and hotels? — Fetched recommend: 10 results, led by Willy-Brandt-Haus, Haci Baba Kebabhaus, Companion Tea & Coffee.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:17:58Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-e989233a",
+    "step": "agent-step-2",
+    "workflow": "entity_tags",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 10,
+    "detail": "entity_tags: Do these Berlin venues carry plant-based dining tags that would make them stronger anchors? — Fetched entity_tags: 10 results, led by Identifies as women-owned, Chicken Korma, German.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:18:02Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-bc9ede0d",
+    "step": "agent-step-3",
+    "workflow": "entity_tags",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 10,
+    "detail": "entity_tags: Do any Berlin venues in the candidate set carry plant-based dining tags? — Fetched entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:18:06Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-144c161a",
+    "step": "agent-step-4",
+    "workflow": "where_popular",
+    "status": "skipped",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 0,
+    "detail": "where_popular: Where is plant-based dining most popular in Berlin, and are there actual vegan venues to anchor the direction to? — Not run: entity names identifiers this run has not observed: urn:tag:interests:qloo:plant_based_dining.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:18:09Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-537c4589",
+    "step": "agent-step-5",
+    "workflow": "find_tags",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 5,
+    "detail": "find_tags: Are there Qloo tags for vegan/plant-based dining that could anchor a Berlin vegan restaurant direction? — Fetched find_tags: 5 results, led by Vegan restaurant, Vegetarian restaurant, Vegetarian Restaurant.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:18:52Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-e99c0fb6",
+    "step": "agent-step-6",
+    "workflow": "entity_tags",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 10,
+    "detail": "entity_tags: Which local references actually align with vegan dining and young-professional audiences? — Held entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:18:57Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-d620e2dd",
+    "step": "agent-step-7",
+    "workflow": "recommend",
+    "status": "skipped",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 0,
+    "detail": "recommend: Can we find Berlin places with observed vegan and young-adult signals to replace the weak current anchors? — Not run: signal_tags needs 1 to 3 identifiers.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:19:05Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-25e3ee89",
+    "step": "agent-step-8",
+    "workflow": "recommend",
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": 10,
+    "detail": "recommend: Can we find Berlin places that directly reflect vegan dining, young-adult appeal, and modern design? — Fetched recommend: 10 results, led by Mokkafee Friedrichshagen, a&o Hostel Berlin Hauptbahnhof, BRLO Grill.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:19:14Z",
+    "request": null,
+    "resultExcerpt": null
+   },
+   {
+    "id": "trace-agent-e8ecef4e",
+    "step": "agent-analysis",
+    "workflow": null,
+    "status": "ok",
+    "durationMs": null,
+    "correlationId": null,
+    "resultCount": null,
+    "detail": "minimax/minimax-m3.1-flash wrote 5 cited claims; 1 rejected by the citation check.",
+    "evidenceIds": [],
+    "acquiredAt": "2026-10-23T16:19:58Z",
+    "request": null,
+    "resultExcerpt": null
+   }
+  ],
+  "result": {
+   "projectId": "cf-ea482029b8",
+   "project": {
+    "businessType": "Food & beverage",
+    "businessIdea": "Vegan restaurant",
+    "audience": "Design-conscious young professionals who enjoy plant-based food",
+    "location": "Berlin, Germany",
+    "budget": "$25k – $50k",
+    "objectives": [
+     "Build a loyal community"
+    ]
+   },
+   "concepts": [
+    {
+     "id": "live-1-verdant-&-copper",
+     "name": "Verdant & Copper",
+     "tagline": "Plant-based plates, natural pours and curated matcha in a room designed to be looked at.",
+     "description": "Proposed for Vegan restaurant in Berlin, Germany. A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed. The reference selected for this direction is Hotel Q! Berlin (rated 4.7 by Qloo and popularity 0.950), described by Qloo as \"Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.\". It was returned by Qloo for a Berlin, Germany query; the location it belongs to was not verified.",
+     "audienceFit": null,
+     "culturalRelevance": null,
+     "feasibility": null,
+     "budget": "$25k – $50k",
+     "investment": "CultureForge planning assumption — not estimated by Qloo",
+     "signals": [
+      "Design-led spaces",
+      "Independent discovery"
+     ],
+     "accent": "#e69b73",
+     "image": "https://images.qloo.com/i/00057443-95D2-4C35-B62F-2EC55895365D-420x-auto.jpg",
+     "direction": "01",
+     "imageAlt": "Hotel Q! Berlin, returned by Qloo for this audience and location",
+     "personality": "Precise, confident, curated",
+     "audienceRationale": "Unlocked by modern restaurant design; proposed for Design-conscious young professionals who enjoy plant-based food in Berlin, Germany. The audience occasion is from the brief, not inferred behavior. For an audience that treats taste as the primary signal of quality.",
+     "implementationNote": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+     "moments": [
+      {
+       "title": "Why this direction",
+       "description": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed."
+      },
+      {
+       "title": "Signature moment",
+       "description": "A monthly change of the room itself, announced the way a gallery announces a new show."
+      }
+     ],
+     "evidenceIds": [
+      "ev-entity-12",
+      "ev-entity-4",
+      "ev-entity-7"
+     ],
+     "decisions": [
+      {
+       "id": "design-led-offering",
+       "field": "offering",
+       "proposal": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed.",
+       "evidenceIds": [
+        "ev-entity-12",
+        "ev-entity-4",
+        "ev-entity-7"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      },
+      {
+       "id": "design-led-ritual",
+       "field": "signature ritual",
+       "proposal": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+       "evidenceIds": [
+        "ev-entity-12"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      },
+      {
+       "id": "design-led-positioning",
+       "field": "positioning",
+       "proposal": "For an audience that treats taste as the primary signal of quality.",
+       "evidenceIds": [
+        "ev-entity-12",
+        "ev-tag-1"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      }
+     ],
+     "limitations": [
+      "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+      "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+      "Qloo returned the same affinity for every candidate here, so affinity does not separate these venues.",
+      "The reference was chosen as the returned place with the highest Qloo popularity, rating breaking ties. Popularity is general, not specific to this audience. This ordering is restricted to category-relevant references."
+     ]
+    }
+   ],
+   "signals": [
+    {
+     "label": "Haci Baba Kebabhaus",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0018741C-6F8E-467D-9439-67683646DB28"
+    },
+    {
+     "label": "Companion Tea & Coffee",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "001C4293-21EE-4811-89DA-B534F8622DF9"
+    },
+    {
+     "label": "Starbucks",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "00219165-4F46-4AB7-977B-E5AD03A27D2E"
+    },
+    {
+     "label": "Thoben",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0026A588-328A-47E2-8D09-2D344FD6AD69"
+    },
+    {
+     "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002780C2-0D3C-41B2-908D-9CE96CA6DF49"
+    },
+    {
+     "label": "Restaurant Duo",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002DEC57-139B-4B1E-8506-B201F84E007F"
+    },
+    {
+     "label": "Grünes Cafe & Hofladen",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002F1C1A-79E5-4BDB-92AB-D15779F3E305"
+    },
+    {
+     "label": "Mokkafee Friedrichshagen",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002F2A6F-839B-432D-8C59-04F2E3B8ED47"
+    },
+    {
+     "label": "Lichterfelder Bäckerei",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0030C2FA-9999-4016-9358-22AC81D3C72C"
+    },
+    {
+     "label": "Hotel Q! Berlin",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "00057443-95D2-4C35-B62F-2EC55895365D"
+    }
+   ],
+   "dataMode": "live",
+   "conceptMode": "evidence_composed",
+   "notice": "Qloo supplied the audience tags and the local venues below. The 1 business direction is CultureForge’s interpretation of that evidence, and each one names the returned venue it was built from. Fit scores are omitted because affinity does not measure business fit. The same audience tags also returned 15 artist/brand/movie references with no location, cited as audience-level cross-references, separate from direction-specific supporting evidence.",
+   "provenance": {
+    "source": "Qloo API",
+    "endpoint": "qloo exec find_tags → recommend",
+    "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+    "resolved_tags": [
+     "urn:tag:interests:qloo:plant_based_dining",
+     "urn:tag:interests:qloo:modern_restaurant_design",
+     "urn:tag:interests:qloo:plant_based_cuisine"
+    ]
+   },
+   "evidence": [
+    {
+     "id": "ev-tag-0",
+     "kind": "tag",
+     "label": "Plant Based Dining",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:plant_based_dining",
+     "affinity": null,
+     "popularity": 0.9978000971730435,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-0",
+      "entityId": null,
+      "label": "Plant Based Dining",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-tag-1",
+     "kind": "tag",
+     "label": "Modern Restaurant Design",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:modern_restaurant_design",
+     "affinity": null,
+     "popularity": 0.9877472583488154,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-1",
+      "entityId": null,
+      "label": "Modern Restaurant Design",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-tag-2",
+     "kind": "tag",
+     "label": "Plant Based Cuisine",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:plant_based_cuisine",
+     "affinity": null,
+     "popularity": 0.9988543759993578,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-2",
+      "entityId": null,
+      "label": "Plant Based Cuisine",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-entity-3",
+     "kind": "entity",
+     "label": "Haci Baba Kebabhaus",
+     "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7006249022603536,
+     "rating": 4.699999809265137,
+     "priceLevel": 1,
+     "description": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+     "image": "https://images.qloo.com/i/0018741C-6F8E-467D-9439-67683646DB28-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Karl-Marx-Straße 228 12055 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-3",
+      "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+      "label": "Haci Baba Kebabhaus",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+      "hasMore": false,
+      "description": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "unrelated",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-4",
+     "kind": "entity",
+     "label": "Companion Tea & Coffee",
+     "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.8321885025858985,
+     "rating": 4.699999809265137,
+     "priceLevel": 1,
+     "description": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+     "image": "https://images.qloo.com/i/001C4293-21EE-4811-89DA-B534F8622DF9-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Weserstr. 166 12045 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-4",
+      "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+      "label": "Companion Tea & Coffee",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+      "hasMore": false,
+      "description": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-5",
+     "kind": "entity",
+     "label": "Starbucks",
+     "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.38164077053572654,
+     "rating": 3.799999952316284,
+     "priceLevel": 1,
+     "description": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+     "image": "https://images.qloo.com/i/00219165-4F46-4AB7-977B-E5AD03A27D2E-420x-auto.jpg",
+     "location": "Hansaviertel, Berlin",
+     "address": "Joachimsthaler Str. 1-4 10623 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-5",
+      "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+      "label": "Starbucks",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+      "hasMore": false,
+      "description": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Hansaviertel, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Hansaviertel, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "unrelated",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-6",
+     "kind": "entity",
+     "label": "Thoben",
+     "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.03460847122749109,
+     "rating": 3.5999999046325684,
+     "priceLevel": 1,
+     "description": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+     "image": "https://images.qloo.com/i/0026A588-328A-47E2-8D09-2D344FD6AD69-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Karl-Marx-Straße 156 12043 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-6",
+      "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+      "label": "Thoben",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+      "hasMore": false,
+      "description": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-7",
+     "kind": "entity",
+     "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+     "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7947584433124909,
+     "rating": 4.199999809265137,
+     "priceLevel": 2,
+     "description": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+     "image": "https://images.qloo.com/i/002780C2-0D3C-41B2-908D-9CE96CA6DF49-420x-auto.jpg",
+     "location": "Berlin Koepenick, Berlin",
+     "address": "Fürstenwalder Damm 260 12587 Berlin-Bezirk Treptow-Köpenick Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-7",
+      "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+      "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+      "hasMore": false,
+      "description": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Koepenick, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Koepenick, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-8",
+     "kind": "entity",
+     "label": "Restaurant Duo",
+     "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.6192427401497937,
+     "rating": 4.699999809265137,
+     "priceLevel": 2,
+     "description": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+     "image": "https://images.qloo.com/i/002DEC57-139B-4B1E-8506-B201F84E007F-420x-auto.jpg",
+     "location": "Steglitz Bezirk, Berlin",
+     "address": "Steglitzer Damm 29 12169 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-8",
+      "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+      "label": "Restaurant Duo",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+      "hasMore": false,
+      "description": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Steglitz Bezirk, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Steglitz Bezirk, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant, pizza. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-9",
+     "kind": "entity",
+     "label": "Grünes Cafe & Hofladen",
+     "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.02989152338638112,
+     "rating": 4.400000095367432,
+     "priceLevel": 1,
+     "description": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+     "image": "https://images.qloo.com/i/002F1C1A-79E5-4BDB-92AB-D15779F3E305-420x-auto.jpg",
+     "location": "Britz, Berlin",
+     "address": "Mohriner Allee 71 12347 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-9",
+      "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+      "label": "Grünes Cafe & Hofladen",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+      "hasMore": false,
+      "description": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Britz, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Britz, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: café, cafe, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-10",
+     "kind": "entity",
+     "label": "Mokkafee Friedrichshagen",
+     "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.40130199424167223,
+     "rating": 4.099999904632568,
+     "priceLevel": 2,
+     "description": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+     "image": "https://images.qloo.com/i/002F2A6F-839B-432D-8C59-04F2E3B8ED47-420x-auto.jpg",
+     "location": "Friedrichshagen, Berlin",
+     "address": "Bölschestraße 7 12587 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-10",
+      "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+      "label": "Mokkafee Friedrichshagen",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+      "hasMore": false,
+      "description": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Friedrichshagen, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Friedrichshagen, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-11",
+     "kind": "entity",
+     "label": "Lichterfelder Bäckerei",
+     "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.33348358772572056,
+     "rating": 4.599999904632568,
+     "priceLevel": 1,
+     "description": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+     "image": "https://images.qloo.com/i/0030C2FA-9999-4016-9358-22AC81D3C72C-420x-auto.jpg",
+     "location": "Lichterfelde, Berlin",
+     "address": "Hildburghauser Str. 201 12209 Berlin-Bezirk Steglitz-Zehlendorf Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-11",
+      "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+      "label": "Lichterfelder Bäckerei",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+      "hasMore": false,
+      "description": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Lichterfelde, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Lichterfelde, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, cafe, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-12",
+     "kind": "entity",
+     "label": "Hotel Q! Berlin",
+     "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.949643234039139,
+     "rating": 4.699999809265137,
+     "priceLevel": null,
+     "description": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+     "image": "https://images.qloo.com/i/00057443-95D2-4C35-B62F-2EC55895365D-420x-auto.jpg",
+     "location": "Wilmersdorf Bezirk, Berlin",
+     "address": "Knesebeckstraße 67 10623 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-12",
+      "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+      "label": "Hotel Q! Berlin",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+      "hasMore": false,
+      "description": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Wilmersdorf Bezirk, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Wilmersdorf Bezirk, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant, bar. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-13",
+     "kind": "crossdomain",
+     "label": "Peter Phillips: The Tallis Scholars",
+     "entityId": "CC2602AC-E805-47E4-A86A-6F7C3E2BD70E",
+     "entityType": "urn:entity:artist",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7951195695626815,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Peter Phillips is the founder and director of The Tallis Scholars, a British choral ensemble established in 1973 that specializes in Renaissance sacred music, particularly polyphony. The group is acclaimed for its pure vocal tone and historically informed performances, focusing on composers such as Thomas Tallis, William Byrd, and Palestrina. Under Phillips' direction, The Tallis Scholars have significantly contributed to the revival and appreciation of early choral music worldwide.",
+     "image": "https://images.qloo.com/i/CC2602AC-E805-47E4-A86A-6F7C3E2BD70E-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-artist",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-14",
+     "kind": "crossdomain",
+     "label": "Bandai",
+     "entityId": "994B02EC-0D76-4DF0-9B2F-5838132C8A29",
+     "entityType": "urn:entity:artist",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.594951143267208,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Bandai is a Japanese toy and video game company, famous for producing action figures, model kits, and video games. It is not a music artist or group.",
+     "image": "https://images.qloo.com/i/994B02EC-0D76-4DF0-9B2F-5838132C8A29-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-artist",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-15",
+     "kind": "crossdomain",
+     "label": "Mathématiques Modernes",
+     "entityId": "B14CF636-7F6E-4B18-AEEB-9420B4A6DA49",
+     "entityType": "urn:entity:artist",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.6594348216450727,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Mathématiques Modernes is a French synthpop and new wave band known for their electronic sound and experimental approach during the early 1980s. They contributed to the French electronic music scene with a blend of synth-driven melodies and post-punk influences.",
+     "image": "https://images.qloo.com/i/B14CF636-7F6E-4B18-AEEB-9420B4A6DA49-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-artist",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-16",
+     "kind": "crossdomain",
+     "label": "Warbreed",
+     "entityId": "613D23BA-E73A-4EAF-BEB4-B6740D3F971B",
+     "entityType": "urn:entity:artist",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7094417028750434,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Warbreed is a metalcore band that blends elements of hardcore punk and heavy metal, known for their aggressive sound, heavy riffs, and intense live performances. They have contributed to the metalcore scene with their energetic music and passionate fanbase.",
+     "image": "https://images.qloo.com/i/613D23BA-E73A-4EAF-BEB4-B6740D3F971B-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-artist",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-17",
+     "kind": "crossdomain",
+     "label": "MOOSE HILL",
+     "entityId": "EBD11EAA-F163-4487-B65D-3AC6CC69720B",
+     "entityType": "urn:entity:artist",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.5295237533505036,
+     "rating": null,
+     "priceLevel": null,
+     "description": "",
+     "image": "https://images.qloo.com/i/EBD11EAA-F163-4487-B65D-3AC6CC69720B-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-artist",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-18",
+     "kind": "crossdomain",
+     "label": "A Nice Neighbor",
+     "entityId": "48F3193E-9F20-4FB7-8965-C413D3294912",
+     "entityType": "urn:entity:movie",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": null,
+     "rating": null,
+     "priceLevel": null,
+     "description": "A Nice Neighbor (1979) is a Hungarian drama film directed by Zsolt Kézdi-Kovács. It stars László Szabó, Margit Dajka, and Lajos Szabó. The film premiered on 20 September 1979 in Hungary and is presented in Hungarian with a mono sound mix.",
+     "image": "https://images.qloo.com/i/48F3193E-9F20-4FB7-8965-C413D3294912-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-movie",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-19",
+     "kind": "crossdomain",
+     "label": "7:11 PM",
+     "entityId": "E3E947F9-3E44-42F5-B8EE-5F3BAD7125B4",
+     "entityType": "urn:entity:movie",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.4316831897017214,
+     "rating": null,
+     "priceLevel": null,
+     "description": "7:11 PM (2023), directed by Chaitu Madala and starring Saahas Pagadala, Tess Walsh and Deepika Reddy, is an action‑driven science fiction thriller that centers on an event at 7:11 PM which jeopardizes a rural town and a distant planet. The protagonist, Ravi, travels through time to confront a criminal mastermind, aiming to save his loved ones and his community. The film mixes small‑town emotional stakes with ambitious visual effects and time‑travel mystery, examining sacrifice, fate, and responsibility in high‑stakes circumstances.",
+     "image": "https://images.qloo.com/i/E3E947F9-3E44-42F5-B8EE-5F3BAD7125B4-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-movie",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-20",
+     "kind": "crossdomain",
+     "label": "Come on Children",
+     "entityId": "1C4C0421-4AAE-473C-9994-6784E7A9462F",
+     "entityType": "urn:entity:movie",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.19812522948659797,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Come on Children (1973), directed by Allan King and filmed in Canada, is an observational documentary that follows ten teenagers living together on a farmhouse as they adjust to communal life. Featuring Alan Dunikowsky, Ken Gibbs, and John Hamilton, the film records their music, conversations, minor conflicts, drug use, and encounters with family visitors. More portrait than plot-driven narrative, it examines adolescence, alienation, and identity through quiet, candid scenes that emphasize authenticity over dramatization. The emotional tone is reflective and gently probing, offering a nostalgic yet unsentimental snapshot of youth.",
+     "image": "https://images.qloo.com/i/1C4C0421-4AAE-473C-9994-6784E7A9462F-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-movie",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-21",
+     "kind": "crossdomain",
+     "label": "Always Audacious",
+     "entityId": "DFB7E774-B8E0-497A-A4B1-001AE2D61A33",
+     "entityType": "urn:entity:movie",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": null,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Always Audacious (1920), directed by James Cruze and starring Wallace Reid, Margaret Loomis and Clarence Geldert, is a silent crime-drama-romance that follows a reckless heir whose life is usurped by a criminal double. The impostor seizes the heir’s job and fiancée and arranges for the real man to be shanghaied, leaving him to prove his identity and reclaim his fortune. The film explores themes of deception, identity, loyalty, and justice through melodramatic silent-era storytelling, and delivers a tense, emotionally charged tone culminating in vindication.",
+     "image": "https://images.qloo.com/i/DFB7E774-B8E0-497A-A4B1-001AE2D61A33-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-movie",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-22",
+     "kind": "crossdomain",
+     "label": "El enemigo",
+     "entityId": "1EB1BEE2-BF0F-48A2-8788-64FD3C50C1E7",
+     "entityType": "urn:entity:movie",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": null,
+     "rating": null,
+     "priceLevel": null,
+     "description": null,
+     "image": "https://images.qloo.com/i/1EB1BEE2-BF0F-48A2-8788-64FD3C50C1E7-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-movie",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-23",
+     "kind": "crossdomain",
+     "label": "Politix Men's Fashion",
+     "entityId": "4B84CEE5-59EA-43E1-9000-27C66D684CFA",
+     "entityType": "urn:entity:brand",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.6002610567713719,
+     "rating": null,
+     "priceLevel": null,
+     "description": "POLITIX is a premium Australian menswear brand specializing in stylish, tailored clothing for every occasion, including suits, casual wear, and formal attire.",
+     "image": "https://images.qloo.com/i/4B84CEE5-59EA-43E1-9000-27C66D684CFA-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-brand",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-24",
+     "kind": "crossdomain",
+     "label": "Duncan Quinn",
+     "entityId": "4E179884-8BA7-4391-A2F3-B65D7114A15C",
+     "entityType": "urn:entity:brand",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.5456256039056805,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Duncan Quinn is a luxury menswear brand specializing in handmade bespoke suits, shirts, ties, cufflinks, and accessories known for high quality and unique designs.",
+     "image": "https://images.qloo.com/i/4E179884-8BA7-4391-A2F3-B65D7114A15C-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-brand",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-25",
+     "kind": "crossdomain",
+     "label": "Binance",
+     "entityId": "5024DC4A-0125-469D-B07E-879C5104D291",
+     "entityType": "urn:entity:brand",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.993685477445712,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Binance is the world's largest cryptocurrency exchange by trading volume, offering trading in over 350 cryptocurrencies to more than 250 million users globally.",
+     "image": "https://images.qloo.com/i/5024DC4A-0125-469D-B07E-879C5104D291-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-brand",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-26",
+     "kind": "crossdomain",
+     "label": "Orfeu Cafés e Azeites",
+     "entityId": "4E8D1362-6673-4BAE-B143-AE3101AA63B5",
+     "entityType": "urn:entity:brand",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.8272448339577224,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Orfeu Cafés e Azeites is a Brazilian brand known for its award-winning specialty coffee and olive oils, produced in Minas Gerais.",
+     "image": "https://images.qloo.com/i/4E8D1362-6673-4BAE-B143-AE3101AA63B5-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-brand",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    },
+    {
+     "id": "ev-bridge-27",
+     "kind": "crossdomain",
+     "label": "Goldilocks Bakeshop",
+     "entityId": "4AB0CE8F-E57A-4BC3-A89C-F2C6C67FEBDF",
+     "entityType": "urn:entity:brand",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.8559526029394314,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Goldilocks Bakeshop is a popular Filipino bakery brand known for its cakes, pastries, and traditional Filipino baked goods.",
+     "image": "https://images.qloo.com/i/4AB0CE8F-E57A-4BC3-A89C-F2C6C67FEBDF-420x-auto.jpg",
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-bridge-brand",
+     "presentation": null,
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "audience_affinity",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "unknown",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Same audience seeds, another domain, no location constraint. No business-specific relationship was established.",
+       "No location metadata returned. The query location is not the place location."
+      ]
+     }
+    }
+   ],
+   "trace": [
+    {
+     "id": "trace-find_tags-resolve-audience-tags",
+     "step": "resolve-audience-tags",
+     "workflow": "find_tags",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-dac91c3e-1b72-4d7c-816e-8ec3707e0b78",
+     "resultCount": 3,
+     "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 1.5s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.829813+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/tags",
+      "query": {
+       "filter.query": "Food & beverage Design-conscious young professionals who enjoy plant-based food",
+       "feature.semantic_search": true,
+       "take": 3
+      },
+      "endpoint": "/v2/tags",
+      "documentation": "https://docs.qloo.com/reference/get-tags"
+     },
+     "resultExcerpt": [
+      "Plant Based Dining · popularity 0.9978",
+      "Modern Restaurant Design · popularity 0.9877",
+      "Plant Based Cuisine · popularity 0.9989"
+     ]
+    },
+    {
+     "id": "trace-find_tags-resolve-business-category",
+     "step": "resolve-business-category",
+     "workflow": "find_tags",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-b7c34378-1eff-4388-bcf8-ae6f6b7343fa",
+     "resultCount": 10,
+     "detail": "Resolved business category to a returned Qloo tag; this is a category filter, not an audience seed. (reused from cache — the original call took 2.5s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.830502+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/tags",
+      "query": {
+       "filter.query": "restaurant",
+       "feature.semantic_search": true,
+       "take": 10
+      },
+      "endpoint": "/v2/tags",
+      "documentation": "https://docs.qloo.com/reference/get-tags"
+     },
+     "resultExcerpt": [
+      "Restaurant Dining · popularity 0.9924",
+      "Restaurant · popularity 0.9881",
+      "Restaurant · popularity 0.9997",
+      "Restaurant · popularity 1.0000",
+      "Restaurant Dining · popularity 0.9789"
+     ]
+    },
+    {
+     "id": "trace-recommend-retrieve-local-evidence",
+     "step": "retrieve-local-evidence",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-f5e85796-1317-4c54-88b4-2baa640feb1b",
+     "resultCount": 10,
+     "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 8.2s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.830570+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/insights",
+      "query": {
+       "filter.type": "urn:entity:place",
+       "take": 10,
+       "signal.interests.tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:modern_restaurant_design",
+        "urn:tag:interests:qloo:plant_based_cuisine"
+       ],
+       "operator.signal.interests.tags": "intersection",
+       "filter.location.query": "Berlin, Germany",
+       "filter.tags": [
+        "urn:tag:genre:place:restaurant"
+       ],
+       "operator.filter.tags": "intersection",
+       "feature.explainability": true
+      },
+      "endpoint": "/v2/insights",
+      "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+     },
+     "resultExcerpt": [
+      "Haci Baba Kebabhaus · affinity 0.765 · popularity 0.7006",
+      "Companion Tea & Coffee · affinity 0.765 · popularity 0.8322",
+      "Starbucks · affinity 0.765 · popularity 0.3816",
+      "Thoben · affinity 0.765 · popularity 0.0346",
+      "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm · affinity 0.765 · popularity 0.7948"
+     ]
+    },
+    {
+     "id": "trace-relevance",
+     "step": "assess-reference-relevance",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 8,
+     "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+     "evidenceIds": [
+      "ev-entity-3",
+      "ev-entity-4",
+      "ev-entity-5",
+      "ev-entity-6",
+      "ev-entity-7",
+      "ev-entity-8",
+      "ev-entity-9",
+      "ev-entity-10",
+      "ev-entity-11",
+      "ev-entity-12"
+     ],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-bridge-artist",
+     "step": "bridge-artist",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": 1522,
+     "correlationId": "exec-c5fb1e14-4bff-412e-8cd7-396dfb2a0b1d",
+     "resultCount": 5,
+     "detail": "Qloo recommend → /v2/insights",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:48.813514+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/insights",
+      "query": {
+       "filter.type": "urn:entity:artist",
+       "take": 5,
+       "signal.interests.tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:modern_restaurant_design",
+        "urn:tag:interests:qloo:plant_based_cuisine"
+       ],
+       "operator.signal.interests.tags": "intersection",
+       "feature.explainability": true
+      },
+      "endpoint": "/v2/insights",
+      "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+     },
+     "resultExcerpt": [
+      "Peter Phillips: The Tallis Scholars · affinity 0.765 · popularity 0.7951",
+      "Bandai · affinity 0.765 · popularity 0.5950",
+      "Mathématiques Modernes · affinity 0.765 · popularity 0.6594",
+      "Warbreed · affinity 0.765 · popularity 0.7094",
+      "MOOSE HILL · affinity 0.765 · popularity 0.5295"
+     ]
+    },
+    {
+     "id": "trace-bridge-movie",
+     "step": "bridge-movie",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": 1913,
+     "correlationId": "exec-a4616389-b204-4760-bb63-8223115e802b",
+     "resultCount": 5,
+     "detail": "Qloo recommend → /v2/insights",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:48.815265+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/insights",
+      "query": {
+       "filter.type": "urn:entity:movie",
+       "take": 5,
+       "signal.interests.tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:modern_restaurant_design",
+        "urn:tag:interests:qloo:plant_based_cuisine"
+       ],
+       "operator.signal.interests.tags": "intersection",
+       "feature.explainability": true
+      },
+      "endpoint": "/v2/insights",
+      "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+     },
+     "resultExcerpt": [
+      "A Nice Neighbor · affinity 0.765",
+      "7:11 PM · affinity 0.765 · popularity 0.4317",
+      "Come on Children · affinity 0.765 · popularity 0.1981",
+      "Always Audacious · affinity 0.765",
+      "El enemigo · affinity 0.765"
+     ]
+    },
+    {
+     "id": "trace-bridge-brand",
+     "step": "bridge-brand",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": 1730,
+     "correlationId": "exec-850e2d6e-de95-40f7-b1e9-e1d5fa79c8b7",
+     "resultCount": 5,
+     "detail": "Qloo recommend → /v2/insights",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:48.816614+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/insights",
+      "query": {
+       "filter.type": "urn:entity:brand",
+       "take": 5,
+       "signal.interests.tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:modern_restaurant_design",
+        "urn:tag:interests:qloo:plant_based_cuisine"
+       ],
+       "operator.signal.interests.tags": "intersection",
+       "feature.explainability": true
+      },
+      "endpoint": "/v2/insights",
+      "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+     },
+     "resultExcerpt": [
+      "Politix Men's Fashion · affinity 0.765 · popularity 0.6003",
+      "Duncan Quinn · affinity 0.765 · popularity 0.5456",
+      "Binance · affinity 0.765 · popularity 0.9937",
+      "Orfeu Cafés e Azeites · affinity 0.765 · popularity 0.8272",
+      "Goldilocks Bakeshop · affinity 0.765 · popularity 0.8560"
+     ]
+    },
+    {
+     "id": "ev-classify",
+     "step": "classify-business-category",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 1,
+     "detail": "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+     "evidenceIds": [],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "ev-compose",
+     "step": "compose-directions",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 1,
+     "detail": "Composed 1 direction(s) from the returned evidence.",
+     "evidenceIds": [
+      "ev-entity-12",
+      "ev-entity-4",
+      "ev-entity-7"
+     ],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "ev-name-directions",
+     "step": "name-the-directions",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": 2764,
+     "correlationId": null,
+     "resultCount": 1,
+     "detail": "Named by minimax/minimax-m3.1-flash.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:51Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-5041750d",
+     "step": "agent-step-1",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 10,
+     "detail": "recommend: Can we find Berlin places that actually carry plant-based dining affinity, rather than text-matched cafés and hotels? — Fetched recommend: 10 results, led by Willy-Brandt-Haus, Haci Baba Kebabhaus, Companion Tea & Coffee.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:58Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-e989233a",
+     "step": "agent-step-2",
+     "workflow": "entity_tags",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 10,
+     "detail": "entity_tags: Do these Berlin venues carry plant-based dining tags that would make them stronger anchors? — Fetched entity_tags: 10 results, led by Identifies as women-owned, Chicken Korma, German.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:18:02Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-bc9ede0d",
+     "step": "agent-step-3",
+     "workflow": "entity_tags",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 10,
+     "detail": "entity_tags: Do any Berlin venues in the candidate set carry plant-based dining tags? — Fetched entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:18:06Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-144c161a",
+     "step": "agent-step-4",
+     "workflow": "where_popular",
+     "status": "skipped",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 0,
+     "detail": "where_popular: Where is plant-based dining most popular in Berlin, and are there actual vegan venues to anchor the direction to? — Not run: entity names identifiers this run has not observed: urn:tag:interests:qloo:plant_based_dining.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:18:09Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-537c4589",
+     "step": "agent-step-5",
+     "workflow": "find_tags",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 5,
+     "detail": "find_tags: Are there Qloo tags for vegan/plant-based dining that could anchor a Berlin vegan restaurant direction? — Fetched find_tags: 5 results, led by Vegan restaurant, Vegetarian restaurant, Vegetarian Restaurant.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:18:52Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-e99c0fb6",
+     "step": "agent-step-6",
+     "workflow": "entity_tags",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 10,
+     "detail": "entity_tags: Which local references actually align with vegan dining and young-professional audiences? — Held entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:18:57Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-d620e2dd",
+     "step": "agent-step-7",
+     "workflow": "recommend",
+     "status": "skipped",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 0,
+     "detail": "recommend: Can we find Berlin places with observed vegan and young-adult signals to replace the weak current anchors? — Not run: signal_tags needs 1 to 3 identifiers.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:19:05Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-25e3ee89",
+     "step": "agent-step-8",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 10,
+     "detail": "recommend: Can we find Berlin places that directly reflect vegan dining, young-adult appeal, and modern design? — Fetched recommend: 10 results, led by Mokkafee Friedrichshagen, a&o Hostel Berlin Hauptbahnhof, BRLO Grill.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:19:14Z",
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "trace-agent-e8ecef4e",
+     "step": "agent-analysis",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": null,
+     "detail": "minimax/minimax-m3.1-flash wrote 5 cited claims; 1 rejected by the citation check.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:19:58Z",
+     "request": null,
+     "resultExcerpt": null
+    }
+   ],
+   "delivery": {
+    "kind": "fresh",
+    "acquiredAt": "2026-10-23T16:01:40.177239+00:00",
+    "servedAt": "2026-10-23T16:17:51.632801+00:00",
+    "expiresAt": "2026-11-22T16:01:40.177239+00:00",
+    "transportRequests": 8,
+    "cachedIn": null
+   },
+   "agent": {
+    "mode": "frontier_ai",
+    "status": "complete",
+    "plan": null,
+    "observation": null,
+    "reflection": {
+     "recommendedDirectionId": null,
+     "recommendationRationale": "No comparative preference was established by a completed ranking or audience comparison in this run. The directions remain proposals to test.",
+     "whatWouldChangeTheConclusion": "A validated audience comparison showing another format performs better, field tests rejecting the proposed social and design occasion, or evidence that the leading references are unsuitable for plant-based dining would change the recommendation.",
+     "cached": false
+    },
+    "steps": [
+     {
+      "index": 1,
+      "tool": "recommend",
+      "arguments": {
+       "target_type": "place",
+       "signal_tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:plant_based_cuisine",
+        "urn:tag:interests:qloo:modern_restaurant_design"
+       ],
+       "limit": 10,
+       "filter_location": "Berlin, Germany"
+      },
+      "question": "Can we find Berlin places that actually carry plant-based dining affinity, rather than text-matched cafés and hotels?",
+      "reason": "Current anchors (tea café, Tex-Mex restaurant, design hotel) only match the word 'restaurant'; none show plant-based affinity, so the direction rests on weak evidence. A recommendation driven by plant-based dining tags should surface genuinely relevant venues to replace or confirm these anchors.",
+      "status": "ok",
+      "detail": "Fetched recommend: 10 results, led by Willy-Brandt-Haus, Haci Baba Kebabhaus, Companion Tea & Coffee.",
+      "upstreamRequests": 1,
+      "cached": false,
+      "resultCount": 10,
+      "observed": [
+       {
+        "entityId": "000E0512-2EFB-4222-94CF-5B6824FF01BB",
+        "name": "Willy-Brandt-Haus",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.987164857484916
+       },
+       {
+        "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+        "name": "Haci Baba Kebabhaus",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.7006249022603536
+       },
+       {
+        "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+        "name": "Companion Tea & Coffee",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.8321885025858985
+       },
+       {
+        "entityId": "002177EC-46D3-40AD-987E-4323293EBBCB",
+        "name": "REWE",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.6776907701456966
+       },
+       {
+        "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+        "name": "Starbucks",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.38164077053572654
+       },
+       {
+        "entityId": "0023A40B-5878-4AE6-9250-7010BADBDF21",
+        "name": "Fressnapf Berlin valley Center",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.8274438811916789
+       },
+       {
+        "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+        "name": "Thoben",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.03460847122749109
+       },
+       {
+        "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+        "name": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.7947584433124909
+       },
+       {
+        "entityId": "0028DE5A-0A24-433F-942F-3C9F314F3920",
+        "name": "Dolden Mädel Ratsherrn Braugasthaus Berlin",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.9630879376368123
+       },
+       {
+        "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+        "name": "Hotel Q! Berlin",
+        "affinity": 0.7649962877984056,
+        "popularity": 0.949643234039139
+       }
+      ]
+     },
+     {
+      "index": 2,
+      "tool": "entity_tags",
+      "arguments": {
+       "entities": [
+        "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+        "002DEC57-139B-4B1E-8506-B201F84E007F",
+        "0026A588-328A-47E2-8D09-2D344FD6AD69"
+       ],
+       "limit": 10
+      },
+      "question": "Do these Berlin venues carry plant-based dining tags that would make them stronger anchors?",
+      "reason": "Current anchors (tea café, Tex-Mex, design hotel) show no plant-based signal; checking tags on the vegan-leaning Berlin venues could supply a better anchor and sharper signal tags.",
+      "status": "ok",
+      "detail": "Fetched entity_tags: 10 results, led by Identifies as women-owned, Chicken Korma, German.",
+      "upstreamRequests": 1,
+      "cached": false,
+      "resultCount": 10,
+      "observed": [
+       {
+        "tagId": "urn:tag:inclusivity:place:identifies_as_women_owned",
+        "name": "Identifies as women-owned"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:chicken_korma",
+        "name": "Chicken Korma"
+       },
+       {
+        "tagId": "urn:tag:genre:place:restaurant:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:language:qloo:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:chicken_vindaloo",
+        "name": "Chicken Vindaloo"
+       },
+       {
+        "tagId": "urn:tag:amenity:qloo:free_parking",
+        "name": "Free Parking"
+       },
+       {
+        "tagId": "urn:tag:decor:qloo:rustic",
+        "name": "Rustic"
+       },
+       {
+        "tagId": "urn:tag:ambience:qloo:authentic",
+        "name": "Authentic"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:sizzling_brownie",
+        "name": "Sizzling Brownie"
+       },
+       {
+        "tagId": "urn:tag:nationality:qloo:german",
+        "name": "German"
+       }
+      ]
+     },
+     {
+      "index": 3,
+      "tool": "entity_tags",
+      "arguments": {
+       "entities": [
+        "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+        "002DEC57-139B-4B1E-8506-B201F84E007F",
+        "002F2A6F-839B-432D-8C59-04F2E3B8ED47"
+       ],
+       "limit": 10
+      },
+      "question": "Do any Berlin venues in the candidate set carry plant-based dining tags?",
+      "reason": "Current anchors (tea café, Tex-Mex, design hotel) show no plant-based evidence; checking tags on the remaining Berlin food candidates would test whether a genuine vegan anchor exists.",
+      "status": "ok",
+      "detail": "Fetched entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+      "upstreamRequests": 1,
+      "cached": false,
+      "resultCount": 10,
+      "observed": [
+       {
+        "tagId": "urn:tag:specialty_dish:place:chicken_korma",
+        "name": "Chicken Korma"
+       },
+       {
+        "tagId": "urn:tag:audience:qloo:young_adults",
+        "name": "Young Adults"
+       },
+       {
+        "tagId": "urn:tag:genre:place:restaurant:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:ethnicity:qloo:irish_american",
+        "name": "Irish American"
+       },
+       {
+        "tagId": "urn:tag:style:qloo:playful",
+        "name": "Playful"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:knoblauchbrot",
+        "name": "Knoblauchbrot"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:new_york_cheesecake",
+        "name": "New York Cheesecake"
+       },
+       {
+        "tagId": "urn:tag:ethnicity:qloo:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:style:qloo:eclectic",
+        "name": "Eclectic"
+       },
+       {
+        "tagId": "urn:tag:theme:qloo:social_issues",
+        "name": "Social Issues"
+       }
+      ]
+     },
+     {
+      "index": 4,
+      "tool": "where_popular",
+      "arguments": {
+       "entity": "urn:tag:interests:qloo:plant_based_dining"
+      },
+      "question": "Where is plant-based dining most popular in Berlin, and are there actual vegan venues to anchor the direction to?",
+      "reason": "Current anchors (tea café, Tex-Mex, design hotel) show no plant-based evidence; locating places popular for the plant-based dining interest would give a category-valid anchor set.",
+      "status": "rejected",
+      "detail": "Not run: entity names identifiers this run has not observed: urn:tag:interests:qloo:plant_based_dining.",
+      "upstreamRequests": 0,
+      "cached": false,
+      "resultCount": 0,
+      "observed": []
+     },
+     {
+      "index": 5,
+      "tool": "find_tags",
+      "arguments": {
+       "query": "vegan plant-based restaurant",
+       "limit": 5
+      },
+      "question": "Are there Qloo tags for vegan/plant-based dining that could anchor a Berlin vegan restaurant direction?",
+      "reason": "Current anchors (tea café, Tex-Mex, design hotel) show no plant-based signal; a real vegan tag would let us re-run recommend and test whether a genuine vegan venue exists in Berlin.",
+      "status": "ok",
+      "detail": "Fetched find_tags: 5 results, led by Vegan restaurant, Vegetarian restaurant, Vegetarian Restaurant.",
+      "upstreamRequests": 1,
+      "cached": false,
+      "resultCount": 5,
+      "observed": [
+       {
+        "tagId": "urn:tag:category:place:vegan_restaurant",
+        "name": "Vegan restaurant"
+       },
+       {
+        "tagId": "urn:tag:category:place:vegetarian_restaurant",
+        "name": "Vegetarian restaurant"
+       },
+       {
+        "tagId": "urn:tag:amenity:qloo:vegetarian_restaurant",
+        "name": "Vegetarian Restaurant"
+       },
+       {
+        "tagId": "urn:tag:good_for:qloo:vegan_dining",
+        "name": "Vegan Dining"
+       },
+       {
+        "tagId": "urn:tag:amenity:qloo:vegan_restaurant",
+        "name": "Vegan Restaurant"
+       }
+      ]
+     },
+     {
+      "index": 6,
+      "tool": "entity_tags",
+      "arguments": {
+       "entities": [
+        "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+        "002DEC57-139B-4B1E-8506-B201F84E007F",
+        "002F2A6F-839B-432D-8C59-04F2E3B8ED47"
+       ],
+       "limit": 10
+      },
+      "question": "Which local references actually align with vegan dining and young-professional audiences?",
+      "reason": "Current anchors are weak category text matches. Check whether these local food venues carry stronger vegan, audience, or design signals.",
+      "status": "ok",
+      "detail": "Held entity_tags: 10 results, led by Chicken Korma, Young Adults, German.",
+      "upstreamRequests": 0,
+      "cached": true,
+      "resultCount": 10,
+      "observed": [
+       {
+        "tagId": "urn:tag:specialty_dish:place:chicken_korma",
+        "name": "Chicken Korma"
+       },
+       {
+        "tagId": "urn:tag:audience:qloo:young_adults",
+        "name": "Young Adults"
+       },
+       {
+        "tagId": "urn:tag:genre:place:restaurant:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:ethnicity:qloo:irish_american",
+        "name": "Irish American"
+       },
+       {
+        "tagId": "urn:tag:style:qloo:playful",
+        "name": "Playful"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:knoblauchbrot",
+        "name": "Knoblauchbrot"
+       },
+       {
+        "tagId": "urn:tag:specialty_dish:place:new_york_cheesecake",
+        "name": "New York Cheesecake"
+       },
+       {
+        "tagId": "urn:tag:ethnicity:qloo:german",
+        "name": "German"
+       },
+       {
+        "tagId": "urn:tag:style:qloo:eclectic",
+        "name": "Eclectic"
+       },
+       {
+        "tagId": "urn:tag:theme:qloo:social_issues",
+        "name": "Social Issues"
+       }
+      ]
+     },
+     {
+      "index": 7,
+      "tool": "recommend",
+      "arguments": {
+       "target_type": "place",
+       "signal_tags": [
+        "urn:tag:category:place:vegan_restaurant",
+        "urn:tag:amenity:qloo:vegan_restaurant",
+        "urn:tag:good_for:qloo:vegan_dining",
+        "urn:tag:audience:qloo:young_adults",
+        "urn:tag:interests:qloo:modern_restaurant_design"
+       ],
+       "use_location": "Berlin, Germany"
+      },
+      "question": "Can we find Berlin places with observed vegan and young-adult signals to replace the weak current anchors?",
+      "reason": "The current references are not vegan-specific and share identical affinity. A recommendation using observed category, audience, and brief-derived design tags should produce more relevant evidence.",
+      "status": "rejected",
+      "detail": "Not run: signal_tags needs 1 to 3 identifiers.",
+      "upstreamRequests": 0,
+      "cached": false,
+      "resultCount": 0,
+      "observed": []
+     },
+     {
+      "index": 8,
+      "tool": "recommend",
+      "arguments": {
+       "target_type": "place",
+       "signal_tags": [
+        "urn:tag:category:place:vegan_restaurant",
+        "urn:tag:audience:qloo:young_adults",
+        "urn:tag:interests:qloo:modern_restaurant_design"
+       ],
+       "limit": 10,
+       "filter_location": "Berlin, Germany"
+      },
+      "question": "Can we find Berlin places that directly reflect vegan dining, young-adult appeal, and modern design?",
+      "reason": "A corrected recommendation using category, audience, and design signals may replace weak text-match anchors with stronger direct evidence.",
+      "status": "ok",
+      "detail": "Fetched recommend: 10 results, led by Mokkafee Friedrichshagen, a&o Hostel Berlin Hauptbahnhof, BRLO Grill.",
+      "upstreamRequests": 1,
+      "cached": false,
+      "resultCount": 10,
+      "observed": [
+       {
+        "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+        "name": "Mokkafee Friedrichshagen",
+        "affinity": 0.8434397618102257,
+        "popularity": 0.40130199424167223
+       },
+       {
+        "entityId": "D584AFA1-1D52-48B5-88BE-85962B6F1B76",
+        "name": "a&o Hostel Berlin Hauptbahnhof",
+        "affinity": 0.8379601871362629,
+        "popularity": 0.9838917633476605
+       },
+       {
+        "entityId": "8FB9C9E6-AEC1-47F5-9989-0C4E3E3B43AF",
+        "name": "BRLO Grill",
+        "affinity": 0.8337244747837418,
+        "popularity": 0.7691178748494206
+       },
+       {
+        "entityId": "CC386D43-FE08-4F02-A2C3-FB1A481034FB",
+        "name": "LINDEMANN'S",
+        "affinity": 0.831535582015008,
+        "popularity": 0.9465254089649683
+       },
+       {
+        "entityId": "062A4EE3-5A31-4BC2-B5DA-9D79FA92C03B",
+        "name": "royals & rice Berlin",
+        "affinity": 0.8309878896032844,
+        "popularity": 0.9477952350227573
+       },
+       {
+        "entityId": "B1004E6D-B275-4E5D-87BA-02DC22EC7D41",
+        "name": "Altes Kraftwerk Rummelsburg",
+        "affinity": 0.8258581644051958,
+        "popularity": 0.8696391777277301
+       },
+       {
+        "entityId": "4C45273E-CF81-44AF-969D-B6E6E2D6C2D4",
+        "name": "AMRIT Restaurant Schoneberg",
+        "affinity": 0.8251252995395967,
+        "popularity": 0.9935914365768594
+       },
+       {
+        "entityId": "6833F992-A71C-4B53-B339-C8830E13A557",
+        "name": "Memorial to the Murdered Jews of Europe",
+        "affinity": 0.8225442626757061,
+        "popularity": 0.9999721407183461
+       },
+       {
+        "entityId": "17CF94C0-1F9A-4E1F-B06E-88C3CED3A720",
+        "name": "Courtyard Berlin City Center",
+        "affinity": 0.8215232591560405,
+        "popularity": 0.9690176928725929
+       },
+       {
+        "entityId": "B18AD63B-523F-4EDD-AAFF-10B47B24237B",
+        "name": "Monkey Bar",
+        "affinity": 0.8132742246002743,
+        "popularity": 0.9922267032329025
+       }
+      ]
+     }
+    ],
+    "analysis": {
+     "claims": [
+      {
+       "statement": "This comparative result supports Verdant & Copper, with playful spatial design and community-relevant programming intended to suit the observed young-adult audience.",
+       "directionId": "live-1-verdant-&-copper",
+       "basis": "inferred",
+       "citations": [
+        {
+         "id": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+         "label": "Mokkafee Friedrichshagen"
+        },
+        {
+         "id": "urn:tag:audience:qloo:young_adults",
+         "label": "Young Adults"
+        },
+        {
+         "id": "urn:tag:style:qloo:playful",
+         "label": "Playful"
+        },
+        {
+         "id": "urn:tag:style:qloo:eclectic",
+         "label": "Eclectic"
+        },
+        {
+         "id": "urn:tag:theme:qloo:social_issues",
+         "label": "Social Issues"
+        }
+       ]
+      },
+      {
+       "statement": "The direct references provide complementary spatial cues: a quiet, book-friendly café, a design hotel with a restaurant and lively bar, and a restaurant with outdoor seating and late-night food.",
+       "directionId": "live-1-verdant-&-copper",
+       "basis": "inferred",
+       "citations": [
+        {
+         "id": "001C4293-21EE-4811-89DA-B534F8622DF9",
+         "label": "Companion Tea & Coffee"
+        },
+        {
+         "id": "00057443-95D2-4C35-B62F-2EC55895365D",
+         "label": "Hotel Q! Berlin"
+        },
+        {
+         "id": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+         "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm"
+        }
+       ]
+      },
+      {
+       "statement": "Plant-based dining is an established category signal, but the vegan-related tags do not establish that one spatial or programming format is preferred over another.",
+       "directionId": null,
+       "basis": "inferred",
+       "citations": [
+        {
+         "id": "urn:tag:category:place:vegan_restaurant",
+         "label": "Vegan restaurant"
+        },
+        {
+         "id": "urn:tag:amenity:qloo:vegan_restaurant",
+         "label": "Vegan Restaurant"
+        },
+        {
+         "id": "urn:tag:good_for:qloo:vegan_dining",
+         "label": "Vegan Dining"
+        },
+        {
+         "id": "urn:tag:interests:qloo:plant_based_cuisine",
+         "label": "Plant Based Cuisine"
+        }
+       ]
+      },
+      {
+       "statement": "Some observed venue tags concern chicken dishes, so those tags should not be treated as evidence of vegan cuisine fit.",
+       "directionId": null,
+       "basis": "inferred",
+       "citations": [
+        {
+         "id": "urn:tag:specialty_dish:place:chicken_korma",
+         "label": "Chicken Korma"
+        },
+        {
+         "id": "urn:tag:specialty_dish:place:chicken_vindaloo",
+         "label": "Chicken Vindaloo"
+        },
+        {
+         "id": "urn:tag:category:place:vegan_restaurant",
+         "label": "Vegan restaurant"
+        }
+       ]
+      },
+      {
+       "statement": "Popularity and affinity indicate relative retrieval standing here, not verified demand, revenue, footfall, or willingness to pay.",
+       "directionId": null,
+       "basis": "inferred",
+       "citations": [
+        {
+         "id": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+         "label": "Mokkafee Friedrichshagen"
+        },
+        {
+         "id": "001C4293-21EE-4811-89DA-B534F8622DF9",
+         "label": "Companion Tea & Coffee"
+        },
+        {
+         "id": "00057443-95D2-4C35-B62F-2EC55895365D",
+         "label": "Hotel Q! Berlin"
+        }
+       ]
+      }
+     ],
+     "recommendedDirectionId": null,
+     "summary": "No comparative preference was established by a completed ranking or audience comparison in this run. The directions remain proposals to test.",
+     "whatWouldChangeTheConclusion": "A validated audience comparison showing another format performs better, field tests rejecting the proposed social and design occasion, or evidence that the leading references are unsuitable for plant-based dining would change the recommendation.",
+     "promptVersion": "agent-loop-3"
+    },
+    "rejectedClaims": [
+     {
+      "statement": "The audience-and-design recommendation ranked Mokkafee Friedrichshagen ahead of the other returned Berlin places, supporting an expressive, socially relevant restaurant concept.",
+      "reason": "No completed ranking or audience comparison supports this comparative claim."
+     }
+    ],
+    "cached": false,
+    "modelCalls": 9,
+    "stoppingReason": "The loop reached its limit of 8 steps.",
+    "model": "minimax/minimax-m3.1-flash"
+   },
+   "composerVersion": "5",
+   "outcome": {
+    "counts": {
+     "unrelated": 2,
+     "direct_business": 8,
+     "audience_affinity": 15
+    },
+    "category": "food",
+    "categoryLabel": "restaurant",
+    "state": "supported",
+    "missing": [],
+    "recovery": []
+   },
+   "intent": {
+    "original": "Vegan restaurant",
+    "components": [
+     {
+      "role": "primary",
+      "phrase": "Vegan restaurant",
+      "categoryId": "restaurant",
+      "categoryLabel": "Restaurant",
+      "status": "canonical",
+      "queries": [
+       "restaurant"
+      ],
+      "modifiers": [
+       "vegan"
+      ],
+      "source": "rules"
+     }
+    ],
+    "hybrid": false,
+    "ambiguous": false,
+    "clarification": "",
+    "unused": [],
+    "substitutions": [
+     "Showing general restaurant evidence; vegan-specific relevance is not verified by Qloo's category. 1 of 10 returned places mention \"vegan\" in their Qloo text."
+    ],
+    "source": "rules",
+    "evidence": [
+     {
+      "role": "primary",
+      "phrase": "Vegan restaurant",
+      "categoryLabel": "Restaurant",
+      "state": "exact",
+      "queriesTried": [
+       "restaurant"
+      ],
+      "tag": {
+       "id": "urn:tag:genre:place:restaurant",
+       "name": "Restaurant",
+       "quality": "exact"
+      },
+      "placeCount": 10,
+      "directCount": 8,
+      "places": [
+       {
+        "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+        "name": "Haci Baba Kebabhaus",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "unrelated",
+        "anchorEligible": false
+       },
+       {
+        "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+        "name": "Companion Tea & Coffee",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+        "name": "Starbucks",
+        "location": "Hansaviertel, Berlin",
+        "evidenceClass": "unrelated",
+        "anchorEligible": false
+       },
+       {
+        "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+        "name": "Thoben",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+        "name": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+        "location": "Berlin Koepenick, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+        "name": "Restaurant Duo",
+        "location": "Steglitz Bezirk, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+        "name": "Grünes Cafe & Hofladen",
+        "location": "Britz, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+        "name": "Mokkafee Friedrichshagen",
+        "location": "Friedrichshagen, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+        "name": "Lichterfelder Bäckerei",
+        "location": "Lichterfelde, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+        "name": "Hotel Q! Berlin",
+        "location": "Wilmersdorf Bezirk, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       }
+      ],
+      "modifiers": [
+       {
+        "word": "vegan",
+        "mentionedIn": 1,
+        "of": 10
+       }
+      ],
+      "categoryOnly": false,
+      "message": ""
+     }
+    ],
+    "overlap": null
+   }
+  },
+  "partialResult": {
+   "projectId": "cf-25c49a65c9",
+   "project": {
+    "businessType": "Food & beverage",
+    "businessIdea": "Vegan restaurant",
+    "audience": "Design-conscious young professionals who enjoy plant-based food",
+    "location": "Berlin, Germany",
+    "budget": "$25k – $50k",
+    "objectives": [
+     "Build a loyal community"
+    ]
+   },
+   "concepts": [
+    {
+     "id": "live-1-the-design-floor",
+     "name": "The Design Floor",
+     "tagline": "A space that behaves like the thing it sells.",
+     "description": "Proposed for Vegan restaurant in Berlin, Germany. A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed. The reference selected for this direction is Hotel Q! Berlin (rated 4.7 by Qloo and popularity 0.950), described by Qloo as \"Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.\". It was returned by Qloo for a Berlin, Germany query; the location it belongs to was not verified.",
+     "audienceFit": null,
+     "culturalRelevance": null,
+     "feasibility": null,
+     "budget": "$25k – $50k",
+     "investment": "CultureForge planning assumption — not estimated by Qloo",
+     "signals": [
+      "Design-led spaces",
+      "Independent discovery"
+     ],
+     "accent": "#e69b73",
+     "image": "https://images.qloo.com/i/00057443-95D2-4C35-B62F-2EC55895365D-420x-auto.jpg",
+     "direction": "01",
+     "imageAlt": "Hotel Q! Berlin, returned by Qloo for this audience and location",
+     "personality": "Precise, confident, curated",
+     "audienceRationale": "Unlocked by modern restaurant design; proposed for Design-conscious young professionals who enjoy plant-based food in Berlin, Germany. The audience occasion is from the brief, not inferred behavior. For an audience that treats taste as the primary signal of quality.",
+     "implementationNote": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+     "moments": [
+      {
+       "title": "Why this direction",
+       "description": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed."
+      },
+      {
+       "title": "Signature moment",
+       "description": "A monthly change of the room itself, announced the way a gallery announces a new show."
+      }
+     ],
+     "evidenceIds": [
+      "ev-entity-12",
+      "ev-entity-4",
+      "ev-entity-7"
+     ],
+     "decisions": [
+      {
+       "id": "design-led-offering",
+       "field": "offering",
+       "proposal": "A design-led format proposed from the returned reference places, where the physical expression carries the brand and the programming follows the space. These places were returned for the query; their design quality was not independently assessed.",
+       "evidenceIds": [
+        "ev-entity-12",
+        "ev-entity-4",
+        "ev-entity-7"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      },
+      {
+       "id": "design-led-ritual",
+       "field": "signature ritual",
+       "proposal": "A monthly change of the room itself, announced the way a gallery announces a new show.",
+       "evidenceIds": [
+        "ev-entity-12"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      },
+      {
+       "id": "design-led-positioning",
+       "field": "positioning",
+       "proposal": "For an audience that treats taste as the primary signal of quality.",
+       "evidenceIds": [
+        "ev-entity-12",
+        "ev-tag-1"
+       ],
+       "ruleId": "design-led",
+       "origin": "cultureforge_rule"
+      }
+     ],
+     "limitations": [
+      "Qloo supplied the audience tags and the returned entities. The business direction above is CultureForge’s interpretation, not a Qloo prediction.",
+      "Category relevance uses returned text, not a validated business match. Opening hours, commuter access, demand and willingness to pay are unverified. A field test rejecting the proposed occasion would change this direction.",
+      "Qloo returned the same affinity for every candidate here, so affinity does not separate these venues.",
+      "The reference was chosen as the returned place with the highest Qloo popularity, rating breaking ties. Popularity is general, not specific to this audience. This ordering is restricted to category-relevant references."
+     ]
+    }
+   ],
+   "signals": [
+    {
+     "label": "Haci Baba Kebabhaus",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0018741C-6F8E-467D-9439-67683646DB28"
+    },
+    {
+     "label": "Companion Tea & Coffee",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "001C4293-21EE-4811-89DA-B534F8622DF9"
+    },
+    {
+     "label": "Starbucks",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "00219165-4F46-4AB7-977B-E5AD03A27D2E"
+    },
+    {
+     "label": "Thoben",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0026A588-328A-47E2-8D09-2D344FD6AD69"
+    },
+    {
+     "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002780C2-0D3C-41B2-908D-9CE96CA6DF49"
+    },
+    {
+     "label": "Restaurant Duo",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002DEC57-139B-4B1E-8506-B201F84E007F"
+    },
+    {
+     "label": "Grünes Cafe & Hofladen",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002F1C1A-79E5-4BDB-92AB-D15779F3E305"
+    },
+    {
+     "label": "Mokkafee Friedrichshagen",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "002F2A6F-839B-432D-8C59-04F2E3B8ED47"
+    },
+    {
+     "label": "Lichterfelder Bäckerei",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "0030C2FA-9999-4016-9358-22AC81D3C72C"
+    },
+    {
+     "label": "Hotel Q! Berlin",
+     "detail": "Qloo aggregate affinity result for the selected cultural tags and location. Raw affinity returned by Qloo: 0.764996.",
+     "score": null,
+     "affinity": 0.7649962877984056,
+     "category": "Qloo recommendation",
+     "provenance_id": "00057443-95D2-4C35-B62F-2EC55895365D"
+    }
+   ],
+   "dataMode": "live",
+   "conceptMode": "evidence_composed",
+   "notice": "Qloo supplied the audience tags and the local venues below. The 1 business direction is CultureForge’s interpretation of that evidence, and each one names the returned venue it was built from. Fit scores are omitted because affinity does not measure business fit.",
+   "provenance": {
+    "source": "Qloo API",
+    "endpoint": "qloo exec find_tags → recommend",
+    "documentation": "https://github.com/qloo/qloo-hackathon-kit",
+    "resolved_tags": [
+     "urn:tag:interests:qloo:plant_based_dining",
+     "urn:tag:interests:qloo:modern_restaurant_design",
+     "urn:tag:interests:qloo:plant_based_cuisine"
+    ]
+   },
+   "evidence": [
+    {
+     "id": "ev-tag-0",
+     "kind": "tag",
+     "label": "Plant Based Dining",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:plant_based_dining",
+     "affinity": null,
+     "popularity": 0.9978000971730435,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-0",
+      "entityId": null,
+      "label": "Plant Based Dining",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-tag-1",
+     "kind": "tag",
+     "label": "Modern Restaurant Design",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:modern_restaurant_design",
+     "affinity": null,
+     "popularity": 0.9877472583488154,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-1",
+      "entityId": null,
+      "label": "Modern Restaurant Design",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-tag-2",
+     "kind": "tag",
+     "label": "Plant Based Cuisine",
+     "entityId": null,
+     "entityType": null,
+     "tagId": "urn:tag:interests:qloo:plant_based_cuisine",
+     "affinity": null,
+     "popularity": 0.9988543759993578,
+     "rating": null,
+     "priceLevel": null,
+     "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+     "image": null,
+     "location": null,
+     "address": null,
+     "coordinates": null,
+     "traceId": "trace-find_tags-resolve-audience-tags",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-tag-2",
+      "entityId": null,
+      "label": "Plant Based Cuisine",
+      "identity": "seed",
+      "identityNote": "",
+      "tagFamily": "interests",
+      "tagBucket": "cultural",
+      "excerpt": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "hasMore": false,
+      "description": "Audience seed resolved by Qloo from the audience description in the brief.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": null,
+      "locationNote": "",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": null
+    },
+    {
+     "id": "ev-entity-3",
+     "kind": "entity",
+     "label": "Haci Baba Kebabhaus",
+     "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7006249022603536,
+     "rating": 4.699999809265137,
+     "priceLevel": 1,
+     "description": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+     "image": "https://images.qloo.com/i/0018741C-6F8E-467D-9439-67683646DB28-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Karl-Marx-Straße 228 12055 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-3",
+      "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+      "label": "Haci Baba Kebabhaus",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+      "hasMore": false,
+      "description": "Late-night Berlin kebabhouse offering kebabs, shawarma plates, wings with curly fries, vegetarian and vegan options, beer and takeaway for quick casual meals.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "unrelated",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-4",
+     "kind": "entity",
+     "label": "Companion Tea & Coffee",
+     "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.8321885025858985,
+     "rating": 4.699999809265137,
+     "priceLevel": 1,
+     "description": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+     "image": "https://images.qloo.com/i/001C4293-21EE-4811-89DA-B534F8622DF9-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Weserstr. 166 12045 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-4",
+      "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+      "label": "Companion Tea & Coffee",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+      "hasMore": false,
+      "description": "Specialty coffee and tea café offering pastries, natural wines, and curated matcha kits in a quiet, book-friendly Weserstraße setting.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-5",
+     "kind": "entity",
+     "label": "Starbucks",
+     "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.38164077053572654,
+     "rating": 3.799999952316284,
+     "priceLevel": 1,
+     "description": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+     "image": "https://images.qloo.com/i/00219165-4F46-4AB7-977B-E5AD03A27D2E-420x-auto.jpg",
+     "location": "Hansaviertel, Berlin",
+     "address": "Joachimsthaler Str. 1-4 10623 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-5",
+      "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+      "label": "Starbucks",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+      "hasMore": false,
+      "description": "Global coffeehouse chain serving signature roasts, light bites, Wi‑Fi, and varied beverages with quick meals and takeaway service.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Hansaviertel, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Hansaviertel, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "unrelated",
+      "relationship": "indirect",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": false,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text does not establish a food reference. Retained as a cultural association; excluded from concept anchors.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-6",
+     "kind": "entity",
+     "label": "Thoben",
+     "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.03460847122749109,
+     "rating": 3.5999999046325684,
+     "priceLevel": 1,
+     "description": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+     "image": "https://images.qloo.com/i/0026A588-328A-47E2-8D09-2D344FD6AD69-420x-auto.jpg",
+     "location": "Berlin Treptow, Berlin",
+     "address": "Karl-Marx-Straße 156 12043 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-6",
+      "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+      "label": "Thoben",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+      "hasMore": false,
+      "description": "Bakery and café on Karl-Marx-Straße offering inexpensive coffee, baked goods, and multiple dine-in, pickup, and delivery options.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Treptow, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Treptow, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-7",
+     "kind": "entity",
+     "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+     "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.7947584433124909,
+     "rating": 4.199999809265137,
+     "priceLevel": 2,
+     "description": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+     "image": "https://images.qloo.com/i/002780C2-0D3C-41B2-908D-9CE96CA6DF49-420x-auto.jpg",
+     "location": "Berlin Koepenick, Berlin",
+     "address": "Fürstenwalder Damm 260 12587 Berlin-Bezirk Treptow-Köpenick Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-7",
+      "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+      "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+      "hasMore": false,
+      "description": "Tex-Mex and Mexican restaurant on Fürstenwalder Damm in Berlin offering cocktails, late-night food, outdoor seating and halal-friendly options.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Berlin Koepenick, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Berlin Koepenick, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-8",
+     "kind": "entity",
+     "label": "Restaurant Duo",
+     "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.6192427401497937,
+     "rating": 4.699999809265137,
+     "priceLevel": 2,
+     "description": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+     "image": "https://images.qloo.com/i/002DEC57-139B-4B1E-8506-B201F84E007F-420x-auto.jpg",
+     "location": "Steglitz Bezirk, Berlin",
+     "address": "Steglitzer Damm 29 12169 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-8",
+      "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+      "label": "Restaurant Duo",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+      "hasMore": false,
+      "description": "Mediterranean-Italian restaurant in Berlin Steglitz offering modern international dishes, pizza, weekend brunch, and a relaxed, cozy atmosphere.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Steglitz Bezirk, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Steglitz Bezirk, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant, pizza. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-9",
+     "kind": "entity",
+     "label": "Grünes Cafe & Hofladen",
+     "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.02989152338638112,
+     "rating": 4.400000095367432,
+     "priceLevel": 1,
+     "description": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+     "image": "https://images.qloo.com/i/002F1C1A-79E5-4BDB-92AB-D15779F3E305-420x-auto.jpg",
+     "location": "Britz, Berlin",
+     "address": "Mohriner Allee 71 12347 Berlin-Bezirk Neukölln Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-9",
+      "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+      "label": "Grünes Cafe & Hofladen",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+      "hasMore": false,
+      "description": "Greenhouse café and farm shop offering organic, homemade cakes, coffee and regional products with a self-harvest area and seasonal produce.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Britz, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Britz, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: café, cafe, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-10",
+     "kind": "entity",
+     "label": "Mokkafee Friedrichshagen",
+     "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.40130199424167223,
+     "rating": 4.099999904632568,
+     "priceLevel": 2,
+     "description": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+     "image": "https://images.qloo.com/i/002F2A6F-839B-432D-8C59-04F2E3B8ED47-420x-auto.jpg",
+     "location": "Friedrichshagen, Berlin",
+     "address": "Bölschestraße 7 12587 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-10",
+      "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+      "label": "Mokkafee Friedrichshagen",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+      "hasMore": false,
+      "description": "Cozy neighborhood café and bakery in Berlin-Köpenick offering breakfast, cakes, sandwiches, organic and gluten-free options with coffee, wine, and outdoor seating.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Friedrichshagen, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Friedrichshagen, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, café, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-11",
+     "kind": "entity",
+     "label": "Lichterfelder Bäckerei",
+     "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.33348358772572056,
+     "rating": 4.599999904632568,
+     "priceLevel": 1,
+     "description": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+     "image": "https://images.qloo.com/i/0030C2FA-9999-4016-9358-22AC81D3C72C-420x-auto.jpg",
+     "location": "Lichterfelde, Berlin",
+     "address": "Hildburghauser Str. 201 12209 Berlin-Bezirk Steglitz-Zehlendorf Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-11",
+      "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+      "label": "Lichterfelder Bäckerei",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+      "hasMore": false,
+      "description": "Neighborhood bakery-cafe in Berlin offering coffee and inexpensive takeout, same-day and standard delivery, and dine-in.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Lichterfelde, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Lichterfelde, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: bakery, cafe, coffee. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    },
+    {
+     "id": "ev-entity-12",
+     "kind": "entity",
+     "label": "Hotel Q! Berlin",
+     "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+     "entityType": "urn:entity:place",
+     "tagId": null,
+     "affinity": 0.7649962877984056,
+     "popularity": 0.949643234039139,
+     "rating": 4.699999809265137,
+     "priceLevel": null,
+     "description": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+     "image": "https://images.qloo.com/i/00057443-95D2-4C35-B62F-2EC55895365D-420x-auto.jpg",
+     "location": "Wilmersdorf Bezirk, Berlin",
+     "address": "Knesebeckstraße 67 10623 Berlin Germany",
+     "coordinates": null,
+     "traceId": "trace-recommend-retrieve-local-evidence",
+     "presentation": {
+      "version": "presentation-1",
+      "id": "ev-entity-12",
+      "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+      "label": "Hotel Q! Berlin",
+      "identity": "place",
+      "identityNote": "",
+      "tagFamily": "",
+      "tagBucket": "other",
+      "excerpt": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+      "hasMore": false,
+      "description": "Design hotel near Kurfürstendamm with futuristic rooms, Thai restaurant, spa, and lively bar.",
+      "requestedLocation": "Berlin, Germany",
+      "returnedLocation": "Wilmersdorf Bezirk, Berlin",
+      "locationNote": "Returned for a Berlin, Germany query. Qloo returned the location “Wilmersdorf Bezirk, Berlin”, so borough membership is not established by this field.",
+      "metrics": {},
+      "notes": []
+     },
+     "relevance": {
+      "version": "relevance-3",
+      "evidenceClass": "direct_business",
+      "relationship": "direct",
+      "category": "food",
+      "categorySource": "idea",
+      "categorySpecificity": "specific",
+      "categoryMatched": "restaurant",
+      "anchorEligible": true,
+      "geography": "text_match",
+      "audience": "returned_for_seeds",
+      "confidence": "rule_assessment_only",
+      "reasons": [
+       "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+       "Returned text matches the food brief: restaurant, bar. This is a text match, not verified operating suitability.",
+       "Returned location text matches the requested city; neighbourhood and travel time are unverified."
+      ]
+     }
+    }
+   ],
+   "trace": [
+    {
+     "id": "trace-find_tags-resolve-audience-tags",
+     "step": "resolve-audience-tags",
+     "workflow": "find_tags",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-dac91c3e-1b72-4d7c-816e-8ec3707e0b78",
+     "resultCount": 3,
+     "detail": "Qloo find_tags → /v2/tags (reused from cache — the original call took 1.5s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.814459+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/tags",
+      "query": {
+       "filter.query": "Food & beverage Design-conscious young professionals who enjoy plant-based food",
+       "feature.semantic_search": true,
+       "take": 3
+      },
+      "endpoint": "/v2/tags",
+      "documentation": "https://docs.qloo.com/reference/get-tags"
+     },
+     "resultExcerpt": [
+      "Plant Based Dining · popularity 0.9978",
+      "Modern Restaurant Design · popularity 0.9877",
+      "Plant Based Cuisine · popularity 0.9989"
+     ]
+    },
+    {
+     "id": "trace-find_tags-resolve-business-category",
+     "step": "resolve-business-category",
+     "workflow": "find_tags",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-b7c34378-1eff-4388-bcf8-ae6f6b7343fa",
+     "resultCount": 10,
+     "detail": "Resolved business category to a returned Qloo tag; this is a category filter, not an audience seed. (reused from cache — the original call took 2.5s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.814993+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/tags",
+      "query": {
+       "filter.query": "restaurant",
+       "feature.semantic_search": true,
+       "take": 10
+      },
+      "endpoint": "/v2/tags",
+      "documentation": "https://docs.qloo.com/reference/get-tags"
+     },
+     "resultExcerpt": [
+      "Restaurant Dining · popularity 0.9924",
+      "Restaurant · popularity 0.9881",
+      "Restaurant · popularity 0.9997",
+      "Restaurant · popularity 1.0000",
+      "Restaurant Dining · popularity 0.9789"
+     ]
+    },
+    {
+     "id": "trace-recommend-retrieve-local-evidence",
+     "step": "retrieve-local-evidence",
+     "workflow": "recommend",
+     "status": "ok",
+     "durationMs": 0,
+     "correlationId": "exec-f5e85796-1317-4c54-88b4-2baa640feb1b",
+     "resultCount": 10,
+     "detail": "Qloo recommend → /v2/insights (reused from cache — the original call took 8.2s, this run spent no time waiting)",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42.815049+00:00",
+     "request": {
+      "method": "GET",
+      "path": "/v2/insights",
+      "query": {
+       "filter.type": "urn:entity:place",
+       "take": 10,
+       "signal.interests.tags": [
+        "urn:tag:interests:qloo:plant_based_dining",
+        "urn:tag:interests:qloo:modern_restaurant_design",
+        "urn:tag:interests:qloo:plant_based_cuisine"
+       ],
+       "operator.signal.interests.tags": "intersection",
+       "filter.location.query": "Berlin, Germany",
+       "filter.tags": [
+        "urn:tag:genre:place:restaurant"
+       ],
+       "operator.filter.tags": "intersection",
+       "feature.explainability": true
+      },
+      "endpoint": "/v2/insights",
+      "documentation": "https://docs.qloo.com/reference/insights-api-deep-dive"
+     },
+     "resultExcerpt": [
+      "Haci Baba Kebabhaus · affinity 0.765 · popularity 0.7006",
+      "Companion Tea & Coffee · affinity 0.765 · popularity 0.8322",
+      "Starbucks · affinity 0.765 · popularity 0.3816",
+      "Thoben · affinity 0.765 · popularity 0.0346",
+      "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm · affinity 0.765 · popularity 0.7948"
+     ]
+    },
+    {
+     "id": "trace-relevance",
+     "step": "assess-reference-relevance",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 8,
+     "detail": "CultureForge relevance rules assessed category and returned location text. Indirect associations stay visible but cannot anchor a direction.",
+     "evidenceIds": [
+      "ev-entity-3",
+      "ev-entity-4",
+      "ev-entity-5",
+      "ev-entity-6",
+      "ev-entity-7",
+      "ev-entity-8",
+      "ev-entity-9",
+      "ev-entity-10",
+      "ev-entity-11",
+      "ev-entity-12"
+     ],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "ev-classify",
+     "step": "classify-business-category",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 1,
+     "detail": "The idea \"Vegan restaurant\" names a food category through \"restaurant\".",
+     "evidenceIds": [],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "ev-compose",
+     "step": "compose-directions",
+     "workflow": null,
+     "status": "ok",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 1,
+     "detail": "Composed 1 direction(s) from the returned evidence.",
+     "evidenceIds": [
+      "ev-entity-12",
+      "ev-entity-4",
+      "ev-entity-7"
+     ],
+     "acquiredAt": null,
+     "request": null,
+     "resultExcerpt": null
+    },
+    {
+     "id": "ev-name-directions",
+     "step": "name-the-directions",
+     "workflow": null,
+     "status": "skipped",
+     "durationMs": null,
+     "correlationId": null,
+     "resultCount": 0,
+     "detail": "Not asked: this answer was rebuilt from held evidence.",
+     "evidenceIds": [],
+     "acquiredAt": "2026-10-23T16:17:42Z",
+     "request": null,
+     "resultExcerpt": null
+    }
+   ],
+   "delivery": {
+    "kind": "cache",
+    "acquiredAt": "2026-10-23T16:01:40.177239+00:00",
+    "servedAt": "2026-10-23T16:17:42.827227+00:00",
+    "expiresAt": "2026-11-22T16:01:40.177239+00:00",
+    "transportRequests": 0,
+    "cachedIn": "server"
+   },
+   "agent": null,
+   "composerVersion": "5",
+   "outcome": {
+    "counts": {
+     "unrelated": 2,
+     "direct_business": 8
+    },
+    "category": "food",
+    "categoryLabel": "restaurant",
+    "state": "supported",
+    "missing": [],
+    "recovery": []
+   },
+   "intent": {
+    "original": "Vegan restaurant",
+    "components": [
+     {
+      "role": "primary",
+      "phrase": "Vegan restaurant",
+      "categoryId": "restaurant",
+      "categoryLabel": "Restaurant",
+      "status": "canonical",
+      "queries": [
+       "restaurant"
+      ],
+      "modifiers": [
+       "vegan"
+      ],
+      "source": "rules"
+     }
+    ],
+    "hybrid": false,
+    "ambiguous": false,
+    "clarification": "",
+    "unused": [],
+    "substitutions": [
+     "Showing general restaurant evidence; vegan-specific relevance is not verified by Qloo's category. 1 of 10 returned places mention \"vegan\" in their Qloo text."
+    ],
+    "source": "rules",
+    "evidence": [
+     {
+      "role": "primary",
+      "phrase": "Vegan restaurant",
+      "categoryLabel": "Restaurant",
+      "state": "exact",
+      "queriesTried": [
+       "restaurant"
+      ],
+      "tag": {
+       "id": "urn:tag:genre:place:restaurant",
+       "name": "Restaurant",
+       "quality": "exact"
+      },
+      "placeCount": 10,
+      "directCount": 8,
+      "places": [
+       {
+        "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+        "name": "Haci Baba Kebabhaus",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "unrelated",
+        "anchorEligible": false
+       },
+       {
+        "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+        "name": "Companion Tea & Coffee",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+        "name": "Starbucks",
+        "location": "Hansaviertel, Berlin",
+        "evidenceClass": "unrelated",
+        "anchorEligible": false
+       },
+       {
+        "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+        "name": "Thoben",
+        "location": "Berlin Treptow, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+        "name": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+        "location": "Berlin Koepenick, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+        "name": "Restaurant Duo",
+        "location": "Steglitz Bezirk, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+        "name": "Grünes Cafe & Hofladen",
+        "location": "Britz, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+        "name": "Mokkafee Friedrichshagen",
+        "location": "Friedrichshagen, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+        "name": "Lichterfelder Bäckerei",
+        "location": "Lichterfelde, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       },
+       {
+        "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+        "name": "Hotel Q! Berlin",
+        "location": "Wilmersdorf Bezirk, Berlin",
+        "evidenceClass": "direct_business",
+        "anchorEligible": true
+       }
+      ],
+      "modifiers": [
+       {
+        "word": "vegan",
+        "mentionedIn": 1,
+        "of": 10
+       }
+      ],
+      "categoryOnly": false,
+      "message": ""
+     }
+    ],
+    "overlap": null
+   }
+  },
+  "timings": {
+   "firstEvidenceMs": 2,
+   "firstConceptMs": 16,
+   "completeMs": 135297
+  },
+  "clarification": null,
+  "error": null,
+  "errorCode": null,
+  "transportRequests": 8,
+  "workflowCalls": 6
+ },
+ "marks": {
+  "firstEvent": 1.052728959,
+  "partial": 1.052728959,
+  "done": 135.517188667
+ },
+ "challenge": {
+  "directions": [
+   {
+    "directionId": "live-1-verdant-&-copper",
+    "name": "Verdant & Copper",
+    "verdict": "unproven",
+    "scope": "Anchor fit within the retrieved sample",
+    "reason": "Qloo ranks Hotel Q! Berlin 2 of the 3 places it returned for the “young adults” demographic CultureForge proposed from the brief, near Berlin, Germany: between the bands (the top band is first and the bottom band is last of 3). This ranking does not use the audience signals you selected.",
+    "claim": "Within the places Qloo returned, Hotel Q! Berlin ranks in the top third for the demographic profile, and Qloo returned a qualifying cultural tag for it in the comparison against the other retrieved places.",
+    "falsifier": "Qloo ranks Hotel Q! Berlin in the bottom third of the places it returned for that demographic. (No qualifying cultural tag leaves it unproven, not contradicted.)",
+    "unprovenIf": "Qloo returned too few places to compare, or either the ranking or the tag comparison could not be run.",
+    "anchor": {
+     "entityId": "00057443-95D2-4C35-B62F-2EC55895365D",
+     "label": "Hotel Q! Berlin"
+    },
+    "originalAnchor": null,
+    "isCounterfactual": false,
+    "alternatives": [
+     {
+      "entityId": "0018741C-6F8E-467D-9439-67683646DB28",
+      "label": "Haci Baba Kebabhaus"
+     },
+     {
+      "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+      "label": "Companion Tea & Coffee"
+     },
+     {
+      "entityId": "00219165-4F46-4AB7-977B-E5AD03A27D2E",
+      "label": "Starbucks"
+     },
+     {
+      "entityId": "0026A588-328A-47E2-8D09-2D344FD6AD69",
+      "label": "Thoben"
+     },
+     {
+      "entityId": "002780C2-0D3C-41B2-908D-9CE96CA6DF49",
+      "label": "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm"
+     },
+     {
+      "entityId": "002DEC57-139B-4B1E-8506-B201F84E007F",
+      "label": "Restaurant Duo"
+     },
+     {
+      "entityId": "002F1C1A-79E5-4BDB-92AB-D15779F3E305",
+      "label": "Grünes Cafe & Hofladen"
+     },
+     {
+      "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+      "label": "Mokkafee Friedrichshagen"
+     },
+     {
+      "entityId": "0030C2FA-9999-4016-9358-22AC81D3C72C",
+      "label": "Lichterfelder Bäckerei"
+     }
+    ],
+    "checks": [
+     {
+      "name": "Where does this place sit for that profile?",
+      "result": "mixed",
+      "detail": "Qloo ranks Hotel Q! Berlin 2 of the 3 places it returned for the “young adults” demographic CultureForge proposed from the brief, near Berlin, Germany: between the bands (the top band is first and the bottom band is last of 3). This ranking does not use the audience signals you selected.",
+      "metric": {
+       "affinity": 0.9071051779251503,
+       "position": 2,
+       "of": 3,
+       "demographic": "young adults"
+      }
+     },
+     {
+      "name": "What cultural tags were returned for this anchor?",
+      "result": "pass",
+      "detail": "Qloo returned 6 qualifying cultural tags for Hotel Q! Berlin in the comparison against the other retrieved places: Contemporary, Designer, Hip. Qloo also returned Place, Restaurant for both sides. This is what the tag data shows about the anchor — it does not establish that the other places lack them, and it is not evidence of an unmet need.",
+      "metric": {
+       "signals": 6,
+       "shared": 2
+      }
+     }
+    ],
+    "problems": [],
+    "completion": {
+     "rank": "complete",
+     "compare": "complete",
+     "completedChecks": 2,
+     "totalChecks": 2
+    },
+    "coverage": {
+     "venuesRetrieved": 10,
+     "venuesCited": 3,
+     "venuesCompared": 10,
+     "tagsUsed": 3,
+     "note": "Judged on 10 places Qloo returned for this brief, 3 of which this direction cites. These checks assess a scoped anchor hypothesis within the retrieved sample — they do not measure demand, competition, rent, or willingness to pay.",
+     "comparedWith": [
+      "Haci Baba Kebabhaus",
+      "Companion Tea & Coffee",
+      "Starbucks",
+      "Thoben",
+      "„Veracruz“ das mexikanische Restaurant im Fürstenwalder Damm",
+      "Restaurant Duo",
+      "Grünes Cafe & Hofladen",
+      "Mokkafee Friedrichshagen",
+      "Lichterfelder Bäckerei"
+     ],
+     "howSignalsWereCounted": "This policy counts a Qloo tag as a cultural signal when its family is not one of genre, category, service_type, amenities, services, facilities, features — the families that say what a place is and how it runs. A family the policy does not know does not count."
+    },
+    "index": {
+     "policy": "anchor-fit-5",
+     "rule": "Contested if the rank check fails; supported only if the rank check and the tag check both pass; otherwise unproven.",
+     "rankCheck": "mixed",
+     "tagCheck": "pass",
+     "qualifyingTags": 6,
+     "sampleSize": 3,
+     "minimumSample": 3,
+     "confidence": "low",
+     "confidenceReason": "Only 3 places were ranked.",
+     "sensitivity": {
+      "stable": true,
+      "checked": true,
+      "rankCheck": "mixed",
+      "changesWhenRemoved": [],
+      "alternativeAnchors": [
+       {
+        "entityId": "002F2A6F-839B-432D-8C59-04F2E3B8ED47",
+        "label": "Mokkafee Friedrichshagen",
+        "position": 1,
+        "rankCheck": "pass"
+       },
+       {
+        "entityId": "001C4293-21EE-4811-89DA-B534F8622DF9",
+        "label": "Companion Tea & Coffee",
+        "position": 3,
+        "rankCheck": "fail"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "order": [
+   "live-1-verdant-&-copper"
+  ],
+  "arrivalOrder": [
+   "live-1-verdant-&-copper"
+  ],
+  "summary": "Checked 1 anchor hypothesis using a demographic ranking and anchor-tag comparisons across 10 retrieved places. The 3 audience seeds were used for retrieval, not for this ranking.",
+  "scope": "Anchor fit within the retrieved sample",
+  "policyVersion": "anchor-fit-5",
+  "profile": {
+   "demographic": "young adults",
+   "inferred": true,
+   "source": "named",
+   "proposed": "young adults",
+   "choices": [
+    "gen z",
+    "millennials",
+    "young adults",
+    "women 25-34",
+    "women 35-44",
+    "men 25-34",
+    "men 35-44",
+    "seniors"
+   ],
+   "proposedBy": "CultureForge, from the brief’s own words",
+   "location": "Berlin, Germany",
+   "signals": [
+    "urn:tag:interests:qloo:plant_based_dining",
+    "urn:tag:interests:qloo:modern_restaurant_design",
+    "urn:tag:interests:qloo:plant_based_cuisine"
+   ]
+  },
+  "whatThisIs": "A CultureForge policy check using Qloo ranking and the anchor tags Qloo returned. It asks where the place an idea is built on sits for a demographic profile, and whether a qualifying cultural tag was returned for it in a comparison with the other retrieved places. It is a consistency check against the same retrieved evidence, not an independent validation of it. It does not measure demand, profitability, footfall, commercial viability, competition, rent, or willingness to pay, and it says nothing about the business as a business."
+ }
+}
