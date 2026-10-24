@@ -151,7 +151,11 @@ def name_match(rows: list[dict], name: str, city: str) -> Optional[dict]:
         have = _tokens(str(row.get('name', '')))
         if not wanted or not have or not _in_city(row, city) or int(row.get('place_rank') or 30) < 26:
             continue
-        if len(wanted & have) / min(len(wanted), len(have)) >= 0.6:
+        shared = wanted & have
+        # A one-word overlap is not a name match: "No.4" shares only "no" with anything called "No ...",
+        # and a short name would otherwise be satisfied by any longer one that contains it. Two shared
+        # words are required unless the two names are the same words.
+        if len(shared) / min(len(wanted), len(have)) >= 0.6 and (len(shared) >= 2 or wanted == have):
             return {'status': 'plotted', 'lat': float(row['lat']), 'lon': float(row['lon']),
                     'matched': row.get('display_name', '')[:240], 'source': SOURCE_NAME,
                     'precision': 'matched by venue name inside the city; not a surveyed venue point'}
