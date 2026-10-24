@@ -193,3 +193,16 @@ console.log('[ok] The idea reading is shown only when informative, and exports e
   assert.equal(diff.qlooDifference(base, [], null), null);
   console.log('[ok] The Qloo-contribution strip counts only cited, run, evidence-bearing steps and can report pushback.');
 }
+
+{
+  // A judge must be able to reach the map from the places it describes, and the
+  // laptop-width layouts must not push the page sideways.
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+  assert.match(app, /Open the interest map/, 'the places section offers the map');
+  assert.match(app, /setInsightTab\('map'\);onView\('roots'\)/, 'that offer opens the map tab of the roots section');
+  const dusk = readFileSync(new URL('../src/dusk.css', import.meta.url), 'utf8');
+  assert.match(dusk, /@media \(max-width: 1180px\)[^}]*\.topbar \{ min-width: 0; \}/, 'the topbar can shrink at laptop widths');
+  const wild = readFileSync(new URL('../src/wildroot.css', import.meta.url), 'utf8');
+  assert.match(wild, /@media \(max-width: 1180px\) \{\s*\.ox-body \{ grid-template-columns: minmax\(0, 1fr\); \}/, 'the map keeps its width at laptop widths');
+  console.log('[ok] The map is reachable from the places section, and laptop widths neither overflow nor squeeze the map.');
+}
