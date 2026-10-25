@@ -3,8 +3,8 @@ dist
 .venv
 __pycache__
 *.pyc
-.env
-.env.local
+.env*
+!.env.example
 .DS_Store
 *.tsbuildinfo
 .pytest_cache/

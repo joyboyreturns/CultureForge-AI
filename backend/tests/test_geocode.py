@@ -28,6 +28,7 @@ def test_missing_address_and_disabled_geocoder_never_guess(monkeypatch, tmp_path
 
 def test_successes_are_cached_and_transport_failures_are_not(monkeypatch, tmp_path):
     monkeypatch.setenv('CULTUREFORGE_GEOCODE_CACHE', str(tmp_path / 'g.json'))
+    monkeypatch.setenv('GEOCODING_ENABLED', 'true')
     calls = []
     monkeypatch.setattr(geocode, '_fetch', lambda address: calls.append(address) or [ROW])
     venue = [{'id': 'a', 'address': '1 Main', 'city': 'Tokyo'}]
