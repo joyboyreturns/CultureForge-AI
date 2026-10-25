@@ -84,6 +84,7 @@ def _strip_specialisations(text: str) -> str:
 
 
 def _component(role: str, phrase: str, source: str = 'rules') -> IntentComponent:
+    phrase = phrase[:80].strip()  # the component's field is bounded; a 160-character idea must not crash the run
     resolution = taxonomy.resolve(phrase)
     modifiers = list(taxonomy.modifiers_in(phrase))
     if resolution.status == 'canonical':

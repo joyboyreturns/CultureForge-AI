@@ -486,3 +486,10 @@ def test_an_unsupported_three_word_idea_offers_its_own_shorter_form_as_a_way_out
     assert [option['value'] for option in offered] == ['camera shop']
     assert idea_alternatives(reading, tried=('film camera shop', 'camera shop')) == []
     assert idea_alternatives(interpret('camera shop'), tried=('camera shop',)) == []
+
+
+def test_a_long_idea_with_no_head_phrase_is_read_not_crashed():
+    idea = 'Plant nursery and natural wine bar where guests repot a houseplant while they drink'
+    intent = interpret(idea)
+    assert intent.original == idea
+    assert all(len(c.phrase) <= 80 for c in intent.components)
