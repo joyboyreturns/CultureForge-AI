@@ -5,7 +5,7 @@ For the [Qloo Agentic Hackathon](https://qloo.devpost.com/). The
 set the deadline to **30 October 2026, 11:45 pm EDT** (31 October, 9:15 am IST).
 They currently state judging on **2–5 November**, with winners around
 5 November. Keep the service accessible through judging and recheck the rules
-before submission. A video is optional. A working public demo, public source
+before submission. A video is optional, and one is recorded: https://youtu.be/D3INYPbqVyk . A working public demo, public source
 and a detectable open-source license are required.
 
 ## Release checklist
