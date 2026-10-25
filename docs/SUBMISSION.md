@@ -106,6 +106,9 @@ React, TypeScript, Vite, Tailwind CSS, Vercel AI Gateway.
 
 ## Before you press submit
 
+See the [final home-PC audit](FINAL_SUBMISSION_AUDIT.md) for verified results,
+remaining limits and the deployed image record.
+
 1. Keep the deployed service on `RUN_PROFILE=judging` and available through
    judging; recheck health and held evidence ([JUDGING_DAY.md](JUDGING_DAY.md)).
 2. Click through the [demo script](DEMO.md) on the hosted URL in a private

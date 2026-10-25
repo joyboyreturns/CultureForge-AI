@@ -27,3 +27,6 @@ __pycache__
 .coverage
 .coverage.*
 coverage.xml
+
+# Detailed final-audit logs and deployment metadata stay local.
+/artifacts/validation/final-2026-10-25/

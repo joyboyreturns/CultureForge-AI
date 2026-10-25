@@ -1,5 +1,9 @@
 # Product and commercial readiness — 23 October 2026
 
+**Superseded for submission readiness by the [25 October final audit](FINAL_SUBMISSION_AUDIT.md).**
+The deployment and owner-declaration blockers below are historical; the public
+home-PC deployment now passes release and smoke checks.
+
 Later judge-scenario verification and the Berlin retrieval fix are recorded
 in [JUDGE_SCENARIOS.md](JUDGE_SCENARIOS.md): 444 backend tests now pass, the
 full Berlin flow completes, and the trial library contains 14 briefs.
