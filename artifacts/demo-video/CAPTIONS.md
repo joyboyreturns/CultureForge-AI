@@ -24,7 +24,7 @@ From that evidence, CultureForge composes directions. Each names its places, its
 
 **6. `06-diagram-pipeline.mp4`**
 
-Under the hood: Qloo returns places, tags and audiences. Rules compose cited directions. A validator rejects any claim without a Qloo ID
+Under the hood: Qloo returns places, tags and audiences. Rules compose cited directions. A validator rejects any claim without a Qloo ID.
 
 **7. `07-map.mp4`**
 
