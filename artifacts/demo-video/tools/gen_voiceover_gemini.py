@@ -1,68 +1,72 @@
 import re
-R = 0.375                      # s/word: Gemini read clip 1 (48 words) in ~18 s as pasted; treated as all-in speech with no pauses
-P = {'S': 0.25, 'M': 0.5, 'L': 1.0}   # [short pause] ~250 ms, [medium pause] ~500 ms, [long pause] ~1 s (per the Replicate model page)
-TAG = {'S': '[short pause]', 'M': '[medium pause]', 'L': '[long pause]'}
+R = 0.47                       # s/word, measured: clip 1 (47 words + 8 spoken tag words) took 27 s with the 125 wpm style prompt
+P = {'S': 0.3, 'M': 0.0, 'L': 0.2}    # S = [short pause] (the only tag this voice honours); M = a full stop (no tag); L = a blank line (no tag)
+TAG = {'S': '[short pause]', 'M': '', 'L': '\n'}
 # Parts: text strings, or 'S' / 'M' / 'L' pauses, or a literal '[tag]' expressive tag (kept to a minimum).
 CLIPS = [
  ("01-landing.mp4", 22.7, "Landing page, slow scroll", [(0.4, [
-   "Every business idea starts as a guess,", 'S', "about what people in a place will love.", 'L',
+   "Every idea starts as a guess,", 'S', "about what people in a place will love.", 'M',
    "Culture Forge A.I. puts that guess on trial.", 'M',
    "Describe an idea,", 'S', "an audience,", 'S', "and a city.", 'M',
-   "We ask Kloo what that audience gravitates to,", 'S', "then turn those signals into directions you can challenge."])]),
+   "We ask Kloo what they love,", 'S', "then build directions you can challenge."])]),
  ("02-diagram-compare.mp4", 13.3, "Diagram: ordinary model vs CultureForge on Qloo", [(0.5, [
-   "Ask a language model about a bakery,", 'S', "and you get fluent text with no sources.", 'L',
-   "Here,", 'S', "every direction must point back to evidence Kloo returned."])]),
+   "Ask a language model about a bakery,", 'S', "and you get fluent text with no sources.", 'M',
+   "Here,", 'S', "every direction cites Kloo evidence."])]),
  ("03-studio.mp4", 18.0, "Studio, run the example, executive brief", [(0.5, [
    "Here's a real brief:", 'S', "an artisan bakery in Tokyo,", 'S', "for early-morning commuters.", 'M',
-   "This demo replays evidence Kloo returned earlier,", 'S', "so it opens instantly.", 'M',
-   "Every claim traces to a Kloo place or tag,", 'S', "never an invented score."])]),
+   "This demo replays evidence Kloo returned,", 'S', "so it opens instantly.", 'M',
+   "Every claim traces to a Kloo place or tag."])]),
  ("04-places.mp4", 12.0, "Places and signals, Qloo photos and numbers", [(0.5, [
-   "Real places Kloo returned,", 'S', "with its own photos and numbers.", 'L',
-   "The figures are Kloo's.", 'S', "The page says what it could not verify."])]),
+   "Real places Kloo returned,", 'S', "with Kloo's own photos and numbers.", 'M',
+   "The page says what it could not verify."])]),
  ("05-directions.mp4", 11.0, "Two directions with citations and limits", [(0.5, [
    "From that evidence,", 'S', "Culture Forge composes directions.", 'M',
-   "Each names the places it rests on,", 'S', "what it claims,", 'S', "and what remains unproven."])]),
+   "Each names its places,", 'S', "its claim,", 'S', "and what remains unproven."])]),
  ("06-diagram-pipeline.mp4", 15.3, "Diagram: from a brief to a verdict", [(0.7, [
-   "Under the hood:", 'S', "Kloo returns places, tags,", 'S', "and audiences.", 'M',
+   "Under the hood:", 'S', "Kloo returns places, tags and audiences.", 'M',
    "Rules compose cited directions.", 'M',
-   "An optional model step comes last,", 'S', "and a validator rejects any claim without a Kloo I.D."])]),
+   "A validator rejects any claim without a Kloo I.D."])]),
  ("07-map.mp4", 36.0, "Interest map, pick a venue, remove it", [
-  (0.6, ["Now,", 'S', "the same evidence on a real map.", 'M', "Venues are pinned from the addresses Kloo returned.", 'M',
+  (0.6, ["The same evidence,", 'S', "on a real map.", 'M', "Pins come from Kloo's addresses.", 'M',
          "Nine of ten were placed.", 'S', "One wasn't, and says why."]),
-  (12.4, ["Pick a venue,", 'S', "and the panel says how its pin was matched,", 'S', "and why it's connected to this audience."]),
-  (21.0, ["Then ask the hard question:", 'S', "what happens without it?", 'L',
+  (12.4, ["Pick a venue.", 'S', "The panel says how its pin was matched,", 'S', "and why it's connected."]),
+  (21.0, ["Then the hard question:", 'S', "what happens without it?", 'M',
           "Remove this bakery,", 'S', "and the directions are rebuilt from held evidence,", 'S', "with no new Kloo request.", 'M',
-          "What changed is shown."])]),
+          "Changes are shown."])]),
  ("08-diagram-verdict.mp4", 15.3, "Diagram: how the evidence test can say no", [(0.4, [
-   "A tool that always agrees is decoration.", 'S', "This test has three outcomes.", 'M',
-   "Both checks pass:", 'S', "supported.", 'S',
-   "A check is missing:", 'S', "unproven.", 'S',
-   "A check fails:", 'S', "contested.", 'S',
-   "Re-anchor,", 'S', "and test again."])]),
+   "A tool that always agrees is decoration.", 'S', "This test can say no.", 'M',
+   "Both checks pass: supported.", 'S',
+   "One missing: unproven.", 'S',
+   "One fails: contested.", 'S',
+   "Re-anchor, and test again."])]),
  ("09-test.mp4", 30.5, "Evidence test runs: contested, order changed", [(0.6, [
-   "Let's run it on this brief.", 'M', "Kloo ranks the places,", 'S', "then compares their tags.", 'M',
+   "Run it on this brief.", 'M', "Kloo ranks the places,", 'S', "then compares their tags.", 'M',
    "The lead direction's anchor,", 'S', "The Little Bakery,", 'S', "ranks eighth of ten.", 'M',
-   "So the verdict is,", 'M', "contested.", 'S', "And the order of directions changes.", 'L',
-   "The brief named no demographic,", 'S', "so the test uses a default one.", 'M',
+   "So the verdict is contested.", 'S', "And the order of directions changes.", 'M',
+   "No demographic was named,", 'S', "so it uses a default.", 'M',
    "It's a verdict about anchor fit in this sample,", 'S', "not about demand."])]),
  ("10-agent.mp4", 25.7, "Agent steps, refused steps, cited analysis", [(0.6, [
-   "Behind it,", 'S', "a bounded agent plans up to eight steps over approved Kloo workflows:", 'S', "tags, audiences, comparisons.", 'M',
+   "Behind it,", 'S', "a bounded agent plans up to eight steps over approved Kloo workflows.", 'M',
    "Six ran.", 'S', "Two cited things it had not observed,", 'S', "so they were refused.", 'M',
    "The final analysis must cite Kloo I.D.s from this run.", 'M',
-   "Its conclusion is modest:", 'S', "the evidence supports only a category-level reading."])]),
+   "Its conclusion is modest:", 'S', "only a category-level reading."])]),
  ("11-diagram-layers.mp4", 13.3, "Diagram: three layers kept apart", [(0.4, [
    "Three layers,", 'S', "kept apart:", 'M', "what Kloo returned,", 'M', "what rules decided,", 'M', "and what a model wrote.", 'M',
    "If the model fails,", 'S', "the rule-based answer stands."])]),
  ("12-close.mp4", 12.2, "Landing hero, cursor to Try the demo", [(0.5, [
    "Culture Forge A.I.:", 'S', "Kloo's cultural intelligence,", 'S', "as evidence that can disagree with your idea.", 'M',
-   "Open source.", 'S', "Nine Kloo workflows.", 'S', "Try the demo."])]),
+   "Open source.", 'S', "Try the demo."])]),
 ]
 def words(t): return len(re.findall(r"[A-Za-z0-9'’\-]+", t.replace('A.I.', 'AI')))
 def est(parts): return sum(words(p) * R if (p not in P and not p.startswith('[')) else (P.get(p, 0)) for p in parts)
 def tts(parts):
     out = []
-    for p in parts: out.append(TAG[p] if p in P else p)
-    return ' '.join(out)
+    for p in parts:
+        if p in P:
+            if TAG[p]: out.append(TAG[p])
+        else: out.append(p)
+    t = ' '.join(out)
+    return t.replace(' \n ', '\n')
 def check_tags(parts):
     prev_tag = False
     for p in parts:
@@ -89,37 +93,33 @@ PROMPT = ('A deep, confident radio announcer: calm, warm and authoritative, like
           'Say "A.I." as the two letters A and I.')
 OUT = '/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/'
 md = ["# CultureForge AI — voice-over for Google Gemini TTS", "",
- "For **Gemini Flash TTS**. The tag rules below come from Google's documentation for **Gemini 3.1 Flash TTS**, the newest I could find; you are on 3.8, which I",
- "could not find documentation for, so run the tag test below before relying on anything. The earlier ElevenLabs script is kept as `VOICEOVER_ELEVENLABS.md`; do not mix them,",
- "because ElevenLabs `<break>` tags are not Google's syntax.", "",
  "Clip order is the file order in `clips/` (01 → 12, about 3:45). Each block is **one audio file**: paste the text exactly as shown into the",
  "text box, put the style prompt below into the prompt (style instructions) box, generate, and place the audio on the timeline at **Place at**.",
  "Clip 7 has three blocks, because the map needs time to load between them.", "",
- "## Tag rules (from Google's documentation)", "",
- "- Tags go in **square brackets**, in English, exactly where the effect should happen.",
- "- **Never put two tags next to each other**; there is always text between them. Every block below follows this.",
- "- Pauses used here: `[short pause]` (about 0.25 s), `[medium pause]` (about 0.5 s), `[long pause]` (about 1 s). These lengths come from the Replicate model",
- "  page, not from Google; the first clip will show if they hold.",
- "- Also available, and not used on purpose in a judging video: `[laughs]`, `[whispers]`, `[gasp]`, mood tags such as `[determination]` and `[seriousness]`,",
- "  and pace tags `[slow]` and `[fast]`. If you try one and it is *spoken aloud*, delete it: some tags are read out loud.",
- "- There is no documented speed setting, so pace comes from the style prompt and the pauses.", "",
+ "## Tags: only `[short pause]`", "",
+ "Your voice **reads `[medium pause]` and `[long pause]` aloud**, so they are gone from this script. The only tag used is `[short pause]`, which your",
+ "list confirms exists. Longer gaps are made with ordinary punctuation: a full stop, or a new sentence. Every block follows two rules:",
+ "",
+ "- The only tag is `[short pause]`, always with text on both sides of it, never two tags together.",
+ "- If you hear `[short pause]` *spoken*, delete every tag in that block. The full stops still give the voice its breaths.",
+ "- Expressive tags from your list (`[sigh]`, `[chuckle]`, `[gasp]` and so on) are left out on purpose: this is a serious product video.", "",
  "## Style prompt (use the same one for every clip)", "", "```", PROMPT, "```", "",
- "Voice: pick a deep, steady one. From memory, not verified here: **Charon** (informative), **Orus** (firm) or **Algenib** (gravelly) suit an announcer.", "",
+ "Voice: pick a deep, steady one.", "",
  "## Pronunciation: why it said \"Claude\"", "",
- "Gemini TTS is a language model, not a rule-based voice, and there is no pronunciation tag. It tends to \"correct\" an unusual word toward a familiar",
- "one, and \"Clue\" in a technology script became \"Claude\". The voice text now spells it **Kloo**, and the style prompt says how to say it.",
- "Run this 15-second test before generating anything else. Listen for three things: the name sounds like \"kloo\", the pauses are real, and **no tag is read aloud**:", "",
- "```", "Kloo. [short pause] Kloo's data. [medium pause] Nine Kloo workflows. [long pause] Culture Forge A.I.", "```", "",
- "If \"Kloo\" is wrong, try these in order: **Kloo-** (no), then **Cloo**, then **Klew**. Use the winner everywhere (find and replace in this file).", "",
- "## Pace (measured, then planned)", "",
- "Clip 1 came out at about **18 s** with the first script, against a 22.7 s slot. This script is longer (more pauses, plus true details taken from the screen",
- "in clips 7, 9 and 10) and is planned to land every clip between 1 and 3 s before its end. Times below assume about 0.375 s a word, from your 18 s",
- "reading, plus the pauses. That is an estimate; **generate clip 1 first** and compare:", "",
- "- Within about 1 s of the *Voice length* shown: carry on.",
- "- More than 1.5 s short: turn every `[short pause]` into `[medium pause]` and every `[medium pause]` into `[long pause]` in that block (the \"stretch dial\"), then regenerate.",
- "- Too long: do the opposite, or delete a few `[short pause]` tags.",
- "- Still off: tell me the real length and I will rescale every block. If the voice ends up much faster or slower than planned, I will also retime the",
- "  Verdict and Layers diagrams so each part appears as the voice says it.", "", "---", ""]
+ "Gemini TTS is a language model, and there is no pronunciation tag. It tends to \"correct\" an unusual word toward a familiar",
+ "one, and \"Clue\" in a technology script became \"Claude\". The voice text spells it **Kloo**, and the style prompt says how to say it.",
+ "Test this before generating anything else; listen for the name sounding like \"kloo\" and for no tag being read aloud:", "",
+ "```", "Kloo. [short pause] Kloo's data. Nine Kloo workflows. Culture Forge A.I.", "```", "",
+ "If \"Kloo\" is wrong, try these in order: **Cloo**, then **Klew**. Use the winner everywhere (find and replace in this file).", "",
+ "## Pace (measured)", "",
+ "Your clip 1 ran **27 s** against a 22.7 s slot. That script had 47 spoken words, plus 8 more words from tags read aloud, with the 125-words-a-minute",
+ "style prompt: about **0.47 s a word**. Every block below is cut to that pace and is planned to end 1.4 to 3.5 s before its clip does. The trims are",
+ "real cuts (shorter sentences), not just fewer pauses. Check **clip 1 first**; its voice length should come out near 20.9 s:", "",
+ "- Within about 1 s of the *Voice length* shown: carry on with the rest.",
+ "- Longer: in the style prompt change \"about 125 words a minute\" to \"about 140 words a minute\", then regenerate.",
+ "- Shorter by more than 1.5 s: change it to \"about 115 words a minute\".",
+ "- Still off: tell me the real length of clip 1 and I will rescale every block. Clip 8 (the verdict diagram) is timed to the voice, so tell me its length too and",
+ "  I will retime that diagram. Clip 11 (layers) is already timed to this pace.", "", "---", ""]
 for i, (fn, dur, desc, row, end, slack) in enumerate(rows, 1):
     md += [f"## {i}. `{fn}` — {dur:.1f} s", f"*On screen: {desc}.*", ""]
     for j, (at, e, parts) in enumerate(row):

@@ -4,45 +4,45 @@ The same words as `VOICEOVER.md`, with the real spellings and no tags. For burne
 
 **1. `01-landing.mp4`**
 
-Every business idea starts as a guess, about what people in a place will love. CultureForge AI puts that guess on trial. Describe an idea, an audience, and a city. We ask Qloo what that audience gravitates to, then turn those signals into directions you can challenge.
+Every idea starts as a guess, about what people in a place will love. CultureForge AI puts that guess on trial. Describe an idea, an audience, and a city. We ask Qloo what they love, then build directions you can challenge.
 
 **2. `02-diagram-compare.mp4`**
 
-Ask a language model about a bakery, and you get fluent text with no sources. Here, every direction must point back to evidence Qloo returned.
+Ask a language model about a bakery, and you get fluent text with no sources. Here, every direction cites Qloo evidence.
 
 **3. `03-studio.mp4`**
 
-Here's a real brief: an artisan bakery in Tokyo, for early-morning commuters. This demo replays evidence Qloo returned earlier, so it opens instantly. Every claim traces to a Qloo place or tag, never an invented score.
+Here's a real brief: an artisan bakery in Tokyo, for early-morning commuters. This demo replays evidence Qloo returned, so it opens instantly. Every claim traces to a Qloo place or tag.
 
 **4. `04-places.mp4`**
 
-Real places Qloo returned, with its own photos and numbers. The figures are Qloo's. The page says what it could not verify.
+Real places Qloo returned, with Qloo's own photos and numbers. The page says what it could not verify.
 
 **5. `05-directions.mp4`**
 
-From that evidence, CultureForge composes directions. Each names the places it rests on, what it claims, and what remains unproven.
+From that evidence, CultureForge composes directions. Each names its places, its claim, and what remains unproven.
 
 **6. `06-diagram-pipeline.mp4`**
 
-Under the hood: Qloo returns places, tags, and audiences. Rules compose cited directions. An optional model step comes last, and a validator rejects any claim without a Qloo ID
+Under the hood: Qloo returns places, tags and audiences. Rules compose cited directions. A validator rejects any claim without a Qloo ID
 
 **7. `07-map.mp4`**
 
-Now, the same evidence on a real map. Venues are pinned from the addresses Qloo returned. Nine of ten were placed. One wasn't, and says why.
-Pick a venue, and the panel says how its pin was matched, and why it's connected to this audience.
-Then ask the hard question: what happens without it? Remove this bakery, and the directions are rebuilt from held evidence, with no new Qloo request. What changed is shown.
+The same evidence, on a real map. Pins come from Qloo's addresses. Nine of ten were placed. One wasn't, and says why.
+Pick a venue. The panel says how its pin was matched, and why it's connected.
+Then the hard question: what happens without it? Remove this bakery, and the directions are rebuilt from held evidence, with no new Qloo request. Changes are shown.
 
 **8. `08-diagram-verdict.mp4`**
 
-A tool that always agrees is decoration. This test has three outcomes. Both checks pass: supported. A check is missing: unproven. A check fails: contested. Re-anchor, and test again.
+A tool that always agrees is decoration. This test can say no. Both checks pass: supported. One missing: unproven. One fails: contested. Re-anchor, and test again.
 
 **9. `09-test.mp4`**
 
-Let's run it on this brief. Qloo ranks the places, then compares their tags. The lead direction's anchor, The Little Bakery, ranks eighth of ten. So the verdict is, contested. And the order of directions changes. The brief named no demographic, so the test uses a default one. It's a verdict about anchor fit in this sample, not about demand.
+Run it on this brief. Qloo ranks the places, then compares their tags. The lead direction's anchor, The Little Bakery, ranks eighth of ten. So the verdict is contested. And the order of directions changes. No demographic was named, so it uses a default. It's a verdict about anchor fit in this sample, not about demand.
 
 **10. `10-agent.mp4`**
 
-Behind it, a bounded agent plans up to eight steps over approved Qloo workflows: tags, audiences, comparisons. Six ran. Two cited things it had not observed, so they were refused. The final analysis must cite Qloo IDs from this run. Its conclusion is modest: the evidence supports only a category-level reading.
+Behind it, a bounded agent plans up to eight steps over approved Qloo workflows. Six ran. Two cited things it had not observed, so they were refused. The final analysis must cite Qloo IDs from this run. Its conclusion is modest: only a category-level reading.
 
 **11. `11-diagram-layers.mp4`**
 
@@ -50,4 +50,4 @@ Three layers, kept apart: what Qloo returned, what rules decided, and what a mod
 
 **12. `12-close.mp4`**
 
-CultureForge AI: Qloo's cultural intelligence, as evidence that can disagree with your idea. Open source. Nine Qloo workflows. Try the demo.
+CultureForge AI: Qloo's cultural intelligence, as evidence that can disagree with your idea. Open source. Try the demo.
