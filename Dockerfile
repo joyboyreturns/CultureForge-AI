@@ -28,6 +28,7 @@ ENV QLOO_HARNESS_PATH=/usr/local/lib/node_modules/@qloo/qloo-harness \
 COPY requirements.txt ./
 RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 ca-certificates fonts-dejavu-core fonts-droid-fallback && \
     rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir --upgrade 'pip>=26.2,<27' && \
     pip install --no-cache-dir -r requirements.txt && \
     useradd --create-home --uid 10001 cultureforge && \
     mkdir -p /data/cache && chown -R cultureforge:cultureforge /data
