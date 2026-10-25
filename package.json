@@ -14,6 +14,7 @@
     "check:api": "python3 scripts/check_api.py",
     "test:endpoints": "node scripts/verify_endpoints.mjs",
     "check:submission": "node scripts/verify_submission.mjs",
+    "check:dependencies": "npm audit",
     "check:release": "node scripts/verify_submission.mjs --release",
     "test:unit": "node scripts/test_unit.mjs",
     "smoke": "python3 scripts/smoke_test.py"
@@ -41,6 +42,9 @@
     "vite": "^6.4.5"
   },
   "license": "MIT",
+  "overrides": {
+    "postcss-selector-parser": "7.1.7"
+  },
   "engines": {
     "node": ">=22.19.0"
   }

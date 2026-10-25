@@ -44,7 +44,7 @@ This is evidence of readiness, not a guarantee of a prize or of no undiscovered 
 | Public strict release check after deployment | Passed |
 | Public smoke after deployment | Passed; 14/14 trials held, checked answer has two directions and zero upstream requests |
 | Installed Python packages in final production image | pip-audit: **no known vulnerabilities found** |
-| JavaScript production dependencies | npm audit: **no known vulnerabilities found** |
+| JavaScript production and build dependencies | npm audit: **no known vulnerabilities found** after the selector-parser follow-up fix |
 | Tracked-text secret-pattern scan | No candidate credential/private-key matches; no tracked `.env` or environment-backup history found |
 | Browser journey on public deployment | Landing → studio → Tokyo example → evidence test → map; no account required |
 | Evidence test in browser | Lead anchor contested, alternative direction unproven; leading direction changed |
@@ -65,10 +65,16 @@ Linux CI for the final source/test changes passed:
 
 ## Remaining limits and owner actions
 
-- **Three moderate npm advisory entries remain in build-time Tailwind/PostCSS
-  dependencies**, from one selector-parser advisory. They are excluded from the
-  production runtime. npm's supported automated remedy is a breaking Tailwind
-  4 migration; that migration was not made during final submission validation.
+- **Build dependency follow-up:** all three Tailwind/PostCSS advisory entries
+  were resolved with an npm override pinning `postcss-selector-parser` to
+  `7.1.7` for both Tailwind and its nesting plugin. The complete dependency
+  audit reports zero vulnerabilities. All three production CSS bundles are
+  byte-for-byte identical to the pre-fix build, and the advisory's 400 KB
+  flat-selector case parsed correctly in 143 ms locally. No Tailwind migration
+  was needed. CI now runs `npm run check:dependencies` so new advisories fail
+  the build. Revisit the override when the upstream dependency ranges include
+  a patched parser. See the [upstream security advisory](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)
+  and [parser changelog](https://github.com/postcss/postcss-selector-parser/blob/main/CHANGELOG.md).
 - Existing FastAPI lifecycle/test-client deprecation warnings and the large,
   lazily loaded MapLibre bundle warning remain. They did not fail validation.
 - Arbitrary new briefs, fresh upstream Qloo/model availability, Safari behavior,

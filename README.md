@@ -339,6 +339,7 @@ The full table and the error envelope are in [docs/API.md](docs/API.md).
 
 ```bash
 npm run lint && npm run build
+npm run check:dependencies              # audit production and build dependencies
 python -m pytest backend/tests -q        # none of these tests can reach Qloo or a model
 npm run test:unit && npm run check:submission
 python3 scripts/smoke_test.py <url>      # a running deployment, no quota spent
