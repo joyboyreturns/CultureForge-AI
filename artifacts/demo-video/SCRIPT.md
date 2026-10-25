@@ -29,8 +29,8 @@ All clips are 1920×1080, 30 fps, H.264.
 
 **The words to read are in `VOICEOVER.md`** (ElevenLabs-ready, with pauses and the exact time to place each audio
 file) and **`CAPTIONS.md`** (the same words with the real spellings, for burned-in captions). They replace the
-narration that used to be in this file. The voice text is about 420 words and is timed so that every clip keeps at
-least 0.8 s of silence at the end.
+narration that used to be in this file. The voice text is about 420 words and is timed (for Adam at speed 0.85) so that every clip keeps at
+least 1 s of silence at the end.
 
 ## If you need it shorter
 

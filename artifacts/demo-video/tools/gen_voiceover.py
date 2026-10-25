@@ -1,5 +1,5 @@
 import re, sys
-SEC_PER_WORD = 0.42          # ~143 wpm: a deliberate announcer pace, slightly under ElevenLabs' default
+SEC_PER_WORD = 0.35 / 0.85   # measured: Adam at speed 1.00 read 48 words + 1.2 s of pauses in 18.0 s (0.35 s/word, 171 wpm); scaled to speed 0.85
 # (file, clip length s, [(place-at s, [text | pause seconds ...])])
 CLIPS = [
  ("01-landing.mp4", 22.7, "Landing page, slow scroll", [(0.4, [
@@ -72,7 +72,7 @@ for fn, dur, desc, segs in CLIPS:
         e = est(parts); row.append((at, e, parts))
     end = max(at + e for at, e, _ in row); slack = dur - end
     rows.append((fn, dur, desc, row, end, slack))
-    if slack < 0.8: bad.append((fn, slack))
+    if slack < 1.0: bad.append((fn, slack))
     for (a1, e1, _), (a2, _, _) in zip(row, row[1:]):
         if a1 + e1 > a2 - 0.3: bad.append((fn, 'segments overlap'))
 total_words = sum(words(clean(p).replace('CultureForge AI','CultureForge A I')) for *_, segs in CLIPS for _, p in segs)
@@ -86,21 +86,23 @@ md = ["# CultureForge AI — ElevenLabs voice-over (Adam)", "",
  "| Model | **Multilingual v2** (or Turbo v2.5). `<break>` tags work on both. *Not* Eleven v3, which ignores them: there, replace each break with ` ... ` |",
  "| Stability | 60 (steady, announcer-like; lower sounds more dramatic and less consistent between clips) |",
  "| Similarity | 80 |", "| Style exaggeration | 10 (higher can make Adam over-act) |",
- "| Speaker boost | On |", "| Speed | 1.00 (see \"Check the pace\" below) |", "",
+ "| Speaker boost | On |", "| Speed | **0.85** for every clip (measured, see below) |", "",
  "## Spelling used in the voice text (so Adam says it right)", "",
  "- **Qloo → \"Clue\"** (that is how it is pronounced). Use the real spelling in captions: see `CAPTIONS.md`.",
  "- **CultureForge AI → \"Culture Forge A.I.\"**, **IDs → \"I.D.s\"**.",
  "- Pauses: commas are a short breath; `<break time=\"0.4s\" />` is a clean beat; a longer one (0.8 s) is placed before a key",
  "  idea. There are no filler sounds (\"um\", \"hmm\"): on a judging video they read as unsure. Ask if you want them.", "",
- "## Check the pace first (2 minutes)", "",
- f"The timings below assume Adam at speed 1.00 reads about {1/SEC_PER_WORD*60:.0f} words a minute. That is an estimate, not a",
- "measurement. Generate **clip 1** and **clip 7 block A**, drop them on the timeline, and compare with the *Voice length* shown:", "",
- "- Within ±0.5 s: go ahead with the rest.",
- "- Longer than the slot: set Speed to 1.05 (about 5% faster) and regenerate. Do not go above 1.10; it sounds rushed.",
- "- Shorter: set Speed to 0.95, or just leave the extra silence.",
- "- If it is way off, tell me the two lengths and I will rescale every block.", "",
- "Slack is the silence left at the end of the clip. Every clip keeps at least 0.8 s of slack.", "",
- "---", ""]
+ "## Pace (measured)", "",
+ "Adam at speed 1.00 read clip 1 in **18.0 s**: 48 words plus 1.2 s of pauses, about 171 words a minute. That is faster than the",
+ "clip needs, so every block below is timed for **speed 0.85** (about 145 words a minute). Use the same speed on all twelve clips",
+ "so the voice sounds consistent.", "",
+ "Generate clip 1 again at 0.85. It should come out near **21 s**. Then:", "",
+ "- Within ±1 s of the *Voice length* shown: carry on with the rest.",
+ "- Still too short: try 0.80, but check the tightest clips (see the slack line under each block).",
+ "- Too long: use 0.90.",
+ "- Anything else: tell me the length and I will rescale every block.", "",
+ "Slack is the silence left at the end of the clip. Every clip keeps at least 1 s of slack at 0.85, and the pauses are fixed",
+ "lengths, so they do not change with speed.", "", "---", ""]
 for i, (fn, dur, desc, row, end, slack) in enumerate(rows, 1):
     md += [f"## {i}. `{fn}` — {dur:.1f} s", f"*On screen: {desc}.*", ""]
     for j, (at, e, parts) in enumerate(row):
@@ -116,6 +118,6 @@ for i, (fn, dur, desc, row, end, slack) in enumerate(rows, 1):
 open('/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/CAPTIONS.md', 'w').write('\n'.join(cap))
 
 print(f"{'clip':26} {'len':>5} {'ends':>6} {'slack':>6}")
-for fn, dur, desc, row, end, slack in rows: print(f"{fn:26} {dur:5.1f} {end:6.1f} {slack:6.1f}" + ("   <-- TIGHT" if slack < 0.8 else ""))
+for fn, dur, desc, row, end, slack in rows: print(f"{fn:26} {dur:5.1f} {end:6.1f} {slack:6.1f}" + ("   <-- TIGHT" if slack < 1.0 else ""))
 print('problems:', bad or 'none')
 print('total words ~', total_words)
