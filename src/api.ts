@@ -602,9 +602,10 @@ export interface InvestigationTool {
   cached: boolean
   transportRequests: number
   durationMs?: number | null
+  originalDurationMs?: number | null
   resultCount: number
   detail?: string
-  acquiredAt: string
+  acquiredAt?: string | null
 }
 
 export interface GeoPoint {

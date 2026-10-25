@@ -32,7 +32,7 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
    waits out the stated pause once and tries that step again; a second limit
    stops the run. A brief costs about nine Qloo workflows and Qloo's own limit
    is unpublished (see [LIMITATIONS.md](LIMITATIONS.md)), so expect to prewarm
-   a few briefs per hour rather than all nine at once. Start days early,
+   a few briefs per hour rather than all 14 at once. Start days early,
    and rerun it with `--skip-held` to leave alone the briefs whose evidence is
    already held (their evidence test may still be cold, so run without it
    once at the end). Any brief it reports as *"no direction

@@ -12,12 +12,12 @@ and a detectable open-source license are required.
 
 | Requirement | Status in this repository | Owner action |
 | --- | --- | --- |
-| Working Qloo agent application | Implemented and tested with fixtures | Deploy, prewarm, and click through the hosted URL |
-| Public, usable demo | Docker service, compose file and Render blueprint provided; **not yet deployed** | Follow [DEPLOY.md](DEPLOY.md); record the URL in `submission.json` and Devpost |
-| Open-source licence | MIT `LICENSE` at the root | Push and confirm GitHub shows MIT |
+| Working Qloo agent application | Backend tests and all 14 held-evidence trial briefs verified on 25 October 2026 | Keep the hosted service running through judging |
+| Public, usable demo | [Public demo](https://cultureforge-ai.tail601a7c.ts.net) passes release and smoke checks; URL recorded in `submission.json` | Include this URL in Devpost and verify from a separate network |
+| Open-source licence | Public GitHub repository displays MIT | Push final audited changes before submission |
 | Description | Draft below | Paste it, then check every sentence against the deployed build |
-| Eligibility and asset rights | Need your personal confirmation | Review the rules and [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md); set the two confirmation fields in `submission.json` |
-| Judges can use it without an account | The studio has no login | Check it in a private window on the hosted URL |
+| Eligibility and asset rights | Owner confirmations recorded in `submission.json` | Ensure the declarations still reflect your review of the rules and [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) |
+| Judges can use it without an account | Public browser journey opens the studio and a held example without a login | Keep access public through judging |
 
 ## Devpost text
 
@@ -35,7 +35,7 @@ that was never given the chance to be wrong.
 ### What it does
 
 A strategist enters a business category, a specific business idea, an audience, a location and a planning budget, or
-picks one of three prepared briefs that open instantly from held Qloo evidence. CultureForge:
+picks one of 14 prepared trial briefs backed by held Qloo evidence. CultureForge:
 
 1. resolves the audience into Qloo tags, retrieves up to ten local places, and
    sends the same tags to other domains (artists, films, brands) with no
@@ -106,9 +106,11 @@ React, TypeScript, Vite, Tailwind CSS, Vercel AI Gateway.
 
 ## Before you press submit
 
-1. Deploy ([DEPLOY.md](DEPLOY.md)), switch to `RUN_PROFILE=judging`, then
-   prewarm and smoke-test ([JUDGING_DAY.md](JUDGING_DAY.md)).
+1. Keep the deployed service on `RUN_PROFILE=judging` and available through
+   judging; recheck health and held evidence ([JUDGING_DAY.md](JUDGING_DAY.md)).
 2. Click through the [demo script](DEMO.md) on the hosted URL in a private
    window.
-3. Record the URL in `submission.json` and run `npm run check:release`.
-4. Confirm eligibility and asset rights, push, and submit to the correct event.
+3. Run `npm run check:release` and copy the recorded public demo, repository
+   and video URLs from `submission.json` into Devpost.
+4. Push the final audited changes and submit to the correct event. Record the
+   resulting Devpost project URL in `submission.json`.

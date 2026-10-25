@@ -101,7 +101,7 @@ export function ExecutiveBrief({ result, ordered, challenge, challenging, onInsp
             </li>
             <li>
               <b>Tested · {challenge ? 'rules' : 'not run yet'}</b>
-              <span>{difference.pushback.text}{difference.agent && difference.agent.rejected > 0 ? ` ${difference.agent.rejected} model claim${difference.agent.rejected === 1 ? ' was' : 's were'} rejected by the citation check and are listed under the agent outcome.` : ''}</span>
+              <span>{difference.pushback.text}{difference.agent && difference.agent.rejected > 0 ? ` ${difference.agent.rejected} model claim${difference.agent.rejected === 1 ? ' was' : 's were'} rejected by the citation check. See the agent outcome for details.` : ''}</span>
             </li>
           </ul>
         </div>

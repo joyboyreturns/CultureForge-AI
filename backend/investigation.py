@@ -20,7 +20,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from .models import ProjectRequest
-from .providers import QlooHarnessError, QlooHarnessProvider
+from .providers import QlooHarnessError, QlooHarnessProvider, mark_reused
+from .evidence_store import canonical_key, get_store
 
 #: The facets an investigation can open. Each is one Qloo workflow.
 FACETS = ('geography', 'tags', 'demographics', 'describe', 'trends')
@@ -120,16 +121,21 @@ def investigate(project: ProjectRequest, direction_id: Optional[str], entity_ids
     spent = 0
 
     for facet in chosen:
+        operation, payload = _call_for(facet, provider, target, entity_ids, within)
         try:
-            envelope, cached, requests = provider.run_workflow_cached(*_call_for(
-                facet, provider, target, entity_ids, within))
+            envelope, cached, requests = provider.run_workflow_cached(operation, payload)
         except QlooHarnessError as exc:
             tools.append({'facet': facet, 'workflow': _workflow_for(facet), 'status': 'error',
                           'detail': str(exc), 'cached': False, 'resultCount': 0})
             limitations.append(f'{FACET_QUESTIONS[facet]} — Qloo could not answer this: {exc}')
             continue
         spent += requests
-        execution = envelope.get('execution') if isinstance(envelope.get('execution'), dict) else {}
+        trace = provider._trace_event(f'investigate-{facet}', operation, envelope,
+                                      len(provider.rows(envelope)))
+        original_duration = trace.durationMs
+        if cached:
+            mark_reused(trace, FACET_QUESTIONS[facet])
+        acquired = get_store().stored_at(canonical_key(operation, payload))
         tool = {
             'facet': facet,
             'workflow': _workflow_for(facet),
@@ -137,10 +143,14 @@ def investigate(project: ProjectRequest, direction_id: Optional[str], entity_ids
             'status': envelope.get('status', 'ok'),
             'cached': cached,
             'transportRequests': requests,
-            'durationMs': execution.get('duration_ms') if isinstance(execution.get('duration_ms'), int) else None,
+            'durationMs': trace.durationMs,
+            'originalDurationMs': original_duration if cached else None,
             'resultCount': len(envelope.get('results') or []) if isinstance(envelope.get('results'), list) else 0,
-            'acquiredAt': _now(),
+            'acquiredAt': (datetime.fromtimestamp(acquired, timezone.utc).isoformat()
+                           if acquired is not None else (None if cached else _now())),
         }
+        if cached:
+            tool['detail'] = trace.detail
         tools.append(tool)
 
         if facet == 'geography':

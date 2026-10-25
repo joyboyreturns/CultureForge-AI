@@ -15,6 +15,8 @@ willingness to pay.
 
 **Demo video:** [Watch it on YouTube](https://youtu.be/D3INYPbqVyk)
 
+**Live demo:** [Open CultureForge AI](https://cultureforge-ai.tail601a7c.ts.net)
+
 **A prototype.** Where Qloo doesn't have enough data for an idea in a place, CultureForge says so plainly instead of inventing an answer.
 
 **Try it in the first minute:** choose from **14 trial briefs** or enter your own
@@ -240,8 +242,9 @@ answered.
 
 ## Quick start
 
-**Hosted demo:** not deployed yet. [docs/DEPLOY.md](docs/DEPLOY.md) has the
-steps; the URL goes here and in `submission.json`.
+**Hosted demo:** [Open the public studio](https://cultureforge-ai.tail601a7c.ts.net).
+No account is required. Choose a prepared brief to reuse held Qloo evidence.
+[docs/DEPLOY.md](docs/DEPLOY.md) describes how to host your own instance.
 
 **Local** (Node 22.19+, Python 3.10+, a Qloo hackathon key):
 
