@@ -1,42 +1,54 @@
-# CultureForge AI — ElevenLabs voice-over (Adam)
+# CultureForge AI — voice-over for Google Gemini TTS
 
-Clip order is the file order in `clips/` (01 → 12, about 3:45). Each block below is **one audio file**: paste the text
-exactly as shown (the `<break … />` tags are pauses), generate it, then place the audio on the timeline at the
-**Place at** time. Clip 7 has three blocks, because the map needs time to load between them.
+For **Gemini Flash TTS**. The tag rules below come from Google's documentation for **Gemini 3.1 Flash TTS**, the newest I could find; you are on 3.8, which I
+could not find documentation for, so run the tag test below before relying on anything. The earlier ElevenLabs script is kept as `VOICEOVER_ELEVENLABS.md`; do not mix them,
+because ElevenLabs `<break>` tags are not Google's syntax.
 
-## Settings for Adam
+Clip order is the file order in `clips/` (01 → 12, about 3:45). Each block is **one audio file**: paste the text exactly as shown into the
+text box, put the style prompt below into the prompt (style instructions) box, generate, and place the audio on the timeline at **Place at**.
+Clip 7 has three blocks, because the map needs time to load between them.
 
-| Setting | Value |
-|---|---|
-| Model | **Multilingual v2** (or Turbo v2.5). `<break>` tags work on both. *Not* Eleven v3, which ignores them: there, replace each break with ` ... ` |
-| Stability | 60 (steady, announcer-like; lower sounds more dramatic and less consistent between clips) |
-| Similarity | 80 |
-| Style exaggeration | 10 (higher can make Adam over-act) |
-| Speaker boost | On |
-| Speed | **0.85** for every clip (measured, see below) |
+## Tag rules (from Google's documentation)
 
-## Spelling used in the voice text (so Adam says it right)
+- Tags go in **square brackets**, in English, exactly where the effect should happen.
+- **Never put two tags next to each other**; there is always text between them. Every block below follows this.
+- Pauses used here: `[short pause]` (about 0.25 s), `[medium pause]` (about 0.5 s), `[long pause]` (about 1 s). These lengths come from the Replicate model
+  page, not from Google; the first clip will show if they hold.
+- Also available, and not used on purpose in a judging video: `[laughs]`, `[whispers]`, `[gasp]`, mood tags such as `[determination]` and `[seriousness]`,
+  and pace tags `[slow]` and `[fast]`. If you try one and it is *spoken aloud*, delete it: some tags are read out loud.
+- There is no documented speed setting, so pace comes from the style prompt and the pauses.
 
-- **Qloo → "Clue"** (that is how it is pronounced). Use the real spelling in captions: see `CAPTIONS.md`.
-- **CultureForge AI → "Culture Forge A.I."**, **IDs → "I.D.s"**.
-- Pauses: commas are a short breath; `<break time="0.4s" />` is a clean beat; a longer one (0.8 s) is placed before a key
-  idea. There are no filler sounds ("um", "hmm"): on a judging video they read as unsure. Ask if you want them.
+## Style prompt (use the same one for every clip)
 
-## Pace (measured)
+```
+A deep, confident radio announcer: calm, warm and authoritative, like a documentary narrator introducing a serious new product. Pace: deliberate and unhurried, about 125 words a minute, with a clear breath between sentences. Never rushed. Pronounce the brand name "Kloo" (written Qloo in captions) exactly as "kloo", rhyming with "blue". It is never "Claude" and never "clue". Say "A.I." as the two letters A and I.
+```
 
-Adam at speed 1.00 read clip 1 in **18.0 s**: 48 words plus 1.2 s of pauses, about 171 words a minute. That is faster than the
-clip needs, so every block below is timed for **speed 0.85** (about 145 words a minute). Use the same speed on all twelve clips
-so the voice sounds consistent.
+Voice: pick a deep, steady one. From memory, not verified here: **Charon** (informative), **Orus** (firm) or **Algenib** (gravelly) suit an announcer.
 
-Generate clip 1 again at 0.85. It should come out near **21 s**. Then:
+## Pronunciation: why it said "Claude"
 
-- Within ±1 s of the *Voice length* shown: carry on with the rest.
-- Still too short: try 0.80, but check the tightest clips (see the slack line under each block).
-- Too long: use 0.90.
-- Anything else: tell me the length and I will rescale every block.
+Gemini TTS is a language model, not a rule-based voice, and there is no pronunciation tag. It tends to "correct" an unusual word toward a familiar
+one, and "Clue" in a technology script became "Claude". The voice text now spells it **Kloo**, and the style prompt says how to say it.
+Run this 15-second test before generating anything else. Listen for three things: the name sounds like "kloo", the pauses are real, and **no tag is read aloud**:
 
-Slack is the silence left at the end of the clip. Every clip keeps at least 1 s of slack at 0.85, and the pauses are fixed
-lengths, so they do not change with speed.
+```
+Kloo. [short pause] Kloo's data. [medium pause] Nine Kloo workflows. [long pause] Culture Forge A.I.
+```
+
+If "Kloo" is wrong, try these in order: **Kloo-** (no), then **Cloo**, then **Klew**. Use the winner everywhere (find and replace in this file).
+
+## Pace (measured, then planned)
+
+Clip 1 came out at about **18 s** with the first script, against a 22.7 s slot. This script is longer (more pauses, plus true details taken from the screen
+in clips 7, 9 and 10) and is planned to land every clip between 1 and 3 s before its end. Times below assume about 0.375 s a word, from your 18 s
+reading, plus the pauses. That is an estimate; **generate clip 1 first** and compare:
+
+- Within about 1 s of the *Voice length* shown: carry on.
+- More than 1.5 s short: turn every `[short pause]` into `[medium pause]` and every `[medium pause]` into `[long pause]` in that block (the "stretch dial"), then regenerate.
+- Too long: do the opposite, or delete a few `[short pause]` tags.
+- Still off: tell me the real length and I will rescale every block. If the voice ends up much faster or slower than planned, I will also retime the
+  Verdict and Layers diagrams so each part appears as the voice says it.
 
 ---
 
@@ -46,7 +58,7 @@ lengths, so they do not change with speed.
 **Place at 0.4 s** · voice length ≈ 21.0 s
 
 ```
-Every business idea starts as a guess about what people in a place will love. <break time="0.4s" /> Culture Forge A.I. puts that guess on trial. <break time="0.4s" /> Describe an idea, an audience, and a city. <break time="0.4s" /> We ask Clue what that audience gravitates to, then turn those signals into directions you can challenge.
+Every business idea starts as a guess, [short pause] about what people in a place will love. [long pause] Culture Forge A.I. puts that guess on trial. [medium pause] Describe an idea, [short pause] an audience, [short pause] and a city. [medium pause] We ask Kloo what that audience gravitates to, [short pause] then turn those signals into directions you can challenge.
 ```
 
 Ends at ≈ 21.4 s of 22.7 s · slack ≈ 1.3 s
@@ -56,52 +68,52 @@ Ends at ≈ 21.4 s of 22.7 s · slack ≈ 1.3 s
 ## 2. `02-diagram-compare.mp4` — 13.3 s
 *On screen: Diagram: ordinary model vs CultureForge on Qloo.*
 
-**Place at 0.5 s** · voice length ≈ 10.8 s
+**Place at 0.5 s** · voice length ≈ 10.9 s
 
 ```
-Ask a language model about a bakery, and you get fluent text with no sources. <break time="0.5s" /> Here, every direction must point back to evidence Clue returned.
+Ask a language model about a bakery, [short pause] and you get fluent text with no sources. [long pause] Here, [short pause] every direction must point back to evidence Kloo returned.
 ```
 
-Ends at ≈ 11.3 s of 13.3 s · slack ≈ 2.0 s
+Ends at ≈ 11.4 s of 13.3 s · slack ≈ 1.9 s
 
 ---
 
 ## 3. `03-studio.mp4` — 18.0 s
 *On screen: Studio, run the example, executive brief.*
 
-**Place at 0.5 s** · voice length ≈ 16.2 s
+**Place at 0.5 s** · voice length ≈ 15.5 s
 
 ```
-Here's a real brief: an artisan bakery in Tokyo, for early-morning commuters. <break time="0.5s" /> This demo replays evidence Clue returned earlier, so it opens instantly. <break time="0.5s" /> Every claim traces to a Clue place or tag, never an invented score.
+Here's a real brief: [short pause] an artisan bakery in Tokyo, [short pause] for early-morning commuters. [medium pause] This demo replays evidence Kloo returned earlier, [short pause] so it opens instantly. [medium pause] Every claim traces to a Kloo place or tag, [short pause] never an invented score.
 ```
 
-Ends at ≈ 16.7 s of 18.0 s · slack ≈ 1.3 s
+Ends at ≈ 16.0 s of 18.0 s · slack ≈ 2.0 s
 
 ---
 
 ## 4. `04-places.mp4` — 12.0 s
 *On screen: Places and signals, Qloo photos and numbers.*
 
-**Place at 0.5 s** · voice length ≈ 9.5 s
+**Place at 0.5 s** · voice length ≈ 9.8 s
 
 ```
-Real places Clue returned, with its own photos and numbers. <break time="0.4s" /> The figures are Clue's. The page says what it could not verify.
+Real places Kloo returned, [short pause] with its own photos and numbers. [long pause] The figures are Kloo's. [short pause] The page says what it could not verify.
 ```
 
-Ends at ≈ 10.0 s of 12.0 s · slack ≈ 2.0 s
+Ends at ≈ 10.2 s of 12.0 s · slack ≈ 1.8 s
 
 ---
 
 ## 5. `05-directions.mp4` — 11.0 s
 *On screen: Two directions with citations and limits.*
 
-**Place at 0.5 s** · voice length ≈ 9.0 s
+**Place at 0.5 s** · voice length ≈ 9.1 s
 
 ```
-From that evidence, Culture Forge composes directions. <break time="0.4s" /> Each names the places it rests on, what it claims, and what remains unproven.
+From that evidence, [short pause] Culture Forge composes directions. [medium pause] Each names the places it rests on, [short pause] what it claims, [short pause] and what remains unproven.
 ```
 
-Ends at ≈ 9.5 s of 11.0 s · slack ≈ 1.5 s
+Ends at ≈ 9.6 s of 11.0 s · slack ≈ 1.4 s
 
 ---
 
@@ -111,7 +123,7 @@ Ends at ≈ 9.5 s of 11.0 s · slack ≈ 1.5 s
 **Place at 0.7 s** · voice length ≈ 13.0 s
 
 ```
-Under the hood: Clue returns places, tags, and audiences. <break time="0.3s" /> Rules compose cited directions. <break time="0.3s" /> An optional model step comes last, and a validator rejects any claim without a Clue I.D.
+Under the hood: [short pause] Kloo returns places, tags, [short pause] and audiences. [medium pause] Rules compose cited directions. [medium pause] An optional model step comes last, [short pause] and a validator rejects any claim without a Kloo I.D.
 ```
 
 Ends at ≈ 13.7 s of 15.3 s · slack ≈ 1.6 s
@@ -121,89 +133,89 @@ Ends at ≈ 13.7 s of 15.3 s · slack ≈ 1.6 s
 ## 7. `07-map.mp4` — 36.0 s
 *On screen: Interest map, pick a venue, remove it.*
 
-**Place at 0.6 s — block A** · voice length ≈ 7.4 s · ends ≈ 8.0 s
+**Place at 0.6 s — block A** · voice length ≈ 11.2 s · ends ≈ 11.8 s
 
 ```
-Now, the same evidence on a real map. <break time="0.8s" /> Venues are pinned from the addresses Clue returned.
+Now, [short pause] the same evidence on a real map. [medium pause] Venues are pinned from the addresses Kloo returned. [medium pause] Nine of ten were placed. [short pause] One wasn't, and says why.
 ```
 
-**Place at 11.6 s — block B** · voice length ≈ 8.5 s · ends ≈ 20.1 s
+**Place at 12.4 s — block B** · voice length ≈ 7.6 s · ends ≈ 20.0 s
 
 ```
-Pick a venue, <break time="0.3s" /> and the panel says exactly how its pin was matched, and why it's connected to this audience.
+Pick a venue, [short pause] and the panel says how its pin was matched, [short pause] and why it's connected to this audience.
 ```
 
-**Place at 21.0 s — block C** · voice length ≈ 12.9 s · ends ≈ 33.9 s
+**Place at 21.0 s — block C** · voice length ≈ 13.1 s · ends ≈ 34.1 s
 
 ```
-Then ask the hard question: what happens without it? <break time="0.6s" /> Remove this bakery, and the directions are rebuilt from held evidence, with no new Clue request. <break time="0.4s" /> What changed is shown.
+Then ask the hard question: [short pause] what happens without it? [long pause] Remove this bakery, [short pause] and the directions are rebuilt from held evidence, [short pause] with no new Kloo request. [medium pause] What changed is shown.
 ```
 
-Ends at ≈ 33.9 s of 36.0 s · slack ≈ 2.1 s
+Ends at ≈ 34.1 s of 36.0 s · slack ≈ 1.9 s
 
 ---
 
 ## 8. `08-diagram-verdict.mp4` — 15.3 s
 *On screen: Diagram: how the evidence test can say no.*
 
-**Place at 0.4 s** · voice length ≈ 13.7 s
+**Place at 0.4 s** · voice length ≈ 13.4 s
 
 ```
-A tool that always agrees is decoration. This test has three outcomes. <break time="0.4s" /> Both checks pass: supported. <break time="0.3s" /> A check is missing: unproven. <break time="0.3s" /> A check fails: contested. <break time="0.3s" /> Re-anchor, and test again.
+A tool that always agrees is decoration. [short pause] This test has three outcomes. [medium pause] Both checks pass: [short pause] supported. [short pause] A check is missing: [short pause] unproven. [short pause] A check fails: [short pause] contested. [short pause] Re-anchor, [short pause] and test again.
 ```
 
-Ends at ≈ 14.1 s of 15.3 s · slack ≈ 1.2 s
+Ends at ≈ 13.8 s of 15.3 s · slack ≈ 1.5 s
 
 ---
 
 ## 9. `09-test.mp4` — 30.5 s
 *On screen: Evidence test runs: contested, order changed.*
 
-**Place at 0.6 s** · voice length ≈ 23.2 s
+**Place at 0.6 s** · voice length ≈ 27.5 s
 
 ```
-Let's run it on this brief. <break time="0.6s" /> Clue ranks the places, then compares their tags. <break time="0.5s" /> The lead direction's anchor lands in the bottom third of the places Clue ranked, so the verdict is <break time="0.3s" /> contested. And the order of directions changes. <break time="0.8s" /> It's a verdict about anchor fit in this sample, not about demand.
+Let's run it on this brief. [medium pause] Kloo ranks the places, [short pause] then compares their tags. [medium pause] The lead direction's anchor, [short pause] The Little Bakery, [short pause] ranks eighth of ten. [medium pause] So the verdict is, [medium pause] contested. [short pause] And the order of directions changes. [long pause] The brief named no demographic, [short pause] so the test uses a default one. [medium pause] It's a verdict about anchor fit in this sample, [short pause] not about demand.
 ```
 
-Ends at ≈ 23.8 s of 30.5 s · slack ≈ 6.7 s
+Ends at ≈ 28.1 s of 30.5 s · slack ≈ 2.4 s
 
 ---
 
 ## 10. `10-agent.mp4` — 25.7 s
 *On screen: Agent steps, refused steps, cited analysis.*
 
-**Place at 0.6 s** · voice length ≈ 20.8 s
+**Place at 0.6 s** · voice length ≈ 22.6 s
 
 ```
-Behind it, a bounded agent plans up to eight steps over approved Clue workflows: tags, audiences, comparisons. <break time="0.5s" /> A step that cites anything it hasn't observed is refused, and shown as refused. <break time="0.5s" /> The final analysis must cite Clue I.D.s from this run, and says what remains unproven.
+Behind it, [short pause] a bounded agent plans up to eight steps over approved Kloo workflows: [short pause] tags, audiences, comparisons. [medium pause] Six ran. [short pause] Two cited things it had not observed, [short pause] so they were refused. [medium pause] The final analysis must cite Kloo I.D.s from this run. [medium pause] Its conclusion is modest: [short pause] the evidence supports only a category-level reading.
 ```
 
-Ends at ≈ 21.4 s of 25.7 s · slack ≈ 4.3 s
+Ends at ≈ 23.2 s of 25.7 s · slack ≈ 2.5 s
 
 ---
 
 ## 11. `11-diagram-layers.mp4` — 13.3 s
 *On screen: Diagram: three layers kept apart.*
 
-**Place at 0.4 s** · voice length ≈ 11.3 s
+**Place at 0.4 s** · voice length ≈ 11.1 s
 
 ```
-Three layers, kept apart: <break time="0.3s" /> what Clue returned, <break time="0.3s" /> what rules decided, <break time="0.3s" /> and what a model wrote. <break time="0.5s" /> If the model fails, the rule-based answer stands.
+Three layers, [short pause] kept apart: [medium pause] what Kloo returned, [medium pause] what rules decided, [medium pause] and what a model wrote. [medium pause] If the model fails, [short pause] the rule-based answer stands.
 ```
 
-Ends at ≈ 11.7 s of 13.3 s · slack ≈ 1.6 s
+Ends at ≈ 11.5 s of 13.3 s · slack ≈ 1.8 s
 
 ---
 
 ## 12. `12-close.mp4` — 12.2 s
 *On screen: Landing hero, cursor to Try the demo.*
 
-**Place at 0.5 s** · voice length ≈ 9.5 s
+**Place at 0.5 s** · voice length ≈ 9.8 s
 
 ```
-Culture Forge A.I.: Clue's cultural intelligence, as evidence that can disagree with your idea. <break time="0.4s" /> Open source. Nine Clue workflows. Try the demo.
+Culture Forge A.I.: [short pause] Kloo's cultural intelligence, [short pause] as evidence that can disagree with your idea. [medium pause] Open source. [short pause] Nine Kloo workflows. [short pause] Try the demo.
 ```
 
-Ends at ≈ 10.0 s of 12.2 s · slack ≈ 2.2 s
+Ends at ≈ 10.2 s of 12.2 s · slack ≈ 1.9 s
 
 ---

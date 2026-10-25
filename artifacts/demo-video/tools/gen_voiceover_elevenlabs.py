@@ -109,13 +109,13 @@ for i, (fn, dur, desc, row, end, slack) in enumerate(rows, 1):
         label = f" — block {'ABC'[j]}" if len(row) > 1 else ""
         md += [f"**Place at {at:.1f} s{label}** · voice length ≈ {e:.1f} s" + (f" · ends ≈ {at+e:.1f} s" if len(row) > 1 else ""), "", "```", tts(parts), "```", ""]
     md += [f"Ends at ≈ {end:.1f} s of {dur:.1f} s · slack ≈ {slack:.1f} s", "", "---", ""]
-open('/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/VOICEOVER.md', 'w').write('\n'.join(md))
+open('/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/VOICEOVER_ELEVENLABS.md', 'w').write('\n'.join(md))
 
 cap = ["# CultureForge AI — captions text (real spellings)", "",
        "Use this for burned-in captions or subtitles. It is the same words as `VOICEOVER.md`, with the real spellings and no pauses.", ""]
 for i, (fn, dur, desc, row, end, slack) in enumerate(rows, 1):
     cap += [f"**{i}. `{fn}`**", ""] + [clean(p) for _, _, p in row] + [""]
-open('/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/CAPTIONS.md', 'w').write('\n'.join(cap))
+open('/Users/vincent/Documents/CultureForge AI/artifacts/demo-video/CAPTIONS_ELEVENLABS.md', 'w').write('\n'.join(cap))
 
 print(f"{'clip':26} {'len':>5} {'ends':>6} {'slack':>6}")
 for fn, dur, desc, row, end, slack in rows: print(f"{fn:26} {dur:5.1f} {end:6.1f} {slack:6.1f}" + ("   <-- TIGHT" if slack < 1.0 else ""))

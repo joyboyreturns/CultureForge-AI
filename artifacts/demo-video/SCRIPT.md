@@ -27,10 +27,9 @@ All clips are 1920×1080, 30 fps, H.264.
 | 11 | `11-diagram-layers.mp4` | 13.3 s | **Diagram:** three layers kept apart |
 | 12 | `12-close.mp4` | 12.2 s | Landing hero, cursor to "Try the demo" |
 
-**The words to read are in `VOICEOVER.md`** (ElevenLabs-ready, with pauses and the exact time to place each audio
-file) and **`CAPTIONS.md`** (the same words with the real spellings, for burned-in captions). They replace the
-narration that used to be in this file. The voice text is about 420 words and is timed (for Adam at speed 0.85) so that every clip keeps at
-least 1 s of silence at the end.
+**The words to read are in `VOICEOVER.md`** (written for Google Gemini TTS, with square-bracket pause tags, a style
+prompt, and the exact time to place each audio file) and **`CAPTIONS.md`** (the same words with the real spellings, for
+burned-in captions). `VOICEOVER_ELEVENLABS.md` is the earlier ElevenLabs version, kept only for reference; do not mix them.
 
 ## If you need it shorter
 
