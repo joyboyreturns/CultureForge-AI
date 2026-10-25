@@ -686,3 +686,12 @@ body { font-family: var(--font-sans); color: var(--text); letter-spacing: -0.005
 .results-page .empty-state .outcome-missing { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.8; }
 .empty-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .run-expectation { margin-bottom: 26px !important; }
+
+/* The reword form: the reader corrects the idea where the answer stopped. */
+.reword-idea { display: grid; gap: 8px; width: 100%; max-width: 74ch; margin-top: 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; }
+.reword-idea label strong { font-size: 14px; }
+.reword-idea p { margin: 0; }
+.reword-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.reword-row input { flex: 1 1 260px; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--text); font: inherit; }
+.reword-row .clarification-suggestion { margin-top: 0; }
+.reword-problem { color: var(--coral, #e0735a); font-size: 13px; }

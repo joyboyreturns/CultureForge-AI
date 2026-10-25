@@ -152,3 +152,23 @@ def test_the_narrow_fallback_is_promising_not_supported():
     cat = classify_brief('Retail', 'Bubble tea shop', '')
     out = build_outcome(category=cat, evidence=[_Item('entity', 'direct_business')], concepts=[D()])
     assert out['state'] == 'promising_unverified' and out['missing']
+
+
+def test_every_answer_without_a_direction_offers_to_reword_the_idea():
+    """An answer that could not read the idea must let the reader correct it, whichever way it fell short."""
+    known = classify_brief('Retail', 'Ice cream parlour', '')
+    unknown = classify_brief('Retail', 'zzqx', '')
+    for category, evidence in ((known, []), (known, [_Item('entity', 'cultural_attraction')]),
+                               (known, [_Item('entity', 'unverified_geography')]), (unknown, [])):
+        out = build_outcome(category=category, evidence=evidence, concepts=[])
+        actions = [item['action'] for item in out['recovery']]
+        assert actions.count('reword_idea') == 1, (out['state'], actions)
+        assert all(item['label'] for item in out['recovery'])
+
+
+def test_a_supported_answer_and_a_provider_failure_do_not_offer_to_reword():
+    cat = classify_brief('Retail', 'Ice cream parlour', '')
+    supported = build_outcome(category=cat, evidence=[_Item('entity', 'direct_business')], concepts=[object()])
+    assert 'reword_idea' not in [item['action'] for item in supported['recovery']]
+    failed = build_outcome(category=cat, evidence=[], concepts=[], provider_failed=True)
+    assert [item['action'] for item in failed['recovery']] == ['retry']

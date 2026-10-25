@@ -48,8 +48,10 @@ def build_outcome(*, category, evidence, concepts, provider_failed: bool = False
     recovery: list[dict] = []
     if category.specificity == 'unknown' or not category.family:
         missing.append('A business category CultureForge could resolve from the idea')
+        recovery.append({'action': 'reword_idea', 'label': 'Reword the idea'})
         recovery.append({'action': 'name_business', 'label': 'Name the main kind of business'})
     else:
+        recovery.append({'action': 'reword_idea', 'label': 'Reword the idea'})
         if not counts.get('direct_business'):
             missing.append(f'Returned places that are themselves a {category.matched or category.family} business')
             recovery.append({'action': 'change_audience', 'label': 'Broaden or change the audience'})

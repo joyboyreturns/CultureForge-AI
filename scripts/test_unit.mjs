@@ -206,3 +206,25 @@ console.log('[ok] The idea reading is shown only when informative, and exports e
   assert.match(wild, /@media \(max-width: 1180px\) \{\s*\.ox-body \{ grid-template-columns: minmax\(0, 1fr\); \}/, 'the map keeps its width at laptop widths');
   console.log('[ok] The map is reachable from the places section, and laptop widths neither overflow nor squeeze the map.');
 }
+
+// ---- rewording the idea: the way out of an answer that could not read it
+const { checkReword, IDEA_MAX_LENGTH } = (await loadTs('../src/rewordIdea.ts')).module;
+const idea = 'Pay-by-the-hour darkroom for film photographers';
+const refused = (next) => { const r = checkReword(idea, next); assert.equal(r.ok, false, `should refuse: ${JSON.stringify(next)}`); assert.ok(r.message.length > 10, 'a refusal must say why'); return r };
+for (const bad of ['', '   ', 'ab', ' a ', '\n\t']) refused(bad);
+refused(idea);                                   // unchanged
+refused(`  ${idea.toUpperCase()}  `);               // unchanged apart from case and padding
+refused('Pay-by-the-hour   darkroom  for film\nphotographers'); // unchanged apart from whitespace
+refused('x'.repeat(IDEA_MAX_LENGTH + 1));
+assert.match(refused('x'.repeat(IDEA_MAX_LENGTH + 5)).message, /165/, 'the message states the real length');
+const good = checkReword(idea, '  Darkroom   cafe\nfor film photographers ');
+assert.deepEqual(good, { ok: true, idea: 'Darkroom cafe for film photographers' });
+assert.equal(checkReword(idea, 'x'.repeat(IDEA_MAX_LENGTH)).ok, true, 'exactly the limit is allowed');
+assert.equal(checkReword('', 'Bakery').ok, true, 'an empty original accepts any real idea');
+assert.equal(checkReword(idea, 'Café 🍕 pizza — 寿司').ok, true, 'non-Latin text and emoji are ideas too');
+const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const clar = readFileSync(new URL('../src/components/Clarification.tsx', import.meta.url), 'utf8');
+assert.match(app, /<RewordIdea current=\{result\.project\.businessIdea/, 'the empty answer offers the reword form');
+assert.match(app, /onRewordIdea=\{\(idea\) => \{ void create\(\{ \.\.\.result\.project, businessIdea: idea \}\)/, 'rewording re-runs the same brief with only the idea changed');
+assert.match(clar, /<RewordIdea current=\{idea\} onReword=\{onUseIdea\}/, 'the clarification offers the reword form');
+console.log('[ok] Rewording refuses empty, tiny, over-long and unchanged ideas with a reason, normalises whitespace, and is wired into both dead ends.');

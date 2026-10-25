@@ -1208,7 +1208,7 @@ class QlooHarnessProvider(CultureProvider):
                 notice = (
                     'Qloo does not have enough data for this idea in this place: what it returned did not include '
                     'relevant businesses we could build a direction on. CultureForge says so instead of guessing. '
-                    'Try a larger city, a broader kind of business, or a different audience.'
+                    'Try a larger city, a broader kind of business, a different audience, or reword the idea.'
                 )
 
         signals_used = ((recommendations.get('query_intent') or {}).get('signals') or {}).get('tags')

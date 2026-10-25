@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import type { ClarificationAsk } from '../api'
+import { RewordIdea } from './RewordIdea'
 
 const HEADLINE: Record<string, string> = {
   UNSUPPORTED_CATEGORY: 'Qloo has no category for this business.',
@@ -8,8 +9,9 @@ const HEADLINE: Record<string, string> = {
 }
 
 /** Every button here does something: it changes the brief and runs it, or puts the cursor where the fix is. */
-export function Clarification({ ask, onUseIdea, onUseLocation, onEditField }: {
+export function Clarification({ ask, idea, onUseIdea, onUseLocation, onEditField }: {
   ask: ClarificationAsk
+  idea: string
   onUseIdea: (value: string) => void
   onUseLocation: (value: string) => void
   onEditField: (field: 'businessIdea' | 'location' | 'audience') => void
@@ -24,5 +26,6 @@ export function Clarification({ ask, onUseIdea, onUseLocation, onEditField }: {
       {ask.actions?.map(action => <button type="button" className="clarification-suggestion" key={action.value} onClick={() => onUseIdea(action.value)}>{action.label}</button>)}
       {field && <button type="button" className="clarification-edit" onClick={() => onEditField(field)}>{field === 'location' ? 'Change the location' : field === 'audience' ? 'Edit the audience' : 'Edit the business idea'} <ArrowRight size={13}/></button>}
     </div>
+    {(field === 'businessIdea' || ask.code === 'UNSUPPORTED_CATEGORY' || ask.code === 'AMBIGUOUS_IDEA') && <RewordIdea current={idea} onReword={onUseIdea}/>}
   </div>
 }
