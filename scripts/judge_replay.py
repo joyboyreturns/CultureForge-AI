@@ -27,7 +27,7 @@ def call(base, route, body=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', default='http://127.0.0.1:8011')
-    parser.add_argument('--json', default='artifacts/validation/judge-replay.json')
+    parser.add_argument('--json', default='.data/judge-replay.json')
     args = parser.parse_args()
     base = args.base_url.rstrip('/')
     _, health = call(base, '/api/health')

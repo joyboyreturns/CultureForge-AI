@@ -25,7 +25,7 @@ available. A floating card follows the continuing research; when it finishes,
 the preview updates to the full report with a completion message.
 London's fresh vegan-restaurant test produced its initial answer in about
 **11 seconds**. This is a measured example, not a latency guarantee; the full
-analysis continues in the background. See the [verification record](docs/JUDGE_SCENARIOS.md).
+analysis continues in the background.
 
 ![The landing page: put the idea on trial](docs/screenshots/landing.jpg)
 
@@ -129,7 +129,7 @@ optional model on: a wellness studio for *mindful professionals who want a slow 
 
 *It works on a phone: the section bar scrolls to the open section, and the menu lists every section.*
 
-The studio assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [verified implementation review](docs/IMPLEMENTATION_REVIEW.md) and [demo journey](docs/DEMO.md).
+The studio assesses reference relevance, resolves explicit business categories, and exposes an initial answer before optional model work. See the [demo journey](docs/DEMO.md).
 
 ## How a brief becomes a verdict
 
@@ -381,6 +381,5 @@ hospitality strategy team, five scoped briefs and a 30-day review. Pricing
 and customer value are unvalidated; commercial data terms are a prerequisite.
 The landing page leads with **Why Qloo** and a demo. A quieter **For teams**
 footer link offers the team-specific pilot discussion brief.
-See the [business model](docs/BUSINESS.md), [investment pitch](docs/INVESTOR_BRIEF.md)
-and [release audit](docs/RELEASE_AUDIT.md).
+See the [business model](docs/BUSINESS.md).
 

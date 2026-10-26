@@ -25,8 +25,7 @@
 - Added Berlin, Mexico City and Vienna to a 14-brief trial library, exposed on
   overview/results with category filters and in a scrollable creation list.
 - Package their real responses without fetching or inventing replacement data.
-- Regression suite: 444 passed. See `docs/JUDGE_SCENARIOS.md` for observations,
-  scope and the distinction between a timed-out request and genuinely empty evidence.
+- Regression suite: 444 passed.
 
 ## Unreleased — judge input hardening, 2026-10-23
 
@@ -39,7 +38,6 @@
 - Stop planning after three consecutive invalid agent requests, and explain
   that audience comparisons require place entities rather than tag URNs.
 - Make the live one-brief probe fail its exit status when the run fails.
-- See `docs/JUDGE_SCENARIOS.md` for evidence, tests and remaining limitations.
 
 ## Unreleased — hackathon first presentation, 2026-10-23
 
@@ -62,8 +60,7 @@
   cost constraints and investment milestones; prices and results remain labeled hypotheses.
 - Updated the contract checker to recognise the existing agent, intent,
   address, coordinates and running-state fields.
-- Rechecked the held-evidence HTTP journey with Qloo and model calls disabled;
-  see `docs/RELEASE_AUDIT.md` for results and remaining public-release gates.
+- Rechecked the held-evidence HTTP journey with Qloo and model calls disabled.
 
 ## Unreleased — the studio takes the landing page's look, 2026-10-23
 
@@ -105,8 +102,7 @@
 
 ## Unreleased — live-run hardening, 2026-10-23
 
-Every item below was found by running a real brief against Qloo and the configured model (see
-docs/LIVE_MATRIX.md), and each has a test that fails without the fix.
+Every item below was found by running a real brief against Qloo and the configured model, and each has a test that fails without the fix.
 
 - **Held demos no longer replay a failed agent.** An agent loop that ended because Qloo was switched off,
   rate-limited or out of quota is never held, and one already held is discarded and re-run. The featured
@@ -140,7 +136,6 @@ docs/LIVE_MATRIX.md), and each has a test that fails without the fix.
 - The picker offers only the three featured demos; the eight weaker prepared briefs stay in the JSON for
   prewarming. The Create form says what kind of idea works and how long a new one takes. The guided tour gains
   a step for the Qloo-contribution strip.
-- `scripts/brief_probe.py`: one brief through the real research-run path with timings and cost.
 
 ## Unreleased — business intent and tag resolution
 

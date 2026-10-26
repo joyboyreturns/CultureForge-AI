@@ -1,9 +1,0 @@
-INPUT   {"businessType": "Food & beverage", "businessIdea": "Vegan restaurant", "audience": "Design-conscious young professionals who enjoy plant-based food", "location": "Berlin, Germany", "budget": "$25k – $50k", "objectives": ["Build a loyal community"]}
-  +   3.0s  resolve-audience             ok       Qloo find_tags → /v2/tags
-  +   3.0s  resolve-business-category    ok       Selected a returned Qloo tag (exact); this is a category filter, not an audience seed. (reused from cache — th
-
-STATUS failed  error=PROVIDER_UNAVAILABLE  total=63.6s  firstEvent=3.0s  partialAnswer=-1.0s  timings={}
-COST   transportRequests=1 workflowCalls=3
-ERROR   Qloo did not answer in time (a network error or timeout). Nothing was lost and nothing was invented; held evidence is still available, and trying again may work.
-PARTIAL: 0 direction(s), 0 place(s)
-COUNTERS qloo calls today 241 -> 243; model calls today 20 -> 20

@@ -142,8 +142,6 @@ with customer permission, learning which experiments lead to useful decisions.
 - Implement billing only after the price and delivery cost are validated.
 - Do not sell cultural affinity as demand forecasting or site underwriting.
 
-See [INVESTOR_BRIEF.md](INVESTOR_BRIEF.md) for the pitch, proposed use of funds
-and validation milestones.
 
 ## What would change this
 

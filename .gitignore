@@ -30,3 +30,11 @@ coverage.xml
 
 # Detailed final-audit logs and deployment metadata stay local.
 /artifacts/validation/final-2026-10-25/
+
+# Local agent tooling
+/AGENTS.md
+/scripts/graphify_mcp.sh
+/scripts/vault_query.py
+/artifacts/
+/devpost-gallery/
+/thumbnail/

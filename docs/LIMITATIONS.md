@@ -55,11 +55,9 @@
 - **The optional model reading is a proposal.** It runs at most once per idea, only when the rules cannot read
   it, and its search strings are validated; every tag still comes from Qloo.
 - **Unverified here:** how many niche categories Qloo's place tags actually cover per city. The offline tests
-  script Qloo; only the live matrix in `docs/IMPLEMENTATION_REVIEW.md` records real observations.
+  script Qloo.
 
 ## Limits found in live runs (23 October 2026)
-
-See [LIVE_MATRIX.md](LIVE_MATRIX.md) for the inputs and outputs.
 
 - **Qloo's category filter is loose for sparse cities.** A "bouldering gym" in Denver returned a Chicago
   gym and parks; a "tea house" in Boise returned drive-thru coffee chains and a Portland garden. The

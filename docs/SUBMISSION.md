@@ -97,17 +97,13 @@ notebook captures an owner, review date, spending cap and proceed/stop criteria.
 Pricing, willingness to pay and delivery economics remain unvalidated.
 Commercial Qloo terms are required before accepting a paid pilot. The
 [business model](BUSINESS.md) defines customer interviews and repeat-purchase
-gates; the [investor brief](INVESTOR_BRIEF.md) proposes milestones for a
-$25,000 investment. Production authentication and tenant isolation precede
+gates. Production authentication and tenant isolation precede
 client-sensitive use.
 
 **Built with:** Qloo Hackathon Kit, Python, FastAPI, Pydantic, SQLite, fpdf2,
 React, TypeScript, Vite, Tailwind CSS, Vercel AI Gateway.
 
 ## Before you press submit
-
-See the [final home-PC audit](FINAL_SUBMISSION_AUDIT.md) for verified results,
-remaining limits and the deployed image record.
 
 1. Keep the deployed service on `RUN_PROFILE=judging` and available through
    judging; recheck health and held evidence ([JUDGING_DAY.md](JUDGING_DAY.md)).

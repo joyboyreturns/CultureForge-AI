@@ -13,7 +13,7 @@ function read(path) { return readFileSync(new URL(path, root), 'utf8'); }
 
 for (const path of ['LICENSE', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES.md', 'Dockerfile',
   'docker-compose.yml', 'render.yaml', 'docs/DEPLOY.md', 'docs/SUBMISSION.md', 'docs/DEMO.md',
-  'docs/JUDGING_DAY.md', 'docs/BUSINESS.md', 'docs/INVESTOR_BRIEF.md', 'docs/RELEASE_AUDIT.md', 'docs/EVIDENCE_POLICY.md', 'docs/ARCHITECTURE.md',
+  'docs/JUDGING_DAY.md', 'docs/BUSINESS.md', 'docs/EVIDENCE_POLICY.md', 'docs/ARCHITECTURE.md',
   'docs/API.md', 'docs/LIMITATIONS.md', 'fonts/OFL.txt', 'dist/index.html', 'dist/studio/index.html']) {
   check(`Packaged: ${path}`, existsSync(new URL(path, root)));
 }
