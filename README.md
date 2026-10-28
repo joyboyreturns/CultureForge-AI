@@ -370,16 +370,16 @@ The full list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md). Also see
 [SUBMISSION](docs/SUBMISSION.md), [CHANGELOG](CHANGELOG.md) and
 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). MIT licensed.
 
+## Business direction
+
+CultureForge is aimed at **hospitality brands, creative agencies and strategy
+teams** who have to defend a concept to a client or a committee. The next step
+is a paid design-partner pilot: one team, a small set of scoped briefs, and a
+review of whether the cited, challengeable evidence is used in a real concept
+review. Pricing and customer value are unvalidated, and commercial Qloo data
+terms must be agreed before any paid use. See the
+[business model](docs/BUSINESS.md).
+
 ## Thank you
 
 Thank you to **Qloo** for providing access to its API and for hosting this hackathon, and to everyone who made it possible. Thanks as well to the tools and services this project is built on: the Qloo harness, Vercel AI Gateway, FastAPI, React and Vite, MapLibre, and the open-source community behind them. Your support made CultureForge AI possible.
-
-## Business direction
-
-**Commercial direction:** a proposed $1,500 design partner pilot for one
-hospitality strategy team, five scoped briefs and a 30-day review. Pricing
-and customer value are unvalidated; commercial data terms are a prerequisite.
-The landing page leads with **Why Qloo** and a demo. A quieter **For teams**
-footer link offers the team-specific pilot discussion brief.
-See the [business model](docs/BUSINESS.md).
-

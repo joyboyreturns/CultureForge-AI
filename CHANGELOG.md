@@ -43,8 +43,7 @@
 
 - Replaced Pilot in desktop and mobile navigation with Why Qloo: a source,
   challenge and removal walkthrough connected to the working studio.
-- Made Try the demo the primary landing action. Commercial pilot details
-  remain accessible through the quieter For teams footer link.
+- Made Try the demo the primary landing action.
 - Removed the landing example's fixed promise of three directions; the
   composer returns only the directions its retrieved evidence supports.
 
