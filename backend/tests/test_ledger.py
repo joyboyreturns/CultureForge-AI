@@ -76,7 +76,7 @@ def test_a_legacy_json_ledger_is_imported_once_and_renamed():
     assert ledger.counts(ledger.QLOO) == (1, 2)
 
 
-def _worker(db_path: str, attempts: int, day_limit, results) -> None:
+def _worker(db_path: str, attempts: int, day_limit, out_path: str) -> None:
     ledger.DB_PATH = Path(db_path)
     granted = 0
     for _ in range(attempts):
@@ -85,20 +85,20 @@ def _worker(db_path: str, attempts: int, day_limit, results) -> None:
             granted += 1
         except ledger.BudgetExceeded:
             pass
-    results.put(granted)
+    Path(out_path).write_text(str(granted), encoding='utf-8')
 
 
 def _race(db_path: Path, processes: int, attempts: int, day_limit) -> int:
     context = multiprocessing.get_context('spawn')
-    results = context.Queue()
-    workers = [context.Process(target=_worker, args=(str(db_path), attempts, day_limit, results))
-               for _ in range(processes)]
+    outputs = [db_path.parent / f'worker-{i}.count' for i in range(processes)]
+    workers = [context.Process(target=_worker, args=(str(db_path), attempts, day_limit, str(outputs[i])))
+               for i in range(processes)]
     for worker in workers:
         worker.start()
     for worker in workers:
         worker.join(60)
         assert worker.exitcode == 0
-    return sum(results.get(timeout=5) for _ in workers)
+    return sum(int(output.read_text(encoding='utf-8')) for output in outputs)
 
 
 def test_concurrent_processes_lose_no_calls():

@@ -92,8 +92,9 @@ rather than hiding it.
 
 Test a proposed $1,500, 30-day design partner pilot with hospitality agency
 strategy teams: five scoped briefs, a concept review and a field experiment
-plan. The Pilot page prepares a downloadable discussion brief; the experiment
-notebook captures an owner, review date, spending cap and proceed/stop criteria.
+plan. The Business direction section and studio exports prepare a discussion
+brief; the decision notebook captures an owner, review date, spending cap and
+proceed/stop criteria.
 Pricing, willingness to pay and delivery economics remain unvalidated.
 Commercial Qloo terms are required before accepting a paid pilot. The
 [business model](BUSINESS.md) defines customer interviews and repeat-purchase

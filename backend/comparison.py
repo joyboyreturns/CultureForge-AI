@@ -186,19 +186,29 @@ def recompose(project, evidence_store=None, exclude_entity_ids: Optional[list[st
     tag_key = canonical_key('find_tags', brief_tags_payload(project.businessType, project.audience))
     store = evidence_store or get_store()
     tag_envelope = tag_envelope or store.get(tag_key)
+    if tag_envelope is None and seed_tag_ids:
+        tag_envelope = provider.confirmed_tag_envelope(
+            project.businessType, project.audience, seed_tag_ids)
     if tag_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
-    tags = [tag for row in provider.rows(tag_envelope) if (tag := provider.tag_id(row))][:3]
+    resolved_tags = [tag for row in provider.rows(tag_envelope) if (tag := provider.tag_id(row))]
+    tags = resolved_tags[:3]
     if seed_tag_ids:
-        selected = set(seed_tag_ids)
-        tags = [tag for tag in tags if tag in selected]
+        selected = [tag for tag in seed_tag_ids if tag]
+        selected_set = set(selected)
+        matched = [tag for tag in resolved_tags if tag in selected_set]
+        tags = (matched or selected)[:3]
         tag_envelope = _without(tag_envelope,
-                                {provider.tag_id(row) for row in provider.rows(tag_envelope)} - selected,
+                                {tag for row in provider.rows(tag_envelope)
+                                 if (tag := provider.tag_id(row)) and tag not in selected_set},
                                 provider)
     if not [tag for tag in tags if tag not in exclude_tag_ids]:
         raise QlooHarnessError('Every audience seed was removed, so there is nothing left to reason from.', code='INVALID_REQUEST')
     rec_key = canonical_key('recommend', brief_places_retrieval_payload(tags, project.location, project.businessIdea, evidence_store=store))
     rec_envelope = recommend_envelope or store.get(rec_key)
+    if rec_envelope is None and resolved_tags[:3] and resolved_tags[:3] != tags:
+        fallback_key = canonical_key('recommend', brief_places_retrieval_payload(resolved_tags[:3], project.location, project.businessIdea, evidence_store=store))
+        rec_envelope = store.get(fallback_key)
     if rec_envelope is None:
         raise QlooHarnessError('There is no cached evidence for this brief yet. Run the research first.', code='NO_CACHED_EVIDENCE')
     if retain_entity_ids is not None:

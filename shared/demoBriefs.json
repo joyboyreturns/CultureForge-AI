@@ -1,5 +1,5 @@
 {
-  "note": "The prepared example briefs. scripts/prewarm.py fetches their evidence ahead of time, the studio's example picker offers them, and the landing page runs the first one. Locations are city-level: neighbourhood names such as 'Greenpoint, Brooklyn' have returned no places from Qloo.",
+  "note": "The prepared example briefs. scripts/prewarm.py fetches their evidence ahead of time, the studio's example picker offers them, and the landing page runs the featured tokyo-morning-bakery brief. Locations are city-level: neighbourhood names such as 'Greenpoint, Brooklyn' have returned no places from Qloo.",
   "briefs": [
     {
       "id": "brooklyn-gen-z-cafe",

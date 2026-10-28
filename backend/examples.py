@@ -1,9 +1,9 @@
 """The prepared example briefs, and whether their evidence is already held.
 
 `shared/demoBriefs.json` is the one list: the studio's example picker offers
-it, the landing page runs its first brief, and `scripts/prewarm.py` fetches
-its evidence ahead of judging. Asking whether a brief is held reads the
-evidence store and never calls Qloo.
+it, the landing page runs the featured `tokyo-morning-bakery` brief, and
+`scripts/prewarm.py` fetches its evidence ahead of judging. Asking whether a
+brief is held reads the evidence store and never calls Qloo.
 """
 from __future__ import annotations
 

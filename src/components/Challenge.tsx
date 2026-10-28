@@ -124,9 +124,9 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
             {(history?.[entry.directionId]?.length ?? 0) > 0 && (
               <p className="challenge-history">
                 {(history?.[entry.directionId] ?? []).map((step) =>
-                  `${step.anchor} — ${step.verdict} (${step.rank}${step.rank === 1 ? 'st' : step.rank === 2 ? 'nd' : 'rd'})`).join('  →  ')}
+                  `${step.anchor} — ${step.verdict} (${ordinal(step.rank)})`).join('  →  ')}
                 {'  →  '}
-                <strong>{entry.anchor?.label} — {entry.verdict} ({index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : 'rd'})</strong>
+                <strong>{entry.anchor?.label} — {entry.verdict} ({ordinal(index + 1)})</strong>
               </p>
             )}
 
@@ -197,6 +197,13 @@ export function ChallengePanel({ challenge, onReanchor, onClose, history, savedA
       </ul>
     </section>
   )
+}
+
+function ordinal(n: number): string {
+  const mod100 = n % 100
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`
+  const suffix = n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th'
+  return `${n}${suffix}`
 }
 
 /** A small X, so this file does not need the whole icon set. */

@@ -233,14 +233,14 @@ and the `/data` paths.
 - **Health is not retrieval.** `/api/health` reports configuration, the
   profile, budgets and cache size without calling Qloo. Use the smoke test
   and a click-through to confirm real retrieval.
-- **Shared demo workspace.** Anonymous visitors share one workspace. Use
-  non-confidential example briefs.
+- **Public demo workspaces.** In `judging` mode each visitor gets a separate
+  workspace hashed from their client address; in `dev` mode anonymous requests
+  share `Local studio`. Still use non-confidential example briefs on any public
+  instance.
 
 ## Status of these instructions
 
-Not yet verified end to end. The Dockerfile, `docker-compose.yml`, the
-Ubuntu steps and `render.yaml` were written and reviewed, but no image was
-built and no Ubuntu machine was used, because the development machine had no
-Docker daemon. The smoke test was run against a local server. Build the image
-and run the Ubuntu steps once before the demo, and fix this page if a step
-differs on your machine.
+Verified end to end on the Ubuntu host serving the public demo
+(`https://cultureforge-ai.tail601a7c.ts.net`). The Docker image, `docker-compose.yml`,
+persistent `/data` volume, CJK/Latin PDF rendering and release/smoke checks
+have all been built and verified against the running container.

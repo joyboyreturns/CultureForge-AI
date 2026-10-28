@@ -296,7 +296,7 @@ def compare(request: CompareRequest, http_request: Request) -> dict:
     project = request.project.model_copy(update={'audience': request.audience})
     ticket = admission.enter(client_id(http_request), held=examples.held(project.model_dump()))
     try:
-        response = provider.generate(project)
+        response = provider.generate(project, seed_tag_ids=request.seedTagIds or None)
     finally:
         admission.leave(ticket)
     return {

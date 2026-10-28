@@ -639,6 +639,25 @@ export interface Investigation {
     gender: Record<string, number>
     note: string
   } | null
+  describe?: {
+    entityId: string | null
+    name: string | null
+    popularity: number | null
+    description?: string | null
+    address?: string | null
+    rating?: number | null
+    image?: string | null
+    geocode?: Record<string, unknown> | null
+  } | null
+  trends?: {
+    series: {
+      date: string
+      popularity: number | null
+      affinity: number | null
+      velocity: number | null
+    }[]
+    note: string | null
+  } | null
   findings: string[]
   limitations: string[]
   transportRequests: number

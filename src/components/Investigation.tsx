@@ -196,6 +196,38 @@ export function Investigation({
         </section>
       )}
 
+      {report.describe && (
+        <section className="investigation-section">
+          <span className="small-cap">QLOO ENTITY RECORD</span>
+          <p>
+            <b>{report.describe.name ?? 'Reference place'}</b>
+            {report.describe.address ? ` · ${report.describe.address}` : ''}
+            {report.describe.popularity != null ? ` · popularity ${report.describe.popularity.toFixed(4)}` : ''}
+            {report.describe.rating != null ? ` · rated ${report.describe.rating}` : ''}
+          </p>
+          {report.describe.description && <p className="investigation-note">{report.describe.description}</p>}
+        </section>
+      )}
+
+      {report.trends && (
+        <section className="investigation-section">
+          <span className="small-cap">POPULARITY HISTORY</span>
+          {report.trends.series.length > 0 ? (
+            <div className="investigation-tags">
+              {report.trends.series.map((point) => (
+                <span key={point.date}>
+                  <b>{point.date}</b>
+                  {point.popularity != null && <i>popularity {point.popularity.toFixed(4)}</i>}
+                  {point.velocity != null && <i>velocity {point.velocity > 0 ? '+' : ''}{point.velocity.toFixed(4)}</i>}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="investigation-note">{report.trends.note ?? 'Qloo returned no popularity time-series points for this place.'}</p>
+          )}
+        </section>
+      )}
+
       {report.findings.length > 0 && (
         <section className="investigation-section">
           <span className="small-cap">WHAT THIS ADDS</span>

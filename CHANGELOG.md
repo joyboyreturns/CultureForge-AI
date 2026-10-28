@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased — audit and submission hardening, 2026-10-25
+
+- Forward confirmed `seedTagIds` on `/api/projects/compare` and preserve cached
+  Qloo tag names and popularities when research runs start from confirmed seeds.
+- Allow `/api/projects/recompose` to reuse the original held `recommend`
+  envelope after an earlier tag removal narrows `seedTagIds`, or when a run
+  started directly from confirmed seeds.
+- Extract nested `image.url` objects, `short_description` and city/region
+  geocode fallbacks in `/api/projects/challenge-probe`.
+- Keep model-selected presentation sentences when only a subset of returned
+  places have selections, clear stale seed state on direct runs, and render
+  `describe` and `trends` facet outputs in the investigation dialog.
+- Align `docs/SUBMISSION.md`, `docs/BUSINESS.md`, `docs/DEPLOY.md`,
+  `docs/JUDGING_DAY.md` and `docs/LIMITATIONS.md` with the current 14-brief
+  demo pack, hybrid business handling and verified container deployment.
+
 ## Unreleased — first evidence and visible completion, 2026-10-23
 
 - Open evidence-bearing initial answers automatically while research continues.

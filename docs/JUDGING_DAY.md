@@ -105,11 +105,13 @@ discarded on the next open.
 Set `RUN_PROFILE=dev` again, so a link that is still circulating cannot spend
 an unbounded amount.
 
-## The three shipped demos (added 22 Oct 2026)
+## The shipped demo pack
 
-`shared/demoPack.json` ships real Qloo answers for three briefs, with their original acquisition times, plus the
-verified venue geocodes. `backend/demo_pack.py` places them in the evidence store at start-up as pinned entries
-(they do not expire), so a fresh clone, or a server with `QLOO_LIVE_ENABLED=false`, opens them with no Qloo request:
+`shared/demoPack.json` ships real Qloo answers for all 14 prepared briefs (including the three featured
+demos: Tokyo bakery, Paris ice cream and Melbourne coffee), with their original acquisition times, plus
+held model direction names, agent reports and verified venue geocodes. `backend/demo_pack.py` places them
+in the evidence store at start-up as pinned entries (they do not expire), so a fresh clone, or a server
+with `QLOO_LIVE_ENABLED=false`, opens them with no Qloo request:
 
 1. **Artisan bakery for morning commuters, Tokyo** (9 of 10 venues on the map, 20 interest cells)
 2. **Ice cream parlour, Paris** (5 of 9 on the map; the rest were returned for other cities and are not plotted)
@@ -121,16 +123,14 @@ Rebuild the pack (reads held evidence; `--live` fetches any gap once; `--allow-g
 python3 scripts/export_demo_pack.py --live --allow-gaps
 ```
 
-What is not in the pack: model-written direction names and the optional agent analysis (they run per server, within
-the model budget), and venue geocodes for any brief other than the three.
-
 ## When a judge types their own brief
 
 | Input | What happens |
 | --- | --- |
 | A known business ("flower shop", "pizza", "gym") | Resolved from a category table, then to Qloo's own place category tag |
 | An unfamiliar one ("bubble tea shop") | Looked up in Qloo's taxonomy; a place counts only if its text matches the distinctive word |
-| Two businesses ("bakery and bookstore") or no business | Asks the founder to name one; nothing is guessed |
+| A hybrid ("bakery and bookstore") | Both businesses are resolved and retrieved separately; overlap is reported without claiming demand for the combination |
+| An ambiguous or unnameable idea | Asks the founder to name the main business; nothing is guessed |
 | A city Qloo will not search ("Narnia") | "Use a city and country" with a way back to the brief |
 | A category with places but no audience overlap in that city | One extra request for the category's places without the audience tags, stated in the answer |
 | Real references but no cultural signature that fits a recipe | One narrow "Local Reference Study" direction, labelled promising but unverified |

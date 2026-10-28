@@ -31,9 +31,11 @@
   Its own location is shown as Qloo returned it, and is not verified.
   Neighbourhood-level locations (for example "Greenpoint, Brooklyn") have
   returned no places in testing; city-level ones work better.
-- **Interest cells are not venues.** The map shows where affinity for a
-  place is strong. Qloo gives places addresses, not coordinates, so places
-  are never plotted.
+- **Interest cells are not venues.** Qloo `where_popular` cells show where
+  affinity for a reference place is strong, not venue coordinates. Returned
+  venue pins on the studio map come from server-side Nominatim geocoding of the
+  street addresses Qloo returned, and any venue whose address cannot be placed
+  unambiguously inside the requested city is left unplotted (see [MAP.md](MAP.md)).
 - **The audience bridge has no location.** Artists, films and brands are
   returned for the audience tags alone, and are cited as audience-level,
   not direction-specific.
@@ -68,10 +70,10 @@
 - **The unfamiliar-category matcher is text-based.** An open-vocabulary idea matches a place by its name
   and the opening of its description. A real tea room described as "a calm room where regulars stay" would
   not match.
-- **Eight of the eleven prepared briefs name no business idea.** Only the three featured ones do. The
-  others are judged against the broad business type and can anchor on an adjacent place (the Brooklyn café
-  anchored on a comedy and pizza venue). They open from held evidence and say so; give them an idea and
-  prewarm them before featuring any of them.
+- **Four of the fourteen prepared briefs leave `businessIdea` blank.** Ten prepared briefs name a specific
+  business idea (including the three featured ones); the other four test broad business types and can
+  anchor on an adjacent place when no narrower category is requested. All fourteen open from held evidence
+  and state their scope.
 - **The agent is not deterministic.** Its plan is a model's, so a re-run may ask different questions, and
   3 of the first 10 live analyses failed both attempts (an over-long summary, once fenced JSON) before
   over-long prose was clipped instead of rejected. A fallback to the rules is shown as such and is never held.

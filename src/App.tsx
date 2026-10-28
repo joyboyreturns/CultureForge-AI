@@ -258,9 +258,10 @@ export default function App() {
         // The answer is only used if it is still about the evidence on
         // screen. A newer exploration has its own call.
         setPresentation((current) => {
-          const stillOurs = (result!.evidence ?? [])
-            .filter((item) => item.kind === 'entity')
-            .every((item) => !item.entityId || Boolean(chosen.selections[item.entityId]))
+          const entityIds = new Set(
+            (result!.evidence ?? []).flatMap((item) => (item.kind === 'entity' && item.entityId ? [item.entityId] : [])),
+          )
+          const stillOurs = Object.keys(chosen.selections).every((id) => entityIds.has(id))
           return stillOurs ? { ...current, ...chosen.selections } : current
         })
       } catch {
@@ -339,7 +340,7 @@ export default function App() {
     const id = ++runId.current
     parkCurrentRun()
     setProviderError(''); setForm(project); setScreen('progress'); setSavedOnly(false)
-    setClarification(null); setResearchRunId(null)
+    setClarification(null); setResearchRunId(null); setSeedCandidates(null); setSeedSelection(null)
     try {
       // The same research run the guided path uses, so the workspace shows the
       // agent's real steps rather than an animation pretending to be them.
@@ -681,7 +682,7 @@ export default function App() {
         {screen === 'results' && (result
           ? <><Results view={resultsView} onView={setResultsView} result={result} selected={selected} select={setSelected} saved={saved} save={save} savedOnly={savedOnly} setSavedOnly={setSavedOnly} open={setModal} compare={() => navigate('compare')} exportBrief={exportBrief} onInspect={setProvenanceId} onShare={shareThisExploration} shareUrl={shareUrl} onNotebook={() => setNotebookOpen(true)} onInvestigate={setInvestigating} onEvidenceDependence={() => setDependenceOpen(true)} challenge={challenge} challenging={challenging} challengeError={challengeError} onChallenge={() => testDirections()} onReanchor={(directionId, anchorEntityId) => testDirections(directionId, anchorEntityId)} onCloseChallenge={() => setChallenge(null)} usage={usage} onNewBrief={() => navigate('create')} onRewordIdea={(idea) => { void create({ ...result.project, businessIdea: idea }) }} challengeHistory={challengeHistory} challengeSavedAt={challengeSavedAt} analysis={analysis} analysisBusy={analysisBusy} analysisError={analysisError} onAnalyze={analyzeCurrentEvidence} dependenceSummary={dependenceSummary} onExportPdf={exportPdf} onApplyRebuild={(next, label) => { if (result) setMapUndo({ original: result, label }); applyRebuild(next, label) }} mapUndo={mapUndo ? { label: mapUndo.label, run: () => { restoreBaseline(mapUndo.original); setMapUndo(null) } } : null} profileControl={<ProfileChooser proposal={profileProposal} chosen={profileChoice} onChoose={setProfileChoice} testedWith={challenge?.profile.demographic}/>}/><DemoShowcase onRun={(project) => create(project)} title="Explore another example"/></>
           : <NoExploration start={() => navigate('create')} runExample={(project) => create(project)}/>)}
-        {result && investigating && (() => { const concept = result.concepts.find((c) => c.id === investigating); if (!concept) return null; const verdict = challenge?.directions.find((entry) => entry.directionId === concept.id); /* Only an alternative anchor is named as one; the original anchor is the place the direction is built around. */ const testedAnchor = verdict?.isCounterfactual ? verdict.anchor?.label ?? null : null; return <Investigation concept={concept} project={result.project} evidence={result.evidence} testedAnchorLabel={testedAnchor} onClose={() => setInvestigating(null)}/> })()}
+        {result && investigating && (() => { const concept = result.concepts.find((c) => c.id === investigating); if (!concept) return null; const verdict = challenge?.directions.find((entry) => entry.directionId === concept.id); /* Only an alternative anchor is named as one; the original anchor is the place the direction is built around. */ const testedAnchor = verdict?.isCounterfactual ? verdict.anchor?.label ?? null : null; return <Investigation concept={concept} project={result.project} evidence={result.evidence} seedTagIds={result.provenance?.resolved_tags} testedAnchorLabel={testedAnchor} onClose={() => setInvestigating(null)}/> })()}
         {result && <ProvenanceDrawer evidence={result.evidence} concepts={result.concepts} trace={result.trace} evidenceId={provenanceId} project={result.project} selection={presentation} onClose={() => setProvenanceId(null)} onRecomposed={(next)=>{ setResult({...result, concepts:next.concepts, evidence:next.evidence, trace:next.trace ?? result.trace, delivery:next.delivery ?? result.delivery, signals:result.signals.filter(signal => next.evidence.some(item => item.entityId === signal.provenance_id)), agent:null, notice:next.notice}); setSelected(next.concepts[0]?.id ?? ''); setToast(next.concepts.length ? 'Rebuilt without that venue. Qloo was not called again, and no model was asked to name anything.' : 'No direction remains supported after removing that venue.') }}/>}
         {screen === 'compare' && (result
           ? <><Compare result={result} apply={applyScenario} busy={scenarioBusy}/><DemoShowcase onRun={(project) => create(project)} title="Compare with another example"/></>

@@ -231,12 +231,8 @@ def _execute(run: ResearchRun, allowance: Optional[int]) -> None:
             # The founder already confirmed these, so the audience is not
             # resolved again and no call is spent.
             run.workflow_calls += 1
-            tag_envelope = {
-                'operation': 'find_tags', 'status': 'ok',
-                'results': [{'id': tag_id} for tag_id in run.seed_tag_ids],
-                'execution': {'duration_ms': 0},
-                'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
-            }
+            tag_envelope = provider.confirmed_tag_envelope(
+                run.project.businessType, run.audience, run.seed_tag_ids)
             run.add_event(_event(run, 'use-confirmed-seeds', tag_envelope, result_count=len(run.seed_tag_ids),
                                  detail='Used the audience seeds you confirmed.'))
         else:

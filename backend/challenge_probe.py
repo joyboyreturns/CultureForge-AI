@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 
 from .models import ChallengeProbeRequest, Evidence
-from .providers import QlooHarnessError, QlooHarnessProvider
+from .providers import QlooHarnessError, QlooHarnessProvider, _returned_location
 
 POLICY_VERSION = 'replacement-probe-2'
 BOUNDARY = (
@@ -64,13 +64,16 @@ def challenge_probe(request: ChallengeProbeRequest, provider: QlooHarnessProvide
             continue
         properties = row.get('properties') if isinstance(row.get('properties'), dict) else {}
         geocode = properties.get('geocode') if isinstance(properties.get('geocode'), dict) else {}
-        returned_location = geocode.get('name')
+        returned_location = geocode.get('name') if isinstance(geocode.get('name'), str) and geocode.get('name').strip() else (_returned_location(geocode) or None)
+        image = properties.get('image')
+        image_url = image.get('url') if isinstance(image, dict) else image
+        description = properties.get('short_description') or properties.get('description')
         returned.append(Evidence(
             id=f'probe-{index + 1}', kind='entity', label=name,
             entityId=entity_id, entityType='place',
             affinity=provider._affinity(row),
-            description=properties.get('description') if isinstance(properties.get('description'), str) else None,
-            image=properties.get('image') if isinstance(properties.get('image'), str) else None,
+            description=description if isinstance(description, str) else None,
+            image=image_url if isinstance(image_url, str) else None,
             location=returned_location if isinstance(returned_location, str) else None,
         ))
 

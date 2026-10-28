@@ -26,6 +26,8 @@ class StubProvider:
 
     recommend_places = QlooHarnessProvider.recommend_places
     interpret_idea = QlooHarnessProvider.interpret_idea
+    confirmed_tag_envelope = QlooHarnessProvider.confirmed_tag_envelope
+    _cached_tag_rows = staticmethod(QlooHarnessProvider._cached_tag_rows)
 
     def tag_id(self, row):
         return row.get('id')
@@ -279,3 +281,32 @@ def test_a_held_agent_report_costs_the_run_nothing(monkeypatch):
     held_requests = run.transport_requests - 2  # the stub provider's own find_tags + recommend
     assert held_requests == 0
     assert run.result['delivery']['transportRequests'] == run.transport_requests
+
+
+def test_confirmed_seeds_retain_cached_names_and_popularities(monkeypatch, store):
+    from backend.evidence_store import canonical_key
+    from backend.providers import brief_tags_payload
+
+    store.put(canonical_key('find_tags', brief_tags_payload(PROJECT.businessType, PROJECT.audience)), {
+        'operation': 'find_tags', 'status': 'ok',
+        'results': [{'id': 'urn:tag:x:qloo:y', 'name': 'Food design', 'popularity': 0.91}],
+    })
+    rec_envelope = {'status': 'ok', 'operation': 'recommend', 'results': [{'entity_id': 'urn:place:a', 'name': 'A'}]}
+    generated = GenerateResponse(
+        projectId='cf-run', project=PROJECT, concepts=[], signals=[], dataMode='live',
+        conceptMode='evidence_composed', notice='n', evidence=[], trace=[],
+        delivery=Delivery(kind='cache', transportRequests=0))
+    captured_tags = {}
+
+    class CapturingProvider(StubProvider):
+        def generate(self, project, **kwargs):
+            if kwargs.get('tag_result') is not None:
+                captured_tags['envelope'] = kwargs['tag_result']
+            return generated.model_copy(deep=True)
+
+    _install(monkeypatch, CapturingProvider({}, rec_envelope, generated))
+    run = research.ResearchRun(PROJECT)
+    run.seed_tag_ids = ['urn:tag:x:qloo:y']
+    research._execute(run, allowance=None)
+    assert captured_tags['envelope']['results'] == [{'id': 'urn:tag:x:qloo:y', 'name': 'Food design', 'popularity': 0.91}]
+

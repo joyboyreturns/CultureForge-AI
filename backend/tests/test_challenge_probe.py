@@ -112,3 +112,20 @@ def test_provider_failure_propagates_without_changing_direction():
         challenge_probe(_request(), provider)
     assert caught.value is error
     assert provider.payloads
+
+
+def test_probe_extracts_qloo_image_dict_short_description_and_geocode_fallback():
+    envelope = {'results': {'entities': [{
+        'entity_id': 'entity-c', 'name': 'Replacement Place', 'affinity': 0.72,
+        'properties': {
+            'short_description': 'Independent neighbourhood bakery.',
+            'image': {'url': 'https://images.example.com/place-c.jpg'},
+            'geocode': {'city': 'Brooklyn', 'admin1_region': 'New York'},
+        },
+    }]}}
+    result = challenge_probe(_request(), FakeProvider(envelope=envelope))
+    replacement = result['replacements'][0]
+    assert replacement.image == 'https://images.example.com/place-c.jpg'
+    assert replacement.description == 'Independent neighbourhood bakery.'
+    assert replacement.location == 'Brooklyn, New York'
+

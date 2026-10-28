@@ -837,28 +837,7 @@ class QlooHarnessProvider(CultureProvider):
             # resolved again and no find_tags call is spent. The cached
             # resolution still holds the name and the popularity Qloo
             # returned for each seed, so the evidence keeps them.
-            query = f'{project.businessType} {project.audience}'.strip()
-            confirmed = set(seed_tag_ids)
-            cached_rows = [
-                row for row in self._cached_tag_rows(query)
-                if row.get('id') in confirmed
-            ]
-            if cached_rows:
-                tag_result = {
-                    'operation': 'find_tags',
-                    'status': 'ok',
-                    'results': cached_rows,
-                    'execution': {'duration_ms': 0},
-                    'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
-                }
-            else:
-                tag_result = {
-                    'operation': 'find_tags',
-                    'status': 'ok',
-                    'results': [{'id': tag_id} for tag_id in seed_tag_ids],
-                    'execution': {'duration_ms': 0},
-                    'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
-                }
+            tag_result = self.confirmed_tag_envelope(project.businessType, project.audience, seed_tag_ids)
             tags_reused = True
         spent = 0
         # Whether any part of this answer had to be fetched live. The delivery
@@ -1318,6 +1297,21 @@ class QlooHarnessProvider(CultureProvider):
             return []
         rows = envelope.get('results')
         return [row for row in rows if isinstance(row, dict)] if isinstance(rows, list) else []
+
+    def confirmed_tag_envelope(self, business_type: str, audience: str, seed_tag_ids: list[str]) -> dict:
+        """Build a find_tags envelope for confirmed seeds, keeping cached names and popularities."""
+        query = f'{business_type} {audience}'.strip()
+        by_id = {
+            tag: {**row, 'id': tag} for row in self._cached_tag_rows(query)
+            if (tag := self.tag_id(row))
+        }
+        return {
+            'operation': 'find_tags',
+            'status': 'ok',
+            'results': [by_id.get(tag_id, {'id': tag_id}) for tag_id in seed_tag_ids if tag_id],
+            'execution': {'duration_ms': 0},
+            'provenance': {'endpoint': 'confirmed by the user', 'requests': []},
+        }
 
     @staticmethod
     def _tag_label(tag_id: str) -> str:

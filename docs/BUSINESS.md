@@ -60,8 +60,9 @@ session, five cited evidence briefs, one concept review and a field experiment
 plan. Agree refresh, comparison, support and workflow limits before kickoff.
 This is a pricing experiment, not a currently available paid subscription.
 
-The public Pilot page creates a downloadable discussion brief with the buyer's
-decision and acceptance criteria. It sends no inquiry, books nothing and takes
+The Business direction section on the front page outlines the pilot scope, and
+the studio decision notebook records the buyer's decision, owner, review date,
+spending cap and acceptance criteria. It sends no inquiry, books nothing and takes
 no payment. The existing studio supplies the research, evidence tests, PDF,
 share links and decision notebook; onboarding and the review are founder-led
 services to validate before automating them.

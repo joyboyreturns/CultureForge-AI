@@ -313,3 +313,47 @@ def test_agent_recomposition_uses_exact_run_envelopes_without_cache_lookup(monke
     assert provider.seen[0]['tag_result']['results'][0]['id'] == 'urn:tag:interests:qloo:founder_selected'
     assert [row['entity_id'] for row in provider.seen[0]['recommendations']['results']] == ['id-two']
     assert all('North Room' not in c['description'] for c in result['concepts'])
+
+
+def test_recompose_handles_subset_seed_tags_from_an_earlier_removal(monkeypatch):
+    """When an earlier step removed one of three tags, basis.evidence sends only the remaining two."""
+    from backend.evidence_store import canonical_key
+    from backend.models import ProjectRequest
+
+    tag_rows = [
+        {'id': 'urn:tag:interests:qloo:food_design', 'name': 'Food design'},
+        {'id': 'urn:tag:interests:qloo:coffee', 'name': 'Coffee'},
+        {'id': 'urn:tag:interests:qloo:bakery', 'name': 'Bakery'},
+    ]
+    place_rows = [
+        {'entity_id': 'id-one', 'name': 'North Bakery', 'properties': {'description': 'Bakery and pastry shop.'}},
+        {'entity_id': 'id-two', 'name': 'South Bakery', 'properties': {'description': 'Artisan bread bakery.'}},
+    ]
+    provider = RecomposeProvider(tag_rows, place_rows)
+    monkeypatch.setattr(comparison, 'QlooHarnessProvider', lambda *a, **k: provider)
+
+    class StubStore:
+        def __init__(self):
+            self.keys = {}
+
+        def get(self, key):
+            return self.keys.get(key)
+
+    store = StubStore()
+    store.keys[canonical_key('find_tags', {'query': 'Food & beverage Design-conscious Gen Z',
+                                           'limit': 3})] = {'status': 'ok', 'results': tag_rows}
+    store.keys[canonical_key('recommend', {
+        'target_type': 'place',
+        'signal_tags': [r['id'] for r in tag_rows],
+        'filter_location': 'Brooklyn, New York', 'limit': 10,
+    })] = {'status': 'ok', 'results': place_rows}
+
+    project = ProjectRequest(businessType='Food & beverage', audience='Design-conscious Gen Z',
+                             location='Brooklyn, New York', budget='$25k – $50k', objectives=[])
+    result = comparison.recompose(
+        project, evidence_store=store, exclude_entity_ids=['id-one'],
+        seed_tag_ids=['urn:tag:interests:qloo:food_design', 'urn:tag:interests:qloo:coffee'],
+    )
+    assert [row['entity_id'] for row in provider.seen[0]['recommendations']['results']] == ['id-two']
+    assert result['dropped'] == 1
+
