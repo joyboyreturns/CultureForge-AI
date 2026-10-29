@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, Bookmark, CheckCheck, ChevronRight, CircleHelp, FlaskConical, Layers3, LayoutGrid, Menu, Moon, Play, Plus, Sparkles, Sun, Waves, X } from 'lucide-react'
 import type { Concept, Evidence, GenerateResponse, ProjectRequest } from './contracts'
-import { analyzeEvidence, compareAudience, downloadReportPdf, proposeProfile, fetchExploration, fetchHealth, fetchSnapshot, fetchUsage, heldResult, rememberLiveResult, resolveTaste, shareExploration, startResearch, challengeDirections } from './api'
-import type { BackendStatus, ChallengeResult, ClarificationAsk, EvidenceAnalysisResult, ProfileProposal, RecomposeResult, TasteSeed } from './api'
+import { compareAudience, downloadReportPdf, proposeProfile, fetchExploration, fetchSnapshot, fetchUsage, heldResult, rememberLiveResult, resolveTaste, shareExploration, startResearch, challengeDirections } from './api'
+import type { ChallengeResult, ClarificationAsk, ProfileProposal, RecomposeResult, TasteSeed } from './api'
 import { ProvenanceDrawer } from './components/ProvenanceDrawer'
 import { Clarification } from './components/Clarification'
 import { RunMonitor } from './components/RunMonitor'
@@ -22,13 +22,14 @@ import { notebookKey, readDecision, renderDecision } from './decisionNotebook'
 import { StudioNav, NavItem } from './components/StudioChrome'
 import { Home, DemoShowcase, Create, Progress, NoExploration } from './components/StudioScreens'
 import { Results, Compare, ConceptModal } from './components/Results'
-import type { Screen, Theme, ResultsView } from './studioShared'
+import type { Screen, ResultsView } from './studioShared'
 import { RESULT_VIEWS, initial, titles } from './studioShared'
 import { readStored, writeStored } from './storage'
+import { useBackendStatus, useEvidenceAnalysis, useRememberedBrief, useSavedConcepts, useTheme, useToast } from './studioHooks'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(() => window.location.hash === '#workspace/create' ? 'create' : 'home')
-  const [theme, setTheme] = useState<Theme>(() => readStored('cultureforge-theme', 'dark'))
+  const [theme, setTheme] = useTheme()
   const [form, setForm] = useState<ProjectRequest>(initial)
   // The studio opens on whatever real answer this browser already holds, and
   // on nothing at all when it holds none. There is no sample answer to fall
@@ -40,12 +41,12 @@ export default function App() {
   // The provenance drawer belongs to one screen and one exploration: it closes when either changes.
   useEffect(() => { setProvenanceId(null) }, [screen, result?.projectId])
   const [selected, setSelected] = useState('')
-  const [backend, setBackend] = useState<BackendStatus | null>(null)
-  const [saved, setSaved] = useState<string[]>(() => readStored('cultureforge-saved', []))
+  const backend = useBackendStatus()
+  const [saved, setSaved] = useSavedConcepts()
   const [menuOpen, setMenuOpen] = useState(false)
   const [providerError, setProviderError] = useState('')
   const [modal, setModal] = useState<Concept | null>(null)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useToast()
   const [savedOnly, setSavedOnly] = useState(false)
   const [resultsView, setResultsView] = useState<ResultsView>(() => window.location.hash.startsWith('#map=') ? 'roots' : 'brief')
   // The guided tour asks for the section that holds the element it points at.
@@ -101,9 +102,7 @@ export default function App() {
   const [challenging, setChallenging] = useState(false)
   const [usage, setUsage] = useState<{ requests: number; upstreamCalls: number } | null>(null)
   const [challengeError, setChallengeError] = useState('')
-  const [analysis, setAnalysis] = useState<EvidenceAnalysisResult | null>(null)
-  const [analysisBusy, setAnalysisBusy] = useState(false)
-  const [analysisError, setAnalysisError] = useState('')
+  const { analysis, analysisBusy, analysisError, analyze: analyzeCurrentEvidence } = useEvidenceAnalysis(result, challenge)
   const [clarification, setClarification] = useState<ClarificationAsk | null>(null)
   const [shareUrl, setShareUrl] = useState('')
   const [tourOpen, setTourOpen] = useState(() => new URLSearchParams(window.location.search).get('tour') === '1')
@@ -113,15 +112,7 @@ export default function App() {
   useEffect(() => { setMapUndo(null) }, [result?.projectId])
   const runId = useRef(0)
   const handoffTaken = useRef(false)
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    document.documentElement.style.colorScheme = theme
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#07070b' : '#f5f1f3')
-    writeStored('cultureforge-theme', theme)
-  }, [theme])
-  useEffect(() => { writeStored('cultureforge-saved', saved) }, [saved])
-  const lastBrief = result?.dataMode === 'live' ? result.project : null
-  useEffect(() => { if (lastBrief) writeStored('cultureforge-last-brief', lastBrief) }, [lastBrief])
+  useRememberedBrief(result)
   // A verdict belongs to the directions it judged. When the directions
   // change — a new brief, a recomposition, a saved exploration — the verdict
   // is stale and is dropped rather than shown against the wrong ideas.
@@ -145,23 +136,12 @@ export default function App() {
       setChallengeError('')
     }
   }, [judgedConcepts, evidenceFingerprint, challenge, result])
-  useEffect(() => { setAnalysis(null); setAnalysisError('') }, [result, challenge])
   useEffect(() => {
     function startNewExploration() { setProviderError(''); setSavedOnly(false); setScreen('create') }
     window.addEventListener('cultureforge:open-create', startNewExploration)
     return () => window.removeEventListener('cultureforge:open-create', startNewExploration)
   }, [])
-  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 3000); return () => clearTimeout(timer) }, [toast])
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); setMenuOpen(false) }, [screen])
-  // What the backend is actually doing right now. The badge says this, not
-  // what the app hopes is true.
-  useEffect(() => {
-    let cancelled = false
-    fetchHealth()
-      .then((status) => { if (!cancelled) setBackend(status) })
-      .catch(() => { if (!cancelled) setBackend({ mode: 'offline', ready: false, reason: 'The backend could not be reached.', workflows: [] }) })
-    return () => { cancelled = true }
-  }, [])
   // The landing page can hand over an exploration it just performed, with the
   // test that was run on it. Opening it shows that, not an empty form.
   useEffect(() => {
@@ -237,7 +217,7 @@ export default function App() {
       })
       .catch((error) => { if (!cancelled) setToast(error instanceof Error ? error.message : 'That snapshot could not be opened.') })
     return () => { cancelled = true }
-  }, [])
+  }, [setToast])
   // Leaving a screen closes the provenance drawer, so it never floats over a screen that has no such evidence.
   function navigate(next: Screen) { setMenuOpen(false); setProvenanceId(null); setScreen(next) }
   function closeTour() {
@@ -538,19 +518,6 @@ export default function App() {
       if (currentResult.current === result) setChallengeError(error instanceof Error ? error.message : 'The directions could not be tested.')
     }
     setChallenging(false)
-  }
-
-  async function analyzeCurrentEvidence() {
-    if (!result || analysisBusy) return
-    setAnalysisBusy(true); setAnalysisError('')
-    try {
-      const answer = await analyzeEvidence(result.project, result.evidence, result.concepts, challenge)
-      if (currentResult.current !== result || currentChallenge.current !== challenge) { setAnalysisBusy(false); return }
-      setAnalysis(answer)
-    } catch (error) {
-      if (currentResult.current === result && currentChallenge.current === challenge) setAnalysisError(error instanceof Error ? error.message : 'Evidence analysis could not be completed.')
-    }
-    setAnalysisBusy(false)
   }
 
   function exportBrief() {
