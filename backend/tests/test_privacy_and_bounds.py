@@ -6,6 +6,7 @@ these pin that the run list and the usage figures honour it, and that the share 
 from __future__ import annotations
 
 import time
+import threading
 
 import pytest
 from fastapi.testclient import TestClient
@@ -163,13 +164,14 @@ def test_a_started_run_is_persisted_at_both_ends(monkeypatch):
     from backend import research
     monkeypatch.setattr(research, '_execute', lambda run, allowance: setattr(run, 'status', research.STATUS_COMPLETE))
     seen = []
+    finished = threading.Event()
     real = main.get_platform().save_run
-    monkeypatch.setattr(main.get_platform(), 'save_run', lambda snap, ws: (seen.append(snap['status']), real(snap, ws)))
-    run = research.start_research(_run(None).project, workspace_id=None)
-    for _ in range(100):
-        if 'complete' in seen:
-            break
-        time.sleep(0.02)
+    def record(snap, ws):
+        real(snap, ws)
+        seen.append(snap['status'])
+    monkeypatch.setattr(main.get_platform(), 'save_run', record)
+    run = research.start_research(_run(None).project, workspace_id=None, on_finish=finished.set)
+    assert finished.wait(5), 'research worker did not finish persisting'
     assert seen[0] == 'running' and seen[-1] == 'complete'
     main.research_registry._runs.pop(run.id, None)
     main.research_registry._order.remove(run.id)
