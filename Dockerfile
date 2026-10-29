@@ -3,7 +3,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY studio/ ./studio/
-COPY index.html main.js landing-scene.js landing-scene.d.ts styles.css vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
+COPY landing/ ./landing/
+COPY index.html vite.config.ts tsconfig*.json tailwind.config.js postcss.config.js ./
 COPY src/ ./src/
 COPY shared/ ./shared/
 COPY assets/ ./assets/

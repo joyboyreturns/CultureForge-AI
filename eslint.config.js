@@ -18,7 +18,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['main.js'],
+    files: ['landing/main.js'],
     extends: [js.configs.recommended],
     languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser, Motion: 'readonly' } },
   },

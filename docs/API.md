@@ -34,7 +34,7 @@ than on the wording:
 | `POST` | `/api/projects/generate` | Answer a brief: seeds, places, bridge domains, directions. |
 | `POST` | `/api/research/runs` | Start an observable research run (returns 202 and a `runId`). |
 | `GET` | `/api/research/runs/{run_id}` | A run's steps, result, clarification or error code. |
-| `GET` | `/api/research/runs` | Recent runs. |
+| `GET` | `/api/research/runs` | The caller's own recent runs (never another visitor's). |
 | `POST` | `/api/taste/resolve` | Resolve an audience into candidate Qloo tags to confirm. |
 | `POST` | `/api/projects/challenge` | The evidence test (policy anchor-fit-5). Optional `anchorEntityId` and `demographic`. |
 | `POST` | `/api/profile/propose` | The demographic profile the test would use, before it runs. |
@@ -51,10 +51,10 @@ than on the wording:
 | `POST` | `/api/report/pdf` | The exploration as a PDF. No upstream call. |
 | `GET` | `/api/qloo/workflows` | The nine workflows and how each is called. |
 | `POST` | `/api/qloo/describe` · `/entity-tags` · `/where-popular` · `/audience-demographics` · `/trends` | One Qloo workflow each, through the cache. |
-| `POST` | `/api/explorations/share` | Freeze an exploration; `GET /api/snapshots/{id}` reopens it (`/studio/?snapshot=<id>`). |
+| `POST` | `/api/explorations/share` | Freeze an exploration; `GET /api/snapshots/{id}` reopens it (`/studio/?snapshot=<id>`). Bounded: 413 over 1 MB, 429 after 30 a connection an hour. |
 | `GET` | `/api/explorations` · `/{id}` · `/{id}/export` | Saved explorations, and JSON or Markdown export. |
 | `POST`/`GET`/`DELETE` | `/api/workspaces…` | Workspaces and issued keys. Needs `CULTUREFORGE_OPERATOR_TOKEN`, or a request from the machine itself. |
-| `GET` | `/api/usage` | Request and upstream-call metering. |
+| `GET` | `/api/usage` | Request and upstream-call metering for the caller's workspace. `?scope=all` is the whole deployment and needs the operator token (or a request from the machine itself). Rows older than 90 days are dropped. |
 
 `/health` is an alias of `/api/health` for container health checks.
 

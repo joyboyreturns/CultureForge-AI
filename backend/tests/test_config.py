@@ -270,8 +270,8 @@ def test_the_landing_page_and_studio_run_the_same_hero_brief_and_it_is_one_that_
     """The hero names its business idea (the Brooklyn brief did not, and anchored a café on a comedy venue)
     and is one the demo pack holds, so a fresh clone opens it with no Qloo request."""
     hero = "'tokyo-morning-bakery'"
-    assert hero in (ROOT / 'main.js').read_text(encoding='utf-8')
-    assert hero in (ROOT / 'src' / 'App.tsx').read_text(encoding='utf-8')
+    assert hero in (ROOT / 'landing' / 'main.js').read_text(encoding='utf-8')
+    assert hero in (ROOT / 'src' / 'studioShared.ts').read_text(encoding='utf-8')
     brief = next(row for row in examples.briefs() if row['id'] == 'tokyo-morning-bakery')
     assert brief['project']['businessIdea'].strip()
     import json

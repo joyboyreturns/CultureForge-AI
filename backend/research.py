@@ -133,10 +133,13 @@ class ResearchRegistry:
                     return run
         return None
 
-    def recent(self, limit: int = 10) -> list[dict]:
+    def recent(self, limit: int = 10, workspace_id: Optional[str] = None) -> list[dict]:
+        """The latest runs, newest first. Given a workspace, only that workspace's own."""
         with self._lock:
-            ids = self._order[-limit:][::-1]
-            return [self._runs[i].snapshot() for i in ids if i in self._runs]
+            runs = [self._runs[i] for i in reversed(self._order) if i in self._runs]
+        if workspace_id is not None:
+            runs = [run for run in runs if run.workspace_id == workspace_id]
+        return [run.snapshot() for run in runs[:limit]]
 
 
 registry = ResearchRegistry()

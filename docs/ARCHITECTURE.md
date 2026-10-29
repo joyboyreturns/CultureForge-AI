@@ -99,4 +99,4 @@ Failures are never cached. A held envelope answers for 24 hours in dev and
   makes every held entry go cold.
 - The README and `.env.example` budget defaults must match `config.py`.
 
-Research polling resumes the same in-memory run across browser reloads. A restart still loses in-flight runs; completed explorations are durable. Failed/clarification envelopes are not cached. Cache followers are released only after publication, and disk-write degradation is surfaced in health and the answer notice. Earlier five-place samples may be reused under their exact original request and provenance; they are never relabelled as ten-place results.
+Research polling resumes the same in-memory run across browser reloads. A restart still loses in-flight runs (the poll then says so and how to continue); completed explorations are durable. Failed/clarification envelopes are not cached. Cache followers are released only after publication, and disk-write degradation is surfaced in health and the answer notice. Earlier five-place samples may be reused under their exact original request and provenance; they are never relabelled as ten-place results.

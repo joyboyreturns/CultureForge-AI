@@ -6,6 +6,8 @@ spend money.
 """
 from __future__ import annotations
 
+import io
+
 import pytest
 
 from backend import llm
@@ -392,3 +394,114 @@ def test_a_claim_about_a_locality_qloo_did_not_establish_is_dropped():
     assert usable[0]['tagline'] is None
     assert len(dropped) == 1
     assert 'locality' in dropped[0]
+
+
+# --- the transport: every way the gateway can fail is a stated reason, never a crash --------------
+
+class _Envelope:
+    def __init__(self, body: bytes):
+        self._body = body
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def _gateway(monkeypatch, outcome):
+    """Run `_post` against a scripted urlopen: a body to return, or an exception to raise."""
+    monkeypatch.setattr(llm, '_api_key', lambda: 'test-only-placeholder')
+    monkeypatch.setattr(llm.modelpace, 'wait_for_slot', lambda: None)
+
+    def urlopen(request, timeout):
+        assert request.get_header('Authorization') == 'Bearer test-only-placeholder'
+        if isinstance(outcome, Exception):
+            raise outcome
+        return _Envelope(outcome)
+    monkeypatch.setattr(llm.urllib.request, 'urlopen', urlopen)
+
+
+def test_a_good_envelope_is_returned(monkeypatch):
+    _gateway(monkeypatch, b'{"choices": []}')
+    assert llm._post({}, 5) == {'choices': []}
+
+
+def _http_error(status, headers=None):
+    return llm.urllib.error.HTTPError('https://gateway.invalid', status, 'error', headers or {}, io.BytesIO(b''))
+
+
+@pytest.mark.parametrize('make_failure, code', [
+    (lambda: llm.urllib.error.URLError('down'), 'LLM_UNREACHABLE'),
+    (lambda: TimeoutError(), 'LLM_TIMEOUT'),
+    (lambda: _http_error(500), 'LLM_REJECTED'),
+], ids=['unreachable', 'timeout', 'rejected'])
+def test_each_gateway_failure_has_its_own_code(monkeypatch, make_failure, code):
+    _gateway(monkeypatch, make_failure())
+    with pytest.raises(llm.LlmUnavailable) as caught:
+        llm._post({}, 5)
+    assert caught.value.code == code
+
+
+def test_a_rate_limit_is_noted_for_the_whole_server_and_not_retried(monkeypatch):
+    noted = []
+    monkeypatch.setattr(llm.modelpace, 'note_limited', lambda retry_after: noted.append(retry_after))
+    _gateway(monkeypatch, _http_error(429, {'Retry-After': '30'}))
+    with pytest.raises(llm.LlmUnavailable):
+        llm._post({}, 5)
+    assert noted == ['30']
+
+
+def test_an_unreadable_envelope_is_malformed_not_a_crash(monkeypatch):
+    _gateway(monkeypatch, b'<html>not json</html>')
+    with pytest.raises(llm.LlmUnavailable) as caught:
+        llm._post({}, 5)
+    assert caught.value.code == 'LLM_MALFORMED'
+
+
+@pytest.mark.parametrize('body', [{'choices': []}, {'choices': [{'message': {'content': '  '}}]},
+                                  {'choices': [{'message': {}}]}])
+def test_an_empty_model_answer_is_reported_as_empty(monkeypatch, body):
+    monkeypatch.setattr(llm, '_model', lambda: 'test/frontier-model')
+    monkeypatch.setattr(llm, '_post', lambda payload, timeout: body)
+    with pytest.raises(llm.LlmUnavailable) as caught:
+        llm._ask_model({}, [], 5)
+    assert caught.value.code == 'LLM_EMPTY'
+
+
+def test_the_ledger_counts_a_completed_answer_even_when_it_is_empty(monkeypatch):
+    monkeypatch.setattr(llm, '_model', lambda: 'test/frontier-model')
+    monkeypatch.setattr(llm, '_post', lambda payload, timeout: {'choices': []})
+    counted = []
+    with pytest.raises(llm.LlmUnavailable):
+        llm._ask_model({}, [], 5, after_request=lambda: counted.append(1))
+    assert counted == [1], 'the request was made and answered, so it counts against the allowance'
+
+
+def test_selection_without_a_gateway_never_calls_it(monkeypatch):
+    monkeypatch.setattr(llm, 'is_configured', lambda: False)
+    monkeypatch.setattr(llm, '_post', lambda *a: (_ for _ in ()).throw(AssertionError('no request')))
+    answer, report = llm.select_source_items([{'entityId': 'E1'}])
+    assert answer is None and report['attempted'] is False
+
+
+def test_selection_reports_a_failed_gateway_and_stops(monkeypatch):
+    monkeypatch.setattr(llm, 'is_configured', lambda: True)
+    monkeypatch.setattr(llm, '_model', lambda: 'test/frontier-model')
+
+    def refuse(payload, timeout):
+        raise llm.LlmUnavailable('Gateway unavailable.', code='LLM_UNREACHABLE')
+    monkeypatch.setattr(llm, '_post', refuse)
+    answer, report = llm.select_source_items([{'entityId': 'E1'}])
+    assert answer is None
+    assert report['attempted'] is True and report['used'] is False
+    assert report['code'] == 'LLM_UNREACHABLE'
+
+
+def test_selection_with_no_records_does_not_spend_a_request(monkeypatch):
+    monkeypatch.setattr(llm, 'is_configured', lambda: True)
+    answer, report = llm.select_source_items([])
+    assert answer is None and report['attempted'] is False

@@ -93,6 +93,33 @@ class Admission:
 admission = Admission()
 
 
+class SlidingWindowLimiter:
+    """At most `limit` events per key in a rolling window; for routes that take no key."""
+
+    def __init__(self, limit: int, window_seconds: int) -> None:
+        self._limit = limit
+        self._window = window_seconds
+        self._lock = threading.Lock()
+        self._events: dict[str, list[float]] = {}
+
+    def allow(self, key: str, now: Optional[float] = None) -> bool:
+        now = time.time() if now is None else now
+        with self._lock:
+            recent = [t for t in self._events.get(key, []) if now - t < self._window]
+            if len(recent) >= self._limit:
+                self._events[key] = recent
+                return False
+            recent.append(now)
+            self._events[key] = recent
+            if len(self._events) > 10_000:  # forget addresses with nothing recent, so the map stays bounded
+                self._events = {k: v for k, v in self._events.items() if v and now - v[-1] < self._window}
+            return True
+
+    def reset(self) -> None:
+        with self._lock:
+            self._events.clear()
+
+
 def _is_local_peer(host: str) -> bool:
     """A loopback or private-network peer: a proxy on this machine or network, which no internet visitor can be."""
     import ipaddress

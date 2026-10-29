@@ -13,7 +13,7 @@ The root MIT license applies to CultureForge's original software. Dependencies, 
 
 ## Landing background
 
-The landing page's background is drawn in code by `landing-scene.js` (sine waves and a hash function). It contains no
+The landing page's background is drawn in code by `landing/landing-scene.js` (sine waves and a hash function). It contains no
 video, photograph or other third-party media. An earlier version used a video downloaded from MotionSites AI, whose
 terms state that the site owns its video backgrounds and do not permit republishing them; that video and its poster
 image were removed.

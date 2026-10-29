@@ -197,7 +197,7 @@ console.log('[ok] The idea reading is shown only when informative, and exports e
 {
   // A judge must be able to reach the map from the places it describes, and the
   // laptop-width layouts must not push the page sideways.
-  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../src/components/Results.tsx', import.meta.url), 'utf8');
   assert.match(app, /Open the interest map/, 'the places section offers the map');
   assert.match(app, /setInsightTab\('map'\);onView\('roots'\)/, 'that offer opens the map tab of the roots section');
   const dusk = readFileSync(new URL('../src/dusk.css', import.meta.url), 'utf8');
@@ -223,8 +223,9 @@ assert.equal(checkReword(idea, 'x'.repeat(IDEA_MAX_LENGTH)).ok, true, 'exactly t
 assert.equal(checkReword('', 'Bakery').ok, true, 'an empty original accepts any real idea');
 assert.equal(checkReword(idea, 'Café 🍕 pizza — 寿司').ok, true, 'non-Latin text and emoji are ideas too');
 const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const resultsView = readFileSync(new URL('../src/components/Results.tsx', import.meta.url), 'utf8');
 const clar = readFileSync(new URL('../src/components/Clarification.tsx', import.meta.url), 'utf8');
-assert.match(app, /<RewordIdea current=\{result\.project\.businessIdea/, 'the empty answer offers the reword form');
+assert.match(resultsView, /<RewordIdea current=\{result\.project\.businessIdea/, 'the empty answer offers the reword form');
 assert.match(app, /onRewordIdea=\{\(idea\) => \{ void create\(\{ \.\.\.result\.project, businessIdea: idea \}\)/, 'rewording re-runs the same brief with only the idea changed');
 assert.match(clar, /<RewordIdea current=\{idea\} onReword=\{onUseIdea\}/, 'the clarification offers the reword form');
 console.log('[ok] Rewording refuses empty, tiny, over-long and unchanged ideas with a reason, normalises whitespace, and is wired into both dead ends.');

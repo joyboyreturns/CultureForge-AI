@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,9 +40,22 @@ from .providers import (COMPOSER_VERSION, QLOO_ENTITY_TYPES, QLOO_WORKFLOWS, Qlo
                         trends_payload, where_popular_payload,
                         QlooHarnessProvider, get_provider)
 from .research import registry as research_registry, run_key, start_research
-from .admission import Refusal, admission, client_id, is_proxied
+from .admission import Refusal, SlidingWindowLimiter, admission, client_id, is_proxied
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Startup work: place the shipped demo evidence in the store, and trim old metering."""
+    from .demo_pack import seed
+    seed()
+    try:
+        get_platform().prune_usage()
+    except Exception:  # pragma: no cover - trimming metering must never stop the server starting
+        pass
+    yield
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title='CultureForge API',
     version='0.3.0',
     description=(
@@ -58,13 +73,6 @@ app = FastAPI(
 )
 
 
-@app.on_event('startup')
-def _seed_demo_pack() -> None:
-    """Place the shipped demo evidence in the store; see backend/demo_pack.py."""
-    from .demo_pack import seed
-    seed()
-
-
 # The deployed studio is served from the same origin as the API and needs no
 # CORS. Local development serves it from another port, so local origins are
 # allowed; a deployment that hosts the studio elsewhere names its origins in
@@ -72,10 +80,21 @@ def _seed_demo_pack() -> None:
 # never leaves the backend.
 ALLOWED_ORIGINS = [origin.strip().rstrip('/') for origin in
                    os.getenv('CULTUREFORGE_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
+def cors_origin_regex() -> Optional[str]:
+    """Which origins are allowed without being named.
+
+    Local development serves the studio from another port, so any localhost origin is allowed. A public
+    (judging) deployment names its origins in CULTUREFORGE_ALLOWED_ORIGINS and allows no others.
+    """
+    if config.run_profile() == config.PROFILE_JUDGING:
+        return None
+    return r'http://(localhost|127\.0\.0\.1)(:\d+)?'
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r'http://(localhost|127\.0\.0\.1)(:\d+)?',
+    allow_origin_regex=cors_origin_regex(),
     allow_credentials=False,
     allow_methods=['GET', 'POST'],
     allow_headers=['Content-Type', 'Authorization'],
@@ -346,8 +365,12 @@ def resolve_workspace(request: Request) -> tuple[dict, Optional[str]]:
         # listed to the next. Only a short hash of the address is kept, as the workspace's name.
         import hashlib
         name = f"Visitor {hashlib.sha256(('cultureforge|' + client_id(request)).encode()).hexdigest()[:12]}"
-    existing = next((w for w in platform.workspaces() if w['name'] == name), None)
+    existing = platform.workspace_named(name)
     return existing or platform.create_workspace(name, plan='studio'), None
+
+
+#: Probes that say nothing about how the API is used.
+UNMETERED_PATHS = frozenset({'/api/health', '/health'})
 
 
 @app.middleware('http')
@@ -360,6 +383,11 @@ async def meter_requests(request: Request, call_next):
     started = time.monotonic()
     counter = metering.begin()
     response = await call_next(request)
+    path = request.url.path
+    if not path.startswith('/api/') or path in UNMETERED_PATHS:
+        # Static files and health probes are not partner usage, and metering them would create a
+        # workspace for every address that merely loaded a page or was pinged.
+        return response
     duration_ms = int((time.monotonic() - started) * 1000)
     try:
         workspace, prefix = resolve_workspace(request)
@@ -441,9 +469,18 @@ def revoke_key(request: Request, workspace_id: str, key_id: str) -> Response:
 
 @app.get('/api/usage', tags=['platform'],
          summary='How much this API has been used')
-def usage(days: int = 30) -> dict:
-    """Metered usage: requests, and the upstream calls they caused."""
-    return get_platform().usage(days=max(1, min(days, 365)))
+def usage(request: Request, days: int = 30, scope: str = 'workspace') -> dict:
+    """Metered usage: requests, and the upstream calls they caused.
+
+    A caller sees their own workspace's usage. The deployment-wide figure (`scope=all`) is for the
+    operator, because it shows everyone's traffic.
+    """
+    days = max(1, min(days, 365))
+    if scope == 'all':
+        _require_operator(request)
+        return get_platform().usage(days=days)
+    workspace, _prefix = resolve_workspace(request)
+    return get_platform().usage(workspace['id'], days=days)
 
 
 @app.get('/api/explorations', tags=['brief'],
@@ -699,13 +736,18 @@ def start_run(request: CompareRequest, response: Response, http_request: Request
 def run_status(run_id: str) -> dict:
     run = research_registry.get(run_id)
     if not run:
-        raise HTTPException(status_code=404, detail='That research run is no longer available.')
+        raise HTTPException(
+            status_code=404,
+            detail='That research run is no longer available: the server may have restarted, or the run aged out. '
+                   'Start the same idea again; evidence it already gathered is held and opens without new requests.')
     return run.snapshot()
 
 
 @app.get('/api/research/runs', tags=['agent'], summary='The recent research runs')
-def recent_runs() -> dict:
-    return {'runs': research_registry.recent()}
+def recent_runs(request: Request) -> dict:
+    """The caller's own recent runs. Another visitor's idea is never listed."""
+    workspace, _prefix = resolve_workspace(request)
+    return {'runs': research_registry.recent(workspace_id=workspace['id'])}
 
 
 # ---------------------------------------------------------------------------
@@ -752,11 +794,31 @@ def resolve_taste(request: CompareRequest) -> dict:
 # ---------------------------------------------------------------------------
 # Snapshots: an exploration that can be reopened exactly as it was shown
 # ---------------------------------------------------------------------------
+#: A frozen exploration is a whole studio state; this is generous for one and far below a disk-filling one.
+MAX_SNAPSHOT_BYTES = 1_000_000
+share_limiter = SlidingWindowLimiter(limit=30, window_seconds=3600)
+
+
 @app.post('/api/explorations/share', status_code=201, tags=['sharing'],
           summary='Freeze an exploration so a shared link reopens exactly it')
-def share_exploration(payload: ShareRequest, response: Response) -> dict:
-    """Freeze an exploration so a judge can open exactly what was shown."""
-    snapshot_id = get_platform().save_share(payload.model_dump())
+def share_exploration(payload: ShareRequest, request: Request, response: Response) -> dict:
+    """Freeze an exploration so a judge can open exactly what was shown.
+
+    The route takes no key, so it is bounded instead: a snapshot has a size cap, and one address may
+    freeze only so many an hour.
+    """
+    frozen = payload.model_dump()
+    if len(json.dumps(frozen, default=str)) > MAX_SNAPSHOT_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f'That exploration is too large to share (the limit is {MAX_SNAPSHOT_BYTES // 1024} KB). '
+                   'Remove some places or evidence and share again.')
+    if not share_limiter.allow(client_id(request)):
+        raise HTTPException(
+            status_code=429,
+            detail='This connection has shared a lot of explorations in the last hour. Try again later; '
+                   'a link you already made keeps working.')
+    snapshot_id = get_platform().save_share(frozen)
     response.headers['Location'] = f'/api/snapshots/{snapshot_id}'
     return {'snapshotId': snapshot_id, 'url': f'/api/snapshots/{snapshot_id}'}
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { startScene } from '../../landing-scene.js'
+import { startScene } from '../../landing/landing-scene.js'
 
 /**
  * The landing page's dusk, behind the studio.

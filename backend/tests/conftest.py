@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
+
+# The app builds its CORS rule from the run profile when it is imported, which is before any fixture
+# runs. A developer's .env may say `judging`; the suite is a dev-profile suite.
+os.environ['RUN_PROFILE'] = 'dev'
 
 FIXTURES = Path(__file__).resolve().parent.parent / 'fixtures'
 

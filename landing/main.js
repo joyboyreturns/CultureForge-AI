@@ -3,7 +3,7 @@
  * Vanilla JS + Framer Motion (Motion engine) enhancements
  */
 
-import demoBriefs from './shared/demoBriefs.json';
+import demoBriefs from '../shared/demoBriefs.json';
 import { startScene } from './landing-scene.js';
 
 (function () {

@@ -19,7 +19,7 @@ for (const path of ['LICENSE', 'README.md', 'CHANGELOG.md', 'THIRD_PARTY_NOTICES
 }
 check('GitHub-detectable MIT license', /MIT License/.test(read('LICENSE')));
 check('No browser mock fallback', !/mockGenerate|mockData/.test(read('src/api.ts')));
-check('Page visits do not run the example automatically', !/setTimeout\(runPulse/.test(read('main.js')));
+check('Page visits do not run the example automatically', !/setTimeout\(runPulse/.test(read('landing/main.js')));
 check('Conservative example Qloo limits', /QLOO_MAX_CALLS_PER_HOUR=20/.test(read('.env.example'))
   && /QLOO_MAX_CALLS_PER_DAY=100/.test(read('.env.example')));
 

@@ -250,7 +250,7 @@ No account is required. Choose a prepared brief to reuse held Qloo evidence.
 
 ```bash
 npm ci
-python3 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate   # CI and the Docker image run 3.12 (see .python-version)
 pip install -r requirements-dev.txt
 npm install --global @qloo/qloo-harness@0.1.26
 cp .env.example .env            # set QLOO_API_KEY; model settings are optional
@@ -360,7 +360,7 @@ CI runs all of these except the smoke test, with coverage.
   not the soundness of reasoning.
 - The deployment is one process and one instance. The judging profile lifts
   local budgets, not Qloo's own quota, so prewarm first.
-- The landing and studio backgrounds are drawn in code (`landing-scene.js`):
+- The landing and studio backgrounds are drawn in code (`landing/landing-scene.js`):
   no video, photograph or third-party media. The studio paints one still
   frame. It was checked in Chromium, not in Safari.
 

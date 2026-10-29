@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — privacy, bounds and structure, 2026-10-29
+
+- `GET /api/research/runs` lists only the caller's own runs; another visitor's idea is no longer shown.
+  A run that is gone (restart, aged out) now says so and how to continue.
+- `GET /api/usage` answers for the caller's workspace; the deployment-wide figure (`?scope=all`) needs the
+  operator token. Usage is summed in SQL, rows older than 90 days are dropped at startup, and health
+  probes and static files are no longer metered (they created a workspace per address).
+- Workspaces are found by an indexed name lookup instead of listing every workspace on each request.
+- `POST /api/explorations/share` is bounded: 413 over 1 MB, 429 after 30 a connection an hour.
+- Open localhost CORS is development-only; judging allows only the named origins.
+- Startup uses a FastAPI lifespan handler instead of the deprecated `on_event`.
+- Request builders moved to `backend/payloads.py` (re-exported from `providers.py`).
+- Studio: `App.tsx` split into `StudioChrome`, `StudioScreens`, `Results`, `studioShared` and `storage`;
+  the landing page's files moved to `landing/`.
+- Tests: the guardrails in `selector.py` and the gateway transport in `llm.py` are now covered (488 tests).
+- Python 3.12 is the target (`.python-version`), matching CI and the Docker image.
+
 ## Unreleased — audit and submission hardening, 2026-10-25
 
 - Forward confirmed `seedTagIds` on `/api/projects/compare` and preserve cached

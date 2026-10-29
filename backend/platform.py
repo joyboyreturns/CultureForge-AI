@@ -36,6 +36,9 @@ DEFAULT_DB_PATH = Path(os.getenv('CULTUREFORGE_DB', Path.home() / '.cache' / 'cu
 #: How a key is named, so a customer can tell at a glance which is which.
 SCOPES = ('read', 'write', 'export')
 
+#: Metering is for billing and for reading traffic, not an archive. Older rows are dropped.
+USAGE_RETENTION_DAYS = 90
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS workspaces (
     id            TEXT PRIMARY KEY,
@@ -43,6 +46,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
     created_at    REAL NOT NULL,
     plan          TEXT NOT NULL DEFAULT 'partner'
 );
+CREATE INDEX IF NOT EXISTS workspaces_name ON workspaces(name);
 
 CREATE TABLE IF NOT EXISTS api_keys (
     id            TEXT PRIMARY KEY,
@@ -103,6 +107,7 @@ CREATE TABLE IF NOT EXISTS usage_events (
     created_at      REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS usage_events_workspace ON usage_events(workspace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS usage_events_created ON usage_events(created_at);
 
 CREATE TABLE IF NOT EXISTS share_snapshots (
     id          TEXT PRIMARY KEY,
@@ -161,6 +166,11 @@ class Platform:
 
     def workspaces(self) -> list[dict]:
         return [self.workspace(row['id']) for row in self._query('SELECT id FROM workspaces ORDER BY created_at')]
+
+    def workspace_named(self, name: str) -> Optional[dict]:
+        """The oldest workspace with this name, found by the index rather than by listing them all."""
+        row = self._one('SELECT id FROM workspaces WHERE name = ? ORDER BY created_at LIMIT 1', (name,))
+        return self.workspace(row['id']) if row else None
 
     # ------------------------------------------------------------- api keys
     def issue_key(self, workspace_id: str, scopes: list[str], expires_at: Optional[float] = None) -> dict:
@@ -370,23 +380,25 @@ class Platform:
 
     def usage(self, workspace_id: Optional[str] = None, days: int = 30) -> dict:
         since = time.time() - days * 86400
+        where, params = 'created_at >= ?', [since]
         if workspace_id:
-            rows = self._query('SELECT * FROM usage_events WHERE workspace_id = ? AND created_at >= ?',
-                               (workspace_id, since))
-        else:
-            rows = self._query('SELECT * FROM usage_events WHERE created_at >= ?', (since,))
-        by_route: dict[str, int] = {}
-        upstream = 0
-        for row in rows:
-            by_route[row['route']] = by_route.get(row['route'], 0) + 1
-            upstream += int(row['upstream_calls'] or 0)
+            where, params = 'workspace_id = ? AND created_at >= ?', [workspace_id, since]
+        routes = self._query(
+            f'SELECT route, COUNT(*) AS n, COALESCE(SUM(upstream_calls), 0) AS upstream '
+            f'FROM usage_events WHERE {where} GROUP BY route', tuple(params))
         return {
-            'requests': len(rows),
-            'upstreamCalls': upstream,
-            'byRoute': by_route,
+            'requests': sum(int(row['n']) for row in routes),
+            'upstreamCalls': sum(int(row['upstream']) for row in routes),
+            'byRoute': {row['route']: int(row['n']) for row in routes},
             'windowDays': days,
             'since': since,
         }
+
+    def prune_usage(self, retention_days: int = USAGE_RETENTION_DAYS) -> int:
+        """Drop metering older than the retention window. Returns how many rows went."""
+        cursor = self._execute('DELETE FROM usage_events WHERE created_at < ?',
+                               (time.time() - retention_days * 86400,))
+        return cursor.rowcount
 
 
 def hash_key(secret: str) -> str:
