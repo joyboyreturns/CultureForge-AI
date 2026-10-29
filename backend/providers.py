@@ -846,53 +846,10 @@ class QlooHarnessProvider(CompositionMixin, CultureProvider):
             for item in evidence
         ]
 
-        # ---- The audience bridge -----------------------------------------
-        # The same audience tags, sent to other domains (artists, films,
-        # brands…) with no location. Each domain is its own cached request;
-        # one that fails is stated and the others still count.
-        bridge_domains = config.bridge_domains() if domains is None else list(domains)
-        crossdomain: list[dict] = []
-        for result in self.bridge_domains(matched_tags, bridge_domains, held_only=bridge_held_only):
-            domain = result['domain']
-            envelope = result['envelope']
-            if envelope is None:
-                trace.append(TraceEvent(
-                    id=f'trace-bridge-{domain}', step=f'bridge-{domain}', workflow='recommend',
-                    status='skipped' if result['skipped'] else 'error', resultCount=0,
-                    detail=result['reason'][:600]))
-                continue
-            spent += result['requests']
-            live = live or not result['cached']
-            bridge_rows = self.rows(envelope)[:BRIDGE_LIMIT]
-            event = self._trace_event(f'bridge-{domain}', 'recommend', envelope, len(bridge_rows))
-            event.id = f'trace-bridge-{domain}'
-            if result['cached']:
-                mark_reused(event)
-            trace.append(event)
-            for row in bridge_rows:
-                name = row.get('name')
-                if not isinstance(name, str) or not name.strip():
-                    continue
-                entity_id = row.get('entity_id') or row.get('id')
-                properties = row.get('properties') if isinstance(row.get('properties'), dict) else {}
-                image = properties.get('image')
-                image_url = image.get('url') if isinstance(image, dict) else image
-                evidence_id = f'ev-bridge-{len(evidence)}'
-                evidence.append(Evidence(
-                    id=evidence_id, kind='crossdomain', label=name,
-                    entityId=entity_id if isinstance(entity_id, str) else None,
-                    entityType=row.get('subtype') or row.get('type') or f'urn:entity:{domain}',
-                    affinity=self._affinity(row),
-                    popularity=row.get('popularity') if isinstance(row.get('popularity'), (int, float)) else None,
-                    description=properties.get('short_description') or properties.get('description'),
-                    image=image_url if isinstance(image_url, str) else None,
-                    traceId=event.id,
-                    relevance=assess(business_type=project.businessType, idea=project.businessIdea,
-                                     audience=project.audience, location=project.location,
-                                     name=name, description=properties.get('description') or '',
-                                     kind='crossdomain', has_identifier=bool(entity_id)),
-                ))
-                crossdomain.append({'evidence_id': evidence_id, 'name': name, 'domain': domain})
+        crossdomain, bridge_spent, bridge_live = self._collect_bridge_evidence(
+            project, matched_tags, domains, bridge_held_only, evidence, trace)
+        spent += bridge_spent
+        live = live or bridge_live
 
         composed = compose(
             business_type=project.businessType,
@@ -924,34 +881,8 @@ class QlooHarnessProvider(CompositionMixin, CultureProvider):
             evidenceIds=[eid for c in composed for eid in c.evidence_ids],
         ))
 
-        # Name the directions.
-        #
-        # The rules above chose the tags, the venues and the evidence; this
-        # only writes the words. A brief that was named before is served
-        # from the evidence store and spends no model request at all.
-        if allow_naming:
-            # The naming is the slowest part of an answer and the least
-            # important. Whoever is watching is told it is happening, so the
-            # wait is legible rather than a stall.
-            if on_step is not None:
-                from . import llm
-                on_step('name-the-directions',
-                        f'Naming the directions with {llm.display_model()}. The rules already have a name '
-                        'for each one, so a model that cannot be reached changes nothing.')
-            named, naming = self._name_directions(project, composed, evidence, matched_tags)
-        else:
-            named, naming = {}, {'used': False, 'attempted': False, 'model': None,
-                                'reason': 'Not asked: this answer was rebuilt from held evidence.'}
-        if composed:
-            for index, concept in enumerate(composed):
-                wording = named.get(index) or named.get(str(index)) or {}
-                if wording.get('name'):
-                    concept.name = wording['name']
-                if wording.get('tagline'):
-                    concept.tagline = wording['tagline']
-                if wording.get('rationale'):
-                    concept.naming = wording['rationale']
-        trace.append(self._naming_trace(composed, named, naming))
+        naming = self._apply_direction_names(
+            project, composed, evidence, matched_tags, allow_naming, on_step, trace)
 
         if composed:
             concepts = [self._composed_concept(project, c, index, trace) for index, c in enumerate(composed)]
@@ -1041,6 +972,92 @@ class QlooHarnessProvider(CompositionMixin, CultureProvider):
             else:
                 self._cache.pop(cache_key, None)
         return response
+
+    def _apply_direction_names(self, project, composed, evidence, matched_tags, allow_naming, on_step, trace):
+        # Name the directions.
+        #
+        # The rules above chose the tags, the venues and the evidence; this
+        # only writes the words. A brief that was named before is served
+        # from the evidence store and spends no model request at all.
+        if allow_naming:
+            # The naming is the slowest part of an answer and the least
+            # important. Whoever is watching is told it is happening, so the
+            # wait is legible rather than a stall.
+            if on_step is not None:
+                from . import llm
+                on_step('name-the-directions',
+                        f'Naming the directions with {llm.display_model()}. The rules already have a name '
+                        'for each one, so a model that cannot be reached changes nothing.')
+            named, naming = self._name_directions(project, composed, evidence, matched_tags)
+        else:
+            named, naming = {}, {'used': False, 'attempted': False, 'model': None,
+                                'reason': 'Not asked: this answer was rebuilt from held evidence.'}
+        if composed:
+            for index, concept in enumerate(composed):
+                wording = named.get(index) or named.get(str(index)) or {}
+                if wording.get('name'):
+                    concept.name = wording['name']
+                if wording.get('tagline'):
+                    concept.tagline = wording['tagline']
+                if wording.get('rationale'):
+                    concept.naming = wording['rationale']
+        trace.append(self._naming_trace(composed, named, naming))
+
+        return naming
+
+    def _collect_bridge_evidence(self, project, matched_tags, domains, bridge_held_only, evidence, trace):
+        # ---- The audience bridge -----------------------------------------
+        # The same audience tags, sent to other domains (artists, films,
+        # brands…) with no location. Each domain is its own cached request;
+        # one that fails is stated and the others still count.
+        bridge_domains = config.bridge_domains() if domains is None else list(domains)
+        spent = 0
+        live = False
+        from .relevance import assess
+        crossdomain: list[dict] = []
+        for result in self.bridge_domains(matched_tags, bridge_domains, held_only=bridge_held_only):
+            domain = result['domain']
+            envelope = result['envelope']
+            if envelope is None:
+                trace.append(TraceEvent(
+                    id=f'trace-bridge-{domain}', step=f'bridge-{domain}', workflow='recommend',
+                    status='skipped' if result['skipped'] else 'error', resultCount=0,
+                    detail=result['reason'][:600]))
+                continue
+            spent += result['requests']
+            live = live or not result['cached']
+            bridge_rows = self.rows(envelope)[:BRIDGE_LIMIT]
+            event = self._trace_event(f'bridge-{domain}', 'recommend', envelope, len(bridge_rows))
+            event.id = f'trace-bridge-{domain}'
+            if result['cached']:
+                mark_reused(event)
+            trace.append(event)
+            for row in bridge_rows:
+                name = row.get('name')
+                if not isinstance(name, str) or not name.strip():
+                    continue
+                entity_id = row.get('entity_id') or row.get('id')
+                properties = row.get('properties') if isinstance(row.get('properties'), dict) else {}
+                image = properties.get('image')
+                image_url = image.get('url') if isinstance(image, dict) else image
+                evidence_id = f'ev-bridge-{len(evidence)}'
+                evidence.append(Evidence(
+                    id=evidence_id, kind='crossdomain', label=name,
+                    entityId=entity_id if isinstance(entity_id, str) else None,
+                    entityType=row.get('subtype') or row.get('type') or f'urn:entity:{domain}',
+                    affinity=self._affinity(row),
+                    popularity=row.get('popularity') if isinstance(row.get('popularity'), (int, float)) else None,
+                    description=properties.get('short_description') or properties.get('description'),
+                    image=image_url if isinstance(image_url, str) else None,
+                    traceId=event.id,
+                    relevance=assess(business_type=project.businessType, idea=project.businessIdea,
+                                     audience=project.audience, location=project.location,
+                                     name=name, description=properties.get('description') or '',
+                                     kind='crossdomain', has_identifier=bool(entity_id)),
+                ))
+                crossdomain.append({'evidence_id': evidence_id, 'name': name, 'domain': domain})
+
+        return crossdomain, spent, live
 
     # ------------------------------------------------------------------
     # The remaining Qloo workflows
