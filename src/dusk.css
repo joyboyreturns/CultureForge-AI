@@ -343,18 +343,13 @@ body { font-family: var(--font-sans); color: var(--text); letter-spacing: -0.005
 :root[data-theme='light'] .page-footer { border-top-color: var(--line) !important; }
 
 /* --- Surfaces ------------------------------------------------------------- */
-.panel, .concept-card, .evidence-mix, .example-picker, .insight-main, .empty-state, .guided-tour,
-.decision-notebook, .api-notice, .evidence-summary, .results-summary > div, .creation-form, .creation-aside,
-.scenario-controls, .scenario-chart, .challenge-panel, .source-panel, .scenario-insight, .saved-explorations,
-.clarification, .replacement-probe, .tour-welcome, .demo-showcase button, .studio-capabilities .discovery-card,
-.intent-summary, .place-strip, .evidence-graph, .decision-comparison, .analysis-launch, .agent-outcome, .evidence-chat {
+.panel, .concept-card, .evidence-mix, .example-picker, .insight-main, .empty-state, .guided-tour, .decision-notebook, .api-notice, .evidence-summary, .results-summary > div, .creation-form, .creation-aside, .scenario-controls, .challenge-panel, .source-panel, .saved-explorations, .clarification, .replacement-probe, .tour-welcome, .demo-showcase button, .studio-capabilities .discovery-card, .intent-summary, .place-strip, .evidence-graph, .decision-comparison, .analysis-launch, .agent-outcome, .evidence-chat {
   background: var(--glass-fill) !important;
   border: 1px solid var(--glass-edge) !important;
   box-shadow: inset 0 1px 0 var(--glass-shine), var(--glass-shadow) !important;
   -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
 }
-.panel, .concept-card, .insight-main, .challenge-panel, .creation-form, .scenario-controls, .scenario-chart,
-.saved-explorations, .clarification, .decision-comparison, .analysis-launch, .evidence-graph { border-radius: 20px !important; }
+.panel, .concept-card, .insight-main, .challenge-panel, .creation-form, .scenario-controls, .saved-explorations, .clarification, .decision-comparison, .analysis-launch, .evidence-graph { border-radius: 20px !important; }
 .demo-showcase button:hover, .concept-card:hover, .studio-capabilities .discovery-card:hover { background: var(--glass-fill-strong) !important; border-color: rgba(255, 255, 255, 0.18) !important; }
 :root[data-theme='light'] .demo-showcase button:hover, :root[data-theme='light'] .concept-card:hover, :root[data-theme='light'] .studio-capabilities .discovery-card:hover { border-color: rgba(106, 75, 196, 0.35) !important; }
 .concept-card.is-selected { border-color: rgba(199, 163, 255, 0.55) !important; box-shadow: 0 0 0 1px rgba(199, 163, 255, 0.3), var(--glass-shadow) !important; }
@@ -639,9 +634,7 @@ body { font-family: var(--font-sans); color: var(--text); letter-spacing: -0.005
 :root[data-theme='light'] { --mix-indirect: #6a4bc4; --mix-attraction: #b4466c; --mix-geo: #a87412; --mix-affinity: #2f6d9e; --mix-unrelated: #8a8494; }
 
 /* --- No square stickers left: every small surface takes the rounded glass --- */
-.anchor-choice, .anchor-list li, .anchor-position, .anchor-signals, .audience-comparison, .clarification,
-.evidence-chip, .evidence-panel, .heat-tile, .provenance-recomposed, .provenance-use, .ritual-grid > div,
-.signal-card, .taste-seed, .taste-seeds, .run-expectation, .concept-modal, .orbit-sticker {
+.anchor-choice, .anchor-list li, .anchor-position, .anchor-signals, .audience-comparison, .clarification, .evidence-chip, .evidence-panel, .heat-tile, .provenance-recomposed, .provenance-use, .ritual-grid > div, .taste-seed, .taste-seeds, .run-expectation, .concept-modal {
   border-radius: 14px !important;
 }
 .taste-seeds, .concept-modal, .clarification { border-radius: 22px !important; }
@@ -649,8 +642,6 @@ body { font-family: var(--font-sans); color: var(--text); letter-spacing: -0.005
 .sample-label { border-radius: 999px !important; }
 .evidence-chip { border-radius: 999px !important; }
 .run-expectation { border: 1px solid var(--glass-edge) !important; background: var(--glass-fill) !important; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: var(--glass-shadow); }
-.run-expectation-bar { border-radius: 999px; overflow: hidden; }
-.run-expectation-bar > span { border-radius: 999px; background: var(--accent) !important; }
 .taste-seed { border: 1px solid var(--glass-edge) !important; background: rgba(255, 255, 255, 0.03) !important; }
 .taste-seed.is-on { border-color: rgba(199, 163, 255, 0.55) !important; background: rgba(199, 163, 255, 0.08) !important; }
 :root[data-theme='light'] .taste-seed.is-on { border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important; background: var(--accent-wash) !important; }

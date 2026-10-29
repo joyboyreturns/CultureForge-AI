@@ -692,13 +692,6 @@
   flex-wrap: wrap; padding: 13px 16px; border-bottom: 1px solid var(--line);
 }
 .geo-map-head .small-cap { font-size: 10px !important; letter-spacing: 0.18em; }
-.geo-axis { fill: var(--subtle); font: 400 10px 'DM Mono', monospace; }
-.geo-tip {
-  fill: var(--text); font: 500 11px 'DM Mono', monospace;
-  paint-order: stroke fill; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round;
-}
-.geo-tip.is-dim { fill: var(--muted); font-size: 10px; }
-.geo-point { cursor: crosshair; }
 .geo-map-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
   flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--line);
@@ -1051,8 +1044,6 @@
 .discovery-card h3 { text-transform: uppercase; }
 .discovery-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0 var(--card-shadow); }
 .feature-bottom { font-family: 'DM Mono', monospace; letter-spacing: 0.14em; }
-.signal-card { border-radius: 0; border: 1.5px solid var(--card-edge); box-shadow: 7px 7px 0 var(--card-shadow); }
-.orbit-sticker { border-radius: 0; border: 1.5px solid var(--card-edge); }
 .brand-symbol { border-radius: 0; }
 .nav-item { border-radius: 0; }
 .nav-item.active { border-left: 3px solid var(--clay); }
@@ -1283,9 +1274,7 @@
 .button-primary { background: var(--accent-solid); color: var(--accent-text); }
 .button-primary:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); }
 .button-secondary { border-radius: 999px; }
-.panel, .creation-form, .creation-aside, .scenario-controls, .scenario-chart,
-.challenge-panel, .source-panel, .insight-main, .decision-card,
-.scenario-insight, .saved-explorations, .clarification, .empty-state {
+.panel, .creation-form, .creation-aside, .scenario-controls, .challenge-panel, .source-panel, .insight-main, .decision-card, .saved-explorations, .clarification, .empty-state {
   border-radius: 18px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.09);
 }
@@ -1382,7 +1371,7 @@
 .concept-photo { border:0; }
 .concept-card-content { background:var(--surface); }
 .select-concept { border-radius:0 0 15px 15px; }
-.insight-main,.decision-card,.challenge-panel,.scenario-controls,.scenario-chart,.creation-form,.saved-explorations { border:1px solid var(--line); box-shadow:none; }
+.insight-main,.decision-card,.challenge-panel,.scenario-controls,.creation-form,.saved-explorations { border:1px solid var(--line); box-shadow:none; }
 .decision-card { background:linear-gradient(150deg,var(--surface-raised),var(--surface)); }
 .decision-card h3 { font-family:'Inter',sans-serif; text-transform:none; letter-spacing:-.045em; }
 .insight-title h2,.page-heading h1,.results-title-row h1 { font-family:'Inter',sans-serif; text-transform:none; letter-spacing:-.055em; }
@@ -1404,7 +1393,7 @@
 .replacement-probe-result pre { overflow:auto; padding:10px; background:var(--paper); color:var(--ink); font-size:10px; }
 .challenge-item { border-radius:12px; }
 .source-panel { border:1px solid var(--line); background:var(--surface-raised); }
-.creation-form,.scenario-controls,.scenario-chart { background:var(--surface); }
+.creation-form,.scenario-controls { background:var(--surface); }
 .field input,.field textarea,.field select { border-radius:10px; background:var(--surface-raised); }
 .business-tile,.goal-chip { border-radius:12px; }
 .page-heading .eyebrow,.results-title-row .eyebrow { color:var(--sage); }
@@ -1503,8 +1492,7 @@
 .agent-outcome>header .small-cap,.agent-outcome .small-cap{color:var(--accent)}
 .agent-outcome>header h2{margin:7px 0;font-family:var(--display);font-size:clamp(1.25rem,2vw,1.8rem)}
 .agent-outcome>header p,.agent-outcome p{color:var(--muted);max-width:78ch}
-.agent-outcome-plan,.agent-outcome-observation,.agent-outcome-reflection{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:11px}
-.agent-outcome-plan strong{display:block;margin-top:8px}
+.agent-outcome-observation,.agent-outcome-reflection{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:11px}
 .agent-outcome small,.agent-outcome footer{display:block;color:var(--muted);font-size:.84rem;line-height:1.5}
 .agent-outcome footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 
@@ -1575,10 +1563,6 @@
 .challenge-index b{color:var(--text);font-weight:500}
 
 /* --- Interest cells as a results view -------------------------------------- */
-.interest-map-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
-.interest-map-controls label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0;flex:1 1 260px}
-.interest-map-controls select{background:var(--surface-raised);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:13px;padding:7px 8px;min-width:0;flex:1}
-.interest-map-cost{font-size:12px;color:var(--muted);margin:0 0 8px}
 
 /* --- The agent loop ---------------------------------------------------------- */
 .agent-steps{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:8px}
@@ -1809,9 +1793,6 @@ body:has(.guided-tour) .run-dock { right: auto; left: 250px; }
 @media (max-width: 900px) { body:has(.guided-tour) .run-dock { left: 16px; bottom: auto; top: 76px; } }
 
 /* --- Executive decision brief ------------------------------------------------ */
-.mode-toggle { display: inline-flex; border: 1.5px solid var(--card-edge); margin: 0 0 18px; }
-.mode-toggle button { cursor: pointer; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; padding: 9px 16px; }
-.mode-toggle button.is-active { background: var(--accent); color: var(--accent-ink, #111); font-weight: 600; }
 .exec-brief { padding: 26px 28px; display: grid; gap: 22px; margin-bottom: 24px; }
 .exec-lead h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.1; margin: 10px 0 8px; letter-spacing: -.03em; }
 .exec-lead p { color: var(--muted); font-size: 16px; line-height: 1.6; margin: 0 0 14px; max-width: 62ch; }
@@ -1832,9 +1813,6 @@ body:has(.guided-tour) .run-dock { right: auto; left: 250px; }
 .run-expectation { width: min(560px, 100%); margin: 18px auto 6px; padding: 16px 18px; border: 1.5px solid var(--card-edge); background: var(--surface); text-align: left; display: grid; gap: 8px; }
 .run-expectation-head { display: flex; align-items: center; gap: 9px; font-size: 14px; }
 .run-expectation-head span { margin-left: auto; font: 13px 'DM Mono', monospace; color: var(--accent); }
-.run-expectation-bar { height: 6px; background: var(--line); overflow: hidden; }
-.run-expectation-bar span { display: block; height: 100%; background: var(--accent); transition: width 1s linear; }
-.run-expectation-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
 .run-expectation p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text); }
 .run-expectation .run-expectation-note { color: var(--muted); font-size: 12px; }
 .submit-time-note, .taste-seed-time { display: block; flex: 1 1 100%; color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0; }

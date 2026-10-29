@@ -17,7 +17,16 @@
 - Studio: `App.tsx` split into `StudioChrome`, `StudioScreens`, `Results`, `studioShared` and `storage`;
   the landing page's files moved to `landing/`.
 - Tests: the guardrails in `selector.py` and the gateway transport in `llm.py` are now covered (488 tests).
-- Python 3.12 is the target (`.python-version`), matching CI and the Docker image.
+- Python 3.12 is the target (`.python-version`), matching CI and the Docker image; the backend suite passes on
+  3.12 and 3.11 as well as 3.9.
+- `QlooHarnessProvider` sheds its trace, model-naming and concept-assembly helpers (`provider_composition.py`),
+  and the provenance query allowlist moves to `payloads.py`.
+- `App()` hands theme, saved directions, toast, remembered brief, backend status and the evidence analysis to
+  hooks in `studioHooks.ts`.
+- About 23 KB of legacy hero, graph and teaser CSS whose classes nothing references was removed (checked with a
+  CSS parser against every source file; library and `:not()`/`:is()` selectors are never touched).
+- maplibre was reviewed: every import outside `maplibreLoader.ts` is type-only and that module is only
+  imported dynamically, so none of the 1 MB map code is in the main bundle.
 
 ## Unreleased — audit and submission hardening, 2026-10-25
 
