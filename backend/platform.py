@@ -36,6 +36,13 @@ DEFAULT_DB_PATH = Path(os.getenv('CULTUREFORGE_DB', Path.home() / '.cache' / 'cu
 #: How a key is named, so a customer can tell at a glance which is which.
 SCOPES = ('read', 'write', 'export')
 
+#: A finished run stays readable this long, so a reload or a restart does not lose the answer's trace.
+RUN_RETENTION_DAYS = 7
+
+#: What a run says when the server stopped while it was still being researched.
+INTERRUPTED_RUN_MESSAGE = ('The server restarted while this idea was being researched. Start it again: '
+                           'evidence it had already gathered is held, so the second run is much shorter.')
+
 #: Metering is for billing and for reading traffic, not an archive. Older rows are dropped.
 USAGE_RETENTION_DAYS = 90
 
@@ -108,6 +115,16 @@ CREATE TABLE IF NOT EXISTS usage_events (
 );
 CREATE INDEX IF NOT EXISTS usage_events_workspace ON usage_events(workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS usage_events_created ON usage_events(created_at);
+
+CREATE TABLE IF NOT EXISTS run_snapshots (
+    id            TEXT PRIMARY KEY,
+    workspace_id  TEXT,
+    status        TEXT NOT NULL,
+    snapshot      TEXT NOT NULL,
+    created_at    REAL NOT NULL,
+    updated_at    REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS run_snapshots_workspace ON run_snapshots(workspace_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS share_snapshots (
     id          TEXT PRIMARY KEY,
@@ -345,6 +362,46 @@ class Platform:
         self._execute('DELETE FROM exploration_versions WHERE exploration_id = ?', (exploration_id,))
         self._execute('DELETE FROM explorations WHERE id = ?', (exploration_id,))
         return True
+
+    # ------------------------------------------------------- research runs
+    def save_run(self, snapshot: dict, workspace_id: Optional[str]) -> None:
+        """Keep a run's state, so a poll after a restart finds it. Written when it starts and when it ends."""
+        now = time.time()
+        self._execute(
+            'INSERT INTO run_snapshots (id, workspace_id, status, snapshot, created_at, updated_at)'
+            ' VALUES (?, ?, ?, ?, ?, ?)'
+            ' ON CONFLICT(id) DO UPDATE SET status = excluded.status, snapshot = excluded.snapshot,'
+            ' updated_at = excluded.updated_at',
+            (snapshot['runId'], workspace_id, snapshot['status'], json.dumps(snapshot, default=str),
+             snapshot.get('createdAt') or now, now))
+
+    def load_run(self, run_id: str) -> Optional[dict]:
+        row = self._one('SELECT snapshot FROM run_snapshots WHERE id = ?', (run_id,))
+        return json.loads(row['snapshot']) if row else None
+
+    def runs(self, workspace_id: str, limit: int = 10) -> list[dict]:
+        rows = self._query('SELECT snapshot FROM run_snapshots WHERE workspace_id = ?'
+                           ' ORDER BY created_at DESC LIMIT ?', (workspace_id, limit))
+        return [json.loads(row['snapshot']) for row in rows]
+
+    def interrupt_running_runs(self) -> int:
+        """At start-up, close every run that was still going when the last process stopped.
+
+        Its thread died with that process, so it will never finish; leaving it "running" would make a
+        reader wait on it forever. It becomes a stated, retryable failure instead.
+        """
+        count = 0
+        for row in self._query("SELECT id, snapshot, workspace_id FROM run_snapshots WHERE status = 'running'"):
+            snapshot = json.loads(row['snapshot'])
+            snapshot.update(status='failed', error=INTERRUPTED_RUN_MESSAGE, errorCode='RUN_INTERRUPTED')
+            self.save_run(snapshot, row['workspace_id'])
+            count += 1
+        return count
+
+    def prune_runs(self, retention_days: int = RUN_RETENTION_DAYS) -> int:
+        cursor = self._execute('DELETE FROM run_snapshots WHERE updated_at < ?',
+                               (time.time() - retention_days * 86400,))
+        return cursor.rowcount
 
     # ------------------------------------------------------- share snapshots
     def save_share(self, payload: dict, exploration_id: Optional[str] = None) -> str:

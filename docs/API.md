@@ -33,7 +33,7 @@ than on the wording:
 | `GET` | `/api/examples` | The prepared briefs and whether each is fully held. No upstream call. |
 | `POST` | `/api/projects/generate` | Answer a brief: seeds, places, bridge domains, directions. |
 | `POST` | `/api/research/runs` | Start an observable research run (returns 202 and a `runId`). |
-| `GET` | `/api/research/runs/{run_id}` | A run's steps, result, clarification or error code. |
+| `GET` | `/api/research/runs/{run_id}` | A run's steps, result, clarification or error code. Survives a restart for seven days; a run cut short by one reads `failed` with `errorCode: RUN_INTERRUPTED`. |
 | `GET` | `/api/research/runs` | The caller's own recent runs (never another visitor's). |
 | `POST` | `/api/taste/resolve` | Resolve an audience into candidate Qloo tags to confirm. |
 | `POST` | `/api/projects/challenge` | The evidence test (policy anchor-fit-5). Optional `anchorEntityId` and `demographic`. |

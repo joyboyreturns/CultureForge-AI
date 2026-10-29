@@ -7,6 +7,8 @@
 - `GET /api/usage` answers for the caller's workspace; the deployment-wide figure (`?scope=all`) needs the
   operator token. Usage is summed in SQL, rows older than 90 days are dropped at startup, and health
   probes and static files are no longer metered (they created a workspace per address).
+- Research runs are persisted (`run_snapshots`): a poll after a restart finds finished runs, and runs cut short
+  by one become a stated, retryable `RUN_INTERRUPTED` failure. The studio shows the server's own explanation.
 - Workspaces are found by an indexed name lookup instead of listing every workspace on each request.
 - `POST /api/explorations/share` is bounded: 413 over 1 MB, 429 after 30 a connection an hour.
 - Open localhost CORS is development-only; judging allows only the named origins.

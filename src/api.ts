@@ -296,7 +296,10 @@ export async function startResearch(project: ProjectRequest, audience: string, s
 
 export async function fetchResearchRun(runId: string): Promise<ResearchRun> {
   const response = await fetch(`/api/research/runs/${runId}`)
-  if (!response.ok) throw new Error('That research run is no longer available.')
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(detailMessage(body, 'That research run is no longer available.'))
+  }
   return await response.json() as ResearchRun
 }
 

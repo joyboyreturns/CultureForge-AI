@@ -48,8 +48,11 @@ async def lifespan(_app: FastAPI):
     from .demo_pack import seed
     seed()
     try:
-        get_platform().prune_usage()
-    except Exception:  # pragma: no cover - trimming metering must never stop the server starting
+        platform = get_platform()
+        platform.prune_usage()
+        platform.prune_runs()
+        platform.interrupt_running_runs()
+    except Exception:  # pragma: no cover - housekeeping must never stop the server starting
         pass
     yield
 
@@ -735,19 +738,26 @@ def start_run(request: CompareRequest, response: Response, http_request: Request
 @app.get('/api/research/runs/{run_id}', tags=['agent'], summary='The state of one research run')
 def run_status(run_id: str) -> dict:
     run = research_registry.get(run_id)
-    if not run:
-        raise HTTPException(
-            status_code=404,
-            detail='That research run is no longer available: the server may have restarted, or the run aged out. '
-                   'Start the same idea again; evidence it already gathered is held and opens without new requests.')
-    return run.snapshot()
+    if run:
+        return run.snapshot()
+    # Not in this process: it may have finished before a restart, or been closed as interrupted by it.
+    kept = get_platform().load_run(run_id)
+    if kept:
+        return kept
+    raise HTTPException(
+        status_code=404,
+        detail='That research run is no longer available: it aged out, or the id is wrong. '
+               'Start the same idea again; evidence it already gathered is held and opens without new requests.')
 
 
 @app.get('/api/research/runs', tags=['agent'], summary='The recent research runs')
 def recent_runs(request: Request) -> dict:
     """The caller's own recent runs. Another visitor's idea is never listed."""
     workspace, _prefix = resolve_workspace(request)
-    return {'runs': research_registry.recent(workspace_id=workspace['id'])}
+    live = research_registry.recent(workspace_id=workspace['id'])
+    seen = {run['runId'] for run in live}
+    kept = [run for run in get_platform().runs(workspace['id']) if run['runId'] not in seen]
+    return {'runs': (live + kept)[:10]}
 
 
 # ---------------------------------------------------------------------------

@@ -185,6 +185,7 @@ def start_research(project: ProjectRequest, audience: Optional[str] = None,
     run.seed_tag_ids = list(seed_tag_ids or [])
     run.key = run_key(project, audience, seed_tag_ids)
     registry.add(run)
+    _persist(run)
 
     thread = threading.Thread(target=_execute_and_release, args=(run, allowance, on_finish), daemon=True)
     thread.start()
@@ -195,8 +196,18 @@ def _execute_and_release(run: ResearchRun, allowance: Optional[int], on_finish=N
     try:
         _execute(run, allowance)
     finally:
+        _persist(run)
         if on_finish:
             on_finish()
+
+
+def _persist(run: ResearchRun) -> None:
+    """Keep the run's state beyond this process. Failing to must never touch the run itself."""
+    try:
+        from .platform import get_platform
+        get_platform().save_run(run.snapshot(), run.workspace_id)
+    except Exception:  # noqa: BLE001 - persistence is a convenience; the run goes on without it
+        pass
 
 
 def _save_exploration(run: ResearchRun, response) -> None:

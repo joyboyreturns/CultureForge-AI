@@ -53,7 +53,7 @@ def test_the_runs_route_does_not_list_another_visitors_idea(client, monkeypatch)
 
 def test_a_missing_run_says_what_to_do_next(client):
     detail = client.get('/api/research/runs/run-gone').json()['detail']
-    assert 'restart' in detail and 'again' in detail
+    assert 'aged out' in detail and 'again' in detail
 
 
 def test_usage_is_the_callers_workspace_and_all_of_it_is_for_the_operator(client, monkeypatch):
@@ -133,3 +133,63 @@ def test_open_localhost_cors_is_for_development_only(monkeypatch):
     assert main.cors_origin_regex()
     monkeypatch.setenv('RUN_PROFILE', 'judging')
     assert main.cors_origin_regex() is None
+
+
+# --- runs survive a restart --------------------------------------------------------------------
+
+def test_a_finished_run_is_readable_after_the_process_forgets_it(client):
+    run = _run(main.get_platform().create_workspace('Visitor a')['id'])
+    run.status, run.result = 'complete', {'projectId': 'p-1', 'concepts': []}
+    main.get_platform().save_run(run.snapshot(), run.workspace_id)
+
+    assert main.research_registry.get(run.id) is None, 'this process has never held it'
+    body = client.get(f'/api/research/runs/{run.id}').json()
+    assert body['status'] == 'complete' and body['result']['projectId'] == 'p-1'
+
+
+def test_a_run_left_running_by_a_stopped_process_becomes_a_stated_failure(client):
+    platform = main.get_platform()
+    run = _run(platform.create_workspace('Visitor b')['id'])
+    platform.save_run(run.snapshot(), run.workspace_id)       # written when it started, still "running"
+
+    assert platform.interrupt_running_runs() == 1
+    body = client.get(f'/api/research/runs/{run.id}').json()
+    assert body['status'] == 'failed' and body['errorCode'] == 'RUN_INTERRUPTED'
+    assert 'Start it again' in body['error']
+    assert platform.interrupt_running_runs() == 0, 'a closed run is not closed twice'
+
+
+def test_a_started_run_is_persisted_at_both_ends(monkeypatch):
+    from backend import research
+    monkeypatch.setattr(research, '_execute', lambda run, allowance: setattr(run, 'status', research.STATUS_COMPLETE))
+    seen = []
+    real = main.get_platform().save_run
+    monkeypatch.setattr(main.get_platform(), 'save_run', lambda snap, ws: (seen.append(snap['status']), real(snap, ws)))
+    run = research.start_research(_run(None).project, workspace_id=None)
+    for _ in range(100):
+        if 'complete' in seen:
+            break
+        time.sleep(0.02)
+    assert seen[0] == 'running' and seen[-1] == 'complete'
+    main.research_registry._runs.pop(run.id, None)
+    main.research_registry._order.remove(run.id)
+
+
+def test_the_run_list_includes_persisted_runs_of_the_caller_only(client):
+    platform = main.get_platform()
+    client.get('/api/usage')  # makes sure the local workspace exists
+    mine = _run(next(w for w in platform.workspaces() if w['name'] == 'Local studio')['id'])
+    other = _run(platform.create_workspace('Visitor c')['id'])
+    for run in (mine, other):
+        platform.save_run(run.snapshot(), run.workspace_id)
+    ids = [r['runId'] for r in client.get('/api/research/runs').json()['runs']]
+    assert mine.id in ids and other.id not in ids
+
+
+def test_old_runs_are_pruned(tmp_path):
+    platform = Platform(tmp_path / 'p.db')
+    run = _run(None)
+    platform.save_run(run.snapshot(), None)
+    platform._execute('UPDATE run_snapshots SET updated_at = ?', (time.time() - 30 * 86400,))
+    assert platform.prune_runs(retention_days=7) == 1
+    assert platform.load_run(run.id) is None
