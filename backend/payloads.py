@@ -12,6 +12,35 @@ from typing import Optional
 from .evidence_store import canonical_key, get_store
 from .intent import interpret
 
+# The exact set of query parameters this app sends to Qloo. A provenance
+# panel may only show a parameter that appears here. Anything else is dropped
+# before it can reach the panel, so a future change to the harness cannot
+# quietly start exposing a new field.
+SAFE_QUERY_KEYS = {
+    # find_tags
+    'filter.query', 'feature.semantic_search',
+    # recommend and rank
+    'filter.type', 'filter.location.query', 'signal.location.query',
+    'take', 'feature.explainability',
+    'signal.interests.tags', 'operator.signal.interests.tags',
+    'signal.interests.entities',
+    'signal.demographics.gender', 'signal.demographics.age',
+    'filter.tags', 'operator.filter.tags',
+    'filter.exclude.tags', 'operator.filter.exclude.tags',
+    'filter.exclude.entities',
+    'filter.results.entities',
+    # compare_audiences
+    'a.signal.interests.entities', 'b.signal.interests.entities',
+}
+
+
+def safe_query(query: dict) -> dict:
+    """Keep only the parameters that are safe to display."""
+    if not isinstance(query, dict):
+        return {}
+    return {key: value for key, value in query.items() if key in SAFE_QUERY_KEYS}
+
+
 #: How many audience seeds a brief resolves to, and how many places it
 #: retrieves. Ten is the most the evidence test can use: Qloo's rank and
 #: compare_audiences accept at most ten entities per list.
