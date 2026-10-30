@@ -11,7 +11,7 @@ from backend import category as taxonomy
 from backend import config, intent as business_intent, llm, relevance
 from backend.evidence_store import canonical_key, get_store
 from backend.intent import interpret, validate_proposal
-from backend.intent_report import held_tag, idea_alternatives, resolve_tag
+from backend.intent_report import held_tag, idea_alternatives
 from backend.models import ProjectRequest
 from backend.providers import QlooHarnessError, QlooHarnessProvider, rank_category_tag
 

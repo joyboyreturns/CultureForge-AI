@@ -17,6 +17,11 @@ willingness to pay.
 
 **Live demo:** [Open CultureForge AI](https://cultureforge-ai.tail601a7c.ts.net)
 
+**Check it without the UI:** [`/api/health`](https://cultureforge-ai.tail601a7c.ts.net/api/health) ·
+[`/api/examples`](https://cultureforge-ai.tail601a7c.ts.net/api/examples) ·
+[`/api/qloo/workflows`](https://cultureforge-ai.tail601a7c.ts.net/api/qloo/workflows) ·
+[`/docs`](https://cultureforge-ai.tail601a7c.ts.net/docs). None of them spends Qloo quota.
+
 **A prototype.** Where Qloo doesn't have enough data for an idea in a place, CultureForge says so plainly instead of inventing an answer.
 
 **Try it in the first minute:** choose from **14 trial briefs** or enter your own
@@ -343,9 +348,19 @@ npm run check:dependencies              # audit production and build dependencie
 python -m pytest backend/tests -q        # none of these tests can reach Qloo or a model
 npm run test:unit && npm run check:submission
 python3 scripts/smoke_test.py <url>      # a running deployment, no quota spent
+python3 scripts/judge_replay.py --base-url <url>   # all 14 prepared briefs end to end, zero upstream requests
+python3 scripts/llm_check.py             # read-only: is the model gateway configured? (--live sends one request)
 ```
 
-CI runs all of these except the smoke test, with coverage.
+`judge_replay.py` refuses to run unless the server has the Qloo kill switch on, the model off and
+the judging profile (`QLOO_LIVE_ENABLED=false AI_GATEWAY_ENABLED=false`; also set
+`GEOCODING_ENABLED=false`), so it can only ever replay held evidence. On a fresh clone with an empty cache it
+answers all 14 prepared briefs from `shared/demoPack.json`, recomposes without a place, runs the
+evidence test, builds the PDF and rejects four malformed inputs. See
+[docs/JUDGING_DAY.md](docs/JUDGING_DAY.md).
+
+CI runs the lint, build, audit, backend and unit checks with coverage. The smoke test, the
+replay and the model check need a running server or a key, so they are run by hand.
 
 ## Limits and non-claims
 

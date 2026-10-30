@@ -46,6 +46,19 @@ Everything here uses the deployed service from [DEPLOY.md](DEPLOY.md). Replace
    python3 scripts/smoke_test.py $HOST
    ```
 
+   For a full replay of all 14 prepared briefs (generate, recompose without a place, evidence
+   test, PDF, four malformed inputs), start a throwaway instance with everything upstream off
+   and an empty cache. This also proves that a fresh clone works from the shipped demo pack:
+
+   ```bash
+   RUN_PROFILE=judging QLOO_LIVE_ENABLED=false AI_GATEWAY_ENABLED=false GEOCODING_ENABLED=false \
+     CULTUREFORGE_CACHE_DIR=$(mktemp -d) CULTUREFORGE_DB=$(mktemp -d)/platform.db \
+     uvicorn backend.main:app --host 127.0.0.1 --port 8031
+   python3 scripts/judge_replay.py --base-url http://127.0.0.1:8031
+   ```
+
+   It refuses to run unless Qloo and the model are off, so it cannot spend quota.
+
 5. **Click through** the [demo script](DEMO.md) once in a private window.
 
 ## The three featured demos open instantly on a fresh host

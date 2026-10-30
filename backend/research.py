@@ -27,8 +27,7 @@ from .evidence_store import known_location
 from .agent import run_agent
 from .models import AgentReport, ProjectRequest, TraceEvent
 from .intent_report import build as build_intent_report, idea_alternatives, resolve_tag
-from .providers import (QlooHarnessError, QlooHarnessProvider, brief_places_retrieval_payload,
-                        brief_tags_payload, brief_category_payload, select_category_tag, mark_reused)
+from .providers import QlooHarnessError, QlooHarnessProvider, brief_tags_payload, mark_reused
 
 # How many Qloo workflows a cold research run may spend is set by the run
 # profile (RESEARCH_RUN_MAX_WORKFLOWS): a count in dev, and none in judging,

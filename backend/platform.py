@@ -27,7 +27,7 @@ import sqlite3
 import threading
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 #: Where the platform database lives. The evidence cache is separate on
 #: purpose: the cache is disposable, the platform state is not.

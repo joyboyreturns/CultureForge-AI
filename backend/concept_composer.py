@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Optional
 
 # Tag families Qloo returns, keyed by the fragment that identifies them.
 AUDIENCE_TAG_HINTS = (

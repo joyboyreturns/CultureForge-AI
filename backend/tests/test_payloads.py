@@ -151,7 +151,6 @@ def test_every_mapped_code_has_an_http_status():
 def test_a_matching_place_returned_for_another_city_is_named_in_what_is_missing():
     """Observed live: Qloo returned a Chicago climbing gym for a Denver query."""
     from types import SimpleNamespace
-    from backend.category import resolve
     from backend.outcome import build_outcome
     from backend import relevance
     category = relevance.classify_brief('Wellness', 'bouldering gym', 'beginner climbers')

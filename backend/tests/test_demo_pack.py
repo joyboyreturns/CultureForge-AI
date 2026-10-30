@@ -1,7 +1,7 @@
 """The shipped pack makes the three prepared demos open from held evidence on a fresh store."""
 import json
 
-from backend import demo_pack, evidence_store, examples, geocode
+from backend import demo_pack, evidence_store, examples
 
 
 def test_a_fresh_store_opens_each_demo_from_the_shipped_pack(monkeypatch, tmp_path):
